@@ -10,21 +10,21 @@ namespace ShiftSoftware.ShiftBlazor.Services
 {
     public class ShiftModalService
     {
-        private readonly IJSRuntime _jsRuntime;
-        private readonly NavigationManager _navManager;
-        private readonly IDialogService _dialogService;
+        private readonly IJSRuntime JsRuntime;
+        private readonly NavigationManager NavManager;
+        private readonly IDialogService DialogService;
 
         private static readonly string QueryKey = "modal";
-        private readonly string ProjectName = typeof(ShiftModalService).Assembly.GetName().Name.Replace('-', '_');
+        private readonly string ProjectName = typeof(ShiftModalService).Assembly.GetName().Name!.Replace('-', '_');
 
         public ShiftModalService(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService)
         {
-            _jsRuntime = jsRuntime;
-            _navManager = navManager;
-            _dialogService = dialogService;
+            JsRuntime = jsRuntime;
+            NavManager = navManager;
+            DialogService = dialogService;
         }
 
-        public async Task<DialogResult?> Open<TComponent>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string> parameters = null) where TComponent : ComponentBase
+        public async Task<DialogResult?> Open<TComponent>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null) where TComponent : ComponentBase
         {
             var ComponentType = typeof(TComponent);
 
@@ -32,12 +32,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             if (openMode == ModalOpenMode.NewTab)
             {
-                await _jsRuntime.InvokeVoidAsync("open", $"{ComponentType.Name}/{key}{GenerateQueryString(parameters)}", "_blank");
+                await JsRuntime.InvokeVoidAsync("open", $"{ComponentType.Name}/{key}{GenerateQueryString(parameters)}", "_blank");
             }
             else if (openMode == ModalOpenMode.Redirect)
             {
-                _navManager.NavigateTo($"{ComponentType.Name}/{key}{GenerateQueryString(parameters)}");
-                //await _jsRuntime.InvokeVoidAsync("open", $"{ComponentType.Name}/{key}{GenerateQueryString(parameters)}", "_self");
+                NavManager.NavigateTo($"{ComponentType.Name}/{key}{GenerateQueryString(parameters)}");
             }
             else if (openMode == ModalOpenMode.Drawer_Start)
             {
@@ -57,7 +56,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return null;
         }
 
-        public string GenerateQueryString(Dictionary<string, string> parameters)
+        public string GenerateQueryString(Dictionary<string, string>? parameters)
         {
             if (parameters == null || parameters.Count == 0)
                 return "";
@@ -73,7 +72,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         public async void UpdateModals()
         {
-            var url = await _jsRuntime.InvokeAsync<string>("GetUrl");
+            var url = await JsRuntime.InvokeAsync<string>("GetUrl");
             var modals = ParseModalUrl(url);
 
             if (modals.Count == 0)
@@ -96,9 +95,9 @@ namespace ShiftSoftware.ShiftBlazor.Services
             UpdateModalQueryUrl(null, key);
         }
 
-        private async void UpdateModalQueryUrl(string? name, object? key, Dictionary<string, string> parameters = null)
+        private async void UpdateModalQueryUrl(string? name, object? key, Dictionary<string, string>? parameters = null)
         {
-            var url = await _jsRuntime.InvokeAsync<string>("GetUrl");
+            var url = await JsRuntime.InvokeAsync<string>("GetUrl");
             var modals = ParseModalUrl(url);
 
             if (name == null)
@@ -115,10 +114,10 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 modals.Add(new ModalInfo { Name = name, Key = key, Parameters = parameters });
             }
             var newUrl = CreateModalUrlQuery(modals, url);
-            await _jsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
+            await JsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
         }
 
-        private async Task<DialogResult> OpenDialog(Type TComponent, object? itemId = null, Dictionary<string, string> parameters = null)
+        private async Task<DialogResult> OpenDialog(Type TComponent, object? itemId = null, Dictionary<string, string>? parameters = null)
         {
             var dParams = new DialogParameters();
             if (itemId != null)
@@ -135,13 +134,13 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
 
             var options = new DialogOptions { NoHeader = true };
-            var diaRef = _dialogService.Show(TComponent, "", dParams, options);
+            var diaRef = DialogService.Show(TComponent, "", dParams, options);
             return await diaRef.Result;
         }
 
         private List<ModalInfo> ParseModalUrl(string url)
         {
-            var uri = _navManager.ToAbsoluteUri(url);
+            var uri = NavManager.ToAbsoluteUri(url);
 
             if (QueryHelpers.ParseQuery(uri.Query).TryGetValue(QueryKey, out var valueFromQueryString))
             {
@@ -173,13 +172,13 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 queryString = "?" + string.Join("&", queryValues);
             }
 
-            var uri = _navManager.ToAbsoluteUri(url);
+            var uri = NavManager.ToAbsoluteUri(url);
             return uri.AbsolutePath + queryString;
         }
 
         private async void RemoveFrontModalFromUrl()
         {
-            var url = await _jsRuntime.InvokeAsync<string>("GetUrl");
+            var url = await JsRuntime.InvokeAsync<string>("GetUrl");
 
             var modals = ParseModalUrl(url);
             if (modals.Count > 0)
@@ -187,7 +186,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 modals.RemoveAt(modals.Count - 1);
             }
             var newUrl = CreateModalUrlQuery(modals, url);
-            await _jsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
+            await JsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
         }
     }
 }

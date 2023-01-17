@@ -4,16 +4,16 @@ namespace ShiftSoftware.ShiftBlazor.Services
 {
     public class ClipboardService
     {
-        private readonly IJSRuntime _jsRuntime;
+        private readonly IJSRuntime JsRuntime;
 
         public ClipboardService(IJSRuntime jsRuntime)
         {
-            _jsRuntime = jsRuntime;
+            JsRuntime = jsRuntime;
         }
 
         public ValueTask WriteTextAsync(string text)
         {
-            return _jsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            return JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
         }
     }
 }

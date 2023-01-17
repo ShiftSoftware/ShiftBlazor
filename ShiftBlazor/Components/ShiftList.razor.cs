@@ -16,7 +16,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         where TComponent : ComponentBase
     {
         [Inject] ISnackbar Snackbar { get; set; } = default!;
-        [Inject] IJSRuntime _jsRuntime { get; set; } = default!;
+        [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
 
         [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
@@ -46,18 +46,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter] public string ActionColumnWidth { get; set; } = "150";
         [Parameter] public string GridHeight { get; set; } = string.Empty;
 
-        [Parameter] public Dictionary<string, string> AddDialogParameters { get; set; }
+        [Parameter] public Dictionary<string, string> AddDialogParameters { get; set; } = new();
         [Parameter] public bool AutoGenerateColumns { get; set; } = true;
         [Parameter] public bool EmbededInsideForm { get; set; }
 
         public SfGrid<T>? Grid;
-        private PropertyInfo[] Props = typeof(T).GetProperties();
-        private CustomMessageHandler MessageHandler = new CustomMessageHandler();
-        protected HttpClient httpClient { get; set; }
+        private readonly PropertyInfo[] Props = typeof(T).GetProperties();
+        private CustomMessageHandler MessageHandler = new();
+        protected HttpClient HttpClient { get; set; }
 
         public ShiftList()
         {
-            httpClient = new HttpClient(MessageHandler);
+            HttpClient = new HttpClient(MessageHandler);
         }
 
         protected override void OnInitialized()
@@ -70,7 +70,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        public async Task<DialogResult?> OpenDialog<TT>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary< string, string> parameters = null) where TT : ComponentBase
+        public async Task<DialogResult?> OpenDialog<TT>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary< string, string>? parameters = null) where TT : ComponentBase
         {
             var result = await ShiftModal.Open<TT>(key, openMode, parameters);
             
@@ -93,7 +93,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public async Task<SelectedItems> GetSelectedItems()
         {
-            var AllSelected = await _jsRuntime.InvokeAsync<bool>("GridAllSelected", this.Grid.ID);
+            var AllSelected = await JsRuntime.InvokeAsync<bool>("GridAllSelected", this.Grid!.ID);
 
             var result = new SelectedItems
             {

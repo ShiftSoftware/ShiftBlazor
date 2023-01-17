@@ -79,7 +79,7 @@
                 Height="@GridHeight">
 
             @if (Values == null) {
-                <SfDataManager HttpClientInstance="httpClient" Url="@Action" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true" />
+                <SfDataManager HttpClientInstance="HttpClient" Url="@Action" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true" />
             }
 
             <GridEvents OnActionFailure="ErrorHandler" TValue="T" />
