@@ -18,7 +18,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] NavigationManager NavManager { get; set; } = default!;
         [Inject] IDialogService DialogService { get; set; } = default!;
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
-        [Inject] ISnackbar Snackbar { get; set; } = default!;
+        [Inject] MessageService MsgService { get; set; } = default!;
 
         [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
         [Parameter] public States State { get; set; } = States.View;
@@ -278,9 +278,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 await StateChanged.InvokeAsync(State);
             }
-            catch
+            catch (Exception e)
             {
-                Snackbar.Add("Could not save item", Severity.Error);
+                MsgService.Error("Could not save item", e.Message, e.ToString());
 
                 State = StateBeforeSaving;
 
@@ -293,16 +293,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 if (shiftEntityResponse != null)
                 {
-                    Snackbar.Add<ViewDetailed>(new Dictionary<string, object>() {
-                        { "Text", shiftEntityResponse.Message.Title },
-                        { "Title", shiftEntityResponse.Message.Title },
-                        { "Detail", shiftEntityResponse.Message.Body },
-                        { "Color", Color.Surface }
-                    }, severity: Severity.Error);
+                    var msg = shiftEntityResponse.Message;
+
+                    MsgService.Error(msg?.Title ?? "Failed to submit data", msg?.Title, msg?.Body);
                 }
                 else
                 {
-                    Snackbar.Add("Could not save item, Error: " + res.StatusCode, Severity.Error);
+                    MsgService.Error("Could not save item, Error: " + res.StatusCode);
                 }
 
                 return;
@@ -342,7 +339,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
                 catch (Exception)
                 {
-                    Snackbar.Add("Something went wrong while trying to retreive the data from the server ", Severity.Error);
+                    MsgService.Error("Something went wrong while trying to retreive the data from the server.");
                     return;
                 }
             }
@@ -385,12 +382,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             catch (Exception e)
             {
-                Snackbar.Add<ViewDetailed>(new Dictionary<string, object>() {
-                    { "Text", "Could not load item" },
-                    { "Title", e.Message },
-                    { "Detail", e.ToString() },
-                    { "Color", Color.Dark }
-                }, severity: Severity.Error);
+                MsgService.Error("Could not load item.", e.Message, e.ToString());
             }
         }
     }
