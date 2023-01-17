@@ -1,0 +1,176 @@
+﻿@using static ShiftSoftware.ShiftBlazor.Utils.Form
+@using Microsoft.AspNetCore.Components.Forms
+@typeparam T where T : ShiftEntityDTO, new()
+
+<EditForm @bind-Model="Value" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudPaper Elevation="25">
+
+        @if (HeaderTemplate == null)
+        {
+            <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
+                <MudIcon Icon="@Icons.Material.Filled.Groups"></MudIcon>
+                <MudText Class="px-4" Style="margin:0;">@(Title ?? "Form")</MudText>
+
+                    <MudSpacer></MudSpacer>
+
+                    @ToolbarTemplate
+
+                @if (IsCrud)
+                {
+                    @if (OnPrint.HasDelegate && !HidePrint)
+                    {
+                        <MudTooltip Text="Print">
+                            <MudButton Style="min-width:40px;" Color="Color.Warning" Variant="Variant.Text" Size="Size.Medium" Disabled="DisablePrint || State != States.View" OnClick="Print">
+                                @if (this.Printing)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Print" />
+                                }
+                            </MudButton>
+                        </MudTooltip>
+                    }
+
+                    @if (!HideDelete)
+                    {
+                        <MudTooltip Text="Delete">
+                            <MudButton Style="min-width:40px;" Disabled="DisableDelete || State != States.View" Variant="Variant.Text" Size="Size.Medium" Color="Color.Error" OnClick="Delete">
+                                <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
+                            </MudButton>
+                        </MudTooltip>
+                    }
+
+                    @if (!HideEdit)
+                    {
+                        <MudTooltip Text="Edit">
+                            <MudButton Style="min-width:40px;" Disabled="DisableEdit || State != States.View" Variant="Variant.Text" Size="Size.Medium" Color="Color.Primary" OnClick="OnEditButton">
+                                <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
+                            </MudButton>
+                        </MudTooltip>
+                    }
+
+                    @if (MudDialog != null && (!HideEdit || !HideDelete || (OnPrint.HasDelegate && !HidePrint)))
+                    {
+                        <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
+                    }
+                }
+
+                @if (MudDialog != null)
+                {
+                    <MudTooltip Text="Close">
+                        <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Default" OnClick="CloseDialog">
+                            <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                        </MudButton>
+                    </MudTooltip>
+                }
+
+            </MudToolBar>
+        }
+        else
+        {
+            @HeaderTemplate
+        }
+
+        <div class="@(MudDialog != null ? "shift-scrollable-content-wrapper" : "")">
+            @if (State == States.View)
+            {
+                @*<div class="form-details pa-6">
+                    <div>
+                        <span>Document Version:</span>
+                        <span>@Value.LastSaveDate</span>
+                    </div>
+
+                    <div>
+                        <span>Created By:</span>
+                        <span>@Value.CreatedByUserID</span>
+                    </div>
+
+                    <div>
+                        <span>Last Edit:</span>
+                        <span>@Value.LastSavedByUserID</span>
+                    </div>
+
+                    <div>
+                        <span>Create Date:</span>
+                        <span>@Value.CreateDate</span>
+                    </div>
+
+                    <div>
+                        <span>Status:</span>
+                        <span>@(Value.IsDeleted ? "Deleted" : "Available")</span>
+                    </div>
+                </div>*@
+            }
+
+            <div class="pa-6">
+                @ChildContent
+
+                @if (State == States.View)
+                {
+                    @ViewStateTemplate
+                }
+                else
+                {
+                    @InsertStateTemplate
+                }
+            </div>
+        </div>
+
+        @if (FooterTemplate == null && (State == States.Edit || State == States.Create || State == States.Saving))
+        {
+            <MudToolBar Style="justify-content: end;">
+                @if (FooterActionsTemplate == null)
+                {
+                    @if ((State == States.Edit || StateBeforeSaving == States.Edit) && IsCrud)
+                    {
+                        <MudButton Disabled="@(State == States.Saving)" StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel">@CancelText</MudButton>
+                    }
+
+                    @if (State == States.View)
+                    {
+                        @*<MudButton Color="Color.Primary" OnClick="OnEditButton">@EditText</MudButton>*@
+                    }
+                    else
+                    {
+                        <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@(State == States.Saving)">
+                            @if (State == States.Saving)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Save" />
+                            }
+
+                            <MudText Style="padding:0 10px;">@SubmitText</MudText>
+                        </MudButton>
+                    }
+                }
+                else
+                {
+                    @FooterActionsTemplate
+                }
+            </MudToolBar>
+        }
+        else
+        {
+            @FooterTemplate
+        }
+
+        @if (State == States.View)
+        {
+            <br />
+        }
+
+    </MudPaper>
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = @<div></div>;
+
+}

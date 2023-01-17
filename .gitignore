@@ -1,0 +1,21 @@
+# User-specific files
+*.suo
+*.user
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+x64/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Roslyn cache directories
+*.ide/
+
+
+# Visual Studio 2015/2017 cache/options directory
+.vs/

@@ -1,0 +1,157 @@
+﻿@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.Buttons
+@typeparam T where T : ShiftEntityDTOBase, new()
+@typeparam TComponent where TComponent : ComponentBase
+
+<MudPaper Elevation="25">
+
+    <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
+        <MudIcon Icon="@Icons.Material.Filled.Groups"></MudIcon>
+        <MudText Class="px-4" Style="margin:0;">@(Title ?? "List")</MudText>
+
+        @ToolbarTemplate
+        
+        @if (!EmbededInsideForm && (EnablePrint || EnableCsvExcelExport || EnablePdfExport) || !DisableAdd)
+        {
+            <MudSpacer></MudSpacer>
+        }
+
+        @if (!EmbededInsideForm && EnablePrint)
+        {
+            <MudTooltip Text="Print">
+                <MudIconButton Icon="@Icons.Material.Filled.Print" Color="Color.Warning" OnClick="PrintList"/>
+            </MudTooltip>
+        }
+        @if (!EmbededInsideForm && (EnableCsvExcelExport || EnablePdfExport)) {
+            <MudTooltip Text="Download">
+                <MudMenu Icon="@Icons.Material.Filled.FileDownload" Color="Color.Warning">
+                    @if (EnableCsvExcelExport)
+                    {
+                        <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">CSV Export</MudMenuItem>
+                        <MudMenuItem OnClick="() => DownloadList(DownloadType.Excel)">Excel Export</MudMenuItem>
+                    }
+                    @if (EnablePdfExport) {
+                        <MudMenuItem OnClick="() => DownloadList(DownloadType.PDF)">PDF Export</MudMenuItem>
+                    }
+                </MudMenu>
+            </MudTooltip>
+        }
+
+        @if (!DisableAdd)
+        {
+            <MudTooltip Text="Add">
+                <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Primary" OnClick="AddItem">
+                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.AddCircle" />
+                </MudButton>
+            </MudTooltip>
+        }
+
+
+        @if (MudDialog != null && !EmbededInsideForm)
+        {
+            <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
+
+            <MudTooltip Text="Close">
+                <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Default" OnClick="CloseDialog">
+                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                </MudButton>
+            </MudTooltip>
+        }
+
+    </MudToolBar>
+
+    <div class="@(MudDialog != null ? "shift-scrollable-content-wrapper" : "")">
+        <SfGrid DataSource="Values"
+                TValue="T" @ref="Grid" class="pa-6"
+                ID="ItemGrid"
+                AllowPaging="!DisablePagination && !EnableVirtualization"
+                AllowSorting="!DisableSorting"
+                AllowMultiSorting="!DisableMultiSorting"
+                AllowExcelExport="EnableCsvExcelExport"
+                AllowPdfExport="EnablePdfExport"
+                AllowFiltering="!DisableFilters"
+                Query="Query"
+                AllowSelection="!DisableSelection"
+                EnableVirtualization="EnableVirtualization"
+                EnableVirtualMaskRow="EnableVirtualization"
+                Height="@GridHeight">
+
+            @if (Values == null) {
+                <SfDataManager HttpClientInstance="httpClient" Url="@Action" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true" />
+            }
+
+            <GridEvents OnActionFailure="ErrorHandler" TValue="T" />
+            <GridEditSettings AllowAdding="true" Mode="EditMode.Normal"></GridEditSettings>
+            <GridPageSettings PageSize="@PageSize"></GridPageSettings>
+            <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu">
+                <GridFilterColumns>@FilterColumnTemplate</GridFilterColumns>
+            </GridFilterSettings>
+            <GridSelectionSettings CheckboxOnly="true" PersistSelection="true" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
+            <GridColumns>
+                <GridColumn IsPrimaryKey="true" Visible="false" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
+
+                @if (EnableVirtualization) {
+                    <GridColumn Type="ColumnType.CheckBox" Width="50">
+                        <HeaderTemplate/>
+                    </GridColumn>
+                }
+                else
+                {
+                    <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
+                }
+
+                @if (this.AutoGenerateColumns)
+                {
+                    @foreach (var prop in Props.Where(x => x.Name != nameof(ShiftEntityDTOBase.ID)))
+                    {
+                        var isVisible = !ExcludedHeaders.Contains(prop.Name, StringComparer.CurrentCultureIgnoreCase);
+                        <GridColumn Visible="isVisible" Field="@prop.Name" TextAlign="TextAlign.Left"></GridColumn>
+                    }
+                }
+
+                @ColumnTemplate
+
+                @if (!ExcludedHeaders.Contains("Actions", StringComparer.CurrentCultureIgnoreCase)) {
+                    <GridColumn HeaderText="Actions" TextAlign="TextAlign.Center" Width="@ActionColumnWidth">
+                        <Template>
+                            @if (ActionsTemplate == null)
+                            {
+                                try
+                                {
+                                    object? key = ((ShiftEntityDTOBase)context).ID;
+
+                                    if (key == null)
+                                    {
+                                        throw new Exception();
+                                    }
+                                    else
+                                    {
+                                        <MudButton OnClick="() => OpenDialog<TComponent>(key, ModalOpenMode.Popup, this.AddDialogParameters)"
+                                           Variant="Variant.Outlined"
+                                           EndIcon="@Icons.Material.Filled.OpenInNew"
+                                           Color="Color.Primary"
+                                           Size="Size.Small">
+                                            Show
+                                        </MudButton>
+                                    }
+                                }
+                                catch (Exception)
+                                {
+                                    Snackbar.Add("Could not create action button", Severity.Error);
+                                }
+                            }
+                            else
+                            {
+                                @ActionsTemplate((T)context);
+                            }
+                        </Template>
+                    </GridColumn>
+                }
+            </GridColumns>
+
+            @ChildContent
+        </SfGrid>
+    </div>
+</MudPaper>
