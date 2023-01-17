@@ -15,7 +15,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         where T : ShiftEntityDTOBase, new() 
         where TComponent : ComponentBase
     {
-        [Inject] ISnackbar Snackbar { get; set; } = default!;
+        [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
 
@@ -83,12 +83,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private void ErrorHandler(FailureEventArgs args)
         {
-            Snackbar.Add<ViewDetailed>(new Dictionary<string, object>() {
-                        { "Text", "Error getting list of items" },
-                        { "Title", args.PreventRender.ToString() },
-                        { "Detail", args.Error.ToString() },
-                        { "Color", Color.Surface }
-                    }, severity: Severity.Error);
+            MsgService.Error("Error getting list of items", "Error getting list of items", args.Error.ToString());
         }
 
         public async Task<SelectedItems> GetSelectedItems()
@@ -118,17 +113,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (this.Grid != null)
             {
-                Snackbar.Add("Opening Print Window, this might take a while", Severity.Info);
+                MsgService.Info("Opening Print Window, this might take a while");
                 await this.Grid.PrintAsync();
+                return;
             }
-                Snackbar.Add("Could not initiate print action", Severity.Error);
+                MsgService.Error("Could not initiate print action");
         }
 
         public async Task DownloadList(DownloadType type)
         {
             if (this.Grid == null)
             {
-                Snackbar.Add("Could not initiate download action", Severity.Error);
+                MsgService.Error("Could not initiate download action");
                 return;
             }
             switch (type)
