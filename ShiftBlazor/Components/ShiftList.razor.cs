@@ -46,7 +46,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter] public string ActionColumnWidth { get; set; } = "150";
         [Parameter] public string GridHeight { get; set; } = string.Empty;
 
-        [Parameter] public Dictionary<string, string> AddDialogParameters { get; set; } = new();
+        [Parameter] public Dictionary<string, string>? AddDialogParameters { get; set; }
         [Parameter] public bool AutoGenerateColumns { get; set; } = true;
         [Parameter] public bool EmbededInsideForm { get; set; }
 
