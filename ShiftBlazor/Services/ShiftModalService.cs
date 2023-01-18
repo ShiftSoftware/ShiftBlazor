@@ -15,19 +15,21 @@ namespace ShiftSoftware.ShiftBlazor.Services
         private readonly IDialogService DialogService;
 
         private static readonly string QueryKey = "modal";
-        private readonly string ProjectName = typeof(ShiftModalService).Assembly.GetName().Name!.Replace('-', '_');
+        private readonly Assembly ProjectAssembly = Assembly.GetEntryAssembly()!;
+        private string ProjectName { get; set; }
 
         public ShiftModalService(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService)
         {
             JsRuntime = jsRuntime;
             NavManager = navManager;
             DialogService = dialogService;
+
+            ProjectName = ProjectAssembly.GetName().Name!.Replace('-', '_');
         }
 
         public async Task<DialogResult?> Open<TComponent>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null) where TComponent : ComponentBase
         {
             var ComponentType = typeof(TComponent);
-
             var fullName = ComponentType!.FullName!.Substring(ProjectName.Length + 1);
 
             if (openMode == ModalOpenMode.NewTab)
@@ -82,7 +84,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             foreach (var modal in modals)
             {
-                var type = Type.GetType($"{ProjectName}.{modal.Name}");
+                var ns = $"{ProjectName}.{modal.Name}";
+                var type = ProjectAssembly.GetType(ns);
                 if (type != null)
                 {
                     _ = OpenDialog(type, modal.Key, modal.Parameters);
