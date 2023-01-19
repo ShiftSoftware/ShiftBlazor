@@ -48,6 +48,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter] public bool DisableDelete { get; set; }
         [Parameter] public bool DisableEdit { get; set; }
         [Parameter] public EventCallback OnPrint { get; set; }
+        [Parameter] public string IconSvg { get; set; } = @Icons.Material.Filled.ListAlt;
 
         private bool Printing { get; set; }
 
@@ -242,8 +243,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        private async Task Test(EditContext context)
+        {
+            MsgService.Info("Can't save");
+        }
+
         private async Task OnValidSubmit(EditContext context)
         {
+            MsgService.Info("Saving");
             await OnSave.InvokeAsync(true);
             await OnBeforeEdit.InvokeAsync(Value);
 

@@ -4,11 +4,6 @@ using ShiftSoftware.ShiftBlazor.Utils;
 using System.Text.Json;
 using Microsoft.OData.Client;
 using MudBlazor;
-using System.Data.Common;
-using System.Linq.Expressions;
-using Microsoft.AspNetCore.Components.Forms;
-using System.ComponentModel.DataAnnotations;
-using static MudBlazor.Colors;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {

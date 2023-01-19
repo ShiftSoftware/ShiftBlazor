@@ -2,14 +2,14 @@
 @using Microsoft.AspNetCore.Components.Forms
 @typeparam T where T : ShiftEntityDTO, new()
 
-<EditForm @bind-Model="Value" OnValidSubmit="OnValidSubmit">
+<EditForm @bind-Model="Value" OnValidSubmit="OnValidSubmit" OnInvalidSubmit="Test">
     <DataAnnotationsValidator />
     <MudPaper Elevation="25">
 
         @if (HeaderTemplate == null)
         {
             <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
-                <MudIcon Icon="@Icons.Material.Filled.Groups"></MudIcon>
+                <MudIcon Icon="@IconSvg"></MudIcon>
                 <MudText Class="px-4" Style="margin:0;">@(Title ?? "Form")</MudText>
 
                     <MudSpacer></MudSpacer>
@@ -108,7 +108,7 @@
             <div class="pa-6">
 
                 <CascadingValue Value="State">
-                @ChildContent
+                    @ChildContent
                 </CascadingValue>
 
                 @if (State == States.View)

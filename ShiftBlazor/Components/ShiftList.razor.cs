@@ -49,6 +49,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter] public Dictionary<string, string>? AddDialogParameters { get; set; }
         [Parameter] public bool AutoGenerateColumns { get; set; } = true;
         [Parameter] public bool EmbededInsideForm { get; set; }
+        [Parameter] public string IconSvg { get; set; } = @Icons.Material.Filled.List;
 
         public SfGrid<T>? Grid;
         private readonly PropertyInfo[] Props = typeof(T).GetProperties();
