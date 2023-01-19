@@ -2,9 +2,9 @@
 @using Microsoft.AspNetCore.Components.Forms
 @typeparam T where T : ShiftEntityDTO, new()
 
-<EditForm @bind-Model="Value" OnValidSubmit="OnValidSubmit" OnInvalidSubmit="Test">
+<EditForm @bind-Model="Value" OnValidSubmit="OnValidSubmit" OnInvalidSubmit="OnInvalidSubmit" style="height: 100%;">
     <DataAnnotationsValidator />
-    <MudPaper Elevation="25">
+    <MudPaper Elevation="25" Style="height: 100%;">
 
         @if (HeaderTemplate == null)
         {
@@ -60,6 +60,12 @@
 
                 @if (MudDialog != null)
                 {
+                    <MudTooltip Text="@(MudDialog.Options.FullScreen != true ? "Maximize" : "Minimize")">
+                        <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Default" OnClick="Maximize">
+                            <MudIcon Size="Size.Medium" Icon="@(MudDialog.Options.FullScreen != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
+                        </MudButton>
+                    </MudTooltip>
+
                     <MudTooltip Text="Close">
                         <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Default" OnClick="() => Cancel(true)">
                             <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />

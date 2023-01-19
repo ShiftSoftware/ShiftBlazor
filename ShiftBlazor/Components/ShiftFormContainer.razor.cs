@@ -243,9 +243,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        private async Task Test(EditContext context)
+        private void OnInvalidSubmit(EditContext context)
         {
-            MsgService.Info("Can't save");
+            // display silent errors/validations
         }
 
         private async Task OnValidSubmit(EditContext context)
@@ -391,6 +391,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 MsgService.Error("Could not load item.", e.Message, e.ToString());
             }
+        }
+
+        private void Maximize()
+        {
+            MudDialog.Options.FullScreen = MudDialog.Options.FullScreen != true;
+            MudDialog.SetOptions(MudDialog.Options);
         }
     }
 }
