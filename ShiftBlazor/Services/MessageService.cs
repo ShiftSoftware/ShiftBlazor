@@ -30,6 +30,16 @@ namespace ShiftSoftware.ShiftBlazor.Services
             this.Show(text, title, detail, severity: Severity.Success, variant: Variant.Text, buttonText: buttonText);
         }
 
+        public void Normal(string text, string? title = null, string? detail = null, string? buttonText = null)
+        {
+            this.Show(text, title, detail, severity: Severity.Normal, variant: Variant.Text, buttonText: buttonText);
+        }
+
+        public void Warning(string text, string? title = null, string? detail = null, string? buttonText = null)
+        {
+            this.Show(text, title, detail, severity: Severity.Warning, variant: Variant.Text, buttonText: buttonText);
+        }
+
         public void Show(string text, string? title = null, string? detail = null, Severity severity = Severity.Normal, Variant? variant = null, string? buttonText = null, Variant? buttonVariant = null, Color buttonColor = Color.Inherit)
         {
             Snackbar.Add(
