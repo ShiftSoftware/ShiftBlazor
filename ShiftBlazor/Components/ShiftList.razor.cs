@@ -53,6 +53,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public SfGrid<T>? Grid;
         private readonly PropertyInfo[] Props = typeof(T).GetProperties();
         private CustomMessageHandler MessageHandler = new();
+        private readonly List<string> DefaultExcludedHeaders = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         protected HttpClient HttpClient { get; set; }
 
         public ShiftList()

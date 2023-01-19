@@ -104,7 +104,7 @@
 
                 @if (this.AutoGenerateColumns)
                 {
-                    @foreach (var prop in Props.Where(x => x.Name != nameof(ShiftEntityDTOBase.ID)))
+                    @foreach (var prop in Props.Where(x => !DefaultExcludedHeaders.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase)))
                     {
                         var isVisible = !ExcludedHeaders.Contains(prop.Name, StringComparer.CurrentCultureIgnoreCase);
                         <GridColumn Visible="isVisible" Field="@prop.Name" TextAlign="TextAlign.Left"></GridColumn>
