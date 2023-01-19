@@ -89,28 +89,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             OriginalValue = JsonSerializer.Serialize(Value);
         }
 
-        private async Task CancelChanges()
+        private void CancelChanges()
         {
-            if (JsonSerializer.Serialize(Value) != OriginalValue)
-            {
-                var dialogOptions = new DialogOptions
-                {
-                    MaxWidth = MaxWidth.ExtraSmall,
-                };
-
-                bool? result = await DialogService.ShowMessageBox(
-                    "Warning",
-                    "You have unsaved changes, do you want to cancel?",
-                    yesText: "Yes",
-                    cancelText: "No",
-                    options: dialogOptions);
-
-                if (!result.HasValue || result.HasValue && !result.Value)
-                {
-                    return;
-                }
-            }
-
             UpdateState(States.View);
             if (string.IsNullOrWhiteSpace(OriginalValue))
             {
@@ -174,11 +154,31 @@ namespace ShiftSoftware.ShiftBlazor.Components
             UpdateState(States.Edit);
         }
 
-        private void Cancel()
+        private async Task Cancel(bool closeModal = false)
         {
-            if (State == States.Edit && IsCrud)
+            if (JsonSerializer.Serialize(Value) != OriginalValue)
             {
-                _ = CancelChanges();
+                var dialogOptions = new DialogOptions
+                {
+                    MaxWidth = MaxWidth.ExtraSmall,
+                };
+
+                bool? result = await DialogService.ShowMessageBox(
+                    "Warning",
+                    "You have unsaved changes, do you want to cancel?",
+                    yesText: "Yes",
+                    cancelText: "No",
+                    options: dialogOptions);
+
+                if (!result.HasValue || result.HasValue && !result.Value)
+                {
+                    return;
+                }
+            }
+
+            if (State == States.Edit && IsCrud && !closeModal)
+            {
+                CancelChanges();
             }
             else
             {

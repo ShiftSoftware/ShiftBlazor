@@ -61,7 +61,7 @@
                 @if (MudDialog != null)
                 {
                     <MudTooltip Text="Close">
-                        <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Default" OnClick="CloseDialog">
+                        <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Default" OnClick="() => Cancel(true)">
                             <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
                         </MudButton>
                     </MudTooltip>
@@ -129,7 +129,7 @@
                 {
                     @if ((State == States.Edit || StateBeforeSaving == States.Edit) && IsCrud)
                     {
-                        <MudButton Disabled="@(State == States.Saving)" StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel">@CancelText</MudButton>
+                        <MudButton Disabled="@(State == States.Saving)" StartIcon="@Icons.Material.Filled.Cancel" OnClick="() => Cancel()">@CancelText</MudButton>
                     }
 
                     @if (State == States.View)
