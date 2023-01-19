@@ -13,10 +13,5 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 base(serviceRoot, protocolVersion)
         {
         }
-
-        override public DataServiceQuery<T> CreateQuery<T>(string entitytSetName)
-        {
-            return base.CreateQuery<T>(entitytSetName);
-        }
     }
 }

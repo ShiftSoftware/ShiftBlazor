@@ -250,7 +250,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task OnValidSubmit(EditContext context)
         {
-            MsgService.Info("Saving");
             await OnSave.InvokeAsync(true);
             await OnBeforeEdit.InvokeAsync(Value);
 
