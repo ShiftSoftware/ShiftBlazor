@@ -7,7 +7,7 @@ using MudBlazor;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public class ShiftAutocompleteClass<T> : MudAutocomplete<T>
+    public partial class ShiftAutocomplete<T> : MudAutocomplete<T>
     {
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient Http { get; set; } = default!;
@@ -29,7 +29,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private DataServiceQuery<T> QueryBuilder { get; set; } = default!;
 
-        public ShiftAutocompleteClass ()
+        public ShiftAutocomplete ()
         {
             OnlyValidateIfDirty = true;
             ResetValueOnEmptyText = true;
@@ -65,13 +65,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             QueryBuilder = OData.CreateQuery<T>(EntitySet);
 
-            base.SearchFunc = Search;
+            SearchFunc = Search;
         }
 
         protected override void OnAfterRender(bool firstRender)
         {
-            base.ReadOnly = State == Form.States.View;
-            base.Disabled = State == Form.States.Saving;
+            ReadOnly = State == Form.States.View;
+            Disabled = State == Form.States.Saving;
             base.OnAfterRender(firstRender);
         }
 
