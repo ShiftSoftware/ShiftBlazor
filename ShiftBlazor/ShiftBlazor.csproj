@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
     <PackageReference Include="Microsoft.OData.Client" Version="7.14.0" />
     <PackageReference Include="MudBlazor" Version="6.1.7" />
-    <PackageReference Include="ShiftSoftware.ShiftEntity" Version="1.1.31-alpha" />
+    <PackageReference Include="ShiftSoftware.ShiftEntity" Version="1.1.32-alpha" />
     <PackageReference Include="Syncfusion.Blazor.Grid" Version="20.4.0.38" />
     <PackageReference Include="Syncfusion.Blazor.Themes" Version="20.4.0.38" />
   </ItemGroup>
