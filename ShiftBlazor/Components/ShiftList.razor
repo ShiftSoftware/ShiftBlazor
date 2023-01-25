@@ -85,9 +85,9 @@
             <GridEvents OnActionFailure="ErrorHandler" TValue="T" />
             <GridEditSettings AllowAdding="true" Mode="EditMode.Normal"></GridEditSettings>
             <GridPageSettings PageSize="@PageSize"></GridPageSettings>
-            <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu">
-                <GridFilterColumns>@FilterColumnTemplate</GridFilterColumns>
-            </GridFilterSettings>
+
+            <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+            
             <GridSelectionSettings CheckboxOnly="true" PersistSelection="true" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
             <GridColumns>
                 <GridColumn IsPrimaryKey="true" Visible="false" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>

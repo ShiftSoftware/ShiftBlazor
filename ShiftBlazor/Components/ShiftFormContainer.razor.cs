@@ -20,35 +20,170 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
         [Inject] MessageService MsgService { get; set; } = default!;
 
-        [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
-        [Parameter] public States State { get; set; } = States.View;
-        [Parameter] public States StateBeforeSaving { get; set; }
-        [Parameter] public EventCallback<States> StateChanged { get; set; }
-        [Parameter] public T Value { get; set; } = new T();
-        [Parameter] public EventCallback<T> ValueChanged { get; set; }
-        [Parameter] public EventCallback<T> OnServerResponse { get; set; }
-        [Parameter] public string? Action { get; set; }
-        [Parameter] public string? Title { get; set; }
-        [Parameter] public FormSettings Settings { get; set; } = new FormSettings();
-        [Parameter] public object? Key { get; set; }
-        [Parameter] public EventCallback<object?> KeyChanged { get; set; }
-        [Parameter] public EventCallback<bool> OnSave { get; set; }
-        [Parameter] public EventCallback<T> OnBeforeEdit { get; set; }
-        [Parameter] public EventCallback<ShiftEntityResponse<T>> OnEditResponse { get; set; }
-        [Parameter] public RenderFragment? ToolbarTemplate { get; set; }
-        [Parameter] public RenderFragment? FooterActionsTemplate { get; set; }
-        [Parameter] public RenderFragment? HeaderTemplate { get; set; }
-        [Parameter] public RenderFragment? FooterTemplate { get; set; }
-        [Parameter] public RenderFragment? ViewStateTemplate { get; set; }
-        [Parameter] public RenderFragment? InsertStateTemplate { get; set; }
-        [Parameter] public bool HidePrint { get; set; }
-        [Parameter] public bool HideDelete { get; set; }
-        [Parameter] public bool HideEdit { get; set; }
-        [Parameter] public bool DisablePrint { get; set; }
-        [Parameter] public bool DisableDelete { get; set; }
-        [Parameter] public bool DisableEdit { get; set; }
-        [Parameter] public EventCallback OnPrint { get; set; }
-        [Parameter] public string IconSvg { get; set; } = @Icons.Material.Filled.ListAlt;
+        [CascadingParameter]
+        protected MudDialogInstance? MudDialog { get; set; }
+
+        /// <summary>
+        /// The current State of the form.
+        /// </summary>
+        [Parameter]
+        public States State { get; set; } = States.View;
+
+        [Parameter]
+        public States StateBeforeSaving { get; set; }
+
+        /// <summary>
+        /// An event triggered when the state of the State paramater has changed.
+        /// </summary>
+        [Parameter]
+        public EventCallback<States> StateChanged { get; set; }
+
+        /// <summary>
+        /// The current item being view/edited, this will be fetched from the API endpoint that is provided in the Action paramater.
+        /// </summary>
+        [Parameter]
+        public T Value { get; set; } = new T();
+
+        /// <summary>
+        /// An event triggered when the state of Value has changed.
+        /// </summary>
+        [Parameter]
+        public EventCallback<T> ValueChanged { get; set; }
+
+        /// <summary>
+        /// An event triggered after getting a response from API.
+        /// </summary>
+        [Parameter]
+        public EventCallback<T> OnServerResponse { get; set; }
+
+        /// <summary>
+        /// The URL endpoint that processes the CRUD operations.
+        /// </summary>
+        [Parameter]
+        public string? Action { get; set; }
+
+        /// <summary>
+        /// The title to render on the form header.
+        /// </summary>
+        [Parameter]
+        public string? Title { get; set; }
+
+        /// <summary>
+        /// The form settings
+        /// </summary>
+        [Parameter]
+        public FormSettings Settings { get; set; } = new FormSettings();
+
+        /// <summary>
+        /// The item ID, it is also used for the CRUD operations.
+        /// </summary>
+        [Parameter]
+        public object? Key { get; set; }
+
+        /// <summary>
+        /// An event triggered when the state of Key has changed.
+        /// </summary>
+        [Parameter]
+        public EventCallback<object?> KeyChanged { get; set; }
+
+        /// <summary>
+        /// An event triggered before user submits a valid form.
+        /// </summary>
+        [Parameter]
+        public EventCallback<T> OnBeforeEdit { get; set; }
+
+        /// <summary>
+        /// An event triggered after saving/editing an item and then getting a response.
+        /// </summary>
+        [Parameter]
+        public EventCallback<ShiftEntityResponse<T>> OnEditResponse { get; set; }
+
+        [Parameter]
+        public RenderFragment? ChildContent { get; set; }
+
+        /// <summary>
+        /// Used to add custom elements to the header toolbar.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? ToolbarTemplate { get; set; }
+
+        /// <summary>
+        /// Used to override the footer toolbar buttons.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? FooterActionsTemplate { get; set; }
+
+        /// <summary>
+        /// Used to override the header.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? HeaderTemplate { get; set; }
+
+        /// <summary>
+        /// Used to override the footer.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? FooterTemplate { get; set; }
+
+        /// <summary>
+        /// Template element to render elements only when form is in View State.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? ViewStateTemplate { get; set; }
+
+        /// <summary>
+        /// Template element to render elements when not in View State.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? InsertStateTemplate { get; set; }
+
+        /// <summary>
+        /// Specifies whether to hide Print button or not.
+        /// </summary>
+        [Parameter]
+        public bool HidePrint { get; set; }
+
+        /// <summary>
+        /// Specifies whether to hide Delete button or not.
+        /// </summary>
+        [Parameter]
+        public bool HideDelete { get; set; }
+
+        /// <summary>
+        /// Specifies whether to hide Edit button or not.
+        /// </summary>
+        [Parameter]
+        public bool HideEdit { get; set; }
+
+        /// <summary>
+        /// Specifies whether to disable Print button or not.
+        /// </summary>
+        [Parameter]
+        public bool DisablePrint { get; set; }
+
+        /// <summary>
+        /// Specifies whether to disable Delete button or not.
+        /// </summary>
+        [Parameter]
+        public bool DisableDelete { get; set; }
+
+        /// <summary>
+        /// Specifies whether to disable Edit button or not.
+        /// </summary>
+        [Parameter]
+        public bool DisableEdit { get; set; }
+
+        /// <summary>
+        /// An event triggered when Print button is clicked, by default Print button does nothing.
+        /// </summary>
+        [Parameter]
+        public EventCallback OnPrint { get; set; }
+
+        /// <summary>
+        /// The icon displayed before the Form Title, in a string in SVG format.
+        /// </summary>
+        [Parameter]
+        public string IconSvg { get; set; } = @Icons.Material.Filled.ListAlt;
 
         private bool Printing { get; set; }
 
@@ -206,22 +341,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (result.HasValue && result.Value)
             {
-                using (var res = await Http.DeleteAsync(ItemUrl))
+                using var res = await Http.DeleteAsync(ItemUrl);
+
+                if (res.StatusCode == HttpStatusCode.NoContent)
                 {
-                    if (res.StatusCode == HttpStatusCode.NoContent)
-                    {
-                        Value = new T();
-                    }
-                    else if (res.IsSuccessStatusCode)
-                    {
-                        var value = await res.Content.ReadFromJsonAsync<T>();
-                        UpdateValue(value);
-                        await this.OnServerResponse.InvokeAsync(value);
-                    }
-                    else
-                    {
-                        throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase));
-                    }
+                    Value = new T();
+                }
+                else if (res.IsSuccessStatusCode)
+                {
+                    var value = await res.Content.ReadFromJsonAsync<T>();
+                    UpdateValue(value);
+                    await this.OnServerResponse.InvokeAsync(value);
+                }
+                else
+                {
+                    throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase));
                 }
             }
         }
@@ -250,7 +384,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task OnValidSubmit(EditContext context)
         {
-            await OnSave.InvokeAsync(true);
             await OnBeforeEdit.InvokeAsync(Value);
 
             if (!IsCrud)

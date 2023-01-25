@@ -27,6 +27,14 @@ namespace ShiftSoftware.ShiftBlazor.Services
             ProjectName = ProjectAssembly.GetName().Name!.Replace('-', '_');
         }
 
+        /// <summary>
+        /// Open a form modal or page.
+        /// </summary>
+        /// <typeparam name="TComponent">The type of the component to open inside the form</typeparam>
+        /// <param name="key">The ID of the item being View or edited</param>
+        /// <param name="openMode">Popup, Redirect, NewTab</param>
+        /// <param name="parameters">Additional component parameters to send with the form</param>
+        /// <returns>DialogResult</returns>
         public async Task<DialogResult?> Open<TComponent>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null) where TComponent : ComponentBase
         {
             var ComponentType = typeof(TComponent);
@@ -58,6 +66,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return null;
         }
 
+        /// <summary>
+        /// Generate query string from a Dictionary without the URL.
+        /// </summary>
+        /// <param name="parameters">A Dictionary of query options</param>
+        /// <returns>A query string that start with '?'</returns>
         public string GenerateQueryString(Dictionary<string, string>? parameters)
         {
             if (parameters == null || parameters.Count == 0)
@@ -66,12 +79,19 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return QueryHelpers.AddQueryString("", parameters);
         }
 
+        /// <summary>
+        /// Close the form dialog.
+        /// </summary>
+        /// <param name="mudDialog">An instance of the MudDialog.</param>
         public void Close(MudDialogInstance mudDialog)
         {
             RemoveFrontModalFromUrl();
             mudDialog.Cancel();
         }
-
+        
+        /// <summary>
+        /// Checks whether the url has any modal info in the URL query, if found, open them.
+        /// </summary>
         public async void UpdateModals()
         {
             var url = await JsRuntime.InvokeAsync<string>("GetUrl");
@@ -93,6 +113,10 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
         }
 
+        /// <summary>
+        /// Update the URL when the ID of an item changes or is created.
+        /// </summary>
+        /// <param name="key"></param>
         public void UpdateKey(object? key)
         {
             UpdateModalQueryUrl(null, key);

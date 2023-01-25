@@ -12,11 +12,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient Http { get; set; } = default!;
 
-        [Parameter] public EventCallback<Form.States> StateChanged { get; set; }
-        [EditorRequired]
-        [Parameter] public string? EntitySet { get; set; }
-        [Parameter] public string FilterFieldName { get; set; } = "Name";
-        [CascadingParameter] public Form.States? State { get; set; }
+        /// <summary>
+        /// The OData EntitySet name.
+        /// </summary>
+        [Parameter, EditorRequired]
+        public string? EntitySet { get; set; }
+
+        /// <summary>
+        /// Name of the column to filter when user types in the input field.
+        /// </summary>
+        [Parameter]
+        public string FilterFieldName { get; set; } = "Name";
+        
+        [CascadingParameter]
+        public Form.States? State { get; set; }
 
         private DataServiceQuery<T> QueryBuilder { get; set; } = default!;
 
