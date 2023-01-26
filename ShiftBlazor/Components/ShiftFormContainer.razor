@@ -2,6 +2,8 @@
 @using Microsoft.AspNetCore.Components.Forms
 @typeparam T where T : ShiftEntityDTO, new()
 
+<PageTitle>@DocumentTitle</PageTitle>
+
 <EditForm @bind-Model="Value" OnValidSubmit="OnValidSubmit" OnInvalidSubmit="OnInvalidSubmit" style="height: 100%;">
     <DataAnnotationsValidator />
     <MudPaper Elevation="25" Style="height: 100%;">
@@ -176,10 +178,3 @@
 
     </MudPaper>
 </EditForm>
-
-@code {
-
-    [Parameter]
-    public RenderFragment ChildContent { get; set; } = @<div></div>;
-
-}

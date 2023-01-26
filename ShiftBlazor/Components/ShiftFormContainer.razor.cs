@@ -192,6 +192,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string EditText { get; set; } = "Edit";
         private string CancelText { get; set; } = "";
         private bool IsCrud { get; set; } = false;
+        private string DocumentTitle = "";
         private string ItemUrl { 
             get {
                 return Action + Key;
@@ -222,6 +223,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             OriginalValue = JsonSerializer.Serialize(Value);
+        }
+
+        protected override void OnParametersSet()
+        {
+            base.OnParametersSet();
+
+            SetTitle();
         }
 
         private void CancelChanges()
@@ -411,7 +419,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     res = await Http.PutAsJsonAsync(ItemUrl, Value);
                 }
 
-                shiftEntityResponse = await res.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>();
+                try
+                {
+                    shiftEntityResponse = await res.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>();
+                }
+                catch {}
 
                 State = StateBeforeSaving;
 
@@ -529,6 +541,32 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             MudDialog.Options.FullScreen = MudDialog.Options.FullScreen != true;
             MudDialog.SetOptions(MudDialog.Options);
+        }
+
+        private void SetTitle()
+        {
+            switch (State)
+            {
+                case States.View:
+                    DocumentTitle = "Viewing";
+                    break;
+                case States.Edit:
+                    DocumentTitle = "Editing";
+                    break;
+                case States.Create:
+                    DocumentTitle = "Creating new";
+                    break;
+                case States.Saving:
+                    DocumentTitle = "Saving";
+                    break;
+            }
+
+            DocumentTitle += " " + Title;
+
+            if (Key != null)
+            {
+                DocumentTitle += " " + Key;
+            }
         }
     }
 }
