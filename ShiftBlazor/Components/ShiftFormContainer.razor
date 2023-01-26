@@ -137,7 +137,7 @@
                 {
                     @if ((State == States.Edit || StateBeforeSaving == States.Edit) && IsCrud)
                     {
-                        <MudButton Disabled="@(State == States.Saving)" StartIcon="@Icons.Material.Filled.Cancel" OnClick="() => Cancel()">@CancelText</MudButton>
+                        <MudButton Disabled="@(State == States.Saving)" StartIcon="@Icons.Material.Filled.Cancel" OnClick="() => Cancel()">Cancel</MudButton>
                     }
 
                     @if (State == States.View)
@@ -156,7 +156,16 @@
                                 <MudIcon Icon="@Icons.Material.Filled.Save" />
                             }
 
-                            <MudText Style="padding:0 10px;">@SubmitText</MudText>
+                            <MudText Style="padding:0 10px;">
+                                @if (State == States.Create || StateBeforeSaving == States.Create)
+                                {
+                                    <text>Create</text>
+                                }
+                                else
+                                {
+                                    <text>Save</text>
+                                }
+                            </MudText>
                         </MudButton>
                     }
                 }

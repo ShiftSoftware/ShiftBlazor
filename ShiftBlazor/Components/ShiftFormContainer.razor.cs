@@ -188,9 +188,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool Printing { get; set; }
 
         private string? OriginalValue { get; set; }
-        private string SubmitText { get; set; } = "";
-        private string EditText { get; set; } = "Edit";
-        private string CancelText { get; set; } = "";
         private bool IsCrud { get; set; } = false;
         private string DocumentTitle = "";
         private string ItemUrl { 
@@ -214,8 +211,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             _ = StateChanged.InvokeAsync(State);
-
-            UpdateButtonTexts(State);
 
             if (IsCrud && State != States.Create)
             {
@@ -245,25 +240,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        private void UpdateButtonTexts(States mode)
-        {
-            if (mode == States.Create)
-            {
-                SubmitText = "Create";
-                CancelText = "Cancel";
-            }
-            else if (mode == States.Edit)
-            {
-                SubmitText = "Save";
-                CancelText = "Cancel";
-            }
-            else if (mode == States.View)
-            {
-                SubmitText = "Edit";
-                CancelText = "Close";
-            }
-        }
-
         private async void UpdateState(States? mode = null)
         {
             if (mode == null)
@@ -274,7 +250,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 State = mode.Value;
             }
-            UpdateButtonTexts(State);
             await StateChanged.InvokeAsync(State);
         }
 
