@@ -7,6 +7,7 @@
 		<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
 		<Version>1.0.0-alpha</Version>
 
+		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageProjectUrl>https://github.com/ShiftSoftware/ShiftBlazor</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/ShiftSoftware/ShiftBlazor</RepositoryUrl>
