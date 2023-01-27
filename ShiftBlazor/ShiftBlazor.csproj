@@ -1,26 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-	<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
-	<Version>1.0.0-alpha</Version>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
+		<Version>1.0.0-alpha</Version>
 
-  <ItemGroup>
-	<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.1" />
-    
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
-    <PackageReference Include="Microsoft.OData.Client" Version="7.14.0" />
-    <PackageReference Include="MudBlazor" Version="6.1.7" />
-    <PackageReference Include="ShiftSoftware.ShiftEntity" Version="1.1.32-alpha" />
-    <PackageReference Include="Syncfusion.Blazor.Grid" Version="20.4.0.38" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="20.4.0.38" />
-  </ItemGroup>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageProjectUrl>https://github.com/ShiftSoftware/ShiftBlazor</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/ShiftSoftware/ShiftBlazor</RepositoryUrl>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.1" />
+
+		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
+		<PackageReference Include="Microsoft.OData.Client" Version="7.14.0" />
+		<PackageReference Include="MudBlazor" Version="6.1.7" />
+		<PackageReference Include="ShiftSoftware.ShiftEntity" Version="1.1.32-alpha" />
+		<PackageReference Include="Syncfusion.Blazor.Grid" Version="20.4.0.38" />
+		<PackageReference Include="Syncfusion.Blazor.Themes" Version="20.4.0.38" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="wwwroot\" />
+	</ItemGroup>
 
 </Project>
