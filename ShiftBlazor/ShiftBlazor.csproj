@@ -13,6 +13,8 @@
 		<RepositoryUrl>https://github.com/ShiftSoftware/ShiftBlazor</RepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageIcon>icon.png</PackageIcon>
+		<StaticWebAssetsEnabled>False</StaticWebAssetsEnabled>
+
 	</PropertyGroup>
 
 	<ItemGroup>
