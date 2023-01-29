@@ -1,4 +1,7 @@
-﻿using MudBlazor;
+﻿using DelegateDecompiler;
+using Microsoft.AspNetCore.Components;
+using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Components;
 
 namespace ShiftSoftware.ShiftBlazor.Services
 {
@@ -7,12 +10,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
     {
         private readonly ISnackbar Snackbar;
         private readonly IDialogService DialogService;
-        private readonly ClipboardService ClipboardService;
-        public MessageService(ISnackbar snackbar, IDialogService dialogService, ClipboardService clipboardService)
+
+        public MessageService(ISnackbar snackbar, IDialogService dialogService)
         {
             Snackbar = snackbar;
             DialogService = dialogService;
-            ClipboardService = clipboardService;
         }
 
         /// <summary>
@@ -25,7 +27,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <remarks>If either title or details is null the Action button will not be rendered.</remarks>
         public void Error(string text, string? title = null, string? detail = null, string? buttonText = null)
         {
-            this.Show(text, title, detail, severity: Severity.Error, variant: Variant.Text, buttonText: buttonText);
+            this.Show(text, title, detail, severity: Severity.Error, buttonText: buttonText);
         }
 
         /// <summary>
@@ -38,7 +40,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <remarks>If either title or details is null the Action button will not be rendered.</remarks>
         public void Info(string text, string? title = null, string? detail = null, string? buttonText = null)
         {
-            this.Show(text, title, detail, severity: Severity.Info, variant: Variant.Text, buttonText: buttonText);
+            this.Show(text, title, detail, severity: Severity.Info, buttonText: buttonText);
         }
 
         /// <summary>
@@ -51,7 +53,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <remarks>If either title or details is null the Action button will not be rendered.</remarks>
         public void Success(string text, string? title = null, string? detail = null, string? buttonText = null)
         {
-            this.Show(text, title, detail, severity: Severity.Success, variant: Variant.Text, buttonText: buttonText);
+            this.Show(text, title, detail, severity: Severity.Success, buttonText: buttonText);
         }
 
         /// <summary>
@@ -64,7 +66,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <remarks>If either title or details is null the Action button will not be rendered.</remarks>
         public void Normal(string text, string? title = null, string? detail = null, string? buttonText = null)
         {
-            this.Show(text, title, detail, severity: Severity.Normal, variant: Variant.Text, buttonText: buttonText);
+            this.Show(text, title, detail, severity: Severity.Normal, buttonText: buttonText);
         }
 
         /// <summary>
@@ -77,65 +79,61 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <remarks>If either title or details is null the Action button will not be rendered.</remarks>
         public void Warning(string text, string? title = null, string? detail = null, string? buttonText = null)
         {
-            this.Show(text, title, detail, severity: Severity.Warning, variant: Variant.Text, buttonText: buttonText);
+            this.Show(text, title, detail, severity: Severity.Warning, buttonText: buttonText);
         }
 
-        public void Show(string text, string? title = null, string? detail = null, Severity severity = Severity.Normal, Variant? variant = null, string? buttonText = null, Variant? buttonVariant = null, Color buttonColor = Color.Inherit)
+        public void Show(string text, Severity severity = Severity.Normal, Action<SnackbarOptions>? configure = null)
         {
             Snackbar.Add(
                 text,
-                severity: severity,
-                config =>
-                {
-                    if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(detail))
-                    {
-                        config.Action = string.IsNullOrWhiteSpace(buttonText) ? "View" : buttonText;
-                        config.ActionColor = buttonColor;
-                        config.Onclick = snackbar =>
-                        {
-                            ShowDetail(title, detail);
-                            return Task.CompletedTask;
-                        };
-
-                        if (buttonVariant.HasValue)
-                        {
-                            config.ActionVariant = buttonVariant.Value;
-                        }
-
-                        if (severity == Severity.Error)
-                        {
-                            config.RequireInteraction = true;
-                            config.CloseAfterNavigation = false;
-                        }
-                    }
-
-                    if (variant.HasValue)
-                    {
-                        config.SnackbarVariant = variant.Value;
-                    }
-                }
+                severity,
+                configure
             );
         }
 
-        private async void ShowDetail(string title, string detail)
+        public void Show(string text, string? title = null, string? detail = null, Severity severity = Severity.Normal, string? buttonText = null, Variant? buttonVariant = null, Color buttonColor = Color.Inherit)
+        {
+
+            Show(text, severity, config =>
+            {
+                if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(detail))
+                {
+                    config.Action = string.IsNullOrWhiteSpace(buttonText) ? "View" : buttonText;
+                    config.ActionColor = buttonColor;
+                    config.Onclick = snackbar =>
+                    {
+                        ShowDialog(text, title, detail);
+                        return Task.CompletedTask;
+                    };
+
+                    if (buttonVariant.HasValue)
+                    {
+                        config.ActionVariant = buttonVariant.Value;
+                    }
+
+                    if (severity == Severity.Error)
+                    {
+                        config.RequireInteraction = true;
+                        config.CloseAfterNavigation = false;
+                    }
+                }
+            });
+        }
+
+        private void ShowDialog(string text, string title, string detail)
         {
             var dialogOptions = new DialogOptions
             {
                 MaxWidth = MaxWidth.Medium,
             };
 
-            var result = await DialogService.ShowMessageBox(
-                title,
-                detail,
-                yesText: "Copy",
-                cancelText: "Close",
-                options: dialogOptions);
-
-            if (result.HasValue && result.Value)
+            var dialogParams = new DialogParameters
             {
-                await ClipboardService.WriteTextAsync(detail);
-                Snackbar.Add("Copied to clipboard", Severity.Success);
-            }
+                {"Title", title},
+                {"Body", detail},
+            };
+
+            DialogService.Show<ShiftMessageBox>(text, dialogParams, dialogOptions);
         }
 
     }

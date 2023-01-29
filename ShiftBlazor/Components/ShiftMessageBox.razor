@@ -1,0 +1,49 @@
+﻿@inject ClipboardService Clip
+@inject MessageService MsgService
+
+<MudMessageBox @ref="msgBox" YesText="Copy" NoText="" CancelText="Close" OnYes="CopyToClipboard">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </TitleContent>
+    <MessageContent>
+        <div class="shift-scrollable-content-wrapper">
+            @Body
+        </div>
+    </MessageContent>
+</MudMessageBox>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string Body { get; set; } = "";
+
+    [CascadingParameter]
+    protected MudDialogInstance? MudDialog { get; set; }
+
+    private MudMessageBox? msgBox { get; set; }
+
+    private readonly int MaxDialogTitleLength = 180;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (Title.Length > MaxDialogTitleLength)
+        {
+            Title = Title[..MaxDialogTitleLength] + "...";
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await Clip.WriteTextAsync(Body);
+        MsgService.Success("Copied to clipboard");
+    }
+
+    public Task<bool?> Show()
+    {
+        return msgBox?.Show();
+    }
+}
