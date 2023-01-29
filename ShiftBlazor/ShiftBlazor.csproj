@@ -8,7 +8,6 @@
 		<Version>1.0.1-alpha</Version>
 
 		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageProjectUrl>https://github.com/ShiftSoftware/ShiftBlazor</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/ShiftSoftware/ShiftBlazor</RepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
