@@ -26,7 +26,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
                 mudConfig.SnackbarConfiguration.PreventDuplicates = false;
                 mudConfig.SnackbarConfiguration.MaxDisplayedSnackbars = 5;
 
-                options.MudBlazorConfiguration.Invoke(mudConfig);
+                options.MudBlazorConfiguration?.Invoke(mudConfig);
             });
 
             services.AddScoped<ClipboardService>();
@@ -34,7 +34,11 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
             services.AddScoped<MessageService>();
             services.AddScoped(sp => new ODataQuery(options.ODataEndpoint));
 
-            services.AddSyncfusionBlazor(options.SyncfusionConfiguration.Invoke);
+            services.AddSyncfusionBlazor(syncConfig =>
+            {
+                options.SyncfusionConfiguration?.Invoke(syncConfig);
+            });
+
             SyncfusionLicenseProvider.RegisterLicense(options.SyncfusionLicense);
 
             return services;
