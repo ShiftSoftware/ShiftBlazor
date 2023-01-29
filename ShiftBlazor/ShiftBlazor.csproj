@@ -5,13 +5,14 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
-		<Version>1.0.0-alpha</Version>
+		<Version>1.0.1-alpha</Version>
 
 		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageProjectUrl>https://github.com/ShiftSoftware/ShiftBlazor</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/ShiftSoftware/ShiftBlazor</RepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageIcon>icon.png</PackageIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -27,6 +28,11 @@
 
 	<ItemGroup>
 		<Folder Include="wwwroot\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="Images\icon.png" Pack="true" PackagePath="\" />
+		<Folder Include="Images\" />
 	</ItemGroup>
 
 </Project>
