@@ -5,6 +5,8 @@ VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShiftBlazor", "ShiftBlazor\ShiftBlazor.csproj", "{43D50542-AABE-435B-9909-475FD1ECAEDE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShiftBlazor.Tests", "ShiftBlazor.Tests\ShiftBlazor.Tests.csproj", "{FF6AE146-AE5A-4700-9F92-D9164661B3C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{43D50542-AABE-435B-9909-475FD1ECAEDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43D50542-AABE-435B-9909-475FD1ECAEDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43D50542-AABE-435B-9909-475FD1ECAEDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF6AE146-AE5A-4700-9F92-D9164661B3C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF6AE146-AE5A-4700-9F92-D9164661B3C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF6AE146-AE5A-4700-9F92-D9164661B3C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF6AE146-AE5A-4700-9F92-D9164661B3C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

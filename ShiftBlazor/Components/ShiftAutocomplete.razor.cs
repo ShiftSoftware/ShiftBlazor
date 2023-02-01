@@ -27,7 +27,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [CascadingParameter]
         public Form.States? State { get; set; }
 
-        private DataServiceQuery<T> QueryBuilder { get; set; } = default!;
+        internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
 
         public ShiftAutocomplete ()
         {
@@ -75,31 +75,38 @@ namespace ShiftSoftware.ShiftBlazor.Components
             base.OnAfterRender(firstRender);
         }
 
-        private async Task<IEnumerable<T>> Search(string val)
+        internal async Task<IEnumerable<T>> Search(string val)
+        {
+            var url = GetODataUrl(val);
+            return await GetODataResult(url);
+        }
+
+        internal string GetODataUrl(string q)
         {
             var url = QueryBuilder.AsQueryable();
 
-            if (val != null)
+            if (!string.IsNullOrWhiteSpace(q))
             {
                 url = QueryBuilder
-                    .AddQueryOption("$filter", $"contains(tolower({FilterFieldName}),'{val}')")
+                    .AddQueryOption("$filter", $"contains(tolower({FilterFieldName}),'{q}')")
                     .Take(100);
             }
+            return url.ToString()!;
+        }
 
-            List<T> Item;
-
+        internal async Task<List<T>> GetODataResult(string url)
+        {
             try
             {
-                var text = await Http.GetStringAsync(url.ToString());
+                var text = await Http.GetStringAsync(url);
                 var json = System.Text.Json.Nodes.JsonNode.Parse(text);
-                Item = json?["value"].Deserialize<List<T>>() ?? new List<T>();
+                return json?["value"].Deserialize<List<T>>() ?? new List<T>();
             }
             catch (Exception)
             {
                 throw;
             }
 
-            return Item;
         }
     }
 }

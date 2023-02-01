@@ -1,0 +1,220 @@
+﻿@using RichardSzalay.MockHttp;
+@using ShiftSoftware.ShiftBlazor.Extensions
+@using ShiftSoftware.ShiftBlazor.Utils
+
+@inherits TestContext
+    
+@code {
+
+    public List<Sample> values = new ()
+    {
+        new Sample { Name = "Sample 1", ID = Guid.NewGuid()},
+        new Sample { Name = "Sample 2", ID = Guid.NewGuid()},
+        new Sample { Name = "Sample 3", ID = Guid.NewGuid()},
+    };
+
+    public static string BaseUrl = "http://localhost";
+    public static string ODataBaseUrl = "/odata";
+
+    /// <summary>
+    /// Add required services to test contexts.
+    /// </summary>
+    public ShiftAutocompleteTests()
+    {
+        var mock = Services.AddMockHttpClient();
+        mock.When(ODataBaseUrl + "/Product").RespondJson(new ODataResult<Sample>
+        {
+            value = values,
+        });
+
+        Services.AddShiftServices(config =>
+        {
+            config.ODataEndpoint = BaseUrl + ODataBaseUrl;
+            config.MudBlazorConfiguration = options =>
+            {
+                options.SnackbarConfiguration.ShowTransitionDuration = 0;
+                options.SnackbarConfiguration.HideTransitionDuration = 0;
+            };
+        });
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+
+    /// <summary>
+    /// Test whether component renders or not.
+    /// </summary>
+    [Fact]
+    public void ComponentRendersCorrectly()
+    {
+        var cut = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" />);
+
+        // Check if the html result contains the MudAutocomplete classes
+        Assert.Contains("mud-select", cut.Markup);
+        Assert.Contains("mud-autocomplete", cut.Markup);
+    }
+
+    /// <summary>
+    /// If the parent's State is 'Edit' then make the component readonly.
+    /// </summary>
+    [Fact]
+    public void ReadOnlyWhenInViewState()
+    {
+        // Add a cascading State value to the context to emulate a form
+        RenderTree.Add<CascadingValue<Form.States>>(parameters => parameters.Add(p => p.Value, Form.States.View));
+
+        var comp = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" />);
+
+        // Mud rerenders the element attributes only on interaction
+        comp.Find("input").Click();
+
+        // Select the component
+        var shiftAuto = comp.FindComponent<ShiftAutocomplete<ShiftEntityDTO>>();
+
+        Assert.True(shiftAuto.Instance.ReadOnly);
+        // Search the generated html to check if has correct attributes,
+        // This line might not be necessary since we already check for the component's ReadOnly property
+        Assert.True(comp.Find("input.mud-select-input").HasAttribute("readonly"));
+    }
+
+    /// <summary>
+    /// If the parent's State is 'Saving' then disable the component.
+    /// </summary>
+    [Fact]
+    public void DisabledWhenInSavingState()
+    {
+        // Add a cascading State value to the context to emulate a form
+        RenderTree.Add<CascadingValue<Form.States>>(parameters => parameters.Add(p => p.Value, Form.States.Saving));
+
+        var comp = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" />);
+
+        // Mud rerenders the element attributes only on interaction
+        comp.Find("input").Click();
+
+        // Select the component
+        var shiftAuto = comp.FindComponent<ShiftAutocomplete<ShiftEntityDTO>>();
+        
+        Assert.True(shiftAuto.Instance.Disabled);
+        Assert.True(comp.Find("input.mud-select-input").HasAttribute("disabled"));
+    }
+
+    /// <summary>
+    /// Make sure the input element is not disabled or is not readonly when State is null.
+    /// </summary>
+    [Fact]
+    public void NoCascadingStateValue()
+    {
+        var comp = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" />);
+
+        comp.Find("input").Click();
+
+        var shiftAuto = comp.FindComponent<ShiftAutocomplete<ShiftEntityDTO>>();
+
+        Assert.False(shiftAuto.Instance.Disabled);
+        Assert.False(shiftAuto.Instance.ReadOnly);
+        Assert.False(comp.Find("input.mud-select-input").HasAttribute("disabled"));
+        Assert.False(comp.Find("input.mud-select-input").HasAttribute("readonly"));
+    }
+
+    /// <summary>
+    /// Checks component for correct default values.
+    /// </summary>
+    [Fact]
+    public void DefaultValues()
+    {
+        var comp = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" />);
+        var shiftAuto = comp.FindComponent<ShiftAutocomplete<ShiftEntityDTO>>();
+
+        Assert.True(shiftAuto.Instance.OnlyValidateIfDirty);
+        Assert.True(shiftAuto.Instance.ResetValueOnEmptyText);
+        Assert.Equal(MudBlazor.Variant.Text, shiftAuto.Instance.Variant);
+    }
+
+    /// <summary>
+    /// Make sure component's default values can be changed.
+    /// </summary>
+    [Fact]
+    public void OverrideDefaultValues()
+    {
+        var comp = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" OnlyValidateIfDirty="false" ResetValueOnEmptyText="false" Variant="@MudBlazor.Variant.Filled" />);
+        var shiftAuto = comp.FindComponent<ShiftAutocomplete<ShiftEntityDTO>>();
+
+        Assert.False(shiftAuto.Instance.OnlyValidateIfDirty);
+        Assert.False(shiftAuto.Instance.ResetValueOnEmptyText);
+        Assert.Equal(MudBlazor.Variant.Filled, shiftAuto.Instance.Variant);
+    }
+
+    /// <summary>
+    /// Test whether QueryBuilder object is created and returns correct url.
+    /// </summary>
+    [Fact]
+    public void QueryBuilderTest()
+    {
+        var comp = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" />);
+        var shiftAuto = comp.FindComponent<ShiftAutocomplete<ShiftEntityDTO>>();
+
+        Assert.NotNull(shiftAuto.Instance.QueryBuilder);
+        Assert.Equal("http://localhost/odata/Product", shiftAuto.Instance.QueryBuilder.ToString());
+    }
+
+    /// <summary>
+    /// Test whether OData search url is generated correctly.
+    /// </summary>
+    [Fact]
+    public void SearchCorrectResultTest()
+    {
+        var entityName = "Product";
+
+        var comp = Render(@<ShiftAutocomplete T="@Sample" EntitySet="@entityName" ToStringFunc="@(e=> e==null ? null : $"{e.Name}")" />);
+        var shiftAuto = comp.FindComponent<ShiftAutocomplete<Sample>>();
+
+        Assert.NotNull(shiftAuto.Instance.SearchFunc);
+        Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{entityName}", shiftAuto.Instance.GetODataUrl(""));
+        Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{entityName}?$top=100&$filter=contains(tolower(Name),'Sample')", shiftAuto.Instance.GetODataUrl("Sample"));
+    }
+
+    /// <summary>
+    /// Test whether OData http call and parse works.
+    /// </summary>
+    /// <returns></returns>
+    [Fact]
+    public async Task Test()
+    {
+        var entityName = "Product";
+
+        var comp = Render(@<ShiftAutocomplete T="@Sample" EntitySet="@entityName" ToStringFunc="@(e=> e==null ? null : $"{e.Name}")" />);
+        var shiftAuto = comp.FindComponent<ShiftAutocomplete<Sample>>();
+
+        var items = await shiftAuto.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{entityName}");
+
+        Assert.IsType<List<Sample>>(items);
+        Assert.Equal(3, items.Count);
+    }
+
+    /// <summary>
+    /// Test whether filtered field name can be changed.
+    /// </summary>
+    /// <returns></returns>
+    [Fact]
+    public async Task Test2()
+    {
+        var entityName = "Product";
+
+        var comp = Render(@<ShiftAutocomplete T="@Sample" EntitySet="@entityName" ToStringFunc="@(e=> e==null ? null : $"{e.Name}")" FilterFieldName="ID"/>);
+        var shiftAuto = comp.FindComponent<ShiftAutocomplete<Sample>>();
+
+        var items = await shiftAuto.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{entityName}");
+
+        var id = Guid.NewGuid();
+
+        Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{entityName}?$top=100&$filter=contains(tolower(ID),'{id}')", shiftAuto.Instance.GetODataUrl(id.ToString()));
+    }
+
+    public class ODataResult<T>
+    {
+        public List<T> value { get; set; } = new();
+    }
+
+    public class Sample : ShiftEntityDTOBase
+    {
+        public string Name { get; set; }
+    }
+}
