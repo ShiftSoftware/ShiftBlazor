@@ -3,7 +3,6 @@
 @using Syncfusion.Blazor.Data
 @using Syncfusion.Blazor.Buttons
 @typeparam T where T : ShiftEntityDTOBase, new()
-@typeparam TComponent where TComponent : ComponentBase
 
 <PageTitle>@Title</PageTitle>
 
@@ -15,7 +14,7 @@
 
         @ToolbarTemplate
         
-        @if (!EmbededInsideForm && (EnablePrint || EnableCsvExcelExport || EnablePdfExport) || !DisableAdd)
+        @if (!EmbededInsideForm && (EnablePrint || EnableCsvExcelExport || EnablePdfExport) || RenderAddButton)
         {
             <MudSpacer></MudSpacer>
         }
@@ -41,7 +40,7 @@
             </MudTooltip>
         }
 
-        @if (!DisableAdd)
+        @if (RenderAddButton)
         {
             <MudTooltip Text="Add">
                 <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Primary" OnClick="AddItem">
@@ -115,7 +114,8 @@
 
                 @ColumnTemplate
 
-                @if (!ExcludedHeaders.Contains("Actions", StringComparer.CurrentCultureIgnoreCase)) {
+                @if (!ExcludedHeaders.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
+                {
                     <GridColumn HeaderText="Actions" TextAlign="TextAlign.Center" Width="@ActionColumnWidth">
                         <Template>
                             @if (ActionsTemplate == null)
@@ -130,7 +130,7 @@
                                     }
                                     else
                                     {
-                                        <MudButton OnClick="() => OpenDialog<TComponent>(key, ModalOpenMode.Popup, this.AddDialogParameters)"
+                                        <MudButton OnClick="() => OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters)"
                                            Variant="Variant.Outlined"
                                            EndIcon="@Icons.Material.Filled.OpenInNew"
                                            Color="Color.Primary"

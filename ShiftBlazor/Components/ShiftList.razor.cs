@@ -2,7 +2,6 @@
 using MudBlazor;
 using Syncfusion.Blazor.Grids;
 using System.Reflection;
-using System.ComponentModel.DataAnnotations;
 using Syncfusion.Blazor.Data;
 using ShiftSoftware.ShiftEntity.Core.Dtos;
 using Microsoft.JSInterop;
@@ -11,9 +10,8 @@ using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftList<T, TComponent> : ComponentBase
+    public partial class ShiftList<T> : ComponentBase
         where T : ShiftEntityDTOBase, new() 
-        where TComponent : ComponentBase
     {
         [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
@@ -181,11 +179,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string IconSvg { get; set; } = @Icons.Material.Filled.List;
 
+        /// <summary>
+        /// The type of the component to open when clicking on Add or the Action button.
+        /// If empty, Add and Action button column will be hidden.
+        /// </summary>
+        [Parameter]
+        public Type? ComponentType { get; set; }
+
         public SfGrid<T>? Grid;
         private readonly PropertyInfo[] Props = typeof(T).GetProperties();
         private CustomMessageHandler MessageHandler = new();
         private readonly List<string> DefaultExcludedHeaders = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         protected HttpClient HttpClient { get; set; }
+
+        private bool RenderAddButton = true;
 
         public ShiftList()
         {
@@ -202,10 +209,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        public async Task<DialogResult?> OpenDialog<TT>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary< string, string>? parameters = null) where TT : ComponentBase
+        protected override void OnParametersSet()
         {
-            var result = await ShiftModal.Open<TT>(key, openMode, parameters);
-            
+            base.OnParametersSet();
+
+            RenderAddButton = !(DisableAdd || ComponentType == null);
+        }
+
+        public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
+        {
+            var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
+
             if (Grid != null)
             {
                 await Grid.Refresh();
@@ -238,7 +252,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public async Task AddItem()
         {
-            await OpenDialog<TComponent>(null, ModalOpenMode.Popup, this.AddDialogParameters);
+            if (ComponentType != null)
+            {
+                await OpenDialog(ComponentType, null, ModalOpenMode.Popup, this.AddDialogParameters);
+            }
         }
 
         public async Task PrintList()

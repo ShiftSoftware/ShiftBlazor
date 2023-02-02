@@ -38,6 +38,16 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public async Task<DialogResult?> Open<TComponent>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null) where TComponent : ComponentBase
         {
             var ComponentType = typeof(TComponent);
+            return await Open(ComponentType, key, openMode, parameters);
+        }
+
+        public async Task<DialogResult?> Open(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
+        {
+            if (ComponentType.IsAssignableFrom(typeof(ComponentBase)))
+            {
+                throw new Exception("ShiftModal: Object is not a component");
+            }
+
             var fullName = ComponentType!.FullName!.Substring(ProjectName.Length + 1);
 
             if (openMode == ModalOpenMode.NewTab)
