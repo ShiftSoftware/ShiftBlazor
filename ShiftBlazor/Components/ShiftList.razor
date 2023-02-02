@@ -63,7 +63,13 @@
 
     </MudToolBar>
 
-    <div class="@(MudDialog != null ? "shift-scrollable-content-wrapper" : "")">
+    @if (Values == null && string.IsNullOrWhiteSpace(Action))
+    {
+        <MudAlert Severity="Severity.Error">Both Action and Values cannot be null</MudAlert>
+    }
+    else
+    {
+        <div class="@(MudDialog != null ? "shift-scrollable-content-wrapper" : "")">
         <SfGrid DataSource="Values"
                 TValue="T" @ref="Grid" class="pa-6"
                 ID="ItemGrid"
@@ -156,4 +162,5 @@
             @ChildContent
         </SfGrid>
     </div>
+    }
 </MudPaper>
