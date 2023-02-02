@@ -9,6 +9,7 @@ using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Core.Dtos;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using FluentValidation;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -185,8 +186,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string IconSvg { get; set; } = @Icons.Material.Filled.ListAlt;
 
-        private bool Printing { get; set; }
+        /// <summary>
+        /// Model Validator object.
+        /// If Validator is not set, reflection will be used to find the model validator.
+        /// Otherwise if it is set, reflection will be disabled and DataAnnotationsValidator will also be disabled.
+        /// </summary>
+        [Parameter]
+        public AbstractValidator<T>? Validator { get; set; }
 
+        private bool Printing { get; set; }
         private string? OriginalValue { get; set; }
         private bool IsCrud { get; set; } = false;
         private string DocumentTitle = "";
@@ -216,6 +224,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 await GetItem();
             }
+
+            //_fluentValidationValidator.Validator = Validator;
 
             OriginalValue = JsonSerializer.Serialize(Value);
         }
