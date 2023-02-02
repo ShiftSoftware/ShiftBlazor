@@ -342,9 +342,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
                 else if (res.IsSuccessStatusCode)
                 {
-                    var value = await res.Content.ReadFromJsonAsync<T>();
-                    UpdateValue(value);
-                    await this.OnServerResponse.InvokeAsync(value);
+                    var shiftResponse = await res.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>();
+                    var value = shiftResponse?.Entity;
+                    if (value != null)
+                    {
+                        UpdateValue(value);
+                        await this.OnServerResponse.InvokeAsync(value);
+                    }
                 }
                 else
                 {
@@ -506,7 +510,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     }
                     else if (res.IsSuccessStatusCode)
                     {
-                        var value = await res.Content.ReadFromJsonAsync<T>();
+                        var shiftResponse = await res.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>();
+                        var value = shiftResponse?.Entity;
                         UpdateValue(value);
                         await this.OnServerResponse.InvokeAsync(value);
                     }
