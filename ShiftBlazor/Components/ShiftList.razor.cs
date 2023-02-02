@@ -193,6 +193,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         protected HttpClient HttpClient { get; set; }
 
         private bool RenderAddButton = true;
+        internal bool ActionUrlBroken = false; 
 
         public ShiftList()
         {
@@ -229,6 +230,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private void ErrorHandler(FailureEventArgs args)
         {
+            ActionUrlBroken = true;
             MsgService.Error("Error getting list of items", "Error getting list of items", args.Error.ToString());
         }
 
@@ -287,6 +289,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 case DownloadType.Excel:
                     await this.Grid.ExportToExcelAsync();
                     break;
+            }
+        }
+
+        private void ReloadGrid()
+        {
+            if (Grid != null)
+            {
+                ActionUrlBroken = false;
+                Grid.Refresh();
             }
         }
 

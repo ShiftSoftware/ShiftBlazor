@@ -69,8 +69,8 @@
     }
     else
     {
-        <div class="@(MudDialog != null ? "shift-scrollable-content-wrapper" : "")">
-        <SfGrid DataSource="Values"
+        <div class="@((MudDialog != null ? "shift-scrollable-content-wrapper" : "")+(ActionUrlBroken ? "disable-grid" : ""))">
+            <SfGrid DataSource="Values"
                 TValue="T" @ref="Grid" class="pa-6"
                 ID="ItemGrid"
                 AllowPaging="!DisablePagination && !EnableVirtualization"
@@ -161,6 +161,13 @@
 
             @ChildContent
         </SfGrid>
-    </div>
+            
+            @if (ActionUrlBroken)
+            {
+                <div class="disabled-grid-overlay">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" OnClick="ReloadGrid">Reload</MudButton>
+                </div>
+            }
+        </div>
     }
 </MudPaper>
