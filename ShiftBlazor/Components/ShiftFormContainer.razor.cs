@@ -488,7 +488,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private void UpdateUrl(object key)
         {
-            if (MudDialog == null && Value.ID == default)
+            if (Value.ID != default || key == default)
+                return;
+
+            if (MudDialog == null)
             {
                 NavManager.NavigateTo(NavManager.Uri + "/" + key.ToString());
             }
