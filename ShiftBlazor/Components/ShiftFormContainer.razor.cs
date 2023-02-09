@@ -468,7 +468,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                         if (Item != null)
                         {
                             await KeyChanged.InvokeAsync(Item.ID);
-                            UpdateUrl(Item.ID);
+
+                            if (Item.ID != default)
+                                UpdateUrl(Item.ID);
                         }
                         await OnEditResponse.InvokeAsync(shiftEntityResponse);
                     }
@@ -488,7 +490,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private void UpdateUrl(object key)
         {
-            if (MudDialog == null && Value.ID == default)
+            if (Value.ID != default)
+                return;
+
+            if (MudDialog == null)
             {
                 NavManager.NavigateTo(NavManager.Uri + "/" + key.ToString());
             }

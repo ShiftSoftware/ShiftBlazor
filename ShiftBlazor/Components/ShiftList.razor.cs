@@ -190,6 +190,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private readonly PropertyInfo[] Props = typeof(T).GetProperties();
         private CustomMessageHandler MessageHandler = new();
         private readonly List<string> DefaultExcludedHeaders = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
+
+        [Inject]
         protected HttpClient HttpClient { get; set; }
 
         private bool RenderAddButton = true;
