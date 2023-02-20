@@ -1,5 +1,4 @@
 ﻿@using RichardSzalay.MockHttp;
-@using ShiftSoftware.ShiftBlazor.Extensions
 @using ShiftSoftware.ShiftBlazor.Utils
 
 @inherits TestContext
@@ -206,15 +205,5 @@
         var id = Guid.NewGuid();
 
         Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{entityName}?$top=100&$filter=contains(tolower(ID),'{id}')", shiftAuto.Instance.GetODataUrl(id.ToString()));
-    }
-
-    public class ODataResult<T>
-    {
-        public List<T> value { get; set; } = new();
-    }
-
-    public class Sample : ShiftEntityDTOBase
-    {
-        public string Name { get; set; }
     }
 }
