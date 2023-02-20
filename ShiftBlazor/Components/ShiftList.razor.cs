@@ -16,6 +16,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
+        [Inject]
+        protected HttpClient HttpClient { get; set; }
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
@@ -54,7 +56,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// A list of columns names to hide them in the UI.
         /// </summary>
         [Parameter]
-        public List<string> ExcludedHeaders { get; set; } = new();
+        public List<string> ExcludedColumns { get; set; } = new();
 
         /// <summary>
         /// Enable CSV And Excel format Download button.
@@ -189,12 +191,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public SfGrid<T>? Grid;
         private readonly PropertyInfo[] Props = typeof(T).GetProperties();
         private CustomMessageHandler MessageHandler = new();
-        private readonly List<string> DefaultExcludedHeaders = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
+        internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
 
-        [Inject]
-        protected HttpClient HttpClient { get; set; }
-
-        private bool RenderAddButton = true;
+        internal bool RenderAddButton = true;
         internal bool ActionUrlBroken = false; 
 
         public ShiftList()
@@ -270,7 +269,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 await this.Grid.PrintAsync();
                 return;
             }
-                MsgService.Error("Could not initiate print action");
+
+            MsgService.Error("Could not initiate print action");
         }
 
         public async Task DownloadList(DownloadType type)

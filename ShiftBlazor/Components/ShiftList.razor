@@ -111,16 +111,16 @@
 
                 @if (this.AutoGenerateColumns)
                 {
-                    @foreach (var prop in Props.Where(x => !DefaultExcludedHeaders.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase)))
+                    @foreach (var prop in Props.Where(x => !DefaultExcludedColumns.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase)))
                     {
-                        var isVisible = !ExcludedHeaders.Contains(prop.Name, StringComparer.CurrentCultureIgnoreCase);
+                        var isVisible = !ExcludedColumns.Contains(prop.Name, StringComparer.CurrentCultureIgnoreCase);
                         <GridColumn Visible="isVisible" Field="@prop.Name" TextAlign="TextAlign.Left"></GridColumn>
                     }
                 }
 
                 @ColumnTemplate
 
-                @if (!ExcludedHeaders.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
+                @if (!ExcludedColumns.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
                 {
                     <GridColumn HeaderText="Actions" TextAlign="TextAlign.Center" Width="@ActionColumnWidth">
                         <Template>
