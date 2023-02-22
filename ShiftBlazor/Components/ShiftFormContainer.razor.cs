@@ -435,7 +435,31 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     var msg = shiftEntityResponse.Message;
 
-                    MsgService.Error(msg?.Title ?? "Failed to submit data", msg?.Title, msg?.Body);
+                    //MsgService.Error(msg?.Title ?? "Failed to submit data", msg?.Title, msg?.Body);
+                    var body = msg?.Body;
+                    var subMessages = "";
+
+                    if (msg?.SubMessages != null)
+                    {
+                        foreach (var item in msg.SubMessages)
+                        {
+                            subMessages += $"<strong>{item.Title}</strong>";
+                            if (!string.IsNullOrWhiteSpace(item.Body))
+                            {
+                                subMessages += $": {item.Body}";
+                            }
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(subMessages))
+                    {
+                        body += $"<br/><ul>{subMessages}</ul>";
+                    }
+
+                    await DialogService.ShowMessageBox(msg?.Title, body, options: new DialogOptions
+                    {
+                        MaxWidth = MaxWidth.ExtraSmall,
+                    });
                 }
                 else
                 {
