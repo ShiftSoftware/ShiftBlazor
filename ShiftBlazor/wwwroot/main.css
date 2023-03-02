@@ -1,0 +1,8 @@
+﻿.shift-scrollable-content-wrapper {
+    max-height: calc(100vh - 175px);
+    overflow: auto;
+}
+
+.shift-toolbar-header > :last-child {
+    margin-inline-end: -12px;
+}
