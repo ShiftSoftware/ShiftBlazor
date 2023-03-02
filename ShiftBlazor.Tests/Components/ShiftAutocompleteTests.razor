@@ -58,7 +58,7 @@
     public void ReadOnlyWhenInViewState()
     {
         // Add a cascading State value to the context to emulate a form
-        RenderTree.Add<CascadingValue<Form.States>>(parameters => parameters.Add(p => p.Value, Form.States.View));
+        RenderTree.Add<CascadingValue<Form.Modes>>(parameters => parameters.Add(p => p.Value, Form.Modes.View));
 
         var comp = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" />);
 
@@ -78,10 +78,10 @@
     /// If the parent's State is 'Saving' then disable the component.
     /// </summary>
     [Fact]
-    public void DisabledWhenInSavingState()
+    public void DisabledWhenInSaveTaskInProgress()
     {
         // Add a cascading State value to the context to emulate a form
-        RenderTree.Add<CascadingValue<Form.States>>(parameters => parameters.Add(p => p.Value, Form.States.Saving));
+        RenderTree.Add<CascadingValue<Form.Tasks>>(parameters => parameters.Add(p => p.Value, Form.Tasks.Save));
 
         var comp = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" />);
 
@@ -99,7 +99,7 @@
     /// Make sure the input element is not disabled or is not readonly when State is null.
     /// </summary>
     [Fact]
-    public void NoCascadingStateValue()
+    public void NoCascadingValues()
     {
         var comp = Render(@<ShiftAutocomplete T="@ShiftEntityDTO" EntitySet="Product" />);
 

@@ -10,10 +10,12 @@ namespace ShiftSoftware.ShiftBlazor.Tests
 {
     public class Sample : ShiftEntityDTOBase
     {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public string Name { get; set; }
         public string LastName { get; set; }
-        public int Age { get; set; }
         public string City { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public int Age { get; set; }
         public int Revisions { get; set; }
     }
 

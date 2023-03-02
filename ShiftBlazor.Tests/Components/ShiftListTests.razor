@@ -183,12 +183,7 @@
     {
         var comp = Render(@<ShiftList T="Sample" Action="@(ODataBaseUrl + "/Product")" ComponentType="typeof(DummyComponent)" EnableCsvExcelExport="false" EnablePdfExport="false"></ShiftList>);
 
-        try
-        {
-            var menu = comp.FindComponent<MudMenu>();
-            throw new Exception("MudMenu element found, it should not be rendered when both Csv and PDF are disabled");
-        }
-        catch {}
+        Assert.Throws<Bunit.Rendering.ComponentNotFoundException>(() => comp.FindComponent<MudMenu>());
     }
 
     [Fact]
@@ -353,7 +348,7 @@
 
         var grid = comp.FindComponent<SfGrid<Sample>>();
         var row = grid.Find(".e-table .e-row .e-rowcell[aria-label~='Actions']");
-        row.FirstChild.MarkupMatches($"<div><h1>{text}</h1></div>");
+        row.FirstChild?.MarkupMatches($"<div><h1>{text}</h1></div>");
     }
 
     [Fact]
@@ -406,12 +401,6 @@
         Assert.Equal(height, grid.Height);
     }
 
-    //[Fact]
-    //public void ShouldOpenDialogWithAddedParameters()
-    //{
-    //    Assert.Fail("ShouldOpenDialogWithAddedParameters");
-    //}
-
     [Fact]
     public void ShouldAutoGenerateColumns()
     {
@@ -443,7 +432,5 @@
         Assert.Empty(tooltips);
         Assert.Empty(divider);
     }
-
-
 
 }

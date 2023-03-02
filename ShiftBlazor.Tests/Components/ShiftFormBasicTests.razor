@@ -62,7 +62,7 @@
     {
         var cut = RenderComponent<ShiftFormBasic<Sample>>();
 
-        Assert.Equal(Utils.Form.States.Create, cut.Instance.State);
+        Assert.Equal(Utils.Form.Modes.Create, cut.Instance.Mode);
     }
 
     [Fact]
@@ -102,7 +102,7 @@
     }
 
     [Fact]
-    public void ShouldChangeStateOnValidSubmit()
+    public void ShouldChangeTaskOnValidSubmit()
     {
         var value = new Sample
         {
@@ -110,14 +110,15 @@
             LastName = "Person Last Name",
         };
 
-        var state = Utils.Form.States.Create;
         var isSaving = false;
+        ShiftFormBasic<Sample> form = default!;
 
-        var cut = Render(@<ShiftFormBasic Value="@value" @bind-State="state" OnValidSubmit="@SubmitHandler"></ShiftFormBasic>);
+        var cut = Render(@<ShiftFormBasic Value="@value" OnValidSubmit="@SubmitHandler"></ShiftFormBasic>);
+        form = cut.FindComponent<ShiftFormBasic<Sample>>().Instance;
 
         void SubmitHandler()
         {
-            isSaving = Utils.Form.States.Saving == state;
+            isSaving = form?.TaskInProgress == Utils.Form.Tasks.Save;
         }
 
         cut.Find("footer button[type='submit']").Click();
