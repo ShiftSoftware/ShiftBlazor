@@ -9,12 +9,20 @@ namespace ShiftSoftware.ShiftBlazor.Utils
     public class Form
     {
 
-        public enum States
+        public enum Modes
         {
             View = 0,
             Edit = 10,
             Create = 20,
-            Saving = 30,
         };
+
+        public enum Tasks
+        {
+            None,
+            Print,
+            Delete,
+            Save,
+            Fetch,
+        }
     }
 }

@@ -41,6 +41,19 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return await Open(ComponentType, key, openMode, parameters);
         }
 
+        public async Task<DialogResult?> Open(string ComponentPath, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
+        {
+            var ComponentType = GetComponentType(ComponentPath);
+            if (ComponentType != null)
+            {
+                return await Open(ComponentType, key, openMode, parameters);
+            }
+            else
+            {
+                return DialogResult.Cancel();
+            }
+        }
+
         public async Task<DialogResult?> Open(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
         {
             if (ComponentType.IsAssignableFrom(typeof(ComponentBase)))
@@ -114,8 +127,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             foreach (var modal in modals)
             {
-                var ns = $"{ProjectName}.{modal.Name}";
-                var type = ProjectAssembly.GetType(ns);
+                var type = GetComponentType(modal.Name);
                 if (type != null)
                 {
                     _ = OpenDialog(type, modal.Key, modal.Parameters);
@@ -154,13 +166,18 @@ namespace ShiftSoftware.ShiftBlazor.Services
             await JsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
         }
 
-        private async Task<DialogResult> OpenDialog(Type TComponent, object? itemId = null, Dictionary<string, string>? parameters = null)
+        internal Type? GetComponentType(string name)
         {
-            var dParams = new DialogParameters();
-            if (itemId != null)
+            var CompNamespace = $"{ProjectName}.{name}";
+            return ProjectAssembly.GetType(CompNamespace);
+        }
+
+        private async Task<DialogResult> OpenDialog(Type TComponent, object? key = null, Dictionary<string, string>? parameters = null)
+        {
+            var dParams = new DialogParameters
             {
-                dParams.Add("Key", itemId);
-            }
+                { "Key", key?.ToString() }
+            };
 
             if (parameters != null)
             {
@@ -175,7 +192,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return await diaRef.Result;
         }
 
-        private List<ModalInfo> ParseModalUrl(string url)
+        public List<ModalInfo> ParseModalUrl(string url)
         {
             var uri = NavManager.ToAbsoluteUri(url);
 

@@ -8,13 +8,14 @@
     <PageTitle>@DocumentTitle</PageTitle>
 }
 
-<article>
+<article style="height: 100%;">
     <EditForm EditContext="editContext" OnValidSubmit="ValidSubmitHandler" OnInvalidSubmit="InvalidSubmitHandler" style="height: 100%;" con>
         <FluentValidationValidator DisableAssemblyScanning="Validator != null" Validator="Validator" />
         @if (Validator == null)
         {
-            <DataAnnotationsValidator/>
+            <DataAnnotationsValidator />
         }
+        @*<ValidationSummary></ValidationSummary>*@
 
         <MudPaper Elevation="25" Style="height: 100%;">
 
@@ -25,11 +26,11 @@
                         <MudIcon Icon="@IconSvg"></MudIcon>
                         <MudText Class="px-4" Style="margin:0;">@(Title ?? "Form")</MudText>
 
-                        @ToolbarStartTemplate
+                            @ToolbarStartTemplate
 
-                        <MudSpacer></MudSpacer>
+                            <MudSpacer></MudSpacer>
 
-                        @if (ToolbarCenterTemplate != null)
+                            @if (ToolbarCenterTemplate != null)
                         {
                             @ToolbarCenterTemplate
                             <MudSpacer></MudSpacer>
@@ -47,7 +48,11 @@
                             @ToolbarControlsTemplate
 
                             <MudTooltip Text="Close">
-                                <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Default" OnClick="() => Cancel()">
+                                <MudButton Style="min-width:40px;"
+                                   Variant="Variant.Text"
+                                   Size="Size.Medium"
+                                   Color="Color.Default"
+                                   OnClick="() => Cancel()">
                                     <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
                                 </MudButton>
                             </MudTooltip>
@@ -56,12 +61,19 @@
                 }
 
                 @HeaderTemplate
+
+                @if (AlertEnabled)
+                {
+                    <MudAlert Severity="@AlertSeverity">@AlertMessage</MudAlert>
+                }
             </header>
 
             <div class="@(MudDialog != null ? "shift-scrollable-content-wrapper form-body" : "form-body")">
                 <div class="pa-6">
-                    <CascadingValue Value="State">
-                        @ChildContent
+                    <CascadingValue Value="Mode">
+                        <CascadingValue Value="TaskInProgress">
+                            @ChildContent
+                        </CascadingValue>
                     </CascadingValue>
                 </div>
             </div>
@@ -85,21 +97,23 @@
 
                         @FooterToolbarEndTemplate
 
-                        <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@(State == States.Saving)">
-                            @if (State == States.Saving)
-                            {
-                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Save" />
-                            }
+                        @if (!HideSubmit)
+                        {
+                            <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@(TaskInProgress != Tasks.None)">
+                                @if (TaskInProgress == Tasks.Save)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Save" />
+                                }
 
-                            <MudText Style="padding:0 10px;">Submit</MudText>
-                        </MudButton>
+                                <MudText Style="padding:0 10px;">@_SubmitText</MudText>
+                            </MudButton>
+                        }
                     </MudToolBar>
                 }
-
             </footer>
         </MudPaper>
     </EditForm>

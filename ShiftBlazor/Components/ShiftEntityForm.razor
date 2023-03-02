@@ -1,0 +1,131 @@
+﻿@typeparam T where T : ShiftEntityDTO, new()
+@inherits ShiftFormBasic<T>
+@using static ShiftSoftware.ShiftBlazor.Utils.Form
+
+@{
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+
+    public async Task SomeTask()
+    {
+        await RunTask(Tasks.Print, async () =>
+        {
+            await Task.Delay(2500);
+        });
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        base.ToolbarStartTemplate +=
+    @<text>
+
+        <MudButton Style="min-width:40px;"
+               Color="Color.Warning"
+               Variant="Variant.Text"
+               Size="Size.Medium"
+               Disabled="TaskInProgress != Tasks.None"
+               OnClick="SomeTask">
+               Some Task
+            </MudButton>
+        
+        </text>;
+
+        base.ToolbarEndTemplate +=
+    @<text>
+
+        @if (OnPrint.HasDelegate && !HidePrint)
+        {
+            <MudTooltip Text="Print">
+                <MudButton Style="min-width:40px;"
+                   Color="Color.Warning"
+                   Variant="Variant.Text"
+                   Size="Size.Medium"
+                   Disabled="DisablePrint || Mode != Modes.View || TaskInProgress != Tasks.None"
+                   OnClick="PrintItem">
+                    @if (TaskInProgress == Tasks.Print)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Print" />
+                    }
+                </MudButton>
+            </MudTooltip>
+        }
+
+        @if (!HideDelete)
+        {
+            <MudTooltip Text="Delete">
+                <MudButton Style="min-width:40px;"
+                   Disabled="DisableDelete || Mode != Modes.View || TaskInProgress != Tasks.None"
+                   Variant="Variant.Text"
+                   Size="Size.Medium"
+                   Color="Color.Error"
+                   OnClick="DeleteItem">
+                    @if (TaskInProgress == Tasks.Delete)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
+                    }
+                </MudButton>
+            </MudTooltip>
+        }
+
+        @if (!HideEdit)
+        {
+            <MudTooltip Text="Edit">
+                <MudButton Style="min-width:40px;"
+                   Disabled="DisableEdit || Mode != Modes.View || TaskInProgress != Tasks.None"
+               Variant="Variant.Text"
+                   Size="Size.Medium"
+                   Color="Color.Primary"
+                   OnClick="EditItem">
+                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
+                </MudButton>
+            </MudTooltip>
+        }
+
+    </text>;
+
+        base.ToolbarControlsTemplate +=
+    @<text>
+        <MudTooltip Text="Open In New Tab">
+            <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   Style="min-width:40px;"
+                   OnClick="OpenInNewTab">
+                <MudIcon Icon="@Icons.Material.Filled.OpenInNew"></MudIcon>
+            </MudButton>
+        </MudTooltip>
+
+        <MudTooltip Text="@(Maximized != true ? "Maximize" : "Minimize")">
+            <MudButton Style="min-width:40px;"
+                   Variant="Variant.Text"
+                   Size="Size.Medium"
+                   Color="Color.Default"
+                   OnClick="ResizeForm">
+                <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
+            </MudButton>
+        </MudTooltip>
+    </text>;
+
+        base.FooterToolbarEndTemplate +=
+    @<text>
+        @if (Mode == Modes.Edit)
+        {
+            <MudButton Disabled="@(TaskInProgress != Tasks.None)"
+               StartIcon="@Icons.Material.Filled.Cancel"
+               OnClick="CancelChanges">Cancel</MudButton>
+        }
+
+    </text>;
+    }
+}

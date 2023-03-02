@@ -25,7 +25,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string FilterFieldName { get; set; } = "Name";
         
         [CascadingParameter]
-        public Form.States? State { get; set; }
+        public Form.Modes? Mode { get; set; }
+
+        [CascadingParameter]
+        public Form.Tasks? TaskInProgress { get; set; }
 
         internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
 
@@ -70,8 +73,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnAfterRender(bool firstRender)
         {
-            ReadOnly = State == Form.States.View;
-            Disabled = State == Form.States.Saving;
+            ReadOnly = Mode == Form.Modes.View;
+            Disabled = TaskInProgress != null && TaskInProgress != Form.Tasks.None;
             base.OnAfterRender(firstRender);
         }
 

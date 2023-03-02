@@ -4,30 +4,32 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
-using System.Text.Json;
+using ShiftSoftware.ShiftBlazor.Utils;
 using static ShiftSoftware.ShiftBlazor.Utils.Form;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     public partial class ShiftFormBasic<T> where T : class, new()
     {
+        [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
         [Inject] IDialogService DialogService { get; set; } = default!;
+
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
 
         /// <summary>
-        /// The current State of the form.
+        /// The current Mode of the form.
         /// </summary>
         [Parameter]
-        public States State { get; set; }
+        public Modes Mode { get; set; }
 
         /// <summary>
-        /// An event triggered when the state of the State paramater has changed.
+        /// An event triggered when the state of the Mode paramater has changed.
         /// </summary>
         [Parameter]
-        public EventCallback<States> StateChanged { get; set; }
+        public EventCallback<Modes> ModeChanged { get; set; }
 
         /// <summary>
         /// The current item being view/edited, this will be fetched from the API endpoint that is provided in the Action paramater.
@@ -132,15 +134,36 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool DisableFooterToolbar { get; set; }
 
         [Parameter]
-        public EventCallback OnInvalidSubmit { get; set; }
+        public EventCallback<EditContext> OnInvalidSubmit { get; set; }
         [Parameter]
-        public EventCallback OnValidSubmit { get; set; }
+        public EventCallback<EditContext> OnValidSubmit { get; set; }
 
-        protected string? DocumentTitle {get; set; }
-        protected States StateBeforeSaving { get; set; }
-        protected bool IsModified { get; set; }
+        [Parameter]
+        public EventCallback<Tasks> OnTaskStart { get; set; }
+        [Parameter]
+        public EventCallback<Tasks> OnTaskFinished { get; set; }
 
-        private EditContext editContext;
+        public EventCallback<Tasks> _OnTaskStart { get; set; }
+        public EventCallback<Tasks> _OnTaskFinished { get; set; }
+
+        [Parameter]
+        public string? DocumentTitle { get; set; }
+
+        [Parameter]
+        public FormSettings Settings { get; set; } = new FormSettings();
+
+        [Parameter]
+        public string? SubmitText { get; set; }
+
+        internal virtual bool HideSubmit { get; set; }
+        internal virtual string _SubmitText { get; set; } = "Submit";
+        internal bool IsModified { get; set; }
+        internal Tasks TaskInProgress { get; set; }
+        internal bool AlertEnabled { get; set; } = false;
+        internal MudBlazor.Severity AlertSeverity { get; set; }
+        internal string AlertMessage { get; set; } = default!;
+
+        internal EditContext editContext = default!;
 
         protected override void OnInitialized()
         {
@@ -148,27 +171,38 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             editContext = new(Value);
 
-            //editContext.OnFieldChanged += FieldChangedHandler;
-            //NavManager.RegisterLocationChangingHandler(LocationChangingHandler);
+            if (!string.IsNullOrWhiteSpace(SubmitText))
+            {
+                _SubmitText = SubmitText;
+            }
 
-            State = StateBeforeSaving = States.Create;
+            //NavManager.RegisterLocationChangingHandler(LocationChangingHandler);
         }
 
-        public ValueTask LocationChangingHandler(LocationChangingContext ctx)
+        protected override async Task OnInitializedAsync()
         {
-            if (IsModified)
+            await SetMode(Modes.Create);
+        }
+
+        internal ValueTask LocationChangingHandler(LocationChangingContext ctx)
+        {
+            if (editContext.IsModified())
             {
                 ctx.PreventNavigation();
             }
             return new ValueTask();
         }
 
-        public void FieldChangedHandler(object? sender, FieldChangedEventArgs args)
+
+        internal async Task Cancel()
         {
-            IsModified = true;
+            if (MudDialog != null && await ConfirmClose())
+            {
+                ShiftModal.Close(MudDialog);
+            }
         }
 
-        private async Task Cancel()
+        internal async Task<bool> ConfirmClose(string message = "You have unsaved changes, do you want to cancel?")
         {
             if (editContext.IsModified())
             {
@@ -179,42 +213,94 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 bool? result = await DialogService.ShowMessageBox(
                     "Warning",
-                    "You have unsaved changes, do you want to cancel?",
+                    message,
                     yesText: "Yes",
                     cancelText: "No",
                     options: dialogOptions);
 
-                if (!result.HasValue || result.HasValue && !result.Value)
-                {
-                    return;
-                }
+
+                return result.HasValue && result.Value;
             }
 
-            if (MudDialog != null)
+            return true;
+        }
+
+        internal virtual async Task SetMode(Modes mode)
+        {
+            Mode = mode;
+            await ModeChanged.InvokeAsync(Mode);
+        }
+
+        internal virtual async Task SetValue(T? value)
+        {
+            if (value != null)
             {
-                ShiftModal.Close(MudDialog);
+                Value = value;
+                await ValueChanged.InvokeAsync(Value);
+                editContext = new(Value);
+                editContext.MarkAsUnmodified();
             }
         }
 
-        protected async Task SetState(States state)
+        internal virtual async Task InvalidSubmitHandler(EditContext context)
         {
-            State = state;
-            await StateChanged.InvokeAsync(State);
+            await OnInvalidSubmit.InvokeAsync(context);
         }
 
-        private async Task InvalidSubmitHandler(EditContext context)
+        internal virtual async Task ValidSubmitHandler(EditContext context)
         {
-            await OnInvalidSubmit.InvokeAsync();
+            await RunTask(Tasks.Save, async () =>
+            {
+                await OnValidSubmit.InvokeAsync(context);
+            });
         }
 
-        private async Task ValidSubmitHandler(EditContext context)
+        internal void ShowAlert(string message, MudBlazor.Severity severity = MudBlazor.Severity.Warning, int? durationInSeconds = null)
         {
-            StateBeforeSaving = State;
-            await SetState(States.Saving);
+            AlertSeverity = severity;
+            AlertMessage = message;
+            AlertEnabled = true;
+            Task.Run(async () => {
+                if (durationInSeconds.HasValue)
+                {
+                    await Task.Delay(durationInSeconds.Value * 1000);
+                    AlertEnabled = false;
+                    StateHasChanged();
+                }
+                else
+                {
+                    AlertEnabled = false;
+                }
+            });
+        }
 
-            await OnValidSubmit.InvokeAsync();
+        internal async Task RunTask(Tasks Task, Func<ValueTask> action)
+        {
+            if (TaskInProgress != Tasks.None)
+            {
+                return;
+            }
 
-            await SetState(StateBeforeSaving);
+            await OnTaskStart.InvokeAsync(Task);
+            await _OnTaskStart.InvokeAsync(Task);
+
+            TaskInProgress = Task;
+
+            try
+            {
+                await action.Invoke();
+            }
+            catch (Exception e)
+            {
+                MsgService.Error($"Could not {Task} the item.", e.Message, e.ToString());
+            }
+            finally
+            {
+                TaskInProgress = Tasks.None;
+                await OnTaskFinished.InvokeAsync(Task);
+                await _OnTaskFinished.InvokeAsync(Task);
+            }
         }
     }
+
 }
