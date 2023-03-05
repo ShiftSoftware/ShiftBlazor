@@ -6,8 +6,8 @@ pool:
 
 steps:
 
- #- script: dotnet test --logger trx
- #  displayName: 'dotnet test'
+ - script: dotnet test --logger trx
+   displayName: 'dotnet test'
 
  - task: PublishTestResults@2
    condition: succeededOrFailed()
