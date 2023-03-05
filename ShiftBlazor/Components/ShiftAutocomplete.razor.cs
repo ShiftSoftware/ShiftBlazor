@@ -109,7 +109,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 throw;
             }
-
         }
     }
 }

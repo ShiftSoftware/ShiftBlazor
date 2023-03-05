@@ -193,8 +193,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private CustomMessageHandler MessageHandler = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
 
-        internal bool RenderAddButton = true;
-        internal bool ActionUrlBroken = false; 
+        internal bool RenderAddButton
+        {
+            get
+            {
+                return !(DisableAdd || ComponentType == null);
+            }
+        }
+        internal bool ActionUrlBroken = false;
 
         public ShiftList()
         {
@@ -209,13 +215,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 DisablePagination = true;
             }
-        }
-
-        protected override void OnParametersSet()
-        {
-            base.OnParametersSet();
-
-            RenderAddButton = !(DisableAdd || ComponentType == null);
         }
 
         public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
