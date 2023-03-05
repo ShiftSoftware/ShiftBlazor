@@ -144,10 +144,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 if (result.HasValue && result.Value)
                 {
+                    var url = ItemUrl + "?ignoreGlobalFilters";
                     using var res = await Http.DeleteAsync(ItemUrl);
                     await SetValue(await ParseEntityResponse(res));
-
-                    ShowAlert("Item has been deleted", Severity.Warning);
                 }
             });
         }

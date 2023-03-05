@@ -20,6 +20,14 @@
     {
         base.OnInitialized();
 
+        base.HeaderTemplate +=
+        @<text>
+            @if (Value.IsDeleted)
+            {
+                <MudAlert Severity="Severity.Error">This item is deleted.</MudAlert>
+            }
+        </text>;
+
         base.ToolbarStartTemplate +=
     @<text>
 
