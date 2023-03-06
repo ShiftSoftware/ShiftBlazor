@@ -3,7 +3,7 @@ using ShiftSoftware.ShiftBlazor.Components;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
-public class ShiftAutocompleteTests2 : ShiftBlazorTestContext
+public class ShiftAutocompleteTests : ShiftBlazorTestContext
 {
 
     [Fact]

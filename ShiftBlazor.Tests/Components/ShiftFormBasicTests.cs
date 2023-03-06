@@ -8,7 +8,7 @@ using MudBlazor;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
-public class ShiftFormBasicTests2 : ShiftBlazorTestContext
+public class ShiftFormBasicTests : ShiftBlazorTestContext
 {
 
     [Fact]

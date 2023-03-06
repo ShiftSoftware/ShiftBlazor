@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing.Printing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 using MudBlazor;
 using Syncfusion.Blazor.Grids;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
-public class ShiftListTests2 : ShiftBlazorTestContext
+public class ShiftListTests : ShiftBlazorTestContext
 {
+
+    public bool DisablePaging = false;
 
     [Fact]
     public void ShouldShowErrorIfActionAndValueAreNull()
     {
-        var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(paramaters => paramaters.Add(p => p.DisablePagination, true));
+        var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(paramaters => paramaters.Add(p => p.DisablePagination, DisablePaging));
 
         var alertComp = cut.FindComponent<MudAlert>();
 
@@ -62,7 +59,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
         var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.Title, title)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         Assert.Contains(title, cut.Markup);
@@ -95,7 +92,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
         var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.PageSize, pageSize)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         var grid = cut.FindComponent<SfGrid<ShiftEntityDTO>>();
@@ -118,7 +115,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ExcludedColumns, excludedColumns)
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         var grid = cut.FindComponent<SfGrid<Sample>>();
@@ -134,7 +131,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
         var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         var grid = comp.FindComponent<SfGrid<Sample>>();
@@ -152,7 +149,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
         // Should not render Actions column when ComponentType is not set
         var comp = RenderComponent<ShiftList<ShiftEntityDTOBase>>(parameters => parameters
             .Add(p => p.Action, ODataBaseUrl + "/Product")
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<ShiftEntityDTOBase>>().Instance;
 
@@ -167,7 +164,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
         var comp = RenderComponent<ShiftList<ShiftEntityDTOBase>>(parameters => parameters
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<ShiftEntityDTOBase>>().Instance;
         
@@ -187,7 +184,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ExcludedColumns, excludedColumns)
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<ShiftEntityDTOBase>>().Instance;
         var cols = grid.Columns.Where(x => x.HeaderText == "Actions");
@@ -202,7 +199,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.EnableCsvExcelExport, false)
             .Add(p => p.EnablePdfExport, false)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         Assert.Throws<Bunit.Rendering.ComponentNotFoundException>(() => comp.FindComponent<MudMenu>());
@@ -216,7 +213,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.EnableCsvExcelExport, true)
             .Add(p => p.EnablePdfExport, false)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         ));
 
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
@@ -244,7 +241,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.EnableCsvExcelExport, false)
             .Add(p => p.EnablePdfExport, true)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         ));
 
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
@@ -270,7 +267,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.EnablePrint, true)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         var tooltips = comp.FindComponents<MudTooltip>();
@@ -286,7 +283,6 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.EnableVirtualization, true)
-            .Add(p => p.DisablePagination, true)
         );
 
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
@@ -304,7 +300,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.DisableAdd, true)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var instance = comp.Instance;
 
@@ -335,7 +331,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.DisableSorting, true)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
@@ -349,7 +345,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.DisableMultiSorting, true)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
@@ -363,7 +359,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.DisableFilters, true)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
@@ -377,7 +373,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.DisableSelection, true)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
@@ -392,7 +388,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add<GridColumn>(p => p.ColumnTemplate, _params => _params.Add(x => x.HeaderText, headerText))
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
@@ -408,7 +404,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.ActionsTemplate, item => $"<h1>{text}</h1>")
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         var grid = comp.FindComponent<SfGrid<Sample>>();
@@ -425,7 +421,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.ToolbarTemplate, $"<button>{text}</button>")
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         var toolbar = comp.Find(".shift-toolbar-header");
@@ -441,7 +437,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.Query, query)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
@@ -457,7 +453,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.ActionColumnWidth, width)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
@@ -472,7 +468,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.GridHeight, height)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
@@ -486,7 +482,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.AutoGenerateColumns, true)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
         var instance = comp.Instance;
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
@@ -505,7 +501,7 @@ public class ShiftListTests2 : ShiftBlazorTestContext
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.EmbededInsideForm, true)
-            .Add(p => p.DisablePagination, true)
+            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         var toolbar = comp.FindComponent<MudToolBar>();
