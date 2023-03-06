@@ -29,10 +29,10 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
                 options.MudBlazorConfiguration?.Invoke(mudConfig);
             });
 
-            services.AddScoped<ClipboardService>();
+            services.AddSingleton<ClipboardService>();
+            services.AddSingleton(sp => new ODataQuery(options.ODataEndpoint));
             services.AddScoped<ShiftModalService>();
             services.AddScoped<MessageService>();
-            services.AddScoped(sp => new ODataQuery(options.ODataEndpoint));
 
             services.AddSyncfusionBlazor(syncConfig =>
             {
