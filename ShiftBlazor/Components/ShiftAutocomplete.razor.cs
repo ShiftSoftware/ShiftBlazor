@@ -39,26 +39,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             Variant = Variant.Text;
         }
 
-        //public override async Task SetParametersAsync(ParameterView parameters)
-        //{
-        //    Func<T, string> value = default;
-
-        //    if (parameters.TryGetValue(nameof(ToStringFunc), out value))
-        //    {
-
-        //    }
-        //    else
-        //    {
-        //        var prop = typeof(T).GetProperty(FilterFieldName);
-        //        if (prop != null)
-        //        {
-        //            ToStringFunc = e => e == null ? null : $"{prop.GetValue(Value)}";
-        //        }
-        //    }
-
-        //    await base.SetParametersAsync(parameters);
-        //}
-
         protected override void OnInitialized()
         {
             if (EntitySet == null)
@@ -69,13 +49,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             QueryBuilder = OData.CreateQuery<T>(EntitySet);
 
             SearchFunc = Search;
-        }
-
-        protected override void OnAfterRender(bool firstRender)
-        {
-            ReadOnly = Mode == Form.Modes.View;
-            Disabled = TaskInProgress != null && TaskInProgress != Form.Tasks.None;
-            base.OnAfterRender(firstRender);
         }
 
         internal async Task<IEnumerable<T>> Search(string val)

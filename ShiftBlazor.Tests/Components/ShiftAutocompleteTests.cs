@@ -51,15 +51,15 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     /// If the parent's State is 'Saving' then disable the component.
     /// </summary>
     [Fact]
-    public void DisabledWhenInSaveTaskInProgress()
+    public void ShouldBeDisabledWhenSaveTaskInProgress()
     {
         // Add a cascading State value to the context to emulate a form
         RenderTree.Add<CascadingValue<Form.Tasks>>(parameters => parameters.Add(p => p.Value, Form.Tasks.Save));
 
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, "Product"));
 
-        // Mud rerenders the element attributes only on interaction
-        comp.Find("input").Click();
+        // Make sure Mud rerenders the element by making an interaction with the element
+        comp.Find("input").Input("mud");
 
         comp.WaitForAssertion(() =>
         {
