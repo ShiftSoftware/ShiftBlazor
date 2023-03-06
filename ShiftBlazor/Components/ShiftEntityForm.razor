@@ -8,14 +8,6 @@
 
 @code {
 
-    public async Task SomeTask()
-    {
-        await RunTask(Tasks.Print, async () =>
-        {
-            await Task.Delay(2500);
-        });
-    }
-
     protected override void OnInitialized()
     {
         base.OnInitialized();
@@ -26,20 +18,6 @@
             {
                 <MudAlert Severity="Severity.Error">This item is deleted.</MudAlert>
             }
-        </text>;
-
-        base.ToolbarStartTemplate +=
-    @<text>
-
-        <MudButton Style="min-width:40px;"
-               Color="Color.Warning"
-               Variant="Variant.Text"
-               Size="Size.Medium"
-               Disabled="TaskInProgress != Tasks.None"
-               OnClick="SomeTask">
-               Some Task
-            </MudButton>
-        
         </text>;
 
         base.ToolbarEndTemplate +=
