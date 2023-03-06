@@ -174,10 +174,12 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         private async Task<DialogResult> OpenDialog(Type TComponent, object? key = null, Dictionary<string, string>? parameters = null)
         {
-            var dParams = new DialogParameters
+            var dParams = new DialogParameters();
+
+            if (key != null)
             {
-                { "Key", key?.ToString() }
-            };
+                dParams.Add("Key", key);
+            }
 
             if (parameters != null)
             {
