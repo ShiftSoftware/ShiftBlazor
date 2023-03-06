@@ -1,8 +1,42 @@
-﻿<MudThemeProvider />
-<MudDialogProvider CloseButton="false"
-                   Position="DialogPosition.Center"
-                   CloseOnEscapeKey="true"
-                   DisableBackdropClick="true"
-                   FullWidth="true"
-                   MaxWidth="MaxWidth.Large" />
+﻿<MudThemeProvider @bind-IsDarkMode="IsDarkMode"
+                  DefaultScrollbar="@DefaultScrollbar"
+                  Theme="Theme" />
+<MudDialogProvider CloseButton="_DialogOptions.CloseButton"
+                   Position="_DialogOptions.Position"
+                   CloseOnEscapeKey="_DialogOptions.CloseOnEscapeKey"
+                   DisableBackdropClick="_DialogOptions.DisableBackdropClick"
+                   FullWidth="_DialogOptions.FullWidth"
+                   MaxWidth="_DialogOptions.MaxWidth"
+                   />
 <MudSnackbarProvider />
+
+@code {
+    [Parameter]
+    public bool IsDarkMode { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsDarkModeChanged { get; set; }
+
+    [Parameter]
+    public bool DefaultScrollbar { get; set; }
+
+    [Parameter]
+    public MudTheme? Theme { get; set; }
+
+    [Parameter]
+    public Action<DialogOptions>? DialogOptions { get; set; }
+
+    private DialogOptions _DialogOptions = new DialogOptions();
+
+    protected override void OnInitialized()
+    {
+        _DialogOptions.CloseButton = false;
+        _DialogOptions.Position = DialogPosition.Center;
+        _DialogOptions.CloseOnEscapeKey = true;
+        _DialogOptions.DisableBackdropClick = true;
+        _DialogOptions.FullWidth = true;
+        _DialogOptions.MaxWidth = MaxWidth.Large;
+
+        DialogOptions?.Invoke(_DialogOptions);
+    }
+}
