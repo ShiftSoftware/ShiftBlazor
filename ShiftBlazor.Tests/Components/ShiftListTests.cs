@@ -408,8 +408,11 @@ public class ShiftListTests : ShiftBlazorTestContext
         );
 
         var grid = comp.FindComponent<SfGrid<Sample>>();
-        var row = grid.Find(".e-table .e-row .e-rowcell[aria-label~='Actions']");
-        row.FirstChild?.MarkupMatches($"<div><h1>{text}</h1></div>");
+        comp.WaitForAssertion(() =>
+        {
+            var row = grid.Find(".e-table .e-row .e-rowcell[aria-label~='Actions']");
+            row.FirstChild?.MarkupMatches($"<div><h1>{text}</h1></div>");
+        });
     }
 
     [Fact]
