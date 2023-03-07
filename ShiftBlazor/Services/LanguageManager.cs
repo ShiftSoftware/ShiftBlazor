@@ -8,13 +8,13 @@ namespace ShiftSoftware.ShiftBlazor.Services
     public class LanguageManager
     {
         private readonly ISyncLocalStorageService SyncLocalStorage;
-        private readonly NavigationManager NavManager;
-        private readonly HttpClient Http;
+        private readonly NavigationManager? NavManager;
+        private readonly HttpClient? Http;
 
         private readonly string Key = "BlazorCulture";
         private readonly string DefaultCultureName = "en-US";
 
-        public LanguageManager(ISyncLocalStorageService syncLocalStorage, NavigationManager navManager, HttpClient http)
+        public LanguageManager(ISyncLocalStorageService syncLocalStorage, NavigationManager? navManager, HttpClient? http)
         {
             SyncLocalStorage = syncLocalStorage;
             NavManager = navManager;
@@ -43,7 +43,10 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             UpdateCulture(name);
 
-            NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+            if (NavManager != null)
+            {
+                NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+            }
         }
 
         private void UpdateCulture(string name)
@@ -59,8 +62,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
 
-            Http.DefaultRequestHeaders.AcceptLanguage.Clear();
-            Http.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue(name));
+            if (Http != null)
+            {
+                Http.DefaultRequestHeaders.AcceptLanguage.Clear();
+                Http.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue(name));
+            }
         }
     }
 }
