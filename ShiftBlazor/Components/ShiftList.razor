@@ -65,7 +65,7 @@
 
     @if (Values == null && string.IsNullOrWhiteSpace(Action))
     {
-        <MudAlert Severity="Severity.Error">Both Action and Values cannot be null</MudAlert>
+        <MudAlert Severity="Severity.Error">Both Action and Values parameters cannot be null</MudAlert>
     }
     else
     {
@@ -91,7 +91,7 @@
 
             <GridEvents OnActionBegin="ActionStartHandler" OnActionFailure="ErrorHandler" TValue="T" />
             <GridEditSettings AllowAdding="true" Mode="EditMode.Normal"></GridEditSettings>
-            <GridPageSettings PageSize="@PageSize" PageSizes="new int[]{5, 10, 50, 100, 250, 500}" ></GridPageSettings>
+            <GridPageSettings PageSize="@PageSize" PageSizes="PageSizes" ></GridPageSettings>
 
             <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
             
