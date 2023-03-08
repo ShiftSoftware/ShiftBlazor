@@ -19,7 +19,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         cut.WaitForAssertion(() =>
         {
             Assert.NotNull(alertComp);
-            Assert.Contains("Both Action and Values cannot be null", alertComp.Markup);
+            Assert.Contains("Both Action and Values parameters cannot be null", alertComp.Markup);
         });
     }
 
