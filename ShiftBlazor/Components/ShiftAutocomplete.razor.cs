@@ -43,7 +43,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (EntitySet == null)
             {
-                throw new Exception("EntitySet is required");
+                throw new ArgumentNullException(nameof(EntitySet));
             }
 
             QueryBuilder = OData.CreateQuery<T>(EntitySet);

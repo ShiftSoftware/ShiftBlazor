@@ -5,11 +5,26 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
 public class ShiftAutocompleteTests : ShiftBlazorTestContext
 {
+    private readonly string EntitytSet = "Product";
+
+    [Fact]
+    public void ShouldInheritMudAutocomplete()
+    {
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
+
+        Assert.IsAssignableFrom<MudAutocomplete<ShiftEntityDTO>>(comp.Instance);
+    }
+
+    [Fact]
+    public void ShouldThrowIfEntitySetIsNull()
+    {
+        Assert.Throws<ArgumentNullException>(() => RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>());
+    }
 
     [Fact]
     public void ShouldRenderComponentCorrectly()
     {
-        var cut = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, "Product"));
+        var cut = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
 
         // Check if the html result contains the MudAutocomplete classes
         cut.WaitForAssertion(() =>
@@ -20,12 +35,12 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     }
 
     [Fact]
-    public void ShouldBeInReadOnlyModeWhenInViewMode()
+    public void ShouldBeReadOnlyWhenInViewMode()
     {
         // Add a cascading State value to the context to emulate a form
         RenderTree.Add<CascadingValue<Form.Modes>>(parameters => parameters.Add(p => p.Value, Form.Modes.View));
 
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, "Product"));
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
 
         // Mud rerenders the element attributes only on interaction
         comp.Find("input").Click();
@@ -40,11 +55,33 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     }
 
     [Fact]
-    public void ShouldInheritMudAutocomplete()
+    public void ShouldNotBeReadOnlyWhenInEditMode()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, "Product"));
+        RenderTree.Add<CascadingValue<Form.Modes>>(parameters => parameters.Add(p => p.Value, Form.Modes.Edit));
 
-        Assert.IsAssignableFrom<MudAutocomplete<ShiftEntityDTO>>(comp.Instance);
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
+        comp.Find("input").Click();
+
+        comp.WaitForAssertion(() =>
+        {
+            Assert.False(comp.Instance.ReadOnly);
+            Assert.False(comp.Find("input.mud-select-input").HasAttribute("readonly"));
+        });
+    }
+
+    [Fact]
+    public void ShouldNotBeReadOnlyWhenInCreateMode()
+    {
+        RenderTree.Add<CascadingValue<Form.Modes>>(parameters => parameters.Add(p => p.Value, Form.Modes.Create));
+
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
+        comp.Find("input").Click();
+
+        comp.WaitForAssertion(() =>
+        {
+            Assert.False(comp.Instance.ReadOnly);
+            Assert.False(comp.Find("input.mud-select-input").HasAttribute("readonly"));
+        });
     }
 
     /// <summary>
@@ -56,7 +93,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
         // Add a cascading State value to the context to emulate a form
         RenderTree.Add<CascadingValue<Form.Tasks>>(parameters => parameters.Add(p => p.Value, Form.Tasks.Save));
 
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, "Product"));
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
 
         // Make sure Mud rerenders the element by making an interaction with the element
         comp.Find("input").Input("mud");
@@ -74,7 +111,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void NoCascadingValues()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, "Product"));
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
 
         comp.Find("input").Click();
 
@@ -93,7 +130,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void DefaultValues()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, "Product"));
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
 
         Assert.True(comp.Instance.OnlyValidateIfDirty);
         Assert.True(comp.Instance.ResetValueOnEmptyText);
@@ -107,7 +144,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     public void OverrideDefaultValues()
     {
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters
-            .Add(p => p.EntitySet, "Product")
+            .Add(p => p.EntitySet, EntitytSet)
             .Add(p => p.OnlyValidateIfDirty, false)
             .Add(p => p.ResetValueOnEmptyText, false)
             .Add(p => p.Variant, MudBlazor.Variant.Filled)
@@ -124,7 +161,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void QueryBuilderTest()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, "Product"));
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
         
         Assert.NotNull(comp.Instance.QueryBuilder);
     }
@@ -135,10 +172,10 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     //[Fact]
     //public void SearchCorrectResultTest()
     //{
-    //    var entityName = "Product";
+    //    var entityName = EntitytSet;
 
     //    var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters
-    //        .Add(p => p.EntitySet, "Product")
+    //        .Add(p => p.EntitySet, EntitytSet)
     //        .Add(p => p.SearchFunc, e => "text")
     //    );
 
@@ -155,15 +192,13 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     /// </summary>
     /// <returns></returns>
     [Fact]
-    public void Test()
+    public void ShouldReturnCorrectODataItems()
     {
-        var entityName = "Product";
-
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, "Product"));
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters.Add(p => p.EntitySet, EntitytSet));
 
         comp.WaitForAssertion(async () =>
         {
-            var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{entityName}");
+            var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}");
             Assert.IsType<List<Sample>>(items);
             Assert.Equal(Values.Count, items.Count);
         });
@@ -174,20 +209,19 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     /// </summary>
     /// <returns></returns>
     [Fact]
-    public void Test2()
+    public void ShouldFilterCorrectColumnWhenSpecified()
     {
-        var entityName = "Product";
         var id = Guid.NewGuid();
 
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters
-            .Add(p => p.EntitySet, "Product")
+            .Add(p => p.EntitySet, EntitytSet)
             .Add(p => p.FilterFieldName, "ID")
         );
 
         comp.WaitForAssertion(async () =>
         {
-            var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{entityName}");
-            Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{entityName}?$top=100&$filter=contains(tolower(ID),'{id}')", comp.Instance.GetODataUrl(id.ToString()));
+            var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}");
+            Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}?$top=100&$filter=contains(tolower(ID),'{id}')", comp.Instance.GetODataUrl(id.ToString()));
         });
     }
 }
