@@ -43,10 +43,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             UpdateCulture(name);
 
-            if (NavManager != null)
-            {
-                NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
-            }
+            NavManager?.NavigateTo(NavManager.Uri, forceLoad: true);
         }
 
         private void UpdateCulture(string name)

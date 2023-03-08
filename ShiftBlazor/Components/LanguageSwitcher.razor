@@ -1,0 +1,13 @@
+﻿@inject LanguageManager LangManager
+
+<MudMenu Class="mr-4"
+         Icon="@Icons.Material.Filled.Translate"
+         Variant="Variant.Outlined"
+         Color="Color.Inherit"
+         ActivationEvent="@MouseEvent.MouseOver"
+         AnchorOrigin="Origin.BottomCenter"
+         TransformOrigin="Origin.TopCenter">
+    <MudMenuItem OnClick="@(e => LangManager.SwitchLanguage("en-US"))">English</MudMenuItem>
+    <MudMenuItem OnClick="@(e => LangManager.SwitchLanguage("ar-IQ"))">Arabic</MudMenuItem>
+    <MudMenuItem OnClick="@(e => LangManager.SwitchLanguage("ku-IQ"))">Kurdish</MudMenuItem>
+</MudMenu>
