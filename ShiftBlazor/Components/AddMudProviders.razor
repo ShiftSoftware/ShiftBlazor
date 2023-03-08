@@ -1,4 +1,6 @@
-﻿<MudThemeProvider @bind-IsDarkMode="IsDarkMode"
+﻿@inject SettingManager SetMan
+
+<MudThemeProvider @bind-IsDarkMode="IsDarkMode"
                   DefaultScrollbar="@DefaultScrollbar"
                   Theme="Theme" />
 <MudDialogProvider CloseButton="_DialogOptions.CloseButton"
@@ -31,7 +33,7 @@
     protected override void OnInitialized()
     {
         _DialogOptions.CloseButton = false;
-        _DialogOptions.Position = DialogPosition.Center;
+        _DialogOptions.Position = SetMan.Settings.ModalPosition;
         _DialogOptions.CloseOnEscapeKey = true;
         _DialogOptions.DisableBackdropClick = true;
         _DialogOptions.FullWidth = true;

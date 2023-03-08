@@ -33,7 +33,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
             services.AddSingleton(sp => new ODataQuery(options.ODataEndpoint));
             services.AddScoped<ShiftModalService>();
             services.AddScoped<MessageService>();
-            services.AddScoped<LanguageManager>();
+            services.AddScoped<SettingManager>();
 
             services.AddSyncfusionBlazor(syncConfig =>
             {

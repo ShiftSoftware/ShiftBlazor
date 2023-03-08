@@ -16,6 +16,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
+        [Inject] SettingManager SetMan { get; set; } = default!;
         [Inject]
         protected HttpClient HttpClient { get; set; }
 
@@ -215,6 +216,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 DisablePagination = true;
             }
+
+            if (SetMan.Settings.ListPageSize != null)
+            {
+                PageSize = SetMan.Settings.ListPageSize.Value;
+            };
         }
 
         public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
@@ -232,6 +238,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             ActionUrlBroken = true;
             MsgService.Error("Error getting list of items", "Error getting list of items", args.Error.ToString());
+        }
+
+        private void ActionStartHandler(ActionEventArgs<T> args)
+        {
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.Paging)
+            {
+                var pageSize = SetMan.Settings.ListPageSize;
+                var currentPageSize = this.Grid?.PageSettings.PageSize;
+
+                if (pageSize != null && pageSize != currentPageSize)
+                {
+                    SetMan.SetListPageSize(currentPageSize);
+                }
+            }
         }
 
         public async Task<SelectedItems> GetSelectedItems()

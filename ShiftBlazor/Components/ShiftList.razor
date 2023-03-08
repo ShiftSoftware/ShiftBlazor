@@ -89,7 +89,7 @@
                 <SfDataManager HttpClientInstance="HttpClient" Url="@Action" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true" />
             }
 
-            <GridEvents OnActionFailure="ErrorHandler" TValue="T" />
+            <GridEvents OnActionBegin="ActionStartHandler" OnActionFailure="ErrorHandler" TValue="T" />
             <GridEditSettings AllowAdding="true" Mode="EditMode.Normal"></GridEditSettings>
             <GridPageSettings PageSize="@PageSize" PageSizes="new int[]{5, 10, 50, 100, 250, 500}" ></GridPageSettings>
 
