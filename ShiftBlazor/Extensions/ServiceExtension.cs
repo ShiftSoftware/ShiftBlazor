@@ -4,6 +4,7 @@ using MudBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Services;
 using Syncfusion.Licensing;
 using Syncfusion.Blazor;
+using Blazored.LocalStorage;
 
 namespace ShiftSoftware.ShiftBlazor.Extensions
 {
@@ -29,6 +30,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
                 options.MudBlazorConfiguration?.Invoke(mudConfig);
             });
 
+            services.AddBlazoredLocalStorage();
             services.AddSingleton<ClipboardService>();
             services.AddSingleton(sp => new ODataQuery(options.ODataEndpoint));
             services.AddScoped<ShiftModalService>();
