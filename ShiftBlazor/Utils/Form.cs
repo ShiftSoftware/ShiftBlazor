@@ -23,6 +23,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             Delete,
             Save,
             Fetch,
+            Custom,
         }
     }
 }
