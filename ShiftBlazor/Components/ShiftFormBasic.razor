@@ -9,7 +9,10 @@
 }
 
 <article style="height: 100%;">
-    <EditForm EditContext="editContext" OnValidSubmit="ValidSubmitHandler" OnInvalidSubmit="InvalidSubmitHandler" style="height: 100%;" con>
+    <EditForm EditContext="editContext"
+              OnValidSubmit="ValidSubmitHandler"
+              OnInvalidSubmit="InvalidSubmitHandler"
+              style="height: 100%;">
         <FluentValidationValidator DisableAssemblyScanning="Validator != null" Validator="Validator" />
         @if (Validator == null)
         {
@@ -26,11 +29,11 @@
                         <MudIcon Icon="@IconSvg"></MudIcon>
                         <MudText Class="px-4" Style="margin:0;">@(Title ?? "Form")</MudText>
 
-                            @ToolbarStartTemplate
+                        @ToolbarStartTemplate
 
-                            <MudSpacer></MudSpacer>
+                        <MudSpacer></MudSpacer>
 
-                            @if (ToolbarCenterTemplate != null)
+                        @if (ToolbarCenterTemplate != null)
                         {
                             @ToolbarCenterTemplate
                             <MudSpacer></MudSpacer>
@@ -68,7 +71,7 @@
                 }
             </header>
 
-            <div class="@(MudDialog != null ? "shift-scrollable-content-wrapper form-body" : "form-body")">
+            <div class="@ContentCssClass">
                 <div class="pa-6">
                     <CascadingValue Value="Mode">
                         <CascadingValue Value="TaskInProgress">

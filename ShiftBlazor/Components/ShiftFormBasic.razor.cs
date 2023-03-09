@@ -164,11 +164,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string AlertMessage { get; set; } = default!;
 
         internal EditContext editContext = default!;
+        internal string ContentCssClass
+        {
+            get
+            {
+                var css = "form-body";
+                if (MudDialog != null) css += " shift-scrollable-content-wrapper";
+                return css;
+            }
+        }
 
         protected override void OnInitialized()
         {
-            base.OnInitialized();
-
             editContext = new(Value);
 
             if (!string.IsNullOrWhiteSpace(SubmitText))
@@ -260,12 +267,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             AlertSeverity = severity;
             AlertMessage = message;
             AlertEnabled = true;
+            InvokeAsync(StateHasChanged);
             Task.Run(async () => {
                 if (durationInSeconds.HasValue)
                 {
                     await Task.Delay(durationInSeconds.Value * 1000);
                     AlertEnabled = false;
-                    StateHasChanged();
+                    await InvokeAsync(StateHasChanged);
                 }
                 else
                 {
