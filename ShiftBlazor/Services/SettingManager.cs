@@ -22,7 +22,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             Settings = GetSettings();
 
-            UpdateCulture(Settings.CultureName);
+            UpdateCulture();
         }
 
         public void SwitchLanguage(string name, bool forceReload = true)
@@ -31,7 +31,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             SyncLocalStorage.SetItem(Key, Settings);
 
-            UpdateCulture(name);
+            UpdateCulture();
 
             if (forceReload)
             {
@@ -49,6 +49,17 @@ namespace ShiftSoftware.ShiftBlazor.Services
         {
             Settings.ModalPosition = position;
             SyncLocalStorage.SetItem(Key, Settings);
+        }
+
+        public CultureInfo GetCulture()
+        {
+            return new CultureInfo(Settings.CultureName)
+            {
+                DateTimeFormat = new DateTimeFormatInfo()
+                {
+                    ShortDatePattern = Settings.DateTimeFormat,
+                },
+            };
         }
 
         private ShiftBlazorSettings GetSettings()
@@ -70,15 +81,9 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return settings;
         }
 
-        private void UpdateCulture(string name)
+        private void UpdateCulture()
         {
-            CultureInfo culture = new(name)
-            {
-                DateTimeFormat = new DateTimeFormatInfo()
-                {
-                    ShortDatePattern = Settings.DateTimeFormat,
-                },
-            };
+            var culture = GetCulture();
 
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
@@ -86,7 +91,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             if (Http != null)
             {
                 Http.DefaultRequestHeaders.AcceptLanguage.Clear();
-                Http.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue(name));
+                Http.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue(culture.Name));
             }
         }
 
