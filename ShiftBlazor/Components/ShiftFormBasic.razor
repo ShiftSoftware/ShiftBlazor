@@ -102,7 +102,7 @@
 
                         @if (!HideSubmit)
                         {
-                            <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@(TaskInProgress != Tasks.None)">
+                            <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@_DisableSubmit">
                                 @if (TaskInProgress == Tasks.Save)
                                 {
                                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />

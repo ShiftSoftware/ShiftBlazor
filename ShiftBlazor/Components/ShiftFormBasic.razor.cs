@@ -173,6 +173,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return css;
             }
         }
+        internal bool _DisableSubmit { get => TaskInProgress != Tasks.None || !editContext.IsModified(); }
 
         protected override void OnInitialized()
         {
