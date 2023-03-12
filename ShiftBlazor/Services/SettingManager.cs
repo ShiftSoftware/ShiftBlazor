@@ -85,8 +85,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
         {
             var culture = GetCulture();
 
-            CultureInfo.DefaultThreadCurrentCulture = culture;
-            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            //CultureInfo.DefaultThreadCurrentCulture = culture;
+            //CultureInfo.DefaultThreadCurrentUICulture = culture;
 
             if (Http != null)
             {
