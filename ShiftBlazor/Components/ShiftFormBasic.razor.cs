@@ -157,7 +157,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal virtual bool HideSubmit { get; set; }
         internal virtual string _SubmitText { get; set; } = "Submit";
-        internal bool IsModified { get; set; }
         internal Tasks TaskInProgress { get; set; }
         internal bool AlertEnabled { get; set; } = false;
         internal MudBlazor.Severity AlertSeverity { get; set; }
@@ -173,7 +172,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return css;
             }
         }
-        internal bool _DisableSubmit { get => TaskInProgress != Tasks.None || !editContext.IsModified(); }
+        internal bool IsModified = false;
+        internal bool _DisableSubmit { get => TaskInProgress != Tasks.None || (!IsModified && Mode == Modes.View); }
 
         protected override void OnInitialized()
         {
