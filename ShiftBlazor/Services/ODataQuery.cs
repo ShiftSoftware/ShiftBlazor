@@ -6,7 +6,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
     public class ODataQuery : DataServiceContext
     {
         public ODataQuery(SettingManager settings) :
-            this(settings.Configuration.BaseAddress.AddUrlPath(settings.Configuration.ODataPath))
+            this(settings.Configuration.ODataPath)
         {
         }
 
