@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.JSInterop;
+using ShiftSoftware.ShiftBlazor.Extensions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -19,7 +20,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] NavigationManager NavManager { get; set; } = default!;
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
-
+        [Inject] SettingManager SettingManager { get; set; } = default!;
         /// <summary>
         /// The URL endpoint that processes the CRUD operations.
         /// </summary>
@@ -93,7 +94,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool Maximized { get; set; }
         internal string ItemUrl
         {
-            get => Mode == Modes.Create ? Action : Combine(Action, Key?.ToString()) ;
+            get
+            {
+                var path = SettingManager.Configuration.ApiPath.AddUrlPath(Action);
+                return Mode == Modes.Create ? path : path.AddUrlPath(Key?.ToString());
+        }
         }
         internal override bool HideSubmit {
             get => (Mode == Modes.View ? true : base.HideSubmit);
@@ -113,6 +118,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override async Task OnInitializedAsync()
         {
+
             if (Key == null && Mode != Modes.Create)
             {
                 await SetMode(Modes.Create);
@@ -348,7 +354,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (MudDialog == null)
             {
-                NavManager.NavigateTo(Combine(NavManager.Uri, key.ToString()));
+                NavManager.NavigateTo(NavManager.Uri.AddUrlPath(key.ToString()));
             }
             else
             {
@@ -388,16 +394,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             return body;
-        }
-        public static string Combine(string uri1, string? uri2)
-        {
-            if (uri2 == null)
-            {
-                return uri1;
-            }
-            uri1 = uri1.TrimEnd('/');
-            uri2 = uri2.TrimStart('/');
-            return string.Format("{0}/{1}", uri1, uri2);
         }
     }
 }

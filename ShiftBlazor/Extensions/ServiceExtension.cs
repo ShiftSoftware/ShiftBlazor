@@ -5,6 +5,8 @@ using ShiftSoftware.ShiftBlazor.Services;
 using Syncfusion.Licensing;
 using Syncfusion.Blazor;
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components;
+using static ShiftSoftware.ShiftBlazor.Services.SettingManager;
 
 namespace ShiftSoftware.ShiftBlazor.Extensions
 {
@@ -32,10 +34,15 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
 
             services.AddBlazoredLocalStorage();
             services.AddSingleton<ClipboardService>();
-            services.AddSingleton(sp => new ODataQuery(options.ODataEndpoint));
+            services.AddScoped<ODataQuery>();
             services.AddScoped<ShiftModalService>();
             services.AddScoped<MessageService>();
-            services.AddScoped<SettingManager>();
+            services.AddScoped(x =>
+                new SettingManager(x.GetRequiredService<ISyncLocalStorageService>(),
+                                   x.GetRequiredService<NavigationManager>(),
+                                   x.GetRequiredService<HttpClient>(),
+                                   config => options.ShiftConfiguration.Invoke(config))
+            );
 
             services.AddSyncfusionBlazor(syncConfig =>
             {
@@ -49,10 +56,10 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
 
         public class ShiftBlazorOptions
         {
-            public string ODataEndpoint { get; set; }
             public string? SyncfusionLicense { get; set; }
             public Action<MudServicesConfiguration> MudBlazorConfiguration { get; set; }
             public Action<GlobalOptions> SyncfusionConfiguration { get; set; }
+            public Action<ShiftBlazorConfiguration> ShiftConfiguration { get; set; }
         }
     }
 }
