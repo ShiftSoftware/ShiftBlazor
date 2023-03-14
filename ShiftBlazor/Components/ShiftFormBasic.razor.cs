@@ -173,7 +173,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
         internal bool IsModified = false;
-        internal bool _DisableSubmit { get => TaskInProgress != Tasks.None || (!IsModified && Mode == Modes.View); }
+        internal bool _DisableSubmit { get => TaskInProgress != Tasks.None || (!IsModified && Mode == Modes.Edit); }
 
         protected override void OnInitialized()
         {
