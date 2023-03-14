@@ -99,12 +99,12 @@
             <GridColumns>
                 <GridColumn IsPrimaryKey="true" Visible="false" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
 
-                @if (EnableVirtualization) {
+                @if (EnableVirtualization && !DisableSelection) {
                     <GridColumn Type="ColumnType.CheckBox" Width="50">
                         <HeaderTemplate/>
                     </GridColumn>
                 }
-                else
+                else if (!DisableSelection)
                 {
                     <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
                 }
