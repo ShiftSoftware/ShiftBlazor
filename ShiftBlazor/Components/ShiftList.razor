@@ -4,64 +4,83 @@
 @using Syncfusion.Blazor.Buttons
 @typeparam T where T : ShiftEntityDTOBase, new()
 
-<PageTitle>@Title</PageTitle>
+@if (!string.IsNullOrWhiteSpace(Title))
+{
+    <PageTitle>@Title</PageTitle>
+}
 
 <MudPaper Elevation="25">
+    <header>
+        <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
+            <MudIcon Icon="@IconSvg"></MudIcon>
+            <MudText Class="px-4" Style="margin:0;">@(Title ?? "List")</MudText>
 
-    <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
-        <MudIcon Icon="@IconSvg"></MudIcon>
-        <MudText Class="px-4" Style="margin:0;">@(Title ?? "List")</MudText>
-
-        @ToolbarTemplate
+            @ToolbarStartTemplate
         
-        @if (!EmbededInsideForm && (EnablePrint || EnableCsvExcelExport || EnablePdfExport) || RenderAddButton)
-        {
             <MudSpacer></MudSpacer>
-        }
 
-        @if (!EmbededInsideForm && EnablePrint)
-        {
-            <MudTooltip Text="Print">
-                <MudIconButton Icon="@Icons.Material.Filled.Print" Color="Color.Warning" OnClick="PrintList"/>
-            </MudTooltip>
-        }
-        @if (!EmbededInsideForm && (EnableCsvExcelExport || EnablePdfExport)) {
-            <MudTooltip Text="Download">
-                <MudMenu Icon="@Icons.Material.Filled.FileDownload" Color="Color.Warning">
-                    @if (EnableCsvExcelExport)
-                    {
-                        <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">CSV Export</MudMenuItem>
-                        <MudMenuItem OnClick="() => DownloadList(DownloadType.Excel)">Excel Export</MudMenuItem>
-                    }
-                    @if (EnablePdfExport) {
-                        <MudMenuItem OnClick="() => DownloadList(DownloadType.PDF)">PDF Export</MudMenuItem>
-                    }
-                </MudMenu>
-            </MudTooltip>
-        }
+            @ToolbarEndTemplate
 
-        @if (RenderAddButton)
-        {
-            <MudTooltip Text="Add">
-                <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Primary" OnClick="AddItem">
-                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.AddCircle" />
-                </MudButton>
-            </MudTooltip>
-        }
+            @if (IsEmbeded != true)
+            {
+                @if (EnablePrint)
+                {
+                    <MudTooltip Text="Print">
+                        <MudIconButton Icon="@Icons.Material.Filled.Print"
+                               Color="Color.Warning"
+                               OnClick="PrintList" />
+                    </MudTooltip>
+                }
+                @if (EnableCsvExcelExport || EnablePdfExport) {
+                    <MudTooltip Text="Download">
+                        <MudMenu Icon="@Icons.Material.Filled.FileDownload" Color="Color.Warning">
+                            @if (EnableCsvExcelExport)
+                            {
+                                <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">CSV Export</MudMenuItem>
+                                <MudMenuItem OnClick="() => DownloadList(DownloadType.Excel)">Excel Export</MudMenuItem>
+                            }
+                            @if (EnablePdfExport) {
+                                <MudMenuItem OnClick="() => DownloadList(DownloadType.PDF)">PDF Export</MudMenuItem>
+                            }
+                        </MudMenu>
+                    </MudTooltip>
+                }
+            }
 
+            @if (RenderAddButton)
+            {
+                <MudTooltip Text="Add">
+                    <MudButton Style="min-width:40px;"
+                           Variant="Variant.Text"
+                           Size="Size.Medium"
+                           Color="Color.Primary"
+                           OnClick="AddItem">
+                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.AddCircle" />
+                    </MudButton>
+                </MudTooltip>
+            }
+            @if ((MudDialog != null && IsEmbeded != true) && (RenderAddButton || EnableCsvExcelExport || EnablePdfExport || EnablePrint))
+            {
+                <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
+            }
 
-        @if (MudDialog != null && !EmbededInsideForm)
-        {
-            <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
+            @if (MudDialog != null && IsEmbeded != true)
+            {
+                @ToolbarControlsTemplate
 
-            <MudTooltip Text="Close">
-                <MudButton Style="min-width:40px;" Variant="Variant.Text" Size="Size.Medium" Color="Color.Default" OnClick="CloseDialog">
-                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
-                </MudButton>
-            </MudTooltip>
-        }
+                <MudTooltip Text="Close">
+                    <MudButton Style="min-width:40px;"
+                           Variant="Variant.Text"
+                           Size="Size.Medium"
+                           Color="Color.Default"
+                           OnClick="CloseDialog">
+                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                    </MudButton>
+                </MudTooltip>
+            }
 
-    </MudToolBar>
+        </MudToolBar>
+    </header>
 
     @if (Values == null && string.IsNullOrWhiteSpace(Action))
     {

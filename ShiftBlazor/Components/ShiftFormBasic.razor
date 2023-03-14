@@ -73,9 +73,11 @@
 
             <div class="@ContentCssClass">
                 <div class="pa-6">
-                    <CascadingValue Value="Mode">
-                        <CascadingValue Value="TaskInProgress">
-                            @ChildContent
+                    <CascadingValue Name="FormChild" Value="@true" IsFixed="@true">
+                        <CascadingValue Value="@Mode">
+                            <CascadingValue Value="@TaskInProgress">
+                                @ChildContent
+                            </CascadingValue>
                         </CascadingValue>
                     </CascadingValue>
                 </div>

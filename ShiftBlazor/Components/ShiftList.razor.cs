@@ -24,6 +24,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         protected MudDialogInstance? MudDialog { get; set; }
 
         /// <summary>
+        /// To check whether this list is currently embeded inside a form component.
+        /// </summary>
+        [CascadingParameter(Name = "FormChild")]
+        public bool? IsEmbeded { get; set; }
+
+        /// <summary>
         /// The current fetched items, this will be fetched from the OData API endpoint that is provided in the Action paramater.
         /// </summary>
         [Parameter]
@@ -133,13 +139,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         public RenderFragment<T>? ActionsTemplate { get; set; }
-        
+
         /// <summary>
-        /// Used to append elements after the title element in the header of the list.
+        /// Used to add custom elements to the start of the header toolbar.
         /// </summary>
         [Parameter]
-        public RenderFragment? ToolbarTemplate { get; set; }
-        
+        public RenderFragment? ToolbarStartTemplate { get; set; }
+
+        /// <summary>
+        /// Used to add custom elements to the end of the header toolbar.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? ToolbarEndTemplate { get; set; }
+
+        /// <summary>
+        /// Used to add custom elements to the controls section of the header toolbar.
+        /// This section is only visible when the form is opened in a dialog.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? ToolbarControlsTemplate { get; set; }
+
         /// <summary>
         /// To pass Syncfusion's OData query data.
         /// </summary>
@@ -169,12 +188,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         public bool AutoGenerateColumns { get; set; } = true;
-        
-        /// <summary>
-        /// To specfy whether this list is currently embeded inside another component that already has a header.
-        /// </summary>
-        [Parameter]
-        public bool EmbededInsideForm { get; set; }
 
         /// <summary>
         /// The icon displayed before the Form Title, in a string in SVG format.
@@ -213,7 +226,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             base.OnInitialized();
 
-            if (EmbededInsideForm)
+            if (IsEmbeded == true)
             {
                 DisablePagination = true;
             }
