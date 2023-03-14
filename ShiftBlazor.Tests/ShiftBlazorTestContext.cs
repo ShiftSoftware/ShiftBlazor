@@ -30,7 +30,12 @@ namespace ShiftSoftware.ShiftBlazor.Tests
 
             Services.AddShiftServices(config =>
             {
-                config.ODataEndpoint = BaseUrl + ODataBaseUrl;
+                config.ShiftConfiguration = options =>
+                {
+                    options.BaseAddress = BaseUrl;
+                    options.ApiPath = "/api";
+                    options.ODataPath = ODataBaseUrl;
+                };
                 config.MudBlazorConfiguration = options =>
                 {
                     options.SnackbarConfiguration.ShowTransitionDuration = 0;

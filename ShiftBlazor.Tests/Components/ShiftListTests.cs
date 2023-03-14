@@ -423,7 +423,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         var comp = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.ToolbarTemplate, $"<button>{text}</button>")
+            .Add(p => p.ToolbarStartTemplate, $"<button>{text}</button>")
             .Add(p => p.DisablePagination, DisablePaging)
         );
 
@@ -500,10 +500,11 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldEmbededInsideForm()
     {
+        RenderTree.Add<ShiftFormBasic<ShiftEntityDTO>>();
+
         var comp = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
             .Add(p => p.Action, ODataBaseUrl + "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.EmbededInsideForm, true)
             .Add(p => p.DisablePagination, DisablePaging)
         );
 
