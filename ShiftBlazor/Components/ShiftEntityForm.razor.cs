@@ -146,7 +146,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal void FieldChangeHandler(object? sender = null, FieldChangedEventArgs? args = null)
         {
-            IsModified = Mode == Modes.Edit && !JsonSerializer.Serialize(Value).Equals(OriginalValue);
+            if (JsonSerializer.Serialize(Value).Equals(OriginalValue))
+            {
+                editContext.MarkAsUnmodified();
+            }
+            StateHasChanged();
         }
 
         public async Task DeleteItem()

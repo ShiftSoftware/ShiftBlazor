@@ -2,6 +2,7 @@
 @using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor.Data
 @using Syncfusion.Blazor.Buttons
+@using ShiftSoftware.ShiftBlazor.Extensions
 @typeparam T where T : ShiftEntityDTOBase, new()
 
 @if (!string.IsNullOrWhiteSpace(Title))
@@ -110,7 +111,7 @@
                 Height="@GridHeight">
 
             @if (Values == null) {
-                <SfDataManager HttpClientInstance="HttpClient" Url="@Action" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true" />
+                <SfDataManager HttpClientInstance="HttpClient" Url="@SetMan.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true" />
             }
 
             <GridEvents OnRecordClick="RecordClickHandler" OnActionBegin="ActionStartHandler" OnActionFailure="ErrorHandler" TValue="T" />
