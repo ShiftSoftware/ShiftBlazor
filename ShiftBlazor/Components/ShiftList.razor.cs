@@ -124,7 +124,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         public bool DisableSelection { get; set; }
-        
+
         /// <summary>
         /// If true, the toolbar in the header will not be rendered.
         /// </summary>
@@ -214,6 +214,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public Type? ComponentType { get; set; }
 
+        [Parameter]
+        public EventCallback<RecordClickEventArgs<T>> OnRowClick { get; set; }
+
         public SfGrid<T>? Grid;
         private readonly PropertyInfo[] Props = typeof(T).GetProperties();
         private CustomMessageHandler MessageHandler = new();
@@ -232,6 +235,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public ShiftList()
         {
             HttpClient = new HttpClient(MessageHandler);
+        }
+
+        private async Task RecordClickHandler(RecordClickEventArgs<T> args)
+        {
+            if (OnRowClick.HasDelegate)
+            {
+                await OnRowClick.InvokeAsync(args);
+            }
         }
 
         protected override void OnInitialized()
