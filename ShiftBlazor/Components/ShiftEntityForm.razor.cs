@@ -40,22 +40,28 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback<object?> KeyChanged { get; set; }
 
         /// <summary>
-        /// Specifies whether to hide Print button or not.
+        /// Specifies whether to render the Print button or not.
         /// </summary>
         [Parameter]
         public bool HidePrint { get; set; }
 
         /// <summary>
-        /// Specifies whether to hide Delete button or not.
+        /// Specifies whether to render the Delete button or not.
         /// </summary>
         [Parameter]
         public bool HideDelete { get; set; }
 
         /// <summary>
-        /// Specifies whether to hide Edit button or not.
+        /// Specifies whether to render the Edit button or not.
         /// </summary>
         [Parameter]
         public bool HideEdit { get; set; }
+
+        /// <summary>
+        /// Specifies whether to render the View Revisions button or not.
+        /// </summary>
+        [Parameter]
+        public bool HideRevisions { get; set; }
 
         /// <summary>
         /// Specifies whether to disable Print button or not.
@@ -74,6 +80,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         public bool DisableEdit { get; set; }
+
+        /// <summary>
+        /// Specifies whether to disable View Revisions button or not.
+        /// </summary>
+        [Parameter]
+        public bool DisableRevisions { get; set; }
 
         /// <summary>
         /// An event triggered when Print button is clicked, by default Print button does nothing.
@@ -98,10 +110,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var path = SettingManager.Configuration.ApiPath.AddUrlPath(Action);
                 return Mode == Modes.Create ? path : path.AddUrlPath(Key?.ToString());
-        }
+            }
         }
         internal override bool HideSubmit {
-            get => (Mode == Modes.View ? true : base.HideSubmit);
+            get => (Mode < Modes.Edit ? true : base.HideSubmit);
             set => base.HideSubmit = value;
         }
         internal override string _SubmitText
@@ -185,15 +197,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (await ConfirmClose())
             {
                 await SetMode(Modes.View);
-                if (string.IsNullOrWhiteSpace(OriginalValue))
-                {
-                    await SetValue(new T());
-                }
-                else
-                {
-                    var original = JsonSerializer.Deserialize<T>(OriginalValue);
-                    await SetValue(original, false);
-                }
+                await RestoreOriginalValue();
             }
         }
 
@@ -258,7 +262,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal async Task SetValue(T? value, bool copyValue = true)
         {
             await base.SetValue(value);
-            
+
             editContext.OnFieldChanged += FieldChangeHandler;
 
             if (copyValue)
@@ -282,12 +286,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             MudDialog.SetOptions(MudDialog.Options);
         }
 
-        internal async Task FetchItem()
+        internal async Task FetchItem(DateTime? asOf = null)
         {
             await RunTask(Tasks.Fetch, async () =>
             {
-                using (var res = await Http.GetAsync(ItemUrl))
-                    await SetValue(await ParseEntityResponse(res));
+                var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + asOf;
+                using (var res = await Http.GetAsync(url))
+                    await SetValue(await ParseEntityResponse(res), asOf == null);
             });
         }
 
@@ -375,6 +380,62 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             var modals = ShiftModal.ParseModalUrl(url);
             await ShiftModal.Open(modals.First().Name, Key, Utils.ModalOpenMode.NewTab, modals.First().Parameters);
+        }
+
+        internal async Task ViewRevisions()
+        {
+            DateTime? date = null;
+
+            await RunTask(Tasks.FetchRevisions, async () =>
+            {
+                var path = SettingManager.Configuration.ODataPath.AddUrlPath(Action, Key?.ToString(), "revisions");
+                var res = await Http.GetFromJsonAsync<ODataDTO<List<RevisionDTO>>>(path);
+
+                if (res == null)
+                {
+                    return;
+                }
+
+                var dParams = new DialogParameters
+                {
+                    {"Revisions", res.Value},
+                    {"Title", Title + " Revisions" },
+                };
+
+                var options = new DialogOptions
+                {
+                    NoHeader = true,
+                };
+
+                var result = await DialogService.Show<RevisionViewer>("", dParams, options).Result;
+                date = (DateTime?)result.Data;
+            });
+
+            if (date != null)
+            {
+                await FetchItem(date);
+                await SetMode(Modes.Archive);
+            }
+
+        }
+
+        internal async Task CloseRevision()
+        {
+            await SetMode(Modes.View);
+            await RestoreOriginalValue();
+        }
+
+        internal async Task RestoreOriginalValue()
+        {
+            if (string.IsNullOrWhiteSpace(OriginalValue))
+            {
+                await SetValue(new T());
+            }
+            else
+            {
+                var original = JsonSerializer.Deserialize<T>(OriginalValue);
+                await SetValue(original, false);
+            }
         }
 
         //helpers

@@ -8,17 +8,15 @@
 
 @code {
 
-    public RenderFragment PrintButton
+    private RenderFragment PrintButton
     {
-        get
-        {
-            return
+        get =>
             @<MudTooltip Text="Print">
                 <MudButton Style="min-width:40px;"
                            Color="Color.Warning"
                            Variant="Variant.Text"
                            Size="Size.Medium"
-                           Disabled="DisablePrint || Mode != Modes.View || TaskInProgress != Tasks.None"
+                           Disabled="DisablePrint || Mode > Modes.Archive || TaskInProgress != Tasks.None"
                            OnClick="PrintItem">
                     @if (TaskInProgress == Tasks.Print)
                     {
@@ -30,17 +28,14 @@
                     }
                 </MudButton>
             </MudTooltip>;
-        }
     }
 
-    public RenderFragment DeleteButton
+    private RenderFragment DeleteButton
     {
-        get
-        {
-            return
+        get =>
             @<MudTooltip Text="Delete">
                 <MudButton Style="min-width:40px;"
-                           Disabled="DisableDelete || Mode != Modes.View || TaskInProgress != Tasks.None"
+                           Disabled="DisableDelete || Mode > Modes.View || TaskInProgress != Tasks.None"
                            Variant="Variant.Text"
                            Size="Size.Medium"
                            Color="Color.Error"
@@ -55,17 +50,14 @@
                     }
                 </MudButton>
             </MudTooltip>;
-        }
     }
 
-    public RenderFragment EditButton
+    private RenderFragment EditButton
     {
-        get
-        {
-            return
+        get =>
             @<MudTooltip Text="Edit">
                 <MudButton Style="min-width:40px;"
-                           Disabled="DisableEdit || Mode != Modes.View || TaskInProgress != Tasks.None"
+                           Disabled="DisableEdit || Mode > Modes.View || TaskInProgress != Tasks.None"
                            Variant="Variant.Text"
                            Size="Size.Medium"
                            Color="Color.Primary"
@@ -73,14 +65,35 @@
                     <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
                 </MudButton>
             </MudTooltip>;
-        }
+    }
+
+    private RenderFragment RevisionButton
+    {
+        get => 
+            @<MudTooltip Text="View Revisions">
+                <MudButton Style="min-width:40px;"
+                           Disabled="DisableRevisions || Mode > Modes.Archive || TaskInProgress != Tasks.None"
+                           Variant="Variant.Text"
+                           Size="Size.Medium"
+                           Color="Color.Warning"
+                           OnClick="ViewRevisions">
+                    @if (TaskInProgress == Tasks.FetchRevisions)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.History" />
+                    }
+                </MudButton>
+            </MudTooltip>;
     }
 
     public RenderFragment? ToolbarEnd
     {
         get
         {
-            if ((!OnPrint.HasDelegate || HidePrint) && HideDelete && HideEdit)
+            if ((!OnPrint.HasDelegate || HidePrint) && HideDelete && HideEdit && HideRevisions)
             {
                 return null;
             }
@@ -90,6 +103,11 @@
             if (OnPrint.HasDelegate && !HidePrint)
             {
                 fragment += PrintButton;
+            }
+            
+            if (!HideRevisions)
+            {
+                fragment += RevisionButton;
             }
 
             if (!HideDelete)
@@ -106,61 +124,72 @@
         }
     }
 
-    public RenderFragment ToolbarControls
+    public RenderFragment NewTabButton
     {
-        get
-        {
-            return
-            @<text>
-                <MudTooltip Text="Open In New Tab">
-                    <MudButton Variant="Variant.Text"
-                           Color="Color.Default"
-                           Style="min-width:40px;"
-                           OnClick="OpenInNewTab">
-                        <MudIcon Icon="@Icons.Material.Filled.OpenInNew"></MudIcon>
-                    </MudButton>
-                </MudTooltip>
-
-                <MudTooltip Text="@(Maximized != true ? "Maximize" : "Minimize")">
-                    <MudButton Style="min-width:40px;"
-                           Variant="Variant.Text"
-                           Size="Size.Medium"
-                           Color="Color.Default"
-                           OnClick="ResizeForm">
-                        <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
-                    </MudButton>
-                </MudTooltip>
-        </text>
-    ;
-        }
+        get =>
+            @<MudTooltip Text="Open In New Tab">
+                <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       Style="min-width:40px;"
+                       OnClick="OpenInNewTab">
+                    <MudIcon Icon="@Icons.Material.Filled.OpenInNew"></MudIcon>
+                </MudButton>
+            </MudTooltip>;
     }
 
-    public RenderFragment? FooterToolbarEnd
+    public RenderFragment MaximizeButton
     {
-        get
-        {
-            if (Mode == Modes.Edit)
-            {
-                return
-                    @<MudButton Disabled="@(TaskInProgress != Tasks.None)"
-                                StartIcon="@Icons.Material.Filled.Cancel"
-                                OnClick="CancelChanges">Cancel</MudButton>
+        get =>
+            @<MudTooltip Text="@(Maximized != true ? "Maximize" : "Minimize")">
+                <MudButton Style="min-width:40px;"
+                        Variant="Variant.Text"
+                        Size="Size.Medium"
+                        Color="Color.Default"
+                        OnClick="ResizeForm">
+                    <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
+                </MudButton>
+            </MudTooltip>
     ;
-            }
-            return null;
-        }
+    }
+
+    public RenderFragment ToolbarControls
+    {
+        get => NewTabButton + MaximizeButton;
     }
 
     public RenderFragment? Header
     {
-        get
-        {
-            if (Value.IsDeleted)
+        get =>
+            @<text>
+                @if (Mode == Modes.Archive)
+                {
+                    <MudAlert Severity="Severity.Warning">You are viewing a revision.</MudAlert>
+                }
+                @if (Value.IsDeleted)
+                {
+                    <MudAlert Severity="Severity.Error">This item is deleted.</MudAlert>
+                }
+            </text>
+    ;
+    }
+
+    public RenderFragment FooterToolbarEnd
+    {
+        get =>
+        @<text>
+            @if (Mode == Modes.Edit)
             {
-                return@<MudAlert Severity="Severity.Error">This item is deleted.</MudAlert>;
+                <MudButton Disabled="@(TaskInProgress != Tasks.None)"
+                           StartIcon="@Icons.Material.Filled.Cancel"
+                           OnClick="CancelChanges">Cancel</MudButton>
             }
-            return null;
-        }
+            else if (Mode == Modes.Archive)
+            {
+                <MudButton Disabled="@(TaskInProgress != Tasks.None)"
+                           StartIcon="@Icons.Material.Filled.Cancel"
+                           OnClick="CloseRevision">Back</MudButton>
+            }
+        </text>;
     }
 
     protected override void OnInitialized()

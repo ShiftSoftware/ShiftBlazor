@@ -12,6 +12,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
         public enum Modes
         {
             View = 0,
+            Archive = 5,
             Edit = 10,
             Create = 20,
         };
@@ -24,6 +25,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             Save,
             Fetch,
             Custom,
+            FetchRevisions,
         }
     }
 }

@@ -1,0 +1,62 @@
+﻿@using Syncfusion.Blazor.Grids;
+@inject ShiftModalService ShiftModal
+
+<ShiftList T="RevisionDTO"
+           Values="_Revisions"
+           DisableSelection="true"
+           OnRowClick="RowClickHandler"
+           DisableHeaderToolbar="true">
+
+    <HeaderTemplate>
+        <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
+            <MudIcon Icon="@Icons.Material.Filled.List"></MudIcon>
+            <MudText Class="px-4" Style="margin:0;">@Title</MudText>
+
+            <MudSpacer></MudSpacer>
+
+            @if (MudDialog != null)
+            {
+                <MudTooltip Text="Close">
+                    <MudButton Style="min-width:40px;"
+                           Variant="Variant.Text"
+                           Size="Size.Medium"
+                           Color="Color.Default"
+                           OnClick="Close">
+                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                    </MudButton>
+                </MudTooltip>
+            }
+        </MudToolBar>
+    </HeaderTemplate>
+</ShiftList>
+
+@code {
+
+    [CascadingParameter]
+    public MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter, EditorRequired]
+    public List<RevisionDTO> Revisions { get; set; } = new();
+
+    private List<RevisionDTO> _Revisions
+    {
+        get => Revisions.Where(x =>
+            x.ValidTo.HasValue && x.ValidTo.Value.Year <= DateTime.UtcNow.Year
+        ).ToList();
+    }
+
+    [Parameter]
+    public string Title { get; set; } = "Revisions";
+
+
+    private async Task RowClickHandler(RecordClickEventArgs<RevisionDTO> args)
+    {
+        await Task.Delay(1);
+        MudDialog?.Close(args.RowData.ValidTo);
+    }
+
+    private void Close()
+    {
+        MudDialog?.Close();
+    }
+}

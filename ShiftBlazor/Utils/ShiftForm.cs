@@ -15,7 +15,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
         public T TheItem { get; set; } = new T();
         public ShiftEntityForm<T>? FormContainer { get; set; }
 
-        public bool ReadOnly { get => Mode == Form.Modes.View; }
+        public bool ReadOnly { get => Mode < Form.Modes.Edit; }
         public bool Disabled { get => Task != Form.Tasks.None; }
         public Form.Tasks Task { get; set; }
 
