@@ -125,6 +125,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool DisableSelection { get; set; }
         
+        /// <summary>
+        /// If true, the toolbar in the header will not be rendered.
+        /// </summary>
+        [Parameter]
+        public bool DisableHeaderToolbar { get; set; }
+
         [Parameter]
         public RenderFragment? ChildContent { get; set; }
 
@@ -139,6 +145,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         public RenderFragment<T>? ActionsTemplate { get; set; }
+
+        /// <summary>
+        /// Used to add custom elements to the header.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? HeaderTemplate { get; set; }
 
         /// <summary>
         /// Used to add custom elements to the start of the header toolbar.

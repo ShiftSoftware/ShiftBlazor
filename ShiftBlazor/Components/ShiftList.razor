@@ -11,6 +11,8 @@
 
 <MudPaper Elevation="25">
     <header>
+        @if (!DisableHeaderToolbar)
+        {
         <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
             <MudIcon Icon="@IconSvg"></MudIcon>
             <MudText Class="px-4" Style="margin:0;">@(Title ?? "List")</MudText>
@@ -80,6 +82,9 @@
             }
 
         </MudToolBar>
+        }
+
+        @HeaderTemplate
     </header>
 
     @if (Values == null && string.IsNullOrWhiteSpace(Action))
