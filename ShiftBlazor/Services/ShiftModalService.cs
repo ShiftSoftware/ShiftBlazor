@@ -190,8 +190,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
 
             var options = new DialogOptions { NoHeader = true };
-            var diaRef = DialogService.Show(TComponent, "", dParams, options);
-            return await diaRef.Result;
+            var result = await DialogService.Show(TComponent, "", dParams, options).Result;
+            return result;
         }
 
         public List<ModalInfo> ParseModalUrl(string url)

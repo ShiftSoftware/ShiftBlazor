@@ -9,6 +9,7 @@
                    DisableBackdropClick="_DialogOptions.DisableBackdropClick"
                    FullWidth="_DialogOptions.FullWidth"
                    MaxWidth="_DialogOptions.MaxWidth"
+                   NoHeader="_DialogOptions.NoHeader"
                    />
 <MudSnackbarProvider />
 
@@ -32,11 +33,12 @@
 
     protected override void OnInitialized()
     {
-        _DialogOptions.CloseButton = false;
         _DialogOptions.Position = SetMan.Settings.ModalPosition;
         _DialogOptions.CloseOnEscapeKey = true;
         _DialogOptions.DisableBackdropClick = true;
         _DialogOptions.FullWidth = true;
+        _DialogOptions.NoHeader = false;
+        _DialogOptions.CloseButton = true;
         _DialogOptions.MaxWidth = MaxWidth.Large;
 
         DialogOptions?.Invoke(_DialogOptions);
