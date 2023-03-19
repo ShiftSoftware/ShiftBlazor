@@ -27,7 +27,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// To check whether this list is currently embeded inside a form component.
         /// </summary>
         [CascadingParameter(Name = "FormChild")]
-        public bool? IsEmbeded { get; set; }
+        public bool? IsEmbedded { get; set; }
 
         /// <summary>
         /// The current fetched items, this will be fetched from the OData API endpoint that is provided in the Action paramater.
@@ -247,13 +247,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            base.OnInitialized();
-
-            if (IsEmbeded == true)
-            {
-                DisablePagination = true;
-            }
-
             if (SetMan.Settings.ListPageSize != null)
             {
                 PageSize = SetMan.Settings.ListPageSize.Value;

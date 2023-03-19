@@ -24,7 +24,7 @@
 
                 @ToolbarEndTemplate
 
-                @if (IsEmbeded != true)
+                @if (IsEmbedded != true)
                 {
                     @if (EnablePrint)
                     {
@@ -62,12 +62,12 @@
                         </MudButton>
                     </MudTooltip>
                 }
-                @if ((MudDialog != null && IsEmbeded != true) && (RenderAddButton || EnableCsvExcelExport || EnablePdfExport || EnablePrint))
+                @if ((MudDialog != null && IsEmbedded != true) && (RenderAddButton || EnableCsvExcelExport || EnablePdfExport || EnablePrint))
                 {
                     <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
                 }
 
-                @if (MudDialog != null && IsEmbeded != true)
+                @if (MudDialog != null && IsEmbedded != true)
                 {
                     @ToolbarControlsTemplate
 
