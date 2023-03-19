@@ -58,9 +58,13 @@ namespace ShiftSoftware.ShiftBlazor.Services
         {
             return new CultureInfo(Settings.CultureName)
             {
-                DateTimeFormat = new DateTimeFormatInfo()
+                DateTimeFormat = new DateTimeFormatInfo
                 {
                     ShortDatePattern = Settings.DateTimeFormat,
+                },
+                NumberFormat = new NumberFormatInfo
+                {
+                    NativeDigits = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" },
                 },
             };
         }
