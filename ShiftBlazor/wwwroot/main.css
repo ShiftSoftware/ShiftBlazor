@@ -6,3 +6,11 @@
 .shift-toolbar-header > :last-child {
     margin-inline-end: -12px;
 }
+
+.e-pager div .mud-input-text {
+    display: inline-flex;
+}
+
+.e-pager div .mud-input-adornment-end, .e-pager div .mud-input-control.mud-select {
+    display: flex;
+}

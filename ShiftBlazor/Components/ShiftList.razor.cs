@@ -16,9 +16,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
-        [Inject] SettingManager SetMan { get; set; } = default!;
-        [Inject]
-        protected HttpClient HttpClient { get; set; }
+        [Inject] SettingManager SettingManager { get; set; } = default!;
+        [Inject] protected HttpClient HttpClient { get; set; }
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
@@ -222,15 +221,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private CustomMessageHandler MessageHandler = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
-
-        internal bool RenderAddButton
+        internal string GridContainerCssClass
         {
             get
             {
-                return !(DisableAdd || ComponentType == null);
+                var cssClasses = "";
+                cssClasses += MudDialog != null ? "shift-scrollable-content-wrapper" : "";
+                cssClasses += ActionUrlBroken ? " disable-grid" : "";
+                return cssClasses;
             }
         }
+
+        internal bool RenderAddButton { get => !(DisableAdd || ComponentType == null); }
         internal bool ActionUrlBroken = false;
+        internal bool IsReady = false;
 
         public ShiftList()
         {
@@ -247,9 +251,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            if (SetMan.Settings.ListPageSize != null)
+            if (SettingManager.Settings.ListPageSize != null)
             {
-                PageSize = SetMan.Settings.ListPageSize.Value;
+                PageSize = SettingManager.Settings.ListPageSize.Value;
             };
         }
 
@@ -268,20 +272,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             ActionUrlBroken = true;
             MsgService.Error("Error getting list of items", "Error getting list of items", args.Error.ToString());
-        }
-
-        private void ActionStartHandler(ActionEventArgs<T> args)
-        {
-            if (args.RequestType == Syncfusion.Blazor.Grids.Action.Paging)
-            {
-                var pageSize = SetMan.Settings.ListPageSize;
-                var currentPageSize = this.Grid?.PageSettings.PageSize;
-
-                if (pageSize != null && pageSize != currentPageSize)
-                {
-                    SetMan.SetListPageSize(currentPageSize);
-                }
-            }
         }
 
         public async Task<SelectedItems> GetSelectedItems()
@@ -357,6 +347,31 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (MudDialog != null)
             {
                 ShiftModal.Close(MudDialog);
+            }
+        }
+
+        internal async Task GoToPage(double page)
+        {
+            await Grid!.GoToPageAsync(page);
+        }
+
+        internal void PageSizeChangeHandler(int size)
+        {
+            PageSize = size;
+
+            var pageSize = SettingManager.Settings.ListPageSize;
+
+            if (pageSize == null || pageSize != size)
+            {
+                SettingManager.SetListPageSize(size);
+            }
+        }
+
+        public void OnDataBoundHandler(BeforeDataBoundArgs<T> args)
+        {
+            if (!IsReady)
+            {
+                IsReady = true;
             }
         }
 

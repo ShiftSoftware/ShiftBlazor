@@ -3,6 +3,7 @@
 @using Syncfusion.Blazor.Data
 @using Syncfusion.Blazor.Buttons
 @using ShiftSoftware.ShiftBlazor.Extensions
+@using Syncfusion.Blazor.Navigations;
 @typeparam T where T : ShiftEntityDTOBase, new()
 
 @if (!string.IsNullOrWhiteSpace(Title))
@@ -94,7 +95,7 @@
     }
     else
     {
-        <div class="@((MudDialog != null ? "shift-scrollable-content-wrapper" : "")+(ActionUrlBroken ? "disable-grid" : ""))">
+        <div class="@GridContainerCssClass">
             <SfGrid DataSource="Values"
                 TValue="T" @ref="Grid" class="pa-6"
                 ID="@Guid.NewGuid().ToString()"
@@ -111,16 +112,63 @@
                 Height="@GridHeight">
 
             @if (Values == null) {
-                <SfDataManager HttpClientInstance="HttpClient" Url="@SetMan.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true" />
+                <SfDataManager HttpClientInstance="HttpClient" Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true" />
             }
 
-            <GridEvents OnRecordClick="RecordClickHandler" OnActionBegin="ActionStartHandler" OnActionFailure="ErrorHandler" TValue="T" />
+            <GridEvents OnRecordClick="RecordClickHandler" OnDataBound="OnDataBoundHandler" OnActionFailure="ErrorHandler" TValue="T" />
             <GridEditSettings AllowAdding="true" Mode="EditMode.Normal"></GridEditSettings>
-            <GridPageSettings PageSize="@PageSize" PageSizes="PageSizes" ></GridPageSettings>
-
             <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
-            
             <GridSelectionSettings CheckboxOnly="true" PersistSelection="true" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
+
+            <GridPageSettings PageSize="@PageSize" PageSizes="@PageSizes">
+                <Template>
+                    @{
+                        var ctx = (PagerTemplateContext)context;
+                        <MudToolBar Dense="true" DisableGutters="false" Class="mt-4" Style="display: flex;">
+                            
+                            @if (!IsReady)
+                            {
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="500px" Height="25px"/>
+
+                                <MudSpacer></MudSpacer>
+                                <MudSkeleton Width="80px"/>
+                            }
+                            else
+                            {
+                                <MudStack Row="true" Spacing="6">
+
+                                    <MudButtonGroup OverrideStyles="false" >
+
+                                        <MudIconButton OnClick="() => GoToPage(1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft"></MudIconButton>
+                                        <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage - 1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@Icons.Material.Filled.KeyboardArrowLeft"></MudIconButton>
+                                        @for (var i = 1; i <= ctx.TotalPages; i++)
+                                        {
+                                            var _page = i;
+                                            <MudButton Color="(ctx.CurrentPage == _page ? Color.Secondary : Color.Default)" OnClick="() => GoToPage(_page)">@_page</MudButton>
+                                        }
+                                        <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage + 1)" Disabled="@(ctx.CurrentPage == ctx.TotalPages)" Icon="@Icons.Material.Filled.KeyboardArrowRight"></MudIconButton>
+                                        <MudIconButton OnClick="() => GoToPage(ctx.TotalPages)" Disabled="@(ctx.CurrentPage == ctx.TotalPages)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight"></MudIconButton>
+
+                                    </MudButtonGroup>
+                            
+                                    <MudSelect T="int" Label="Items Per Page" Value="PageSize" ValueChanged="PageSizeChangeHandler" Dense="true" Style="width: 150px;">
+                                        @foreach (var size in this.PageSizes)
+                                        {
+                                            <MudSelectItem Value="@size">@size</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudStack>
+
+                                <MudSpacer/>
+
+                                <MudText>@ctx.CurrentPage of @ctx.TotalPages (@ctx.TotalItemsCount)</MudText>
+
+                            }
+                        </MudToolBar>
+                    }
+                </Template>
+            </GridPageSettings>
+            
             <GridColumns>
                 <GridColumn IsPrimaryKey="true" Visible="false" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
 
