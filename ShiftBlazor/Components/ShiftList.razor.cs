@@ -352,7 +352,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task GoToPage(double page)
         {
-            await Grid!.GoToPageAsync(page);
+            if (Grid!.PageSettings.CurrentPage != page)
+            {
+                await Grid!.GoToPageAsync(page);
+            }
         }
 
         internal void PageSizeChangeHandler(int size)

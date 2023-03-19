@@ -131,7 +131,7 @@
                                 <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="500px" Height="25px"/>
 
                                 <MudSpacer></MudSpacer>
-                                <MudSkeleton Width="80px"/>
+                                <MudSkeleton Width="160px"/>
                             }
                             else
                             {
@@ -146,11 +146,11 @@
                                             var _page = i;
                                             <MudButton Color="(ctx.CurrentPage == _page ? Color.Secondary : Color.Default)" OnClick="() => GoToPage(_page)">@_page</MudButton>
                                         }
-                                        <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage + 1)" Disabled="@(ctx.CurrentPage == ctx.TotalPages)" Icon="@Icons.Material.Filled.KeyboardArrowRight"></MudIconButton>
-                                        <MudIconButton OnClick="() => GoToPage(ctx.TotalPages)" Disabled="@(ctx.CurrentPage == ctx.TotalPages)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight"></MudIconButton>
+                                        <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage + 1)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@Icons.Material.Filled.KeyboardArrowRight"></MudIconButton>
+                                        <MudIconButton OnClick="() => GoToPage(ctx.TotalPages)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight"></MudIconButton>
 
                                     </MudButtonGroup>
-                            
+
                                     <MudSelect T="int" Label="Items Per Page" Value="PageSize" ValueChanged="PageSizeChangeHandler" Dense="true" Style="width: 150px;">
                                         @foreach (var size in this.PageSizes)
                                         {
@@ -161,7 +161,7 @@
 
                                 <MudSpacer/>
 
-                                <MudText>@ctx.CurrentPage of @ctx.TotalPages (@ctx.TotalItemsCount)</MudText>
+                                <MudText>@(ctx.TotalItemsCount > 0 ? ctx.CurrentPage : 0) of @ctx.TotalPages pages (@ctx.TotalItemsCount items)</MudText>
 
                             }
                         </MudToolBar>
