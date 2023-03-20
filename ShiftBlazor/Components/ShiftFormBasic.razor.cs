@@ -20,32 +20,32 @@ namespace ShiftSoftware.ShiftBlazor.Components
         protected MudDialogInstance? MudDialog { get; set; }
 
         /// <summary>
-    ///     The current Mode of the form.
+        ///     The current Mode of the form.
         /// </summary>
         [Parameter]
         public Modes Mode { get; set; }
 
         /// <summary>
-    ///     An event triggered when the state of the Mode paramater has changed.
+        ///     An event triggered when the state of the Mode paramater has changed.
         /// </summary>
         [Parameter]
         public EventCallback<Modes> ModeChanged { get; set; }
 
         /// <summary>
-    ///     The current item being view/edited, this will be fetched from the API endpoint that is provided in the Action
-    ///     paramater.
+        ///     The current item being view/edited, this will be fetched from the API endpoint that is provided in the Action
+        ///     paramater.
         /// </summary>
         [Parameter]
-    public T Value { get; set; } = new();
+        public T Value { get; set; } = new();
 
         /// <summary>
-    ///     An event triggered when the state of Value has changed.
+        ///     An event triggered when the state of Value has changed.
         /// </summary>
         [Parameter]
         public EventCallback<T> ValueChanged { get; set; }
 
         /// <summary>
-    ///     The title to render on the form header.
+        ///     The title to render on the form header.
         /// </summary>
         [Parameter]
         public string? Title { get; set; }
@@ -54,82 +54,82 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public RenderFragment? ChildContent { get; set; }
 
         /// <summary>
-    ///     The icon displayed before the Form Title, in a string in SVG format.
+        ///     The icon displayed before the Form Title, in a string in SVG format.
         /// </summary>
         [Parameter]
-    public string IconSvg { get; set; } = Icons.Material.Filled.ListAlt;
+        public string IconSvg { get; set; } = Icons.Material.Filled.ListAlt;
 
         /// <summary>
-    ///     Model Validator object.
-    ///     If Validator is not set, reflection will be used to find the model validator.
-    ///     Otherwise if it is set, reflection will be disabled and DataAnnotationsValidator will also be disabled.
+        ///     Model Validator object.
+        ///     If Validator is not set, reflection will be used to find the model validator.
+        ///     Otherwise if it is set, reflection will be disabled and DataAnnotationsValidator will also be disabled.
         /// </summary>
         [Parameter]
         public AbstractValidator<T>? Validator { get; set; }
 
         /// <summary>
-    ///     Used to add custom elements to the header.
+        ///     Used to add custom elements to the header.
         /// </summary>
         [Parameter]
         public RenderFragment? HeaderTemplate { get; set; }
 
         /// <summary>
-    ///     Used to add custom elements to the footer.
+        ///     Used to add custom elements to the footer.
         /// </summary>
         [Parameter]
         public RenderFragment? FooterTemplate { get; set; }
 
         /// <summary>
-    ///     Used to add custom elements to the start of the header toolbar.
+        ///     Used to add custom elements to the start of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarStartTemplate { get; set; }
 
         /// <summary>
-    ///     Used to add custom elements to the end of the header toolbar.
+        ///     Used to add custom elements to the end of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarEndTemplate { get; set; }
 
         /// <summary>
-    ///     Used to add custom elements to the center of the header toolbar.
+        ///     Used to add custom elements to the center of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarCenterTemplate { get; set; }
 
         /// <summary>
-    ///     Used to add custom elements to the controls section of the header toolbar.
-    ///     This section is only visible when the form is opened in a dialog.
+        ///     Used to add custom elements to the controls section of the header toolbar.
+        ///     This section is only visible when the form is opened in a dialog.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarControlsTemplate { get; set; }
 
         /// <summary>
-    ///     Used to add custom elements to the start of the header toolbar.
+        ///     Used to add custom elements to the start of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? FooterToolbarStartTemplate { get; set; }
 
         /// <summary>
-    ///     Used to add custom elements to the end of the header toolbar.
+        ///     Used to add custom elements to the end of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? FooterToolbarEndTemplate { get; set; }
 
         /// <summary>
-    ///     Used to add custom elements to the center of the header toolbar.
+        ///     Used to add custom elements to the center of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? FooterToolbarCenterTemplate { get; set; }
 
         /// <summary>
-    ///     If true, the toolbar in the header will not be rendered
+        ///     If true, the toolbar in the header will not be rendered
         /// </summary>
         [Parameter]
         public bool DisableHeaderToolbar { get; set; }
 
         /// <summary>
-    ///     If true, the toolbar in the footer will not be rendered
+        ///     If true, the toolbar in the footer will not be rendered
         /// </summary>
         [Parameter]
         public bool DisableFooterToolbar { get; set; }
@@ -174,12 +174,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-    internal bool IsModified => editContext.IsModified();
-    internal bool _DisableSubmit => TaskInProgress != Tasks.None || (!IsModified && Mode == Modes.Edit);
+        internal bool IsModified => editContext.IsModified();
+        internal bool _DisableSubmit => TaskInProgress != Tasks.None || (!IsModified && Mode == Modes.Edit);
 
         protected override void OnInitialized()
         {
-        editContext = new EditContext(Value);
+            editContext = new EditContext(Value);
 
             if (!string.IsNullOrWhiteSpace(SubmitText))
             {
@@ -221,12 +221,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     MaxWidth = MaxWidth.ExtraSmall,
                 };
 
-            var result = await DialogService.ShowMessageBox(
-                    "Warning",
-                    message,
-                    yesText: "Yes",
-                    cancelText: "No",
-                    options: dialogOptions);
+                var result = await DialogService.ShowMessageBox(
+                        "Warning",
+                        message,
+                        yesText: "Yes",
+                        cancelText: "No",
+                        options: dialogOptions);
 
 
                 return result.HasValue && result.Value;
@@ -247,7 +247,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 Value = value;
                 await ValueChanged.InvokeAsync(Value);
-            editContext = new EditContext(Value);
+                editContext = new EditContext(Value);
                 editContext.MarkAsUnmodified();
             }
         }
@@ -271,8 +271,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             AlertMessage = message;
             AlertEnabled = true;
             InvokeAsync(StateHasChanged);
-        Task.Run(async () =>
-        {
+            Task.Run(async () =>
+            {
                 if (durationInSeconds.HasValue)
                 {
                     await Task.Delay(durationInSeconds.Value * 1000);

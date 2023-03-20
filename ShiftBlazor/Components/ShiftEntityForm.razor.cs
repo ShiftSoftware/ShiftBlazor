@@ -212,11 +212,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal override async Task ValidSubmitHandler(EditContext context)
         {
-            if (!editContext.IsModified())
-            {
-                return;
-            }
-
             await RunTask(Tasks.Save, async () =>
             {
                 await OnValidSubmit.InvokeAsync(context);
