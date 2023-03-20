@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.Net;
+using System.Reflection;
+using System.Text.Json;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Utils;
-using System.Reflection;
-using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Services
 {
@@ -16,7 +17,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         private static readonly string QueryKey = "modal";
         private readonly Assembly ProjectAssembly = Assembly.GetEntryAssembly()!;
-        private string ProjectName { get; set; }
 
         public ShiftModalService(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService)
         {
@@ -27,8 +27,10 @@ namespace ShiftSoftware.ShiftBlazor.Services
             ProjectName = ProjectAssembly.GetName().Name!.Replace('-', '_');
         }
 
+        private string ProjectName { get; }
+
         /// <summary>
-        /// Open a form modal or page.
+        ///     Open a form modal or page.
         /// </summary>
         /// <typeparam name="TComponent">The type of the component to open inside the form</typeparam>
         /// <param name="key">The ID of the item being View or edited</param>
@@ -90,7 +92,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         }
 
         /// <summary>
-        /// Generate query string from a Dictionary without the URL.
+        ///     Generate query string from a Dictionary without the URL.
         /// </summary>
         /// <param name="parameters">A Dictionary of query options</param>
         /// <returns>A query string that start with '?'</returns>
@@ -103,7 +105,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         }
 
         /// <summary>
-        /// Close the form dialog.
+        ///     Close the form dialog.
         /// </summary>
         /// <param name="mudDialog">An instance of the MudDialog.</param>
         public void Close(MudDialogInstance mudDialog)
@@ -111,9 +113,9 @@ namespace ShiftSoftware.ShiftBlazor.Services
             RemoveFrontModalFromUrl();
             mudDialog.Cancel();
         }
-        
+
         /// <summary>
-        /// Checks whether the url has any modal info in the URL query, if found, open them.
+        ///     Checks whether the url has any modal info in the URL query, if found, open them.
         /// </summary>
         public async void UpdateModals()
         {
@@ -136,7 +138,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         }
 
         /// <summary>
-        /// Update the URL when the ID of an item changes or is created.
+        ///     Update the URL when the ID of an item changes or is created.
         /// </summary>
         /// <param name="key"></param>
         public void UpdateKey(object? key)
@@ -162,6 +164,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             {
                 modals.Add(new ModalInfo { Name = name, Key = key, Parameters = parameters });
             }
+
             var newUrl = CreateModalUrlQuery(modals, url);
             await JsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
         }
@@ -200,7 +203,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             if (QueryHelpers.ParseQuery(uri.Query).TryGetValue(QueryKey, out var valueFromQueryString))
             {
-                var decodedString = System.Net.WebUtility.UrlDecode(valueFromQueryString);
+                var decodedString = WebUtility.UrlDecode(valueFromQueryString);
                 try
                 {
                     return JsonSerializer.Deserialize<List<ModalInfo>>(decodedString) ?? new List<ModalInfo>();
@@ -213,12 +216,12 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         private string CreateModalUrlQuery(List<ModalInfo> modals, string url)
         {
-            string queryString = "";
+            var queryString = "";
 
             if (modals.Count > 0)
             {
                 var modalString = JsonSerializer.Serialize(modals);
-                var param = new Dictionary<string, object?>()
+                var param = new Dictionary<string, object?>
                 {
                     //{QueryKey, System.Net.WebUtility.UrlEncode(modalString) },
                     {QueryKey, modalString },

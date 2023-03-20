@@ -12,7 +12,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         }
 
         /// <summary>
-        /// Writes the specified text string to the system clipboard.
+        ///     Writes the specified text string to the system clipboard.
         /// </summary>
         /// <param name="text">The string to be written to the clipboard.</param>
         public ValueTask WriteTextAsync(string text)

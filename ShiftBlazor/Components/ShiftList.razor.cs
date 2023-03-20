@@ -13,119 +13,119 @@ namespace ShiftSoftware.ShiftBlazor.Components
     public partial class ShiftList<T> : ComponentBase
         where T : ShiftEntityDTOBase, new() 
     {
-        [Inject] MessageService MsgService { get; set; } = default!;
-        [Inject] IJSRuntime JsRuntime { get; set; } = default!;
-        [Inject] ShiftModalService ShiftModal { get; set; } = default!;
-        [Inject] SettingManager SettingManager { get; set; } = default!;
+        [Inject] private MessageService MsgService { get; set; } = default!;
+        [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
+        [Inject] private ShiftModalService ShiftModal { get; set; } = default!;
+        [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] protected HttpClient HttpClient { get; set; }
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
 
         /// <summary>
-        /// To check whether this list is currently embeded inside a form component.
+        ///     To check whether this list is currently embeded inside a form component.
         /// </summary>
         [CascadingParameter(Name = "FormChild")]
         public bool? IsEmbedded { get; set; }
 
         /// <summary>
-        /// The current fetched items, this will be fetched from the OData API endpoint that is provided in the Action paramater.
+        ///     The current fetched items, this will be fetched from the OData API endpoint that is provided in the Action paramater.
         /// </summary>
         [Parameter]
         public List<T>? Values { get; set; }
 
         /// <summary>
-        /// An event triggered when the state of Values has changed.
+        ///     An event triggered when the state of Values has changed.
         /// </summary>
         [Parameter]
         public EventCallback<T> ValuesChanged { get; set; }
 
         /// <summary>
-        /// The URL endpoint that processes the CRUD operations.
+        ///     The URL endpoint that processes the CRUD operations.
         /// </summary>
         [Parameter]
         public string? Action { get; set; }
 
         /// <summary>
-        /// The title to render on the form header.
+        ///     The title to render on the form header.
         /// </summary>
         [Parameter]
         public string? Title { get; set; }
 
         /// <summary>
-        /// The number of items to be displayed per page.
+        ///     The number of items to be displayed per page.
         /// </summary>
         [Parameter]
         public int PageSize { get; set; } = 10;
 
         /// <summary>
-        /// A list of columns names to hide them in the UI.
+        ///     A list of columns names to hide them in the UI.
         /// </summary>
         [Parameter]
         public List<string> ExcludedColumns { get; set; } = new();
 
         /// <summary>
-        /// Enable CSV And Excel format Download button.
+        ///     Enable CSV And Excel format Download button.
         /// </summary>
         [Parameter]
         public bool EnableCsvExcelExport { get; set; }
 
         /// <summary>
-        /// Enable PDF format Download button.
+        ///     Enable PDF format Download button.
         /// </summary>
         [Parameter]
         public bool EnablePdfExport { get; set; }
         
         /// <summary>
-        /// Enable Print button.
+        ///     Enable Print button.
         /// </summary>
         [Parameter]
         public bool EnablePrint { get; set; }
 
         /// <summary>
-        /// Enable Virtualization and disable Paging.
+        ///     Enable Virtualization and disable Paging.
         /// </summary>
         [Parameter]
         public bool EnableVirtualization { get; set; }
         
         /// <summary>
-        /// Disable the add item button to open a form.
+        ///     Disable the add item button to open a form.
         /// </summary>
         [Parameter]
         public bool DisableAdd { get; set; }
         
         /// <summary>
-        /// Disable paging.
+        ///     Disable paging.
         /// </summary>
         [Parameter]
         public bool DisablePagination { get; set; }
         
         /// <summary>
-        /// Disable sorting.
+        ///     Disable sorting.
         /// </summary>
         [Parameter]
         public bool DisableSorting { get; set; }
         
         /// <summary>
-        /// Disable multisorting.
+        ///     Disable multisorting.
         /// </summary>
         [Parameter]
         public bool DisableMultiSorting { get; set; }
         
         /// <summary>
-        /// Disable filtering.
+        ///     Disable filtering.
         /// </summary>
         [Parameter]
         public bool DisableFilters { get; set; }
         
         /// <summary>
-        /// Disable select
+        ///     Disable select
         /// </summary>
         [Parameter]
         public bool DisableSelection { get; set; }
 
         /// <summary>
-        /// If true, the toolbar in the header will not be rendered.
+        ///     If true, the toolbar in the header will not be rendered.
         /// </summary>
         [Parameter]
         public bool DisableHeaderToolbar { get; set; }
@@ -134,68 +134,68 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public RenderFragment? ChildContent { get; set; }
 
         /// <summary>
-        /// An element used to insert GridColumn elements before the Action column.
+        ///     An element used to insert GridColumn elements before the Action column.
         /// </summary>
         [Parameter]
         public RenderFragment? ColumnTemplate { get; set; }
         
         /// <summary>
-        /// Used to override any element in the Action column.
+        ///     Used to override any element in the Action column.
         /// </summary>
         [Parameter]
         public RenderFragment<T>? ActionsTemplate { get; set; }
 
         /// <summary>
-        /// Used to add custom elements to the header.
+        ///     Used to add custom elements to the header.
         /// </summary>
         [Parameter]
         public RenderFragment? HeaderTemplate { get; set; }
 
         /// <summary>
-        /// Used to add custom elements to the start of the header toolbar.
+        ///     Used to add custom elements to the start of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarStartTemplate { get; set; }
 
         /// <summary>
-        /// Used to add custom elements to the end of the header toolbar.
+        ///     Used to add custom elements to the end of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarEndTemplate { get; set; }
 
         /// <summary>
-        /// Used to add custom elements to the controls section of the header toolbar.
-        /// This section is only visible when the form is opened in a dialog.
+        ///     Used to add custom elements to the controls section of the header toolbar.
+        ///     This section is only visible when the form is opened in a dialog.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarControlsTemplate { get; set; }
 
         /// <summary>
-        /// To pass Syncfusion's OData query data.
+        ///     To pass Syncfusion's OData query data.
         /// </summary>
         [Parameter]
         public Query? Query { get; set; }
         
         /// <summary>
-        /// To set the Action Column's fixed width.
+        ///     To set the Action Column's fixed width.
         /// </summary>
         [Parameter]
         public string ActionColumnWidth { get; set; } = "150";
         
         /// <summary>
-        /// To set the list's fixed height.
+        ///     To set the list's fixed height.
         /// </summary>
         [Parameter]
         public string GridHeight { get; set; } = string.Empty;
 
         /// <summary>
-        /// To pass additional parameters to the ShiftFormContainer componenet.
+        ///     To pass additional parameters to the ShiftFormContainer componenet.
         /// </summary>
         [Parameter]
         public Dictionary<string, string>? AddDialogParameters { get; set; }
         
         /// <summary>
-        /// To specify whether to generate the Syncfusion columns automatically or not.
+        ///     To specify whether to generate the Syncfusion columns automatically or not.
         /// </summary>
         [Parameter]
         public bool AutoGenerateColumns { get; set; } = true;
@@ -207,8 +207,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string IconSvg { get; set; } = @Icons.Material.Filled.List;
 
         /// <summary>
-        /// The type of the component to open when clicking on Add or the Action button.
-        /// If empty, Add and Action button column will be hidden.
+        ///     The type of the component to open when clicking on Add or the Action button.
+        ///     If empty, Add and Action button column will be hidden.
         /// </summary>
         [Parameter]
         public Type? ComponentType { get; set; }
@@ -232,7 +232,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        internal bool RenderAddButton { get => !(DisableAdd || ComponentType == null); }
+        internal bool RenderAddButton => !(DisableAdd || ComponentType == null);
         internal bool ActionUrlBroken = false;
         internal bool IsReady = false;
 

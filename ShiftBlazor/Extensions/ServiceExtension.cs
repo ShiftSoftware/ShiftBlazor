@@ -14,7 +14,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
     {
         public static IServiceCollection AddShiftServices(this IServiceCollection services, Action<ShiftBlazorOptions> configure)
         {
-            ShiftBlazorOptions options = new ShiftBlazorOptions();
+            var options = new ShiftBlazorOptions();
             configure.Invoke(options);
 
             services.AddMudServices(mudConfig =>

@@ -1,7 +1,7 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
-@using static ShiftSoftware.ShiftBlazor.Utils.Form
-@typeparam T where T : class, new()
+﻿@using static Utils.Form
 @using Blazored.FluentValidation
+@using Microsoft.AspNetCore.Components.Forms
+@typeparam T where T : class, new()
 
 @if (!string.IsNullOrWhiteSpace(DocumentTitle))
 {
@@ -52,10 +52,10 @@
 
                             <MudTooltip Text="Close">
                                 <MudButton Style="min-width:40px;"
-                                   Variant="Variant.Text"
-                                   Size="Size.Medium"
-                                   Color="Color.Default"
-                                   OnClick="() => Cancel()">
+                                           Variant="Variant.Text"
+                                           Size="Size.Medium"
+                                           Color="Color.Default"
+                                           OnClick="() => Cancel()">
                                     <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
                                 </MudButton>
                             </MudTooltip>

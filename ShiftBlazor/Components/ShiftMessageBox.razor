@@ -13,10 +13,13 @@
 </MudMessageBox>
 
 @code {
-    [Parameter, EditorRequired]
+
+    [Parameter]
+    [EditorRequired]
     public string Title { get; set; } = "";
 
-    [Parameter, EditorRequired]
+    [Parameter]
+    [EditorRequired]
     public string Body { get; set; } = "";
 
     [CascadingParameter]
@@ -46,4 +49,5 @@
     {
         return msgBox?.Show();
     }
+
 }

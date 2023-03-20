@@ -1,5 +1,6 @@
 ﻿using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using System.Globalization;
 using System.Net.Http.Headers;
@@ -48,7 +49,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             SyncLocalStorage.SetItem(Key, Settings);
         }
 
-        public void SetModalPosition(MudBlazor.DialogPosition position)
+        public void SetModalPosition(DialogPosition position)
         {
             Settings.ModalPosition = position;
             SyncLocalStorage.SetItem(Key, Settings);
@@ -104,10 +105,10 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         public class ShiftBlazorSettings
         {
+            public string DateTimeFormat = "yyyy-MM-dd";
             public string CultureName { get; set; } = "en-US";
             public int? ListPageSize { get; set; }
-            public MudBlazor.DialogPosition ModalPosition { get; set; } = MudBlazor.DialogPosition.Center;
-            public string DateTimeFormat = "yyyy-MM-dd";
+            public DialogPosition ModalPosition { get; set; } = DialogPosition.Center;
         }
 
         public class ShiftBlazorConfiguration
@@ -117,13 +118,14 @@ namespace ShiftSoftware.ShiftBlazor.Services
             private string _ODataPath = "/odata";
             public string ApiPath
             {
-                get { return BaseAddress.AddUrlPath(_ApiPath); }
-                set { _ApiPath = value; }
+                get => BaseAddress.AddUrlPath(_ApiPath);
+                set => _ApiPath = value;
             }
+
             public string ODataPath
             {
-                get { return BaseAddress.AddUrlPath(_ODataPath); }
-                set { _ODataPath = value; }
+                get => BaseAddress.AddUrlPath(_ODataPath);
+                set => _ODataPath = value;
             }
         }
     }

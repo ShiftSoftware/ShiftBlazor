@@ -1,20 +1,16 @@
-﻿using Microsoft.AspNetCore.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace ShiftSoftware.ShiftBlazor.Tests;
 
-namespace ShiftSoftware.ShiftBlazor.Tests
+public class MockNavigationManager : NavigationManager
 {
-    public class MockNavigationManager : NavigationManager
+    public MockNavigationManager()
     {
-        public MockNavigationManager() : base() =>
-            this.Initialize("http://localhost:2112/", "http://localhost:2112/test");
+        Initialize("http://localhost:2112/", "http://localhost:2112/test");
+    }
 
-        protected override void NavigateToCore(string uri, bool forceLoad) =>
-            this.WasNavigateInvoked = true;
+    public bool WasNavigateInvoked { get; private set; }
 
-        public bool WasNavigateInvoked { get; private set; }
+    protected override void NavigateToCore(string uri, bool forceLoad)
+    {
+        WasNavigateInvoked = true;
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using System.Reflection;
 using ShiftSoftware.ShiftEntity.Core.Dtos;
 using ShiftSoftware.ShiftBlazor.Components;
 
@@ -11,12 +10,12 @@ namespace ShiftSoftware.ShiftBlazor.Utils
         [CascadingParameter] public MudDialogInstance? MudDialog { get; set; }
         [Parameter] public Form.Modes Mode { get; set; } = Form.Modes.View;
         [Parameter] public object? Key { get; set; }
-        public FormSettings FormSetting { get; set; } = new FormSettings();
-        public T TheItem { get; set; } = new T();
+        public FormSettings FormSetting { get; set; } = new();
+        public T TheItem { get; set; } = new();
         public ShiftEntityForm<T>? FormContainer { get; set; }
 
-        public bool ReadOnly { get => Mode < Form.Modes.Edit; }
-        public bool Disabled { get => Task != Form.Tasks.None; }
+        public bool ReadOnly => Mode < Form.Modes.Edit;
+        public bool Disabled => Task != Form.Tasks.None;
         public Form.Tasks Task { get; set; }
 
         protected override void OnAfterRender(bool firstRender)

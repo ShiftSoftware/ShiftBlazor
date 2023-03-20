@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace ShiftSoftware.ShiftBlazor.Tests;
 
-namespace ShiftSoftware.ShiftBlazor.Tests
+public class ODataResult<T>
 {
-    public class ODataResult<T>
-    {
-        public List<T> value { get; set; } = new();
-    }
+    public List<T> value { get; set; } = new();
 }

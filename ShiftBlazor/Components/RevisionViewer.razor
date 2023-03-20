@@ -1,4 +1,4 @@
-﻿@using Syncfusion.Blazor.Grids;
+﻿@using Syncfusion.Blazor.Grids
 @inject ShiftModalService ShiftModal
 
 <ShiftList T="RevisionDTO"
@@ -35,19 +35,16 @@
     [CascadingParameter]
     public MudDialogInstance? MudDialog { get; set; }
 
-    [Parameter, EditorRequired]
+    [Parameter]
+    [EditorRequired]
     public List<RevisionDTO> Revisions { get; set; } = new();
 
-    private List<RevisionDTO> _Revisions
-    {
-        get => Revisions.Where(x =>
-            x.ValidTo.HasValue && x.ValidTo.Value.Year <= DateTime.UtcNow.Year
-        ).ToList();
-    }
+    private List<RevisionDTO> _Revisions => Revisions.Where(x =>
+        x.ValidTo.HasValue && x.ValidTo.Value.Year <= DateTime.UtcNow.Year
+    ).ToList();
 
     [Parameter]
     public string Title { get; set; } = "Revisions";
-
 
     private async Task RowClickHandler(RecordClickEventArgs<RevisionDTO> args)
     {
@@ -59,4 +56,5 @@
     {
         MudDialog?.Close();
     }
+
 }

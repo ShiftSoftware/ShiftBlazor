@@ -1,25 +1,27 @@
-﻿using Microsoft.AspNetCore.Components;
-using ShiftSoftware.ShiftBlazor.Services;
-using ShiftSoftware.ShiftBlazor.Utils;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Components;
 using Microsoft.OData.Client;
 using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     public partial class ShiftAutocomplete<T> : MudAutocomplete<T>
     {
-        [Inject] ODataQuery OData { get; set; } = default!;
-        [Inject] HttpClient Http { get; set; } = default!;
+        [Inject] private ODataQuery OData { get; set; } = default!;
+        [Inject] private HttpClient Http { get; set; } = default!;
 
         /// <summary>
-        /// The OData EntitySet name.
+        ///     The OData EntitySet name.
         /// </summary>
-        [Parameter, EditorRequired]
+        [Parameter]
+        [EditorRequired]
         public string? EntitySet { get; set; }
 
         /// <summary>
-        /// Name of the column to filter when user types in the input field.
+        ///     Name of the column to filter when user types in the input field.
         /// </summary>
         [Parameter]
         public string FilterFieldName { get; set; } = "Name";
@@ -75,7 +77,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             try
             {
                 var text = await Http.GetStringAsync(url);
-                var json = System.Text.Json.Nodes.JsonNode.Parse(text);
+                var json = JsonNode.Parse(text);
                 return json?["value"].Deserialize<List<T>>() ?? new List<T>();
             }
             catch (Exception)

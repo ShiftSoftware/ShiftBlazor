@@ -1,100 +1,103 @@
-﻿using Microsoft.AspNetCore.Components;
-using ShiftSoftware.ShiftEntity.Core.Dtos;
-using static ShiftSoftware.ShiftBlazor.Utils.Form;
-using MudBlazor;
-using Microsoft.AspNetCore.Components.Forms;
-using ShiftSoftware.ShiftBlazor.Services;
-using ShiftSoftware.ShiftEntity.Core;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
+using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core;
+using ShiftSoftware.ShiftEntity.Core.Dtos;
+using static ShiftSoftware.ShiftBlazor.Utils.Form;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     public partial class ShiftEntityForm<T> : ShiftFormBasic<T> where T : ShiftEntityDTO, new()
     {
-        [Inject] HttpClient Http { get; set; } = default!;
-        [Inject] IDialogService DialogService { get; set; } = default!;
-        [Inject] NavigationManager NavManager { get; set; } = default!;
-        [Inject] ShiftModalService ShiftModal { get; set; } = default!;
-        [Inject] IJSRuntime JsRuntime { get; set; } = default!;
-        [Inject] SettingManager SettingManager { get; set; } = default!;
+        [Inject] private HttpClient Http { get; set; } = default!;
+        [Inject] private IDialogService DialogService { get; set; } = default!;
+        [Inject] private NavigationManager NavManager { get; set; } = default!;
+        [Inject] private ShiftModalService ShiftModal { get; set; } = default!;
+        [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
+        [Inject] private SettingManager SettingManager { get; set; } = default!;
+
         /// <summary>
-        /// The URL endpoint that processes the CRUD operations.
+        ///     The URL endpoint that processes the CRUD operations.
         /// </summary>
-        [Parameter, EditorRequired]
+        [Parameter]
+        [EditorRequired]
         public string Action { get; set; } = default!;
 
         /// <summary>
-        /// The item ID, it is also used for the CRUD operations.
+        ///     The item ID, it is also used for the CRUD operations.
         /// </summary>
         [Parameter]
         public object? Key { get; set; }
 
         /// <summary>
-        /// An event triggered when the state of Key has changed.
+        ///     An event triggered when the state of Key has changed.
         /// </summary>
         [Parameter]
         public EventCallback<object?> KeyChanged { get; set; }
 
         /// <summary>
-        /// Specifies whether to render the Print button or not.
+        ///     Specifies whether to render the Print button or not.
         /// </summary>
         [Parameter]
         public bool HidePrint { get; set; }
 
         /// <summary>
-        /// Specifies whether to render the Delete button or not.
+        ///     Specifies whether to render the Delete button or not.
         /// </summary>
         [Parameter]
         public bool HideDelete { get; set; }
 
         /// <summary>
-        /// Specifies whether to render the Edit button or not.
+        ///     Specifies whether to render the Edit button or not.
         /// </summary>
         [Parameter]
         public bool HideEdit { get; set; }
 
         /// <summary>
-        /// Specifies whether to render the View Revisions button or not.
+        ///     Specifies whether to render the View Revisions button or not.
         /// </summary>
         [Parameter]
         public bool HideRevisions { get; set; }
 
         /// <summary>
-        /// Specifies whether to disable Print button or not.
+        ///     Specifies whether to disable Print button or not.
         /// </summary>
         [Parameter]
         public bool DisablePrint { get; set; }
 
         /// <summary>
-        /// Specifies whether to disable Delete button or not.
+        ///     Specifies whether to disable Delete button or not.
         /// </summary>
         [Parameter]
         public bool DisableDelete { get; set; }
 
         /// <summary>
-        /// Specifies whether to disable Edit button or not.
+        ///     Specifies whether to disable Edit button or not.
         /// </summary>
         [Parameter]
         public bool DisableEdit { get; set; }
 
         /// <summary>
-        /// Specifies whether to disable View Revisions button or not.
+        ///     Specifies whether to disable View Revisions button or not.
         /// </summary>
         [Parameter]
         public bool DisableRevisions { get; set; }
 
         /// <summary>
-        /// An event triggered when Print button is clicked, by default Print button does nothing.
+        ///     An event triggered when Print button is clicked, by default Print button does nothing.
         /// </summary>
         [Parameter]
         public EventCallback OnPrint { get; set; }
 
         /// <summary>
-        /// An event triggered after getting a response from API.
+        ///     An event triggered after getting a response from API.
         /// </summary>
         [Parameter]
         public EventCallback<HttpResponseMessage> OnResponse { get; set; }
@@ -104,6 +107,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal string? OriginalValue { get; set; }
         internal bool Maximized { get; set; }
+
         internal string ItemUrl
         {
             get
@@ -112,17 +116,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return Mode == Modes.Create ? path : path.AddUrlPath(Key?.ToString());
             }
         }
-        internal override bool HideSubmit {
-            get => (Mode < Modes.Edit ? true : base.HideSubmit);
+
+        internal override bool HideSubmit
+        {
+            get => Mode < Modes.Edit ? true : base.HideSubmit;
             set => base.HideSubmit = value;
         }
+
         internal override string _SubmitText
         {
-            get {
-                if (string.IsNullOrWhiteSpace(SubmitText))
-                {
-                    return Mode == Modes.Create ? "Create" : "Save";
-                }
+            get
+            {
+                if (string.IsNullOrWhiteSpace(SubmitText)) return Mode == Modes.Create ? "Create" : "Save";
                 return base._SubmitText;
             }
             set => base._SubmitText = value;
@@ -162,12 +167,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     MaxWidth = MaxWidth.ExtraSmall,
                 };
 
-                bool? result = await DialogService.ShowMessageBox(
-                    "Warning",
-                    "Do you want to delete this item?",
-                    yesText: "Delete",
-                    cancelText: "Cancel",
-                    options: dialogOptions);
+                var result = await DialogService.ShowMessageBox(
+                        "Warning",
+                        "Do you want to delete this item?",
+                        yesText: "Delete",
+                        cancelText: "Cancel",
+                        options: dialogOptions);
 
                 if (result.HasValue && result.Value)
                 {
@@ -296,7 +301,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + asOf;
                 using (var res = await Http.GetAsync(url))
+                {
                     await SetValue(await ParseEntityResponse(res), asOf == null);
+                }
             });
         }
 
@@ -322,19 +329,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 await OnEntityResponse.InvokeAsync(value);
                 return value;
             }
-            else if (TaskInProgress == Tasks.Save && result.Message != null)
+
+            if (TaskInProgress == Tasks.Save && result.Message != null)
             {
                 await DialogService.ShowMessageBox(result.Message.Title, MessageToHtml(result.Message), options: new DialogOptions
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                 });
-                
+
                 return null;
             }
-            else
-            {
-                throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase));
-            }
+
+            throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase));
         }
 
         internal void SetTitle()
@@ -383,7 +389,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var url = await JsRuntime.InvokeAsync<string>("GetUrl");
 
             var modals = ShiftModal.ParseModalUrl(url);
-            await ShiftModal.Open(modals.First().Name, Key, Utils.ModalOpenMode.NewTab, modals.First().Parameters);
+            await ShiftModal.Open(modals.First().Name, Key, ModalOpenMode.NewTab, modals.First().Parameters);
         }
 
         internal async Task ViewRevisions()

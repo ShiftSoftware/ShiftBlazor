@@ -1,6 +1,6 @@
 ﻿@typeparam T where T : ShiftEntityDTO, new()
 @inherits ShiftFormBasic<T>
-@using static ShiftSoftware.ShiftBlazor.Utils.Form
+@using static Utils.Form
 
 @{
     base.BuildRenderTree(__builder);
@@ -69,7 +69,7 @@
 
     private RenderFragment RevisionButton
     {
-        get => 
+        get =>
             @<MudTooltip Text="View Revisions">
                 <MudButton Style="min-width:40px;"
                            Disabled="DisableRevisions || Mode > Modes.Archive || TaskInProgress != Tasks.None"
@@ -98,13 +98,13 @@
                 return null;
             }
 
-            RenderFragment fragment =@<text></text>;
+            RenderFragment fragment = @<text></text>;
 
             if (OnPrint.HasDelegate && !HidePrint)
             {
                 fragment += PrintButton;
             }
-            
+
             if (!HideRevisions)
             {
                 fragment += RevisionButton;
@@ -129,9 +129,9 @@
         get =>
             @<MudTooltip Text="Open In New Tab">
                 <MudButton Variant="Variant.Text"
-                       Color="Color.Default"
-                       Style="min-width:40px;"
-                       OnClick="OpenInNewTab">
+                           Color="Color.Default"
+                           Style="min-width:40px;"
+                           OnClick="OpenInNewTab">
                     <MudIcon Icon="@Icons.Material.Filled.OpenInNew"></MudIcon>
                 </MudButton>
             </MudTooltip>;
@@ -142,14 +142,13 @@
         get =>
             @<MudTooltip Text="@(Maximized != true ? "Maximize" : "Minimize")">
                 <MudButton Style="min-width:40px;"
-                        Variant="Variant.Text"
-                        Size="Size.Medium"
-                        Color="Color.Default"
-                        OnClick="ResizeForm">
+                           Variant="Variant.Text"
+                           Size="Size.Medium"
+                           Color="Color.Default"
+                           OnClick="ResizeForm">
                     <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
                 </MudButton>
-            </MudTooltip>
-    ;
+            </MudTooltip>;
     }
 
     public RenderFragment ToolbarControls
@@ -157,7 +156,7 @@
         get => NewTabButton + MaximizeButton;
     }
 
-    public RenderFragment? Header
+    public RenderFragment Header
     {
         get =>
             @<text>
@@ -169,27 +168,30 @@
                 {
                     <MudAlert Severity="Severity.Error">This item is deleted.</MudAlert>
                 }
-            </text>
-    ;
+             </text>;
     }
 
     public RenderFragment FooterToolbarEnd
     {
         get =>
-        @<text>
-            @if (Mode == Modes.Edit)
-            {
-                <MudButton Disabled="@(TaskInProgress != Tasks.None)"
-                           StartIcon="@Icons.Material.Filled.Cancel"
-                           OnClick="CancelChanges">Cancel</MudButton>
-            }
-            else if (Mode == Modes.Archive)
-            {
-                <MudButton Disabled="@(TaskInProgress != Tasks.None)"
-                           StartIcon="@Icons.Material.Filled.Cancel"
-                           OnClick="CloseRevision">Back</MudButton>
-            }
-        </text>;
+            @<text>
+                @if (Mode == Modes.Edit)
+                {
+                    <MudButton Disabled="@(TaskInProgress != Tasks.None)"
+                               StartIcon="@Icons.Material.Filled.Cancel"
+                               OnClick="CancelChanges">
+                        Cancel
+                    </MudButton>
+                }
+                else if (Mode == Modes.Archive)
+                {
+                    <MudButton Disabled="@(TaskInProgress != Tasks.None)"
+                               StartIcon="@Icons.Material.Filled.Cancel"
+                               OnClick="CloseRevision">
+                        Back
+                    </MudButton>
+                }
+             </text>;
     }
 
     protected override void OnInitialized()
@@ -204,4 +206,5 @@
 
         base.FooterToolbarEndTemplate += FooterToolbarEnd;
     }
+
 }

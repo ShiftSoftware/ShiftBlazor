@@ -2,13 +2,13 @@
 {
     public class CustomMessageHandler : DelegatingHandler
     {
-        public string? Query { get; set; }
-
         public CustomMessageHandler()
         {
             //add this to solve "The inner handler has not been assigned"
             InnerHandler = new HttpClientHandler();
         }
+
+        public string? Query { get; set; }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {

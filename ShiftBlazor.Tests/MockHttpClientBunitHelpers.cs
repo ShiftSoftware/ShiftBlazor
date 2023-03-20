@@ -1,11 +1,8 @@
-﻿using Bunit;
-using Microsoft.Extensions.DependencyInjection;
-using RichardSzalay.MockHttp;
-using System;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using RichardSzalay.MockHttp;
 
 public static class MockHttpClientBunitHelpers
 {
@@ -14,7 +11,7 @@ public static class MockHttpClientBunitHelpers
         var mockHttpHandler = new MockHttpMessageHandler();
         var httpClient = mockHttpHandler.ToHttpClient();
         httpClient.BaseAddress = new Uri("http://localhost");
-        services.AddSingleton<HttpClient>(httpClient);
+        services.AddSingleton(httpClient);
         return mockHttpHandler;
     }
 

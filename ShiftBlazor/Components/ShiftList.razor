@@ -1,9 +1,8 @@
-﻿@using Syncfusion.Blazor
-@using Syncfusion.Blazor.Grids
+﻿@using ShiftSoftware.ShiftBlazor.Extensions
+@using Syncfusion.Blazor
 @using Syncfusion.Blazor.Data
-@using Syncfusion.Blazor.Buttons
-@using ShiftSoftware.ShiftBlazor.Extensions
-@using Syncfusion.Blazor.Navigations;
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Navigations
 @typeparam T where T : ShiftEntityDTOBase, new()
 
 @if (!string.IsNullOrWhiteSpace(Title))
@@ -20,7 +19,7 @@
                 <MudText Class="px-4" Style="margin:0;">@(Title ?? "List")</MudText>
 
                 @ToolbarStartTemplate
-        
+
                 <MudSpacer></MudSpacer>
 
                 @ToolbarEndTemplate
@@ -31,11 +30,12 @@
                     {
                         <MudTooltip Text="Print">
                             <MudIconButton Icon="@Icons.Material.Filled.Print"
-                                   Color="Color.Warning"
-                                   OnClick="PrintList" />
+                                           Color="Color.Warning"
+                                           OnClick="PrintList" />
                         </MudTooltip>
                     }
-                    @if (EnableCsvExcelExport || EnablePdfExport) {
+                    @if (EnableCsvExcelExport || EnablePdfExport)
+                    {
                         <MudTooltip Text="Download">
                             <MudMenu Icon="@Icons.Material.Filled.FileDownload" Color="Color.Warning">
                                 @if (EnableCsvExcelExport)
@@ -43,7 +43,8 @@
                                     <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">CSV Export</MudMenuItem>
                                     <MudMenuItem OnClick="() => DownloadList(DownloadType.Excel)">Excel Export</MudMenuItem>
                                 }
-                                @if (EnablePdfExport) {
+                                @if (EnablePdfExport)
+                                {
                                     <MudMenuItem OnClick="() => DownloadList(DownloadType.PDF)">PDF Export</MudMenuItem>
                                 }
                             </MudMenu>
@@ -55,15 +56,15 @@
                 {
                     <MudTooltip Text="Add">
                         <MudButton Style="min-width:40px;"
-                               Variant="Variant.Text"
-                               Size="Size.Medium"
-                               Color="Color.Primary"
-                               OnClick="AddItem">
+                                   Variant="Variant.Text"
+                                   Size="Size.Medium"
+                                   Color="Color.Primary"
+                                   OnClick="AddItem">
                             <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.AddCircle" />
                         </MudButton>
                     </MudTooltip>
                 }
-                @if ((MudDialog != null && IsEmbedded != true) && (RenderAddButton || EnableCsvExcelExport || EnablePdfExport || EnablePrint))
+                @if (MudDialog != null && IsEmbedded != true && (RenderAddButton || EnableCsvExcelExport || EnablePdfExport || EnablePrint))
                 {
                     <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
                 }
@@ -74,10 +75,10 @@
 
                     <MudTooltip Text="Close">
                         <MudButton Style="min-width:40px; z-index: 100;"
-                               Variant="Variant.Text"
-                               Size="Size.Medium"
-                               Color="Color.Default"
-                               OnClick="CloseDialog">
+                                   Variant="Variant.Text"
+                                   Size="Size.Medium"
+                                   Color="Color.Default"
+                                   OnClick="CloseDialog">
                             <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
                         </MudButton>
                     </MudTooltip>
@@ -97,150 +98,148 @@
     {
         <div class="@GridContainerCssClass">
             <SfGrid DataSource="Values"
-                TValue="T" @ref="Grid" class="pa-6"
-                ID="@Guid.NewGuid().ToString()"
-                AllowPaging="!DisablePagination && !EnableVirtualization"
-                AllowSorting="!DisableSorting"
-                AllowMultiSorting="!DisableMultiSorting"
-                AllowExcelExport="EnableCsvExcelExport"
-                AllowPdfExport="EnablePdfExport"
-                AllowFiltering="!DisableFilters"
-                Query="Query"
-                AllowSelection="!DisableSelection"
-                EnableVirtualization="EnableVirtualization"
-                EnableVirtualMaskRow="EnableVirtualization"
-                Height="@GridHeight">
+                    TValue="T" @ref="Grid" class="pa-6"
+                    ID="@Guid.NewGuid().ToString()"
+                    AllowPaging="!DisablePagination && !EnableVirtualization"
+                    AllowSorting="!DisableSorting"
+                    AllowMultiSorting="!DisableMultiSorting"
+                    AllowExcelExport="EnableCsvExcelExport"
+                    AllowPdfExport="EnablePdfExport"
+                    AllowFiltering="!DisableFilters"
+                    Query="Query"
+                    AllowSelection="!DisableSelection"
+                    EnableVirtualization="EnableVirtualization"
+                    EnableVirtualMaskRow="EnableVirtualization"
+                    Height="@GridHeight">
 
-            @if (Values == null) {
-                <SfDataManager HttpClientInstance="HttpClient" Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true" />
-            }
-
-            <GridEvents OnRecordClick="RecordClickHandler" OnDataBound="OnDataBoundHandler" OnActionFailure="ErrorHandler" TValue="T" />
-            <GridEditSettings AllowAdding="true" Mode="EditMode.Normal"></GridEditSettings>
-            <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
-            <GridSelectionSettings CheckboxOnly="true" PersistSelection="true" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
-
-            <GridPageSettings PageSize="@PageSize" PageSizes="@PageSizes">
-                <Template>
-                    @{
-                        var ctx = (PagerTemplateContext)context;
-                        <MudToolBar Dense="true" DisableGutters="false" Class="mt-4" Style="display: flex;">
-                            
-                            @if (!IsReady)
-                            {
-                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="500px" Height="25px"/>
-
-                                <MudSpacer></MudSpacer>
-                                <MudSkeleton Width="160px"/>
-                            }
-                            else
-                            {
-                                <MudStack Row="true" Spacing="6">
-
-                                    <MudButtonGroup OverrideStyles="false" >
-
-                                        <MudIconButton OnClick="() => GoToPage(1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft"></MudIconButton>
-                                        <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage - 1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@Icons.Material.Filled.KeyboardArrowLeft"></MudIconButton>
-                                        @for (var i = 1; i <= ctx.TotalPages; i++)
-                                        {
-                                            var _page = i;
-                                            <MudButton Color="(ctx.CurrentPage == _page ? Color.Secondary : Color.Default)" OnClick="() => GoToPage(_page)">@_page</MudButton>
-                                        }
-                                        <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage + 1)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@Icons.Material.Filled.KeyboardArrowRight"></MudIconButton>
-                                        <MudIconButton OnClick="() => GoToPage(ctx.TotalPages)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight"></MudIconButton>
-
-                                    </MudButtonGroup>
-
-                                    <MudSelect T="int" Label="Items Per Page" Value="PageSize" ValueChanged="PageSizeChangeHandler" Dense="true" Style="width: 150px;">
-                                        @foreach (var size in this.PageSizes)
-                                        {
-                                            <MudSelectItem Value="@size">@size</MudSelectItem>
-                                        }
-                                    </MudSelect>
-                                </MudStack>
-
-                                <MudSpacer/>
-
-                                <MudText>@(ctx.TotalItemsCount > 0 ? ctx.CurrentPage : 0) of @ctx.TotalPages pages (@ctx.TotalItemsCount items)</MudText>
-
-                            }
-                        </MudToolBar>
-                    }
-                </Template>
-            </GridPageSettings>
-            
-            <GridColumns>
-                <GridColumn IsPrimaryKey="true" Visible="false" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
-
-                @if (EnableVirtualization && !DisableSelection) {
-                    <GridColumn Type="ColumnType.CheckBox" Width="50">
-                        <HeaderTemplate/>
-                    </GridColumn>
-                }
-                else if (!DisableSelection)
+                @if (Values == null)
                 {
-                    <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
+                    <SfDataManager HttpClientInstance="HttpClient" Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true"/>
                 }
 
-                @if (this.AutoGenerateColumns)
-                {
-                    @foreach (var prop in Props.Where(x => !DefaultExcludedColumns.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase)))
-                    {
-                        var isVisible = !ExcludedColumns.Contains(prop.Name, StringComparer.CurrentCultureIgnoreCase);
-                        <GridColumn Visible="isVisible" Field="@prop.Name" TextAlign="TextAlign.Left"></GridColumn>
-                    }
-                }
+                <GridEvents OnRecordClick="RecordClickHandler" OnDataBound="OnDataBoundHandler" OnActionFailure="ErrorHandler" TValue="T" />
+                <GridEditSettings AllowAdding="true" Mode="EditMode.Normal"></GridEditSettings>
+                <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+                <GridSelectionSettings CheckboxOnly="true" PersistSelection="true" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
 
-                @ColumnTemplate
+                <GridPageSettings PageSize="@PageSize" PageSizes="@PageSizes">
+                    <Template>
+                        @{
+                            var ctx = (PagerTemplateContext)context;
+                            <MudToolBar Dense="true" DisableGutters="false" Class="mt-4" Style="display: flex;">
 
-                @if (!ExcludedColumns.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
-                {
-                    <GridColumn HeaderText="Actions" TextAlign="TextAlign.Center" Width="@ActionColumnWidth">
-                        <Template>
-                            @if (ActionsTemplate == null)
-                            {
-                                try
+                                @if (!IsReady)
                                 {
-                                    object? key = ((ShiftEntityDTOBase)context).ID;
+                                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="500px" Height="25px"/>
 
-                                    if (key == null)
+                                    <MudSpacer></MudSpacer>
+                                    <MudSkeleton Width="160px"/>
+                                }
+                                else
+                                {
+                                    <MudStack Row="true" Spacing="6">
+
+                                        <MudButtonGroup OverrideStyles="false">
+
+                                            <MudIconButton OnClick="() => GoToPage(1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft"></MudIconButton>
+                                            <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage - 1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@Icons.Material.Filled.KeyboardArrowLeft"></MudIconButton>
+                                            @for (var i = 1; i <= ctx.TotalPages; i++)
+                                            {
+                                                var _page = i;
+                                                <MudButton Color="ctx.CurrentPage == _page ? Color.Secondary : Color.Default" OnClick="() => GoToPage(_page)">@_page</MudButton>
+                                            }
+                                            <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage + 1)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@Icons.Material.Filled.KeyboardArrowRight"></MudIconButton>
+                                            <MudIconButton OnClick="() => GoToPage(ctx.TotalPages)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight"></MudIconButton>
+
+                                        </MudButtonGroup>
+
+                                        <MudSelect T="int" Label="Items per page" Value="PageSize" ValueChanged="PageSizeChangeHandler" Dense="true" Style="width: 150px;">
+                                            @foreach (var size in PageSizes)
+                                            {
+                                                <MudSelectItem Value="@size">@size</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudStack>
+
+                                    <MudSpacer/>
+
+                                    <MudText>@(ctx.TotalItemsCount > 0 ? ctx.CurrentPage : 0) of @ctx.TotalPages pages (@ctx.TotalItemsCount items)</MudText>
+                                }
+                            </MudToolBar>
+                        }
+                    </Template>
+                </GridPageSettings>
+
+                <GridColumns>
+                    <GridColumn IsPrimaryKey="true" Visible="false" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
+
+                    @if (EnableVirtualization && !DisableSelection)
+                    {
+                        <GridColumn Type="ColumnType.CheckBox" Width="50">
+                            <HeaderTemplate/>
+                        </GridColumn>
+                    }
+                    else if (!DisableSelection)
+                    {
+                        <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
+                    }
+
+                    @if (AutoGenerateColumns)
+                    {
+                        @foreach (var prop in Props.Where(x => !DefaultExcludedColumns.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase)))
+                        {
+                            var isVisible = !ExcludedColumns.Contains(prop.Name, StringComparer.CurrentCultureIgnoreCase);
+                            <GridColumn Visible="isVisible" Field="@prop.Name" TextAlign="TextAlign.Left"></GridColumn>
+                        }
+                    }
+
+                    @ColumnTemplate
+
+                    @if (!ExcludedColumns.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
+                    {
+                        <GridColumn HeaderText="Actions" TextAlign="TextAlign.Center" Width="@ActionColumnWidth">
+                            <Template>
+                                @if (ActionsTemplate == null)
+                                {
+                                    try
                                     {
-                                        throw new Exception();
-                                    }
-                                    else
-                                    {
-                                        <MudButton OnClick="() => OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters)"
-                                           Variant="Variant.Outlined"
-                                           EndIcon="@Icons.Material.Filled.OpenInNew"
-                                           Color="Color.Primary"
-                                           Size="Size.Small">
-                                            Show
+                                        object? key = ((ShiftEntityDTOBase)context).ID;
+
+                                        if (key == null)
+                                        {
+                                            throw new Exception();
+                                        }
+                                        <MudButton OnClick="@(() => OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters))"
+                                                   Variant="@Variant.Outlined"
+                                                   EndIcon="@Icons.Material.Filled.OpenInNew"
+                                                   Color="@Color.Primary"
+                                                   Size="@Size.Small">
+                                            View
                                         </MudButton>
                                     }
+                                    catch (Exception)
+                                    {
+                                        MsgService.Error("Could not create action button");
+                                    }
                                 }
-                                catch (Exception)
+                                else
                                 {
-                                    MsgService.Error("Could not create action button");
+                                    @ActionsTemplate((T)context);
                                 }
-                            }
-                            else
-                            {
-                                @ActionsTemplate((T)context);
-                            }
-                        </Template>
-                    </GridColumn>
-                }
-            </GridColumns>
+                            </Template>
+                        </GridColumn>
+                    }
+                </GridColumns>
 
-            @ChildContent
-        </SfGrid>
-            
-        @if (ActionUrlBroken)
-        {
-            <div class="disabled-grid-overlay">
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" OnClick="ReloadGrid">Reload</MudButton>
-            </div>
-        }
+                @ChildContent
+            </SfGrid>
+
+            @if (ActionUrlBroken)
+            {
+                <div class="disabled-grid-overlay">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" OnClick="ReloadGrid">Reload</MudButton>
+                </div>
+            }
         </div>
     }
 </MudPaper>

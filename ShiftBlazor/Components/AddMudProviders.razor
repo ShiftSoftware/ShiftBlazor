@@ -1,4 +1,4 @@
-﻿@inject SettingManager SetMan
+﻿@inject SettingManager SettingManager
 
 <MudThemeProvider @bind-IsDarkMode="IsDarkMode"
                   DefaultScrollbar="@DefaultScrollbar"
@@ -9,11 +9,11 @@
                    DisableBackdropClick="_DialogOptions.DisableBackdropClick"
                    FullWidth="_DialogOptions.FullWidth"
                    MaxWidth="_DialogOptions.MaxWidth"
-                   NoHeader="_DialogOptions.NoHeader"
-                   />
+                   NoHeader="_DialogOptions.NoHeader" />
 <MudSnackbarProvider />
 
 @code {
+
     [Parameter]
     public bool IsDarkMode { get; set; }
 
@@ -29,11 +29,11 @@
     [Parameter]
     public Action<DialogOptions>? DialogOptions { get; set; }
 
-    private DialogOptions _DialogOptions = new DialogOptions();
+    private DialogOptions _DialogOptions = new();
 
     protected override void OnInitialized()
     {
-        _DialogOptions.Position = SetMan.Settings.ModalPosition;
+        _DialogOptions.Position = SettingManager.Settings.ModalPosition;
         _DialogOptions.CloseOnEscapeKey = true;
         _DialogOptions.DisableBackdropClick = true;
         _DialogOptions.FullWidth = true;
@@ -43,4 +43,5 @@
 
         DialogOptions?.Invoke(_DialogOptions);
     }
+
 }

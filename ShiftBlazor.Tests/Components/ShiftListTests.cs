@@ -1,18 +1,19 @@
-﻿
+﻿using Bunit.Rendering;
 using MudBlazor;
+using Syncfusion.Blazor.Data;
 using Syncfusion.Blazor.Grids;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
 public class ShiftListTests : ShiftBlazorTestContext
 {
-
     public bool DisablePaging = false;
 
     [Fact]
     public void ShouldShowErrorIfActionAndValueAreNull()
     {
-        var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(paramaters => paramaters.Add(p => p.DisablePagination, DisablePaging));
+        var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(paramaters =>
+            paramaters.Add(p => p.DisablePagination, DisablePaging));
 
         var alertComp = cut.FindComponent<MudAlert>();
 
@@ -48,7 +49,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     //}
 
     /// <summary>
-    /// Title
+    ///     Title
     /// </summary>
     [Fact]
     public void ShouldRenderTitleCorrectly()
@@ -67,7 +68,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     }
 
     /// <summary>
-    /// Title
+    ///     Title
     /// </summary>
     [Fact]
     public void ShouldRenderPagingByDefault()
@@ -82,7 +83,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     }
 
     /// <summary>
-    /// page size
+    ///     page size
     /// </summary>
     [Fact]
     public void ShouldBeAbleToSetDataGridPageSize()
@@ -100,7 +101,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     }
 
     /// <summary>
-    /// ExcludedHeaders
+    ///     ExcludedHeaders
     /// </summary>
     [Fact]
     public void ShouldHideExcludedColumns2()
@@ -108,7 +109,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         List<string> excludedColumns = new()
         {
             nameof(Sample.LastName),
-            nameof(Sample.City),
+            nameof(Sample.City)
         };
 
         var cut = RenderComponent<ShiftList<Sample>>(parameters => parameters
@@ -156,10 +157,10 @@ public class ShiftListTests : ShiftBlazorTestContext
         var cols = grid.Columns.Where(x => x.HeaderText == "Actions");
         Assert.Empty(cols);
     }
+
     [Fact]
     public void ShouldRenderOrHideActionColumn2()
     {
-
         // Should render Actions column when ComponentType is 
         var comp = RenderComponent<ShiftList<ShiftEntityDTOBase>>(parameters => parameters
             .Add(p => p.Action, "/Product")
@@ -167,16 +168,17 @@ public class ShiftListTests : ShiftBlazorTestContext
             .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<ShiftEntityDTOBase>>().Instance;
-        
+
         var cols = grid.Columns.Where(x => x.HeaderText == "Actions");
         Assert.Single(cols);
     }
+
     [Fact]
     public void ShouldRenderOrHideActionColumn3()
     {
         List<string> excludedColumns = new()
         {
-            "Actions",
+            "Actions"
         };
 
         // Should not render Actions column when it is excluded in ExcludedColumns
@@ -202,18 +204,19 @@ public class ShiftListTests : ShiftBlazorTestContext
             .Add(p => p.DisablePagination, DisablePaging)
         );
 
-        Assert.Throws<Bunit.Rendering.ComponentNotFoundException>(() => comp.FindComponent<MudMenu>());
+        Assert.Throws<ComponentNotFoundException>(() => comp.FindComponent<MudMenu>());
     }
 
     [Fact]
     public void ShouldOnlyRenderCSVnExcelButton()
     {
-        var comp = RenderComponent<IncludeMudProviders>(_params => _params.AddChildContent<ShiftList<Sample>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.EnableCsvExcelExport, true)
-            .Add(p => p.EnablePdfExport, false)
-            .Add(p => p.DisablePagination, DisablePaging)
+        var comp = RenderComponent<IncludeMudProviders>(_params => _params.AddChildContent<ShiftList<Sample>>(
+            parameters => parameters
+                .Add(p => p.Action, "/Product")
+                .Add(p => p.ComponentType, typeof(DummyComponent))
+                .Add(p => p.EnableCsvExcelExport, true)
+                .Add(p => p.EnablePdfExport, false)
+                .Add(p => p.DisablePagination, DisablePaging)
         ));
 
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
@@ -236,12 +239,13 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldOnlyRenderPDFButton()
     {
-        var comp = RenderComponent<IncludeMudProviders>(_params => _params.AddChildContent<ShiftList<Sample>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.EnableCsvExcelExport, false)
-            .Add(p => p.EnablePdfExport, true)
-            .Add(p => p.DisablePagination, DisablePaging)
+        var comp = RenderComponent<IncludeMudProviders>(_params => _params.AddChildContent<ShiftList<Sample>>(
+            parameters => parameters
+                .Add(p => p.Action, "/Product")
+                .Add(p => p.ComponentType, typeof(DummyComponent))
+                .Add(p => p.EnableCsvExcelExport, false)
+                .Add(p => p.EnablePdfExport, true)
+                .Add(p => p.DisablePagination, DisablePaging)
         ));
 
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
@@ -435,7 +439,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldAddQueryToDataGridQuery()
     {
-        var query = new Syncfusion.Blazor.Data.Query().Expand(new List<string> { "Customer" });
+        var query = new Query().Expand(new List<string> { "Customer" });
         var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
@@ -519,4 +523,3 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.Empty(divider);
     }
 }
-

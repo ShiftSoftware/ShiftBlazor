@@ -1,16 +1,12 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Blazored.FluentValidation;
+using Bunit.Rendering;
+using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
 public class ShiftFormBasicTests : ShiftBlazorTestContext
 {
-
     [Fact]
     public void ShouldRenderComponentCorrectly()
     {
@@ -70,7 +66,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         var validator = new SampleValidator();
         var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters.Add(p => p.Validator, validator));
 
-        var fluentValidator = cut.FindComponent<Blazored.FluentValidation.FluentValidationValidator>().Instance;
+        var fluentValidator = cut.FindComponent<FluentValidationValidator>().Instance;
 
         Assert.NotNull(fluentValidator.Validator);
         Assert.True(fluentValidator.DisableAssemblyScanning);
@@ -82,7 +78,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         var value = new Sample
         {
             Name = "Person",
-            LastName = "Person Last Name",
+            LastName = "Person Last Name"
         };
 
         var isSaving = false;
@@ -120,13 +116,13 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         );
 
         var auto = cut.FindComponent<ShiftAutocomplete<Sample>>().Instance;
-        
+
         Assert.NotNull(auto.Mode);
         Assert.NotNull(auto.TaskInProgress);
     }
 
     /// <summary>
-    /// Should use FluentValidator using assembly scanning when Validator parameter is not used.
+    ///     Should use FluentValidator using assembly scanning when Validator parameter is not used.
     /// </summary>
     [Fact]
     public void ShouldUseFluentValidator()
@@ -147,29 +143,25 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderHeaderToolbar()
     {
-        var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters.Add(p => p.DisableHeaderToolbar, true));
+        var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters =>
+            parameters.Add(p => p.DisableHeaderToolbar, true));
 
-        Assert.Throws<ElementNotFoundException>(() =>
-        {
-            cut.Find("header .mud-toolbar");
-        });
+        Assert.Throws<ElementNotFoundException>(() => { cut.Find("header .mud-toolbar"); });
     }
 
     [Fact]
     public void ShouldNotRenderFooterToolbar()
     {
-        var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters.Add(p => p.DisableFooterToolbar, true));
+        var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters =>
+            parameters.Add(p => p.DisableFooterToolbar, true));
 
-        Assert.Throws<ElementNotFoundException>(() =>
-        {
-            cut.Find("footer .mud-toolbar");
-        });
+        Assert.Throws<ElementNotFoundException>(() => { cut.Find("footer .mud-toolbar"); });
     }
 
     [Fact]
     public void ShouldRenderToolbarTemplatesCorrectly()
     {
-        Func<string, string> text = (e) => $"This is the {e} section in the header";
+        Func<string, string> text = e => $"This is the {e} section in the header";
 
         var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters
             .Add<MudChip>(p => p.ToolbarStartTemplate, z => z.AddChildContent(text("1st")))
@@ -188,7 +180,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderFooterToolbarTemplatesCorrectly()
     {
-        Func<string, string> text = (e) => $"This is the {e} section in the footer";
+        Func<string, string> text = e => $"This is the {e} section in the footer";
 
         var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters
             .Add<MudChip>(p => p.FooterToolbarStartTemplate, z => z.AddChildContent(text("1st")))
@@ -207,7 +199,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderToolbarControlsAndDividerTemplate()
     {
-        var text = $"This is the controls section";
+        var text = "This is the controls section";
 
         var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters
             .Add<MudChip>(p => p.ToolbarControlsTemplate, z => z.AddChildContent(text))
@@ -215,16 +207,17 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
 
         var toolbar = cut.FindComponent<MudToolBar>();
 
-        Assert.Throws<Bunit.Rendering.ComponentNotFoundException>(() => toolbar.FindComponent<MudDivider>());
+        Assert.Throws<ComponentNotFoundException>(() => toolbar.FindComponent<MudDivider>());
         Assert.DoesNotContain(text, toolbar.Markup);
     }
 
     [Fact]
     public void ShouldRenderToolbarControlsTemplateCorrectly()
     {
-        var text = $"This is the controls section";
+        var text = "This is the controls section";
 
-        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters => parameters.Add(p => p.Value, new MudDialogInstance()));
+        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters =>
+            parameters.Add(p => p.Value, new MudDialogInstance()));
 
         var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters
             .Add<MudTooltip>(p => p.ToolbarControlsTemplate, z => z.Add(p => p.Text, text))
@@ -239,7 +232,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     }
 
     /// <summary>
-    /// Should have one spacer component in header toolbar if ToolbarCenterTemplate is null.
+    ///     Should have one spacer component in header toolbar if ToolbarCenterTemplate is null.
     /// </summary>
     [Fact]
     public void ShouldRenderOneSpacerInHeaderToolbar()
@@ -252,7 +245,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     }
 
     /// <summary>
-    /// Should add another spacer when ToolbarCenterTemplate has value to center it.
+    ///     Should add another spacer when ToolbarCenterTemplate has value to center it.
     /// </summary>
     [Fact]
     public void ShouldRenderTwoSpacersInHeaderToolbar()
@@ -267,12 +260,13 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     }
 
     /// <summary>
-    /// Should render a divider element when form is open in a modal and ToolbarEndTemplate is not null.
+    ///     Should render a divider element when form is open in a modal and ToolbarEndTemplate is not null.
     /// </summary>
     [Fact]
     public void ShouldRenderDivider()
     {
-        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters => parameters.Add(p => p.Value, new MudDialogInstance()));
+        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters =>
+            parameters.Add(p => p.Value, new MudDialogInstance()));
         var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters
             .Add(p => p.ToolbarEndTemplate, "some text")
         );
@@ -281,15 +275,16 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     }
 
     /// <summary>
-    /// Should not render divider when ToolbarEndTemplate is null.
+    ///     Should not render divider when ToolbarEndTemplate is null.
     /// </summary>
     [Fact]
     public void ShouldNotRenderDivider()
     {
-        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters => parameters.Add(p => p.Value, new MudDialogInstance()));
+        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters =>
+            parameters.Add(p => p.Value, new MudDialogInstance()));
         var cut = RenderComponent<ShiftFormBasic<Sample>>();
 
-        Assert.Throws<Bunit.Rendering.ComponentNotFoundException>(() => cut.FindComponent<MudToolBar>().FindComponent<MudDivider>());
+        Assert.Throws<ComponentNotFoundException>(() => cut.FindComponent<MudToolBar>().FindComponent<MudDivider>());
     }
 
     [Fact]
@@ -317,7 +312,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     }
 
     /// <summary>
-    /// Should have one spacer component in footer toolbar if FooterToolbarCenterTemplate is null
+    ///     Should have one spacer component in footer toolbar if FooterToolbarCenterTemplate is null
     /// </summary>
     [Fact]
     public void ShouldRenderOneSpacerInFooterToolbar()
@@ -330,7 +325,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     }
 
     /// <summary>
-    /// Should add another spacer when FooterToolbarCenterTemplate has value to center it.
+    ///     Should add another spacer when FooterToolbarCenterTemplate has value to center it.
     /// </summary>
     [Fact]
     public void ShouldRenderTwoSpacersInFooterToolbar()
@@ -357,7 +352,8 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldMakeFormScrollableInModal()
     {
-        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters => parameters.Add(p => p.Value, new MudDialogInstance()));
+        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters =>
+            parameters.Add(p => p.Value, new MudDialogInstance()));
         var cut = RenderComponent<ShiftFormBasic<Sample>>();
 
         cut.Find(".shift-scrollable-content-wrapper");
@@ -371,7 +367,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         cut.Instance.HideSubmit = true;
         //render the component again after flag has been changed
         cut.Render();
-        
+
         var buttons = cut.FindComponents<MudToolBar>().Last().FindComponents<MudButton>();
         //Footer toolbar should not have any buttons with the type of submit
         Assert.Empty(buttons.Where(x => x.Instance.ButtonType == ButtonType.Submit));
@@ -425,7 +421,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         var cut = RenderComponent<ShiftFormBasic<Sample>>();
 
         _ = cut.Instance.RunTask(Form.Tasks.Custom, () => throw new Exception());
-        
+
         Assert.Equal(Form.Tasks.None, cut.Instance.TaskInProgress);
     }
 
