@@ -29,6 +29,7 @@ public class ShiftBlazorTestContext : TestContext
                 options.BaseAddress = BaseUrl;
                 options.ApiPath = "/api";
                 options.ODataPath = ODataBaseUrl;
+                options.UserListEndpoint = "/odata/PublicUser";
             };
             config.MudBlazorConfiguration = options =>
             {
