@@ -1,11 +1,16 @@
-﻿@using Syncfusion.Blazor.Grids
+﻿@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor;
+@using ShiftIdentity.Model
 @inject ShiftModalService ShiftModal
+@inject SettingManager SettingManager
 
 <ShiftList T="RevisionDTO"
            Values="_Revisions"
            DisableSelection="true"
            OnRowClick="RowClickHandler"
-           DisableHeaderToolbar="true">
+           DisableHeaderToolbar="true"
+           ExcludedColumns="@(new List<string> {nameof(RevisionDTO.SavedByUserID)})">
 
     <HeaderTemplate>
         <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
@@ -28,6 +33,15 @@
             }
         </MudToolBar>
     </HeaderTemplate>
+
+    <ColumnTemplate>
+        <GridForeignColumn TValue="PublicUserListDTO"
+                           Field="@nameof(RevisionDTO.SavedByUserID)"
+                           ForeignKeyField="@nameof(PublicUserListDTO.ID)"
+                           ForeignKeyValue="@nameof(PublicUserListDTO.Name)">
+            <SfDataManager Url="@SettingManager.Configuration.UserListEndpoint" CrossDomain="true" Adaptor="Adaptors.ODataV4Adaptor" />
+        </GridForeignColumn>
+    </ColumnTemplate>
 </ShiftList>
 
 @code {

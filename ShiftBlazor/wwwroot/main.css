@@ -11,6 +11,6 @@
     display: inline-flex;
 }
 
-.e-pager div .mud-input-adornment-end, .e-pager div .mud-input-control.mud-select {
+.e-pager div .mud-input-adornment-end {
     display: flex;
 }

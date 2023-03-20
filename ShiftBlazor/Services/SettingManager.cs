@@ -24,6 +24,9 @@ namespace ShiftSoftware.ShiftBlazor.Services
             Http = http;
             config.Invoke(Configuration);
 
+            if (string.IsNullOrWhiteSpace(Configuration.BaseAddress)) throw new ArgumentNullException(nameof(Configuration.BaseAddress));
+            if (string.IsNullOrWhiteSpace(Configuration.UserListEndpoint)) throw new ArgumentNullException(nameof(Configuration.UserListEndpoint));
+
             Settings = GetSettings();
 
             UpdateCulture();
@@ -114,6 +117,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public class ShiftBlazorConfiguration
         {
             public string BaseAddress { get; set; } = "";
+            public string UserListEndpoint { get; set; } = "";
+
             private string _ApiPath = "/api";
             private string _ODataPath = "/odata";
             public string ApiPath
