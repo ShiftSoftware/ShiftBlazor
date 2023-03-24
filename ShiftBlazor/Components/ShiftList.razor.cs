@@ -3,7 +3,7 @@ using MudBlazor;
 using Syncfusion.Blazor.Grids;
 using System.Reflection;
 using Syncfusion.Blazor.Data;
-using ShiftSoftware.ShiftEntity.Core.Dtos;
+using ShiftSoftware.ShiftEntity.Model.Dtos;
 using Microsoft.JSInterop;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;

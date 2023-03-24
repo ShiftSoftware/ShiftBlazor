@@ -8,8 +8,8 @@ using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftEntity.Core;
-using ShiftSoftware.ShiftEntity.Core.Dtos;
+using ShiftSoftware.ShiftEntity.Model;
+using ShiftSoftware.ShiftEntity.Model.Dtos;
 using static ShiftSoftware.ShiftBlazor.Utils.Form;
 
 namespace ShiftSoftware.ShiftBlazor.Components
