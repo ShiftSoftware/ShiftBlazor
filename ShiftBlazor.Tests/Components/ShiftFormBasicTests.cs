@@ -46,6 +46,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         var toolbar = cut.FindComponent<MudToolBar>();
 
         Assert.Contains(title, toolbar.Markup);
+        Assert.Equal(title, cut.Instance.DocumentTitle);
     }
 
     [Fact]

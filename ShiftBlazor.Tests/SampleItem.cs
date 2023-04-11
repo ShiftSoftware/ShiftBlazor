@@ -2,7 +2,7 @@
 
 namespace ShiftSoftware.ShiftBlazor.Tests;
 
-public class Sample : ShiftEntityDTOBase
+public class Sample : ShiftEntityDTO
 {
     public int Age { get; set; }
     public int Revisions { get; set; }
