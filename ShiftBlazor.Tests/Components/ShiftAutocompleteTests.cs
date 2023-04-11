@@ -28,11 +28,8 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
             parameters.Add(p => p.EntitySet, EntitytSet));
 
         // Check if the html result contains the MudAutocomplete classes
-        cut.WaitForAssertion(() =>
-        {
-            Assert.Contains("mud-select", cut.Markup);
-            Assert.Contains("mud-autocomplete", cut.Markup);
-        });
+        Assert.Contains("mud-select", cut.Markup);
+        Assert.Contains("mud-autocomplete", cut.Markup);
     }
 
     [Fact]
@@ -200,14 +197,15 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     /// </summary>
     /// <returns></returns>
     [Fact]
-    public void ShouldReturnCorrectODataItems()
+    public async Task ShouldReturnCorrectODataItems()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters =>
+        var comp = RenderComponent<ShiftAutocomplete<Sample>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet));
 
-        comp.WaitForAssertion(async () =>
+        var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}");
+
+        comp.WaitForAssertion(() =>
         {
-            var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}");
             Assert.IsType<List<Sample>>(items);
             Assert.Equal(Values.Count, items.Count);
         });
@@ -218,7 +216,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     /// </summary>
     /// <returns></returns>
     [Fact]
-    public void ShouldFilterCorrectColumnWhenSpecified()
+    public async Task ShouldFilterCorrectColumnWhenSpecified()
     {
         var id = Guid.NewGuid();
 
@@ -227,9 +225,10 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
             .Add(p => p.FilterFieldName, "ID")
         );
 
-        comp.WaitForAssertion(async () =>
+        var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}");
+
+        comp.WaitForAssertion(() =>
         {
-            var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}");
             Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}?$top=100&$filter=contains(tolower(ID),'{id}')",
                 comp.Instance.GetODataUrl(id.ToString()));
         });

@@ -224,10 +224,10 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.False(grid.AllowPdfExport);
         Assert.True(grid.AllowExcelExport);
 
+        comp.FindAll("button.mud-button-root")[0].Click();
+
         comp.WaitForAssertion(() =>
         {
-            comp.FindAll("button.mud-button-root")[0].Click();
-
             Assert.Equal(2, comp.FindAll("div.mud-list-item").Count);
 
             Assert.DoesNotContain("PDF Export", comp.Markup);
@@ -250,13 +250,13 @@ public class ShiftListTests : ShiftBlazorTestContext
 
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
+        Assert.False(grid.AllowExcelExport);
+        Assert.True(grid.AllowPdfExport);
+
+        comp.FindAll("button.mud-button-root")[0].Click();
+
         comp.WaitForAssertion(() =>
         {
-            Assert.False(grid.AllowExcelExport);
-            Assert.True(grid.AllowPdfExport);
-
-            comp.FindAll("button.mud-button-root")[0].Click();
-
             Assert.Equal(1, comp.FindAll("div.mud-list-item").Count);
             Assert.Contains("PDF Export", comp.Markup);
             Assert.DoesNotContain("CSV Export", comp.Markup);
