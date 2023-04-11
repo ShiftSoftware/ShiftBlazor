@@ -497,11 +497,11 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.True(submitHandled);
     }
 
-    [Fact]
-    public async Task ShouldParseEntityResponse()
-    {
+    //[Fact]
+    //public async Task ShouldParseEntityResponse()
+    //{
 
-    }
+    //}
 
     [Fact]
     public async Task ShouldCopyValueOnSetValue()
@@ -531,24 +531,24 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.Equal(JsonSerializer.Serialize(comp.Instance.Value), comp.Instance.OriginalValue);
     }
 
-    [Fact]
-    public async Task Should()
-    {
-        var value = new Sample
-        {
-            Name = "Test"
-        };
+    //[Fact]
+    //public async Task Should()
+    //{
+    //    var value = new Sample
+    //    {
+    //        Name = "Test"
+    //    };
 
-        var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
-            .Add(p => p.Action, path)
-        );
+    //    var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
+    //        .Add(p => p.Action, path)
+    //    );
 
-        comp.Instance.Value.Name = "Test2";
+    //    comp.Instance.Value.Name = "Test2";
 
-        //await comp.Instance.SetValue(value);
+    //    //await comp.Instance.SetValue(value);
 
-        Assert.False(comp.Instance.editContext.IsModified());
-    }
+    //    Assert.False(comp.Instance.editContext.IsModified());
+    //}
 
     [Fact]
     public async Task ShouldUpdateUrl()

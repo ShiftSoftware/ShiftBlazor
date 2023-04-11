@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Components;
@@ -20,19 +21,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [EditorRequired]
         public string? EntitySet { get; set; }
 
-        /// <summary>
-        ///     Name of the column to filter when user types in the input field.
-        /// </summary>
-        [Parameter]
-        public string FilterFieldName { get; set; } = "Name";
-        
+        ///// <summary>
+        /////     Name of the column to filter when user types in the input field.
+        ///// </summary>
+        //[Parameter]
+        //public string FilterFieldName { get; set; } = "Name";
+
         [CascadingParameter]
         public Form.Modes? Mode { get; set; }
 
         [CascadingParameter]
         public Form.Tasks? TaskInProgress { get; set; }
 
-        internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
+        internal IQueryable<T> QueryBuilder { get; set; } = default!;
+
+        [Parameter]
+        public Func<string, Expression<Func<T, bool>>> Where { get; set; }
 
         public ShiftAutocomplete ()
         {
@@ -63,10 +67,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             var url = QueryBuilder.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(q))
+            //if (!string.IsNullOrWhiteSpace(q))
             {
                 url = QueryBuilder
-                    .AddQueryOption("$filter", $"contains(tolower({FilterFieldName}),'{q}')")
+                    //.AddQueryOption("$filter", $"contains(tolower({FilterFieldName}),'{q}')")
+                    .Where(Where(q ?? ""))
                     .Take(100);
             }
             return url.ToString()!;
