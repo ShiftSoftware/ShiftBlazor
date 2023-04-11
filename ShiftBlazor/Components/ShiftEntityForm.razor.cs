@@ -125,16 +125,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal override string _SubmitText
         {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(SubmitText)) return Mode == Modes.Create ? "Create" : "Save";
-                return base._SubmitText;
-            }
+            get => string.IsNullOrWhiteSpace(SubmitText)
+                ? Mode == Modes.Create ? "Create" : "Save"
+                : base._SubmitText;
             set => base._SubmitText = value;
         }
 
         protected override async Task OnInitializedAsync()
         {
+            if (string.IsNullOrWhiteSpace(Action))
+            {
+                throw new ArgumentNullException(nameof(Action));
+            }
 
             if (Key == null && Mode != Modes.Create)
             {
@@ -145,6 +147,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 await FetchItem();
             }
+
+            SetTitle();
 
             OriginalValue = JsonSerializer.Serialize(Value);
         }
@@ -265,6 +269,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task SetValue(T? value, bool copyValue = true)
         {
+            if (value == null)
+            {
+                return;
+            }
+
             await base.SetValue(value);
 
             editContext.OnFieldChanged += FieldChangeHandler;

@@ -17,7 +17,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
 
         [CascadingParameter]
-        protected MudDialogInstance? MudDialog { get; set; }
+        internal MudDialogInstance? MudDialog { get; set; }
 
         /// <summary>
         ///     The current Mode of the form.
@@ -192,6 +192,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         protected override async Task OnInitializedAsync()
         {
             await SetMode(Modes.Create);
+            DocumentTitle = Title;
         }
 
         internal ValueTask LocationChangingHandler(LocationChangingContext ctx)
