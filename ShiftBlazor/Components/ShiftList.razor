@@ -171,7 +171,7 @@
                 </GridPageSettings>
 
                 <GridColumns>
-                    <GridColumn IsPrimaryKey="true" Visible="false" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
+                    <GridColumn IsPrimaryKey="true" Visible="@(ShowIDColumn)" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
 
                     @if (EnableVirtualization && !DisableSelection)
                     {

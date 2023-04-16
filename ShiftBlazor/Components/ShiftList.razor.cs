@@ -216,6 +216,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public EventCallback<RecordClickEventArgs<T>> OnRowClick { get; set; }
 
+        [Parameter]
+        public bool ShowIDColumn { get; set; } = false;
+
         public SfGrid<T>? Grid;
         private readonly PropertyInfo[] Props = typeof(T).GetProperties();
         private CustomMessageHandler MessageHandler = new();
