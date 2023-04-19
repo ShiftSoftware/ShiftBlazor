@@ -410,7 +410,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 column.Label = GetLocalizedColumnLabel(prop.Name);
                 column.Field = GetFieldName(prop);
 
-                if (!IsSystemType(prop.PropertyType))
+                if (!IsSystemType(prop.PropertyType) && prop.PropertyType.IsClass)
                 {
                     complexColumns.Add(prop.Name);
                 }
@@ -436,12 +436,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             var field = property.Name;
             // try getting the complex field name when field is complex type
-            if (!IsSystemType(property.PropertyType))
+            if (!IsSystemType(property.PropertyType) && property.PropertyType.IsClass)
             {
                 var childProp = property
                     .PropertyType
                     .GetProperties()
-                    .First(x => x.PropertyType.Name == "String" && x.Name != nameof(ShiftEntityDTOBase.ID));
+                    .FirstOrDefault(x => x.PropertyType.Name == "String" && x.Name != nameof(ShiftEntityDTOBase.ID));
 
                 if (!string.IsNullOrWhiteSpace(childProp?.Name))
                 {
