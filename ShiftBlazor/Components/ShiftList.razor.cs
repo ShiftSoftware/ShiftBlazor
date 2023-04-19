@@ -7,6 +7,7 @@ using ShiftSoftware.ShiftEntity.Model.Dtos;
 using Microsoft.JSInterop;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using Microsoft.Extensions.Localization;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -174,7 +175,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         ///     To pass Syncfusion's OData query data.
         /// </summary>
         [Parameter]
-        public Query? Query { get; set; }
+        public Query Query { get; set; } = new();
         
         /// <summary>
         ///     To set the Action Column's fixed width.
@@ -214,11 +215,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public Type? ComponentType { get; set; }
 
         [Parameter]
+        public List<IStringLocalizer> Localizers { get; set; } = new();
+
+        [Parameter]
         public EventCallback<RecordClickEventArgs<T>> OnRowClick { get; set; }
 
         public SfGrid<T>? Grid;
-        private readonly PropertyInfo[] Props = typeof(T).GetProperties();
         private CustomMessageHandler MessageHandler = new();
+        internal List<ShiftColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
         internal string GridContainerCssClass
@@ -255,6 +259,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 PageSize = SettingManager.Settings.ListPageSize.Value;
             };
+
+            if (AutoGenerateColumns)
+            {
+                GenerateColumns();
+            }
         }
 
         public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
@@ -384,5 +393,73 @@ namespace ShiftSoftware.ShiftBlazor.Components
             PDF,
             Excel,
         }
+
+        internal void GenerateColumns()
+        {
+            var properties = typeof(T)
+                .GetProperties()
+                .Where(x => !DefaultExcludedColumns.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase))
+                .Where(x => !ExcludedColumns.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase));
+
+            var complexColumns = new List<string>();
+
+            foreach (var prop in properties)
+            {
+                var column = new ShiftColumn();
+
+                column.Label = GetLocalizedColumnLabel(prop.Name);
+                column.Field = GetFieldName(prop);
+
+                if (!IsSystemType(prop.PropertyType))
+                {
+                    complexColumns.Add(prop.Name);
+                }
+
+                GeneratedColumns.Add(column);
+            }
+
+            Query.Expand(complexColumns);
+        }
+
+        internal string GetLocalizedColumnLabel(string name)
+        {
+            var label = name;
+            foreach (var localizer in Localizers)
+            {
+                label = localizer[name];
+                if (label != name) break;
+            }
+            return label;
+        }
+
+        internal string GetFieldName(PropertyInfo property)
+        {
+            var field = property.Name;
+            // try getting the complex field name when field is complex type
+            if (!IsSystemType(property.PropertyType))
+            {
+                var childProp = property
+                    .PropertyType
+                    .GetProperties()
+                    .First(x => x.PropertyType.Name == "String" && x.Name != nameof(ShiftEntityDTOBase.ID));
+
+                if (!string.IsNullOrWhiteSpace(childProp?.Name))
+                {
+                    field = $"{property.Name}.{childProp.Name}";
+                }
+            }
+            return field;
+        }
+
+        internal static bool IsSystemType(Type type)
+        {
+            return type.Namespace == "System";
+        }
+    }
+
+    public class ShiftColumn
+    {
+        public string Label { get; set; }
+        public string Field { get; set; }
     }
 }
