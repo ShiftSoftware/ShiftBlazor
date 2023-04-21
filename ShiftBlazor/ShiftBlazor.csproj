@@ -21,7 +21,6 @@
 		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
 		<PackageReference Include="Microsoft.OData.Client" Version="7.15.0" />
 		<PackageReference Include="MudBlazor" Version="6.1.9" />
-		<PackageReference Include="ShiftSoftware.ShiftIdentity.Model" Version="1.1.21-alpha" />
 		<PackageReference Include="Syncfusion.Blazor.Grid" Version="20.4.0.38" />
 		<PackageReference Include="Syncfusion.Blazor.Themes" Version="20.4.0.38" />
 	</ItemGroup>
@@ -37,6 +36,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj" />
+	  <ProjectReference Include="..\..\ShiftIdentity\ShiftIdentity.Model\ShiftIdentity.Model.csproj" />
 	</ItemGroup>
 
 </Project>
