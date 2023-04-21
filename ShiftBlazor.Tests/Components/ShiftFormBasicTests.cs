@@ -390,8 +390,8 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldHaveALoadingIconWhenSaving()
     {
-        var cut = RenderComponent<ShiftFormBasic<ShiftEntityDTOBase>>(parameters => parameters
-            .Add(p => p.Value, new ShiftEntityDTOBase())
+        var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters
+            .Add(p => p.Value, new Sample() { Name = "First", LastName = "Last" })
             .Add(p => p.OnValidSubmit, async () => await Task.Delay(1000))
         );
 

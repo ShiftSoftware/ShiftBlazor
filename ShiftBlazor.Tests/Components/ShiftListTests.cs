@@ -12,7 +12,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldShowErrorIfActionAndValueAreNull()
     {
-        var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(paramaters =>
+        var cut = RenderComponent<ShiftList<Sample>>(paramaters =>
             paramaters.Add(p => p.DisablePagination, DisablePaging));
 
         var alertComp = cut.FindComponent<MudAlert>();
@@ -57,7 +57,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         //get a random string
         var title = Guid.NewGuid().ToString();
 
-        var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
+        var cut = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.Title, title)
             .Add(p => p.DisablePagination, DisablePaging)
@@ -73,11 +73,11 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderPagingByDefault()
     {
-        var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
+        var cut = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
         );
 
-        var grid = cut.FindComponent<SfGrid<ShiftEntityDTO>>();
+        var grid = cut.FindComponent<SfGrid<Sample>>();
 
         Assert.True(grid.Instance.AllowPaging);
     }
@@ -90,13 +90,13 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         var pageSize = 22;
 
-        var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
+        var cut = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.PageSize, pageSize)
             .Add(p => p.DisablePagination, DisablePaging)
         );
 
-        var grid = cut.FindComponent<SfGrid<ShiftEntityDTO>>();
+        var grid = cut.FindComponent<SfGrid<Sample>>();
         Assert.Equal(pageSize, grid.Instance.PageSettings.PageSize);
     }
 
@@ -148,11 +148,11 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldRenderOrHideActionColumn1()
     {
         // Should not render Actions column when ComponentType is not set
-        var comp = RenderComponent<ShiftList<ShiftEntityDTOBase>>(parameters => parameters
+        var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.DisablePagination, DisablePaging)
         );
-        var grid = comp.FindComponent<SfGrid<ShiftEntityDTOBase>>().Instance;
+        var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
         var cols = grid.Columns.Where(x => x.HeaderText == "Actions");
         Assert.Empty(cols);
@@ -162,12 +162,12 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldRenderOrHideActionColumn2()
     {
         // Should render Actions column when ComponentType is 
-        var comp = RenderComponent<ShiftList<ShiftEntityDTOBase>>(parameters => parameters
+        var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.DisablePagination, DisablePaging)
         );
-        var grid = comp.FindComponent<SfGrid<ShiftEntityDTOBase>>().Instance;
+        var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
 
         var cols = grid.Columns.Where(x => x.HeaderText == "Actions");
         Assert.Single(cols);
@@ -182,13 +182,13 @@ public class ShiftListTests : ShiftBlazorTestContext
         };
 
         // Should not render Actions column when it is excluded in ExcludedColumns
-        var comp = RenderComponent<ShiftList<ShiftEntityDTOBase>>(parameters => parameters
+        var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ExcludedColumns, excludedColumns)
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.DisablePagination, DisablePaging)
         );
-        var grid = comp.FindComponent<SfGrid<ShiftEntityDTOBase>>().Instance;
+        var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
         var cols = grid.Columns.Where(x => x.HeaderText == "Actions");
         Assert.Empty(cols);
     }
@@ -196,7 +196,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderDownloadButton()
     {
-        var comp = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
+        var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.EnableCsvExcelExport, false)
@@ -267,7 +267,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderPrintButton()
     {
-        var comp = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
+        var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.EnablePrint, true)
@@ -424,7 +424,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         var text = "click me!";
 
-        var comp = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
+        var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.ToolbarStartTemplate, $"<button>{text}</button>")
@@ -504,9 +504,9 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldEmbededInsideForm()
     {
-        RenderTree.Add<ShiftFormBasic<ShiftEntityDTO>>();
+        RenderTree.Add<ShiftFormBasic<Sample>>();
 
-        var comp = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters
+        var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.DisablePagination, DisablePaging)

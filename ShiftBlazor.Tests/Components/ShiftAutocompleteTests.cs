@@ -222,7 +222,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     {
         var id = "ab49Q";
 
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters
+        var comp = RenderComponent<ShiftAutocomplete<Sample>>(parameters => parameters
             .Add(p => p.EntitySet, EntitytSet)
             .Add(p => p.Where, q => x => x.ID == q)
         );
