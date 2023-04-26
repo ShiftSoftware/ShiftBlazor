@@ -11,7 +11,7 @@
     private RenderFragment PrintButton
     {
         get =>
-            @<MudTooltip Text="Print">
+            @<MudTooltip Text="@Loc["Print"]">
                 <MudButton Style="min-width:40px;"
                            Color="Color.Warning"
                            Variant="Variant.Text"
@@ -33,7 +33,7 @@
     private RenderFragment DeleteButton
     {
         get =>
-            @<MudTooltip Text="Delete">
+            @<MudTooltip Text="@Loc["Delete"]">
                 <MudButton Style="min-width:40px;"
                            Disabled="DisableDelete || Mode > Modes.View || TaskInProgress != Tasks.None"
                            Variant="Variant.Text"
@@ -55,7 +55,7 @@
     private RenderFragment EditButton
     {
         get =>
-            @<MudTooltip Text="Edit">
+            @<MudTooltip Text="@Loc["Edit"]">
                 <MudButton Style="min-width:40px;"
                            Disabled="DisableEdit || Mode > Modes.View || TaskInProgress != Tasks.None"
                            Variant="Variant.Text"
@@ -70,7 +70,7 @@
     private RenderFragment RevisionButton
     {
         get =>
-            @<MudTooltip Text="View Revisions">
+            @<MudTooltip Text="@Loc["Revisions"]">
                 <MudButton Style="min-width:40px;"
                            Disabled="DisableRevisions || Mode > Modes.Archive || TaskInProgress != Tasks.None"
                            Variant="Variant.Text"
@@ -127,7 +127,7 @@
     public RenderFragment NewTabButton
     {
         get =>
-            @<MudTooltip Text="Open In New Tab">
+            @<MudTooltip Text="@Loc["NewTab"]">
                 <MudButton Variant="Variant.Text"
                            Color="Color.Default"
                            Style="min-width:40px;"
@@ -140,7 +140,7 @@
     public RenderFragment MaximizeButton
     {
         get =>
-            @<MudTooltip Text="@(Maximized != true ? "Maximize" : "Minimize")">
+            @<MudTooltip Text="@(Maximized != true ? Loc["Maximize"] : Loc["Minimize"])">
                 <MudButton Style="min-width:40px;"
                            Variant="Variant.Text"
                            Size="Size.Medium"
@@ -162,11 +162,11 @@
             @<text>
                 @if (Mode == Modes.Archive)
                 {
-                    <MudAlert Severity="Severity.Warning">You are viewing a revision.</MudAlert>
+                    <MudAlert Severity="Severity.Warning">@Loc["RevisionIndicator"]</MudAlert>
                 }
                 @if (Value.IsDeleted)
                 {
-                    <MudAlert Severity="Severity.Error">This item is deleted.</MudAlert>
+                    <MudAlert Severity="Severity.Error">@Loc["DeletedIndicator"]</MudAlert>
                 }
              </text>;
     }
@@ -180,7 +180,7 @@
                     <MudButton Disabled="@(TaskInProgress != Tasks.None)"
                                StartIcon="@Icons.Material.Filled.Cancel"
                                OnClick="CancelChanges">
-                        Cancel
+                        @Loc["CancelChanges"]
                     </MudButton>
                 }
                 else if (Mode == Modes.Archive)
@@ -188,7 +188,7 @@
                     <MudButton Disabled="@(TaskInProgress != Tasks.None)"
                                StartIcon="@Icons.Material.Filled.Cancel"
                                OnClick="CloseRevision">
-                        Back
+                        @Loc["CloseRevisions"]
                     </MudButton>
                 }
              </text>;

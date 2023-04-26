@@ -19,6 +19,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private ShiftModalService ShiftModal { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] protected HttpClient HttpClient { get; set; }
+        [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
@@ -280,7 +281,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private void ErrorHandler(FailureEventArgs args)
         {
             ActionUrlBroken = true;
-            MsgService.Error("Error getting list of items", "Error getting list of items", args.Error.ToString());
+            MsgService.Error(Loc["GetItemListError"], Loc["GetItemListError"], args.Error.ToString());
         }
 
         public async Task<SelectedItems> GetSelectedItems()
@@ -313,19 +314,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (this.Grid != null)
             {
-                MsgService.Info("Opening Print Window, this might take a while");
+                MsgService.Info(Loc["PrintMessage"]);
                 await this.Grid.PrintAsync();
                 return;
             }
 
-            MsgService.Error("Could not initiate print action");
+            MsgService.Error(Loc["PrintFailed"]);
         }
 
         public async Task DownloadList(DownloadType type)
         {
             if (this.Grid == null)
             {
-                MsgService.Error("Could not initiate download action");
+                MsgService.Error(Loc["DownloadFailed"]);
                 return;
             }
             switch (type)

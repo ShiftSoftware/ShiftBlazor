@@ -16,7 +16,7 @@
         {
             <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
                 <MudIcon Icon="@IconSvg"></MudIcon>
-                <MudText Class="px-4" Style="margin:0;">@(Title ?? "List")</MudText>
+                <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["ListDefaultTitle"])</MudText>
 
                 @ToolbarStartTemplate
 
@@ -28,7 +28,7 @@
                 {
                     @if (EnablePrint)
                     {
-                        <MudTooltip Text="Print">
+                        <MudTooltip Text="@Loc["PrintButton"]">
                             <MudIconButton Icon="@Icons.Material.Filled.Print"
                                            Color="Color.Warning"
                                            OnClick="PrintList" />
@@ -36,16 +36,16 @@
                     }
                     @if (EnableCsvExcelExport || EnablePdfExport)
                     {
-                        <MudTooltip Text="Download">
+                        <MudTooltip Text="@Loc["DownloadButton"]">
                             <MudMenu Icon="@Icons.Material.Filled.FileDownload" Color="Color.Warning">
                                 @if (EnableCsvExcelExport)
                                 {
-                                    <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">CSV Export</MudMenuItem>
-                                    <MudMenuItem OnClick="() => DownloadList(DownloadType.Excel)">Excel Export</MudMenuItem>
+                                    <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">@Loc["CSVExportButton"]</MudMenuItem>
+                                    <MudMenuItem OnClick="() => DownloadList(DownloadType.Excel)">@Loc["ExcelExportButton"]</MudMenuItem>
                                 }
                                 @if (EnablePdfExport)
                                 {
-                                    <MudMenuItem OnClick="() => DownloadList(DownloadType.PDF)">PDF Export</MudMenuItem>
+                                    <MudMenuItem OnClick="() => DownloadList(DownloadType.PDF)">@Loc["PDFExportButton"]</MudMenuItem>
                                 }
                             </MudMenu>
                         </MudTooltip>
@@ -54,7 +54,7 @@
 
                 @if (RenderAddButton)
                 {
-                    <MudTooltip Text="Add">
+                    <MudTooltip Text="@Loc["AddButton"]">
                         <MudButton Style="min-width:40px;"
                                    Variant="Variant.Text"
                                    Size="Size.Medium"
@@ -73,7 +73,7 @@
                 {
                     @ToolbarControlsTemplate
 
-                    <MudTooltip Text="Close">
+                    <MudTooltip Text="@Loc["CloseButton"]">
                         <MudButton Style="min-width:40px; z-index: 100;"
                                    Variant="Variant.Text"
                                    Size="Size.Medium"
@@ -140,20 +140,27 @@
                                     <MudStack Row="true" Spacing="6">
 
                                         <MudButtonGroup OverrideStyles="false">
-
-                                            <MudIconButton OnClick="() => GoToPage(1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft"></MudIconButton>
-                                            <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage - 1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@Icons.Material.Filled.KeyboardArrowLeft"></MudIconButton>
+                                            <MudTooltip Text="@Loc["GoToFirstPage"]">
+                                                <MudIconButton OnClick="() => GoToPage(1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@(SettingManager.Settings.CurrentLanguage.RTL ? Icons.Material.Filled.KeyboardDoubleArrowRight : Icons.Material.Filled.KeyboardDoubleArrowLeft)"></MudIconButton>
+                                            </MudTooltip>
+                                            <MudTooltip Text="@Loc["GoToPreviousPage"]">
+                                                <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage - 1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@(SettingManager.Settings.CurrentLanguage.RTL ? Icons.Material.Filled.KeyboardArrowRight : Icons.Material.Filled.KeyboardArrowLeft)"></MudIconButton>
+                                            </MudTooltip>
                                             @for (var i = 1; i <= ctx.TotalPages; i++)
                                             {
                                                 var _page = i;
                                                 <MudButton Color="ctx.CurrentPage == _page ? Color.Secondary : Color.Default" OnClick="() => GoToPage(_page)">@_page</MudButton>
                                             }
-                                            <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage + 1)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@Icons.Material.Filled.KeyboardArrowRight"></MudIconButton>
-                                            <MudIconButton OnClick="() => GoToPage(ctx.TotalPages)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight"></MudIconButton>
+                                            <MudTooltip Text="@Loc["GoToNextPage"]">
+                                                <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage + 1)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@(SettingManager.Settings.CurrentLanguage.RTL ? Icons.Material.Filled.KeyboardArrowLeft : Icons.Material.Filled.KeyboardArrowRight)"></MudIconButton>
+                                            </MudTooltip>
+                                            <MudTooltip Text="@Loc["GoToLastPage"]">
+                                                <MudIconButton OnClick="() => GoToPage(ctx.TotalPages)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@(SettingManager.Settings.CurrentLanguage.RTL ? Icons.Material.Filled.KeyboardDoubleArrowLeft : Icons.Material.Filled.KeyboardDoubleArrowRight)"></MudIconButton>
+                                            </MudTooltip>
 
                                         </MudButtonGroup>
 
-                                        <MudSelect T="int" Label="Items per page" Value="PageSize" ValueChanged="PageSizeChangeHandler" Dense="true" Style="width: 150px;display: flex;">
+                                        <MudSelect T="int" Label="@Loc["ItemsPerPage"]" Value="PageSize" ValueChanged="PageSizeChangeHandler" Dense="true" Style="width: 150px;display: flex;">
                                             @foreach (var size in PageSizes)
                                             {
                                                 <MudSelectItem Value="@size">@size</MudSelectItem>
@@ -163,7 +170,7 @@
 
                                     <MudSpacer/>
 
-                                    <MudText>@(ctx.TotalItemsCount > 0 ? ctx.CurrentPage : 0) of @ctx.TotalPages pages (@ctx.TotalItemsCount items)</MudText>
+                                    <MudText>@Loc["PageCountAndTotal", ctx.TotalItemsCount > 0 ? ctx.CurrentPage : 0, ctx.TotalPages, ctx.TotalItemsCount]</MudText>
                                 }
                             </MudToolBar>
                         }
@@ -193,7 +200,7 @@
 
                     @if (!ExcludedColumns.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
                     {
-                        <GridColumn HeaderText="Actions" TextAlign="TextAlign.Center" Width="@ActionColumnWidth">
+                        <GridColumn HeaderText="@Loc["ActionsColumnTitle"]" TextAlign="TextAlign.Center" Width="@ActionColumnWidth">
                             <Template>
                                 @if (ActionsTemplate == null)
                                 {
@@ -210,12 +217,12 @@
                                                    EndIcon="@Icons.Material.Filled.OpenInNew"
                                                    Color="@Color.Primary"
                                                    Size="@Size.Small">
-                                            View
+                                            @Loc["ViewButton"]
                                         </MudButton>
                                     }
                                     catch (Exception)
                                     {
-                                        MsgService.Error("Could not create action button");
+                                        MsgService.Error(Loc["ActionButtonError"]);
                                     }
                                 }
                                 else
@@ -233,7 +240,7 @@
             @if (ActionUrlBroken)
             {
                 <div class="disabled-grid-overlay">
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" OnClick="ReloadGrid">Reload</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" OnClick="ReloadGrid">@Loc["RefreshList"]</MudButton>
                 </div>
             }
         </div>

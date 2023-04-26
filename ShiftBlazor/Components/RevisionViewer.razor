@@ -4,30 +4,31 @@
 @using ShiftIdentity.Model
 @inject ShiftModalService ShiftModal
 @inject SettingManager SettingManager
+@inject IStringLocalizer<Resources.Components.ResourceViewer> Loc
 
 <ShiftList T="RevisionDTO"
-           Values="_Revisions"
-           DisableSelection="true"
-           OnRowClick="RowClickHandler"
-           DisableHeaderToolbar="true"
+           Values="@_Revisions"
+           DisableSelection="@true"
+           OnRowClick="@RowClickHandler"
+           DisableHeaderToolbar="@true"
            ExcludedColumns="@(new List<string> {nameof(RevisionDTO.SavedByUserID)})">
 
     <HeaderTemplate>
-        <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
+        <MudToolBar Dense="@true" DisableGutters="@false" Class="light-toolbar shift-toolbar-header">
             <MudIcon Icon="@Icons.Material.Filled.List"></MudIcon>
-            <MudText Class="px-4" Style="margin:0;">@Title</MudText>
+            <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["DefaultTitle"])</MudText>
 
             <MudSpacer></MudSpacer>
 
             @if (MudDialog != null)
             {
-                <MudTooltip Text="Close">
+                <MudTooltip Text="@Loc["CloseButton"]">
                     <MudButton Style="min-width:40px;"
-                           Variant="Variant.Text"
-                           Size="Size.Medium"
-                           Color="Color.Default"
-                           OnClick="Close">
-                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                           Variant="@Variant.Text"
+                           Size="@Size.Medium"
+                           Color="@Color.Default"
+                           OnClick="@Close">
+                        <MudIcon Size="@Size.Medium" Icon="@Icons.Material.Filled.Close" />
                     </MudButton>
                 </MudTooltip>
             }
@@ -58,7 +59,7 @@
     ).ToList();
 
     [Parameter]
-    public string Title { get; set; } = "Revisions";
+    public string? Title { get; set; }
 
     private async Task RowClickHandler(RecordClickEventArgs<RevisionDTO> args)
     {

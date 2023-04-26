@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Extensions;
@@ -22,6 +23,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private ShiftModalService ShiftModal { get; set; } = default!;
         [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
+        [Inject] IStringLocalizer<Resources.Components.ShiftEntityForm> Loc { get; set; } = default!;
 
         /// <summary>
         ///     The URL endpoint that processes the CRUD operations.
@@ -126,7 +128,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal override string _SubmitText
         {
             get => string.IsNullOrWhiteSpace(SubmitText)
-                ? Mode == Modes.Create ? "Create" : "Save"
+                ? Mode == Modes.Create ? Loc["CreateForm"] : Loc["SaveForm"]
                 : base._SubmitText;
             set => base._SubmitText = value;
         }
@@ -172,10 +174,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 };
 
                 var result = await DialogService.ShowMessageBox(
-                        "Warning",
-                        "Do you want to delete this item?",
-                        yesText: "Delete",
-                        cancelText: "Cancel",
+                        Loc["Warning"],
+                        Loc["DeleteConfirmation"],
+                        yesText: Loc["DeleteAccept"],
+                        cancelText: Loc["DeleteDecline"],
                         options: dialogOptions);
 
                 if (result.HasValue && result.Value)
@@ -226,12 +228,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (Mode == Modes.Create)
                 {
                     res = await Http.PostAsJsonAsync(ItemUrl, Value);
-                    message = "Item has been Created";
+                    message = Loc["ItemCreated"];
                 }
                 else
                 {
                     res = await Http.PutAsJsonAsync(ItemUrl, Value);
-                    message = "Item has been Saved";
+                    message = Loc["ItemSaved"];
                 }
 
                 var value = await ParseEntityResponse(res);
@@ -349,24 +351,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal void SetTitle()
         {
-            switch (Mode)
+            if (string.IsNullOrWhiteSpace(Title))
             {
-                case Modes.View:
-                    DocumentTitle = "Viewing";
-                    break;
-                case Modes.Edit:
-                    DocumentTitle = "Editing";
-                    break;
-                case Modes.Create:
-                    DocumentTitle = "Creating new";
-                    break;
+                return;
             }
 
-            DocumentTitle += " " + Title;
-
-            if (Key != null)
+            if (Key != null && Mode == Modes.View)
             {
-                DocumentTitle += " " + Key;
+                DocumentTitle = Loc["ViewingForm", Title, Key];
+            }
+            else if (Key != null && Mode == Modes.Edit)
+            {
+                DocumentTitle = Loc["EditingForm", Title, Key];
+            }
+            else if (Mode == Modes.Create)
+            {
+                DocumentTitle = Loc["CreatingForm", Title];
             }
         }
 
@@ -413,8 +413,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var dParams = new DialogParameters
                 {
                     {"Revisions", res.Value},
-                    {"Title", Title + " Revisions" },
                 };
+
+                if (!string.IsNullOrWhiteSpace(Title))
+                {
+                    dParams.Add("Title", Loc["RevisionsTitle", Title].ToString());
+                }
 
                 var options = new DialogOptions
                 {
@@ -432,6 +436,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
         }
+
 
         internal async Task CloseRevision()
         {

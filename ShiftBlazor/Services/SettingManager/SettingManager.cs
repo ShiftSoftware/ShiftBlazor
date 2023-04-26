@@ -1,7 +1,6 @@
 ﻿using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Extensions;
 using System.Globalization;
 using System.Net.Http.Headers;
 
@@ -14,10 +13,14 @@ namespace ShiftSoftware.ShiftBlazor.Services
         private readonly HttpClient? Http;
 
         private readonly string Key = "ShiftSettings";
-        public ShiftBlazorSettings Settings { get; set; }
-        public ShiftBlazorConfiguration Configuration { get; set; } = new ShiftBlazorConfiguration();
+        public AppSetting Settings { get; set; }
+        public AppConfiguration Configuration { get; set; } = new();
+        private string DefaultCultureName = "en-US";
 
-        public SettingManager(ISyncLocalStorageService syncLocalStorage, NavigationManager? navManager, HttpClient? http, Action<ShiftBlazorConfiguration> config)
+        public SettingManager(ISyncLocalStorageService syncLocalStorage,
+                              NavigationManager? navManager,
+                              HttpClient? http,
+                              Action<AppConfiguration> config)
         {
             SyncLocalStorage = syncLocalStorage;
             NavManager = navManager;
@@ -32,9 +35,9 @@ namespace ShiftSoftware.ShiftBlazor.Services
             UpdateCulture();
         }
 
-        public void SwitchLanguage(string name, bool forceReload = true)
+        public void SwitchLanguage(LanguageInfo lang, bool forceReload = true)
         {
-            Settings.CultureName = name;
+            Settings.CurrentLanguage = lang;
 
             SyncLocalStorage.SetItem(Key, Settings);
 
@@ -60,7 +63,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         public CultureInfo GetCulture()
         {
-            return new CultureInfo(Settings.CultureName)
+            return new CultureInfo(Settings.CurrentLanguage?.CultureName ?? DefaultCultureName)
             {
                 DateTimeFormat = new DateTimeFormatInfo
                 {
@@ -73,19 +76,19 @@ namespace ShiftSoftware.ShiftBlazor.Services
             };
         }
 
-        private ShiftBlazorSettings GetSettings()
+        private AppSetting GetSettings()
         {
-            ShiftBlazorSettings? settings = null;
+            AppSetting? settings = null;
 
             try
             {
-                settings = SyncLocalStorage.GetItem<ShiftBlazorSettings>(Key);
+                settings = SyncLocalStorage.GetItem<AppSetting>(Key);
             }
             catch { }
 
             if (settings == null)
             {
-                settings = new ShiftBlazorSettings();
+                settings = new AppSetting();
                 SyncLocalStorage.SetItem(Key, settings);
             }
 
@@ -96,9 +99,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
         {
             var culture = GetCulture();
 
-            //CultureInfo.DefaultThreadCurrentCulture = culture;
-            //CultureInfo.DefaultThreadCurrentUICulture = culture;
-
             if (Http != null)
             {
                 Http.DefaultRequestHeaders.AcceptLanguage.Clear();
@@ -106,32 +106,5 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
         }
 
-        public class ShiftBlazorSettings
-        {
-            public string DateTimeFormat = "yyyy-MM-dd";
-            public string CultureName { get; set; } = "en-US";
-            public int? ListPageSize { get; set; }
-            public DialogPosition ModalPosition { get; set; } = DialogPosition.Center;
-        }
-
-        public class ShiftBlazorConfiguration
-        {
-            public string BaseAddress { get; set; } = "";
-            public string UserListEndpoint { get; set; } = "";
-
-            private string _ApiPath = "/api";
-            private string _ODataPath = "/odata";
-            public string ApiPath
-            {
-                get => BaseAddress.AddUrlPath(_ApiPath);
-                set => _ApiPath = value;
-            }
-
-            public string ODataPath
-            {
-                get => BaseAddress.AddUrlPath(_ODataPath);
-                set => _ODataPath = value;
-            }
-        }
     }
 }

@@ -7,7 +7,11 @@
          ActivationEvent="@MouseEvent.MouseOver"
          AnchorOrigin="Origin.BottomCenter"
          TransformOrigin="Origin.TopCenter">
-    <MudMenuItem OnClick="@(e => LangManager.SwitchLanguage("en-US"))">English</MudMenuItem>
-    <MudMenuItem OnClick="@(e => LangManager.SwitchLanguage("ar-IQ"))">Arabic</MudMenuItem>
-    <MudMenuItem OnClick="@(e => LangManager.SwitchLanguage("ku-IQ"))">Kurdish</MudMenuItem>
+    @foreach (var lang in LangManager.Configuration.Languages)
+    {
+        var selected = LangManager.Settings.CurrentLanguage.CultureName == lang.CultureName;
+        var selectedStyle = "background-color: var(--mud-palette-action-default-hover);";
+        <MudMenuItem Style="@( selected ? selectedStyle : "")" OnClick="@(e => LangManager.SwitchLanguage(lang))">@lang.Label</MudMenuItem>
+    }
+    
 </MudMenu>

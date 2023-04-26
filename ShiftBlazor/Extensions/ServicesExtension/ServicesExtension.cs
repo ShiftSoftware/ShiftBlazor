@@ -6,15 +6,15 @@ using Syncfusion.Licensing;
 using Syncfusion.Blazor;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
-using static ShiftSoftware.ShiftBlazor.Services.SettingManager;
 
 namespace ShiftSoftware.ShiftBlazor.Extensions
 {
-    public static class ServiceExtension
+    public static class ServicesExtension
     {
-        public static IServiceCollection AddShiftServices(this IServiceCollection services, Action<ShiftBlazorOptions> configure)
+        public static IServiceCollection AddShiftServices(this IServiceCollection services, Action<AppStartupOptions> configure)
         {
-            var options = new ShiftBlazorOptions();
+            SettingManager settingManager = null;
+            var options = new AppStartupOptions();
             configure.Invoke(options);
 
             services.AddMudServices(mudConfig =>
@@ -38,28 +38,29 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
             services.AddScoped<ShiftModalService>();
             services.AddScoped<MessageService>();
             services.AddScoped(x =>
-                new SettingManager(x.GetRequiredService<ISyncLocalStorageService>(),
+            {
+                settingManager = new SettingManager(x.GetRequiredService<ISyncLocalStorageService>(),
                                    x.GetRequiredService<NavigationManager>(),
                                    x.GetRequiredService<HttpClient>(),
-                                   config => options.ShiftConfiguration.Invoke(config))
-            );
+                                   config =>
+                                   {
+                                       options.ShiftConfiguration.Invoke(config);
+                                   });
+
+                return settingManager;
+            });
 
             services.AddSyncfusionBlazor(syncConfig =>
             {
+                syncConfig.EnableRtl = settingManager?.Settings.CurrentLanguage?.RTL ?? false;
                 options.SyncfusionConfiguration?.Invoke(syncConfig);
             });
+
+            services.AddLocalization();
 
             SyncfusionLicenseProvider.RegisterLicense(options.SyncfusionLicense);
 
             return services;
-        }
-
-        public class ShiftBlazorOptions
-        {
-            public string? SyncfusionLicense { get; set; }
-            public Action<MudServicesConfiguration> MudBlazorConfiguration { get; set; }
-            public Action<GlobalOptions> SyncfusionConfiguration { get; set; }
-            public Action<ShiftBlazorConfiguration> ShiftConfiguration { get; set; }
         }
     }
 }

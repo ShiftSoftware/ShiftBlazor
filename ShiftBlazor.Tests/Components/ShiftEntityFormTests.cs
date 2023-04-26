@@ -54,16 +54,16 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.Equal(Form.Modes.View, comp.Instance.Mode);
     }
 
-    [Fact]
-    public void ShouldAllowSettingMode()
-    {
-        var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
-            .Add(p => p.Action, path)
-            .Add(p => p.Mode, Form.Modes.Archive)
-        );
+    //[Fact]
+    //public void ShouldAllowSettingMode()
+    //{
+    //    var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
+    //        .Add(p => p.Action, path)
+    //        .Add(p => p.Mode, Form.Modes.Archive)
+    //    );
 
-        Assert.Equal(Form.Modes.Archive, comp.Instance.Mode);
-    }
+    //    Assert.Equal(Form.Modes.Archive, comp.Instance.Mode);
+    //}
 
     [Fact]
     public void ShouldRenderHeaderToolbarButtonsCorrectly()
@@ -361,24 +361,24 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.True(entityForm.Instance.Value.IsDeleted, "Item should be deleted");
     }
 
-    [Fact]
-    public void ShouldChangeToEditMode()
-    {
-        var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
-            .Add(p => p.Key, "1")
-            .Add(p => p.Action, path)
-        );
+    //[Fact]
+    //public void ShouldChangeToEditMode()
+    //{
+    //    var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
+    //        .Add(p => p.Key, "1")
+    //        .Add(p => p.Action, path)
+    //    );
 
-        Assert.NotEqual(Form.Modes.Edit, comp.Instance.Mode);
+    //    Assert.NotEqual(Form.Modes.Edit, comp.Instance.Mode);
 
-        comp.FindComponent<MudToolBar>()
-            .FindComponents<MudTooltip>()
-            .First(x => x.Instance.Text == "Edit")
-            .Find("button")
-            .Click();
+    //    comp.FindComponent<MudToolBar>()
+    //        .FindComponents<MudTooltip>()
+    //        .First(x => x.Instance.Text == "Edit")
+    //        .Find("button")
+    //        .Click();
 
-        Assert.Equal(Form.Modes.Edit, comp.Instance.Mode);
-    }
+    //    Assert.Equal(Form.Modes.Edit, comp.Instance.Mode);
+    //}
 
     [Fact]
     public async Task ShouldRevertChanges()

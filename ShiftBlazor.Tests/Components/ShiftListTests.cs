@@ -7,7 +7,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
 public class ShiftListTests : ShiftBlazorTestContext
 {
-    public bool DisablePaging = false;
+    public static bool DisablePaging = false;
 
     [Fact]
     public void ShouldShowErrorIfActionAndValueAreNull()
@@ -121,9 +121,13 @@ public class ShiftListTests : ShiftBlazorTestContext
 
         var grid = cut.FindComponent<SfGrid<Sample>>();
 
-        var columns = grid.Instance.Columns.Where(x => excludedColumns.Contains(x.Field));
-        Assert.Equal(excludedColumns.Count, columns.Count());
-        Assert.All(columns, x => x.Visible.Equals(false));
+        var columns = grid.Instance.Columns;
+        var properties = typeof(Sample).GetProperties();
+        // +1 because Actions column
+        Assert.Equal(properties.Count() - excludedColumns.Count + 1, columns.Count());
+        Assert.All(columns, x => excludedColumns.Contains(x.Field).Equals(false));
+
+
     }
 
     [Fact]
@@ -401,7 +405,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     }
 
     [Fact]
-    public void ShouldReplaceActionsColumnContent()
+    public async Task ShouldReplaceActionsColumnContent()
     {
         var text = "Hello World!";
         var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
@@ -412,11 +416,12 @@ public class ShiftListTests : ShiftBlazorTestContext
         );
 
         var grid = comp.FindComponent<SfGrid<Sample>>();
-        comp.WaitForAssertion(() =>
-        {
-            var row = grid.Find(".e-table .e-row .e-rowcell[aria-label~='Actions']");
-            row.FirstChild?.MarkupMatches($"<div><h1>{text}</h1></div>");
-        });
+
+        await Task.Delay(300);
+
+        var row = grid.Find(".e-table .e-row .e-rowcell[aria-label~='Actions']");
+        row.FirstChild?.MarkupMatches($"<div><h1>{text}</h1></div>");
+        
     }
 
     [Fact]

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.Extensions.Localization;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
@@ -14,7 +15,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] ShiftModalService ShiftModal { get; set; } = default!;
         [Inject] IDialogService DialogService { get; set; } = default!;
-
+        [Inject] IStringLocalizer<Resources.Components.ShiftFormBasic> Loc { get; set; } = default!;
 
         [CascadingParameter]
         internal MudDialogInstance? MudDialog { get; set; }
@@ -157,7 +158,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? SubmitText { get; set; }
 
         internal virtual bool HideSubmit { get; set; }
-        internal virtual string _SubmitText { get; set; } = "Submit";
+        internal virtual string _SubmitText { get; set; }
         internal Tasks TaskInProgress { get; set; }
         internal bool AlertEnabled { get; set; } = false;
         internal MudBlazor.Severity AlertSeverity { get; set; }
@@ -181,10 +182,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             editContext = new EditContext(Value);
 
-            if (!string.IsNullOrWhiteSpace(SubmitText))
-            {
-                _SubmitText = SubmitText;
-            }
+            _SubmitText = string.IsNullOrWhiteSpace(SubmitText)
+                ? Loc["SubmitTextDefault"]
+                : SubmitText;
 
             //NavManager.RegisterLocationChangingHandler(LocationChangingHandler);
         }

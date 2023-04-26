@@ -27,7 +27,7 @@
                 {
                     <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
                         <MudIcon Icon="@IconSvg"></MudIcon>
-                        <MudText Class="px-4" Style="margin:0;">@(Title ?? "Form")</MudText>
+                        <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FormDefaultTitle"])</MudText>
 
                         @ToolbarStartTemplate
 
@@ -50,7 +50,7 @@
                         {
                             @ToolbarControlsTemplate
 
-                            <MudTooltip Text="Close">
+                            <MudTooltip Text="@Loc["ModalClose"]">
                                 <MudButton Style="min-width:40px;"
                                            Variant="Variant.Text"
                                            Size="Size.Medium"
