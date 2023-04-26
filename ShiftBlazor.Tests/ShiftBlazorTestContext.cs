@@ -11,9 +11,9 @@ public class ShiftBlazorTestContext : TestContext
 
     public List<Sample> Values = new()
     {
-        new Sample { Name = "Sample 1", ID = 1 },
-        new Sample { Name = "Sample 2", ID = 2 },
-        new Sample { Name = "Sample 3", ID = 3, IsDeleted = true },
+        new Sample { Name = "Sample 1", ID = "1" },
+        new Sample { Name = "Sample 2", ID = "2" },
+        new Sample { Name = "Sample 3", ID = "3", IsDeleted = true },
     };
 
     public ShiftBlazorTestContext()

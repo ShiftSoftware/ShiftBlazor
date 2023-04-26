@@ -218,18 +218,18 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public async Task ShouldFilterCorrectColumnWhenSpecified()
     {
-        var id = 1;
+        var id = "ab49Q";
 
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters => parameters
+        var comp = RenderComponent<ShiftAutocomplete<Sample>>(parameters => parameters
             .Add(p => p.EntitySet, EntitytSet)
-            .Add(p => p.Where, q => x => x.ID == int.Parse(q))
+            .Add(p => p.Where, q => x => x.ID == q)
         );
 
         var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}");
         comp.WaitForAssertion(() =>
         {
 
-            Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}?$filter=ID eq {id}&$top=100",
+            Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}?$filter=ID eq '{id}'&$top=100",
                 comp.Instance.GetODataUrl(id.ToString()));
         });
     }
