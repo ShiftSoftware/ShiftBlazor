@@ -1,22 +1,22 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using ShiftSoftware.ShiftBlazor.Components;
+using ShiftSoftware.ShiftBlazor.Enums;
 
-namespace ShiftSoftware.ShiftBlazor.Utils
+namespace ShiftSoftware.ShiftBlazor.Components
 {
     public partial class ShiftForm<TComponent, T> : ComponentBase where TComponent : ComponentBase where T : ShiftEntityDTO, new()
     {
         [CascadingParameter] public MudDialogInstance? MudDialog { get; set; }
-        [Parameter] public Form.Modes Mode { get; set; } = Form.Modes.View;
+        [Parameter] public FormModes Mode { get; set; } = FormModes.View;
         [Parameter] public object? Key { get; set; }
         public FormSettings FormSetting { get; set; } = new();
         public T TheItem { get; set; } = new();
         public ShiftEntityForm<T>? FormContainer { get; set; }
 
-        public bool ReadOnly => Mode < Form.Modes.Edit;
-        public bool Disabled => Task != Form.Tasks.None;
-        public Form.Tasks Task { get; set; }
+        public bool ReadOnly => Mode < FormModes.Edit;
+        public bool Disabled => Task != FormTasks.None;
+        public FormTasks Task { get; set; }
 
         protected override void OnAfterRender(bool firstRender)
         {
@@ -24,19 +24,19 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
             if (FormContainer != null && firstRender)
             {
-                FormContainer._OnTaskStart = new EventCallbackFactory().Create<Form.Tasks>(this, TaskStartHandler);
-                FormContainer._OnTaskFinished = new EventCallbackFactory().Create<Form.Tasks>(this, TaskFinishHandler);
+                FormContainer._OnTaskStart = new EventCallbackFactory().Create<FormTasks>(this, TaskStartHandler);
+                FormContainer._OnTaskFinished = new EventCallbackFactory().Create<FormTasks>(this, TaskFinishHandler);
             }
         }
 
-        public void TaskStartHandler(Form.Tasks task)
+        public void TaskStartHandler(FormTasks task)
         {
             Task = task;
         }
 
-        public void TaskFinishHandler(Form.Tasks task)
+        public void TaskFinishHandler(FormTasks task)
         {
-            Task = Form.Tasks.None;
+            Task = FormTasks.None;
         }
     }
 }

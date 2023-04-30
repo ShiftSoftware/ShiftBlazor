@@ -6,7 +6,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 {
     public class ShiftMainLayout : LayoutComponentBase
     {
-        [Inject] private ShiftModalService ShiftModal { get; set; } = default!;
+        [Inject] private ShiftModal ShiftModal { get; set; } = default!;
         [Inject] private NavigationManager NavManager { get; set; } = default!;
 
         protected override void OnInitialized()

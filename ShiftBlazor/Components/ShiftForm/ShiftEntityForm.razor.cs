@@ -8,10 +8,9 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Services;
-using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using static ShiftSoftware.ShiftBlazor.Utils.Form;
+using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -20,7 +19,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private HttpClient Http { get; set; } = default!;
         [Inject] private IDialogService DialogService { get; set; } = default!;
         [Inject] private NavigationManager NavManager { get; set; } = default!;
-        [Inject] private ShiftModalService ShiftModal { get; set; } = default!;
+        [Inject] private ShiftModal ShiftModal { get; set; } = default!;
         [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftEntityForm> Loc { get; set; } = default!;
@@ -115,20 +114,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
             get
             {
                 var path = SettingManager.Configuration.ApiPath.AddUrlPath(Action);
-                return Mode == Modes.Create ? path : path.AddUrlPath(Key?.ToString());
+                return Mode == FormModes.Create ? path : path.AddUrlPath(Key?.ToString());
             }
         }
 
         internal override bool HideSubmit
         {
-            get => Mode < Modes.Edit ? true : base.HideSubmit;
+            get => Mode < FormModes.Edit ? true : base.HideSubmit;
             set => base.HideSubmit = value;
         }
 
         internal override string _SubmitText
         {
             get => string.IsNullOrWhiteSpace(SubmitText)
-                ? Mode == Modes.Create ? Loc["CreateForm"] : Loc["SaveForm"]
+                ? Mode == FormModes.Create ? Loc["CreateForm"] : Loc["SaveForm"]
                 : base._SubmitText;
             set => base._SubmitText = value;
         }
@@ -140,12 +139,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 throw new ArgumentNullException(nameof(Action));
             }
 
-            if (Key == null && Mode != Modes.Create)
+            if (Key == null && Mode != FormModes.Create)
             {
-                await SetMode(Modes.Create);
+                await SetMode(FormModes.Create);
             }
 
-            if (Mode != Modes.Create)
+            if (Mode != FormModes.Create)
             {
                 await FetchItem();
             }
@@ -166,7 +165,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public async Task DeleteItem()
         {
-            await RunTask(Tasks.Delete, async () =>
+            await RunTask(FormTasks.Delete, async () =>
             {
                 var dialogOptions = new DialogOptions
                 {
@@ -191,7 +190,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public async Task PrintItem()
         {
-            await RunTask(Tasks.Print, async () =>
+            await RunTask(FormTasks.Print, async () =>
             {
                 await OnPrint.InvokeAsync();
             });
@@ -199,33 +198,33 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public async Task EditItem()
         {
-            await SetMode(Modes.Edit);
+            await SetMode(FormModes.Edit);
         }
 
         public async Task CancelChanges()
         {
-            if (TaskInProgress != Tasks.None)
+            if (TaskInProgress != FormTasks.None)
             {
                 return;
             }
 
             if (await ConfirmClose())
             {
-                await SetMode(Modes.View);
+                await SetMode(FormModes.View);
                 await RestoreOriginalValue();
             }
         }
 
         internal override async Task ValidSubmitHandler(EditContext context)
         {
-            await RunTask(Tasks.Save, async () =>
+            await RunTask(FormTasks.Save, async () =>
             {
                 await OnValidSubmit.InvokeAsync(context);
 
                 HttpResponseMessage res;
                 var message = "";
 
-                if (Mode == Modes.Create)
+                if (Mode == FormModes.Create)
                 {
                     res = await Http.PostAsJsonAsync(ItemUrl, Value);
                     message = Loc["ItemCreated"];
@@ -256,14 +255,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     ShowAlert(message, Severity.Success, 5);
 
                     await UpdateUrl(value.ID);
-                    await SetMode(Modes.View);
+                    await SetMode(FormModes.View);
                     await SetValue(value);
                 }
             });
 
         }
 
-        internal override async Task SetMode(Modes mode)
+        internal override async Task SetMode(FormModes mode)
         {
             await base.SetMode(mode);
             SetTitle();
@@ -303,7 +302,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task FetchItem(DateTime? asOf = null)
         {
-            await RunTask(Tasks.Fetch, async () =>
+            await RunTask(FormTasks.Fetch, async () =>
             {
                 var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + asOf;
                 using (var res = await Http.GetAsync(url))
@@ -336,7 +335,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return value;
             }
 
-            if (TaskInProgress == Tasks.Save && result.Message != null)
+            if (TaskInProgress == FormTasks.Save && result.Message != null)
             {
                 await DialogService.ShowMessageBox(result.Message.Title, MessageToHtml(result.Message), options: new DialogOptions
                 {
@@ -356,15 +355,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return;
             }
 
-            if (Key != null && Mode == Modes.View)
+            if (Key != null && Mode == FormModes.View)
             {
                 DocumentTitle = Loc["ViewingForm", Title, Key];
             }
-            else if (Key != null && Mode == Modes.Edit)
+            else if (Key != null && Mode == FormModes.Edit)
             {
                 DocumentTitle = Loc["EditingForm", Title, Key];
             }
-            else if (Mode == Modes.Create)
+            else if (Mode == FormModes.Create)
             {
                 DocumentTitle = Loc["CreatingForm", Title];
             }
@@ -400,7 +399,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             DateTime? date = null;
 
-            await RunTask(Tasks.FetchRevisions, async () =>
+            await RunTask(FormTasks.FetchRevisions, async () =>
             {
                 var path = SettingManager.Configuration.ODataPath.AddUrlPath(Action, Key?.ToString(), "revisions");
                 var res = await Http.GetFromJsonAsync<ODataDTO<List<RevisionDTO>>>(path);
@@ -432,7 +431,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (date != null)
             {
                 await FetchItem(date);
-                await SetMode(Modes.Archive);
+                await SetMode(FormModes.Archive);
             }
 
         }
@@ -440,7 +439,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task CloseRevision()
         {
-            await SetMode(Modes.View);
+            await SetMode(FormModes.View);
             await RestoreOriginalValue();
         }
 

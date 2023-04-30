@@ -2,6 +2,7 @@
 using Bunit.Rendering;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
@@ -12,7 +13,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var cut = RenderComponent<ShiftFormBasic<Sample>>();
 
-        Assert.Equal(Form.Modes.Create, cut.Instance.Mode);
+        Assert.Equal(FormModes.Create, cut.Instance.Mode);
         cut.FindComponent<EditForm>();
     }
 
@@ -87,7 +88,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
 
         var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters
             .Add(p => p.Value, value)
-            .Add(p => p.OnValidSubmit, () => isSaving = form?.TaskInProgress == Form.Tasks.Save)
+            .Add(p => p.OnValidSubmit, () => isSaving = form?.TaskInProgress == FormTasks.Save)
         );
 
         form = cut.Instance;
@@ -407,12 +408,12 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var cut = RenderComponent<ShiftFormBasic<Sample>>();
 
-        var Task = Form.Tasks.None;
+        var Task = FormTasks.None;
 
-        _ = cut.Instance.RunTask(Form.Tasks.Custom, async () => Task = cut.Instance.TaskInProgress);
+        _ = cut.Instance.RunTask(FormTasks.Custom, async () => Task = cut.Instance.TaskInProgress);
 
-        Assert.NotEqual(Form.Tasks.None, Task);
-        Assert.Equal(Form.Tasks.None, cut.Instance.TaskInProgress);
+        Assert.NotEqual(FormTasks.None, Task);
+        Assert.Equal(FormTasks.None, cut.Instance.TaskInProgress);
     }
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
@@ -421,9 +422,9 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var cut = RenderComponent<ShiftFormBasic<Sample>>();
 
-        _ = cut.Instance.RunTask(Form.Tasks.Custom, () => throw new Exception());
+        _ = cut.Instance.RunTask(FormTasks.Custom, () => throw new Exception());
 
-        Assert.Equal(Form.Tasks.None, cut.Instance.TaskInProgress);
+        Assert.Equal(FormTasks.None, cut.Instance.TaskInProgress);
     }
 
     //[Fact]

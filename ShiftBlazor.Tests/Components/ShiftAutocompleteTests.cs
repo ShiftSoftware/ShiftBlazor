@@ -1,4 +1,5 @@
 ﻿using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
@@ -36,7 +37,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     public void ShouldBeReadOnlyWhenInViewMode()
     {
         // Add a cascading State value to the context to emulate a form
-        RenderTree.Add<CascadingValue<Form.Modes>>(parameters => parameters.Add(p => p.Value, Form.Modes.View));
+        RenderTree.Add<CascadingValue<FormModes>>(parameters => parameters.Add(p => p.Value, FormModes.View));
 
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet));
@@ -56,7 +57,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotBeReadOnlyWhenInEditMode()
     {
-        RenderTree.Add<CascadingValue<Form.Modes>>(parameters => parameters.Add(p => p.Value, Form.Modes.Edit));
+        RenderTree.Add<CascadingValue<FormModes>>(parameters => parameters.Add(p => p.Value, FormModes.Edit));
 
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet));
@@ -72,7 +73,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotBeReadOnlyWhenInCreateMode()
     {
-        RenderTree.Add<CascadingValue<Form.Modes>>(parameters => parameters.Add(p => p.Value, Form.Modes.Create));
+        RenderTree.Add<CascadingValue<FormModes>>(parameters => parameters.Add(p => p.Value, FormModes.Create));
 
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet));
@@ -92,7 +93,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     public void ShouldBeDisabledWhenSaveTaskInProgress()
     {
         // Add a cascading State value to the context to emulate a form
-        RenderTree.Add<CascadingValue<Form.Tasks>>(parameters => parameters.Add(p => p.Value, Form.Tasks.Save));
+        RenderTree.Add<CascadingValue<FormTasks>>(parameters => parameters.Add(p => p.Value, FormTasks.Save));
 
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet));

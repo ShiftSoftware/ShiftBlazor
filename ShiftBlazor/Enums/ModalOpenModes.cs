@@ -1,4 +1,4 @@
-﻿namespace ShiftSoftware.ShiftBlazor.Utils
+﻿namespace ShiftSoftware.ShiftBlazor.Enums
 {
     public enum ModalOpenMode
     {

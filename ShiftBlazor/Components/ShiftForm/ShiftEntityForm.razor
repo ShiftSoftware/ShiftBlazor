@@ -1,6 +1,7 @@
 ﻿@typeparam T where T : ShiftEntityDTO, new()
 @inherits ShiftFormBasic<T>
-@using static Utils.Form
+@using ShiftSoftware.ShiftBlazor.Enums
+@namespace ShiftSoftware.ShiftBlazor.Components
 
 @{
     base.BuildRenderTree(__builder);
@@ -16,9 +17,9 @@
                            Color="Color.Warning"
                            Variant="Variant.Text"
                            Size="Size.Medium"
-                           Disabled="DisablePrint || Mode > Modes.Archive || TaskInProgress != Tasks.None"
+                           Disabled="DisablePrint || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
                            OnClick="PrintItem">
-                    @if (TaskInProgress == Tasks.Print)
+                    @if (TaskInProgress == FormTasks.Print)
                     {
                         <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
                     }
@@ -35,12 +36,12 @@
         get =>
             @<MudTooltip Text="@Loc["Delete"]">
                 <MudButton Style="min-width:40px;"
-                           Disabled="DisableDelete || Mode > Modes.View || TaskInProgress != Tasks.None"
+                           Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
                            Variant="Variant.Text"
                            Size="Size.Medium"
                            Color="Color.Error"
                            OnClick="DeleteItem">
-                    @if (TaskInProgress == Tasks.Delete)
+                    @if (TaskInProgress == FormTasks.Delete)
                     {
                         <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
                     }
@@ -57,7 +58,7 @@
         get =>
             @<MudTooltip Text="@Loc["Edit"]">
                 <MudButton Style="min-width:40px;"
-                           Disabled="DisableEdit || Mode > Modes.View || TaskInProgress != Tasks.None"
+                           Disabled="DisableEdit || Mode > FormModes.View || TaskInProgress != FormTasks.None"
                            Variant="Variant.Text"
                            Size="Size.Medium"
                            Color="Color.Primary"
@@ -72,12 +73,12 @@
         get =>
             @<MudTooltip Text="@Loc["Revisions"]">
                 <MudButton Style="min-width:40px;"
-                           Disabled="DisableRevisions || Mode > Modes.Archive || TaskInProgress != Tasks.None"
+                           Disabled="DisableRevisions || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
                            Variant="Variant.Text"
                            Size="Size.Medium"
                            Color="Color.Warning"
                            OnClick="ViewRevisions">
-                    @if (TaskInProgress == Tasks.FetchRevisions)
+                    @if (TaskInProgress == FormTasks.FetchRevisions)
                     {
                         <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
                     }
@@ -160,7 +161,7 @@
     {
         get =>
             @<text>
-                @if (Mode == Modes.Archive)
+                @if (Mode == FormModes.Archive)
                 {
                     <MudAlert Severity="Severity.Warning">@Loc["RevisionIndicator"]</MudAlert>
                 }
@@ -175,17 +176,17 @@
     {
         get =>
             @<text>
-                @if (Mode == Modes.Edit)
+                @if (Mode == FormModes.Edit)
                 {
-                    <MudButton Disabled="@(TaskInProgress != Tasks.None)"
+                    <MudButton Disabled="@(TaskInProgress != FormTasks.None)"
                                StartIcon="@Icons.Material.Filled.Cancel"
                                OnClick="CancelChanges">
                         @Loc["CancelChanges"]
                     </MudButton>
                 }
-                else if (Mode == Modes.Archive)
+                else if (Mode == FormModes.Archive)
                 {
-                    <MudButton Disabled="@(TaskInProgress != Tasks.None)"
+                    <MudButton Disabled="@(TaskInProgress != FormTasks.None)"
                                StartIcon="@Icons.Material.Filled.Cancel"
                                OnClick="CloseRevision">
                         @Loc["CloseRevisions"]

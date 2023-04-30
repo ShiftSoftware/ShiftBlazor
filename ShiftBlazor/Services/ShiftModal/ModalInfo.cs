@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace ShiftSoftware.ShiftBlazor.Utils
+namespace ShiftSoftware.ShiftBlazor.Services
 {
     public class ModalInfo
     {

@@ -5,15 +5,14 @@ using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.Localization;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
-using ShiftSoftware.ShiftBlazor.Utils;
-using static ShiftSoftware.ShiftBlazor.Utils.Form;
+using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     public partial class ShiftFormBasic<T> where T : class, new()
     {
         [Inject] MessageService MsgService { get; set; } = default!;
-        [Inject] ShiftModalService ShiftModal { get; set; } = default!;
+        [Inject] ShiftModal ShiftModal { get; set; } = default!;
         [Inject] IDialogService DialogService { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftFormBasic> Loc { get; set; } = default!;
 
@@ -24,13 +23,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         ///     The current Mode of the form.
         /// </summary>
         [Parameter]
-        public Modes Mode { get; set; }
+        public FormModes Mode { get; set; }
 
         /// <summary>
         ///     An event triggered when the state of the Mode paramater has changed.
         /// </summary>
         [Parameter]
-        public EventCallback<Modes> ModeChanged { get; set; }
+        public EventCallback<FormModes> ModeChanged { get; set; }
 
         /// <summary>
         ///     The current item being view/edited, this will be fetched from the API endpoint that is provided in the Action
@@ -141,12 +140,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback<EditContext> OnValidSubmit { get; set; }
 
         [Parameter]
-        public EventCallback<Tasks> OnTaskStart { get; set; }
+        public EventCallback<FormTasks> OnTaskStart { get; set; }
         [Parameter]
-        public EventCallback<Tasks> OnTaskFinished { get; set; }
+        public EventCallback<FormTasks> OnTaskFinished { get; set; }
 
-        public EventCallback<Tasks> _OnTaskStart { get; set; }
-        public EventCallback<Tasks> _OnTaskFinished { get; set; }
+        public EventCallback<FormTasks> _OnTaskStart { get; set; }
+        public EventCallback<FormTasks> _OnTaskFinished { get; set; }
 
         [Parameter]
         public string? DocumentTitle { get; set; }
@@ -159,7 +158,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal virtual bool HideSubmit { get; set; }
         internal virtual string _SubmitText { get; set; }
-        internal Tasks TaskInProgress { get; set; }
+        internal FormTasks TaskInProgress { get; set; }
         internal bool AlertEnabled { get; set; } = false;
         internal MudBlazor.Severity AlertSeverity { get; set; }
         internal string AlertMessage { get; set; } = default!;
@@ -176,7 +175,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         }
 
         internal bool IsModified => editContext.IsModified();
-        internal bool _DisableSubmit => TaskInProgress != Tasks.None || (!IsModified && Mode == Modes.Edit);
+        internal bool _DisableSubmit => TaskInProgress != FormTasks.None || (!IsModified && Mode == FormModes.Edit);
 
         protected override void OnInitialized()
         {
@@ -191,7 +190,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override async Task OnInitializedAsync()
         {
-            await SetMode(Modes.Create);
+            await SetMode(FormModes.Create);
             DocumentTitle = Title;
         }
 
@@ -236,7 +235,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return true;
         }
 
-        internal virtual async Task SetMode(Modes mode)
+        internal virtual async Task SetMode(FormModes mode)
         {
             Mode = mode;
             await ModeChanged.InvokeAsync(Mode);
@@ -260,7 +259,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal virtual async Task ValidSubmitHandler(EditContext context)
         {
-            await RunTask(Tasks.Save, async () =>
+            await RunTask(FormTasks.Save, async () =>
             {
                 await OnValidSubmit.InvokeAsync(context);
             });
@@ -287,9 +286,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
             });
         }
 
-        internal async Task RunTask(Tasks Task, Func<ValueTask> action)
+        internal async Task RunTask(FormTasks Task, Func<ValueTask> action)
         {
-            if (TaskInProgress != Tasks.None)
+            if (TaskInProgress != FormTasks.None)
             {
                 return;
             }
@@ -309,7 +308,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             finally
             {
-                TaskInProgress = Tasks.None;
+                TaskInProgress = FormTasks.None;
                 await OnTaskFinished.InvokeAsync(Task);
                 await _OnTaskFinished.InvokeAsync(Task);
             }

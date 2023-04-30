@@ -7,6 +7,7 @@ using ShiftSoftware.ShiftEntity.Model.Dtos;
 using Microsoft.JSInterop;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftBlazor.Enums;
 using Microsoft.Extensions.Localization;
 
 namespace ShiftSoftware.ShiftBlazor.Components
@@ -16,7 +17,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
     {
         [Inject] private MessageService MsgService { get; set; } = default!;
         [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
-        [Inject] private ShiftModalService ShiftModal { get; set; } = default!;
+        [Inject] private ShiftModal ShiftModal { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] protected HttpClient HttpClient { get; set; }
         [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
@@ -226,7 +227,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public SfGrid<T>? Grid;
         public CustomMessageHandler MessageHandler = new();
-        internal List<ShiftColumn> GeneratedColumns = new();
+        internal List<ListColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
         internal string GridContainerCssClass
@@ -445,7 +446,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             foreach (var prop in properties)
             {
-                var column = new ShiftColumn();
+                var column = new ListColumn();
 
                 column.Label = GetLocalizedColumnLabel(prop.Name);
                 column.Field = GetFieldName(prop);
@@ -495,11 +496,5 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             return type.Namespace == "System";
         }
-    }
-
-    public class ShiftColumn
-    {
-        public string Label { get; set; }
-        public string Field { get; set; }
     }
 }

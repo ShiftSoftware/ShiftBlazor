@@ -1,4 +1,4 @@
-﻿namespace ShiftSoftware.ShiftBlazor.Utils
+﻿namespace ShiftSoftware.ShiftBlazor.Components
 {
     public class SelectedItems
     {

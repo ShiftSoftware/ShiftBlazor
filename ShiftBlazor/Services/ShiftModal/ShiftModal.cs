@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.JSInterop;
 using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Services
 {
-    public class ShiftModalService
+    public class ShiftModal
     {
         private readonly IJSRuntime JsRuntime;
         private readonly NavigationManager NavManager;
@@ -18,7 +18,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         private static readonly string QueryKey = "modal";
         private readonly Assembly ProjectAssembly = Assembly.GetEntryAssembly()!;
 
-        public ShiftModalService(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService)
+        public ShiftModal(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService)
         {
             JsRuntime = jsRuntime;
             NavManager = navManager;

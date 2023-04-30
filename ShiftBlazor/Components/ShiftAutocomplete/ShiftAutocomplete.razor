@@ -1,0 +1,10 @@
+﻿@using ShiftSoftware.ShiftBlazor.Enums
+@typeparam T
+@inherits MudAutocomplete<T>
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@{
+    base.ReadOnly = Mode < FormModes.Edit;
+    base.Disabled = TaskInProgress != null && TaskInProgress != FormTasks.None;
+    base.BuildRenderTree(__builder);
+}

@@ -2,10 +2,9 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Components;
-using Microsoft.OData.Client;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
-using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -28,10 +27,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         //public string FilterFieldName { get; set; } = "Name";
 
         [CascadingParameter]
-        public Form.Modes? Mode { get; set; }
+        public FormModes? Mode { get; set; }
 
         [CascadingParameter]
-        public Form.Tasks? TaskInProgress { get; set; }
+        public FormTasks? TaskInProgress { get; set; }
 
         internal IQueryable<T> QueryBuilder { get; set; } = default!;
 

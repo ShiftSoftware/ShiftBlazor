@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Bunit;
-using Microsoft.AspNetCore.Components.Forms;
+﻿using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using MudBlazor;
-using Xunit.Sdk;
+using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components;
 
@@ -40,7 +32,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
             .Add(p => p.Action, path)
         );
 
-        Assert.Equal(Form.Modes.Create, comp.Instance.Mode);
+        Assert.Equal(FormModes.Create, comp.Instance.Mode);
     }
 
     [Fact]
@@ -51,7 +43,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
             .Add(p => p.Key, "1")
         );
 
-        Assert.Equal(Form.Modes.View, comp.Instance.Mode);
+        Assert.Equal(FormModes.View, comp.Instance.Mode);
     }
 
     //[Fact]
@@ -200,8 +192,8 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
             .Add(p => p.Action, path)
             .Add(p => p.Key, "1")
             .Add(p => p.OnPrint, () => invoked = true)
-            .Add(p => p.OnTaskStart, (task) => taskStarted = task == Form.Tasks.Print)
-            .Add(p => p.OnTaskFinished, (task) => taskFinished = task == Form.Tasks.Print)
+            .Add(p => p.OnTaskStart, (task) => taskStarted = task == FormTasks.Print)
+            .Add(p => p.OnTaskFinished, (task) => taskFinished = task == FormTasks.Print)
         );
 
         var button = comp.FindComponent<MudToolBar>()
@@ -290,7 +282,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldFetchItem()
     {
-        var taskInprogress = Form.Tasks.None;
+        var taskInprogress = FormTasks.None;
 
         var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
             .Add(p => p.Key, "1")
@@ -298,7 +290,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
             .Add(p => p.OnTaskStart, (task) => taskInprogress = task)
         );
 
-        Assert.Equal(Form.Tasks.Fetch, taskInprogress);
+        Assert.Equal(FormTasks.Fetch, taskInprogress);
         Assert.Equivalent(Values.First(), comp.Instance.Value);
     }
 
@@ -331,8 +323,8 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
             parameters => parameters
                 .Add(p => p.Key, "1")
                 .Add(p => p.Action, path)
-                .Add(p => p.OnTaskStart, (task) => deleteTaskStarted = task == Form.Tasks.Delete)
-                .Add(p => p.OnTaskFinished, (task) => deleteTaskFinished = task == Form.Tasks.Delete)
+                .Add(p => p.OnTaskStart, (task) => deleteTaskStarted = task == FormTasks.Delete)
+                .Add(p => p.OnTaskFinished, (task) => deleteTaskFinished = task == FormTasks.Delete)
         ));
 
         var entityForm = comp.FindComponent<ShiftEntityForm<Sample>>();
@@ -485,8 +477,8 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
 
         var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
             .Add(p => p.Action, path)
-            .Add(p => p.OnTaskStart, (task) => taskStarted = task == Form.Tasks.Save)
-            .Add(p => p.OnTaskFinished, (task) => taskFinished = task == Form.Tasks.Save)
+            .Add(p => p.OnTaskStart, (task) => taskStarted = task == FormTasks.Save)
+            .Add(p => p.OnTaskFinished, (task) => taskFinished = task == FormTasks.Save)
             .Add(p => p.OnValidSubmit, () => submitHandled = true)
         );
 

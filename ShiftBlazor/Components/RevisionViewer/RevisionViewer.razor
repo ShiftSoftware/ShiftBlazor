@@ -2,9 +2,10 @@
 @using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor;
 @using ShiftIdentity.Model
-@inject ShiftModalService ShiftModal
+@inject ShiftModal ShiftModal
 @inject SettingManager SettingManager
 @inject IStringLocalizer<Resources.Components.ResourceViewer> Loc
+@namespace ShiftSoftware.ShiftBlazor.Components
 
 <ShiftList T="RevisionDTO"
            Values="@_Revisions"

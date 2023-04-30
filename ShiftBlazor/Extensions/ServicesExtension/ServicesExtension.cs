@@ -35,7 +35,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
             services.AddBlazoredLocalStorage();
             services.AddSingleton<ClipboardService>();
             services.AddScoped<ODataQuery>();
-            services.AddScoped<ShiftModalService>();
+            services.AddScoped<ShiftModal>();
             services.AddScoped<MessageService>();
             services.AddScoped(x =>
             {

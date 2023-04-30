@@ -1,8 +1,0 @@
-﻿@typeparam T
-@inherits MudAutocomplete<T>
-
-@{
-    base.ReadOnly = Mode < Form.Modes.Edit;
-    base.Disabled = TaskInProgress != null && TaskInProgress != Form.Tasks.None;
-    base.BuildRenderTree(__builder);
-}
