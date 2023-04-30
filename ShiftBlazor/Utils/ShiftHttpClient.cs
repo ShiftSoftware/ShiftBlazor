@@ -9,11 +9,22 @@
         }
 
         public string? Query { get; set; }
+        public Uri? FailedUrl { get; set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Query = request.RequestUri?.Query;
-            return base.SendAsync(request, cancellationToken);
+
+            try
+            {
+                var response = await base.SendAsync(request, cancellationToken);
+                return response;
+            }
+            catch (Exception)
+            {
+                FailedUrl = request.RequestUri;
+                throw;
+            }
         }
     }
 }

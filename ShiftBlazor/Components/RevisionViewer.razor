@@ -11,6 +11,7 @@
            DisableSelection="@true"
            OnRowClick="@RowClickHandler"
            DisableHeaderToolbar="@true"
+           @ref="ShiftList"
            ExcludedColumns="@(new List<string> {nameof(RevisionDTO.SavedByUserID)})">
 
     <HeaderTemplate>
@@ -40,7 +41,7 @@
                            Field="@nameof(RevisionDTO.SavedByUserID)"
                            ForeignKeyField="@nameof(PublicUserListDTO.ID)"
                            ForeignKeyValue="@nameof(PublicUserListDTO.Name)">
-            <SfDataManager Url="@SettingManager.Configuration.UserListEndpoint" CrossDomain="true" Adaptor="Adaptors.ODataV4Adaptor" />
+            <SfDataManager HttpClientInstance="new HttpClient(ShiftList.MessageHandler)" Url="@SettingManager.Configuration.UserListEndpoint" CrossDomain="true" Adaptor="Adaptors.ODataV4Adaptor" />
         </GridForeignColumn>
     </ColumnTemplate>
 </ShiftList>
@@ -60,6 +61,8 @@
 
     [Parameter]
     public string? Title { get; set; }
+
+    public ShiftList<RevisionDTO>? ShiftList { get; set; }
 
     private async Task RowClickHandler(RecordClickEventArgs<RevisionDTO> args)
     {

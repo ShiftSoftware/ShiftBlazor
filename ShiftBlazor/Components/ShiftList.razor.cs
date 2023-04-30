@@ -225,7 +225,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool ShowIDColumn { get; set; } = false;
 
         public SfGrid<T>? Grid;
-        private CustomMessageHandler MessageHandler = new();
+        public CustomMessageHandler MessageHandler = new();
         internal List<ShiftColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
@@ -283,8 +283,44 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private void ErrorHandler(FailureEventArgs args)
         {
-            ActionUrlBroken = true;
-            MsgService.Error(Loc["GetItemListError"], Loc["GetItemListError"], args.Error.ToString());
+            var shouldRefresh = false;
+
+            this.Grid?.Columns
+                .Where(column => column.IsForeignColumn() && column.Template == null)
+                .ToList()
+                .ForEach(column =>
+                {
+                    var failedUrl = MessageHandler.FailedUrl;
+                    if (failedUrl != null && failedUrl.AbsoluteUri.Replace(failedUrl.Query, "") == column.DataManager.Url)
+                    {
+                        var type = column.GetType().GetGenericArguments().First();
+
+                        Type genericClass = typeof(List<>);
+                        Type constructedClass = genericClass.MakeGenericType(type);
+                        var created = Activator.CreateInstance(constructedClass);
+
+                        var colType = column.GetType();
+                        var prop = colType.GetProperty("ForeignDataSource");
+
+                        if (prop != null)
+                        {
+                            column.Template = (item) => UnableToLoadDataTemplate;
+
+                            prop.SetValue(column, created);
+                            shouldRefresh = true;
+                        }
+                    }
+                });
+
+            if (shouldRefresh)
+            {
+                this.Grid?.Refresh();
+            }
+            else
+            {
+                ActionUrlBroken = true;
+                MsgService.Error(Loc["GetItemListError"], Loc["GetItemListError"], args.Error.ToString());
+            }
         }
 
         public async Task<SelectedItems> GetSelectedItems()
