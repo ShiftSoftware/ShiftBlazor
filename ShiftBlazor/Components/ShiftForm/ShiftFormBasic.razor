@@ -11,8 +11,7 @@
 
 <article style="height: 100%;">
     <EditForm EditContext="editContext"
-              OnValidSubmit="ValidSubmitHandler"
-              OnInvalidSubmit="InvalidSubmitHandler"
+              OnSubmit="SubmitHandler"
               style="height: 100%;">
         <FluentValidationValidator DisableAssemblyScanning="Validator != null" Validator="Validator" />
         @if (Validator == null)

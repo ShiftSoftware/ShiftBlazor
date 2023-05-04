@@ -138,6 +138,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback<EditContext> OnInvalidSubmit { get; set; }
         [Parameter]
         public EventCallback<EditContext> OnValidSubmit { get; set; }
+        [Parameter]
+        public EventCallback<EditContext> OnSubmit { get; set; }
 
         [Parameter]
         public EventCallback<FormTasks> OnTaskStart { get; set; }
@@ -258,9 +260,23 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal virtual async Task ValidSubmitHandler(EditContext context)
         {
+            await OnValidSubmit.InvokeAsync(context);
+        }
+
+        internal virtual async Task SubmitHandler(EditContext context)
+        {
             await RunTask(FormTasks.Save, async () =>
             {
-                await OnValidSubmit.InvokeAsync(context);
+                await OnSubmit.InvokeAsync(context);
+
+                if (context.Validate())
+                {
+                    await ValidSubmitHandler(context);
+                }
+                else
+                {
+                    await InvalidSubmitHandler(context);
+                }
             });
         }
 

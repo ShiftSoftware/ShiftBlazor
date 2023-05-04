@@ -208,48 +208,45 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal override async Task ValidSubmitHandler(EditContext context)
         {
-            await RunTask(FormTasks.Save, async () =>
+            await OnValidSubmit.InvokeAsync(context);
+
+            HttpResponseMessage res;
+            var message = "";
+
+            if (Mode == FormModes.Create)
             {
-                await OnValidSubmit.InvokeAsync(context);
+                res = await Http.PostAsJsonAsync(ItemUrl, Value);
+                message = Loc["ItemCreated"];
+            }
+            else
+            {
+                res = await Http.PutAsJsonAsync(ItemUrl, Value);
+                message = Loc["ItemSaved"];
+            }
 
-                HttpResponseMessage res;
-                var message = "";
+            var value = await ParseEntityResponse(res);
 
-                if (Mode == FormModes.Create)
-                {
-                    res = await Http.PostAsJsonAsync(ItemUrl, Value);
-                    message = Loc["ItemCreated"];
-                }
-                else
-                {
-                    res = await Http.PutAsJsonAsync(ItemUrl, Value);
-                    message = Loc["ItemSaved"];
-                }
+            if (value == null)
+            {
+                return;
+            }
 
-                var value = await ParseEntityResponse(res);
+            if (Settings.CloseFormOnSave)
+            {
+                MudDialog?.Cancel();
+            }
+            else if (Settings.ResetFormOnSave)
+            {
+                await SetValue(new T());
+            }
+            else
+            {
+                ShowAlert(message, Severity.Success, 5);
 
-                if (value == null)
-                {
-                    return;
-                }
-
-                if (Settings.CloseFormOnSave)
-                {
-                    MudDialog?.Cancel();
-                }
-                else if (Settings.ResetFormOnSave)
-                {
-                    await SetValue(new T());
-                }
-                else
-                {
-                    ShowAlert(message, Severity.Success, 5);
-
-                    await UpdateUrl(value.ID);
-                    await SetMode(FormModes.View);
-                    await SetValue(value);
-                }
-            });
+                await UpdateUrl(value.ID);
+                await SetMode(FormModes.View);
+                await SetValue(value);
+            }
 
         }
 
