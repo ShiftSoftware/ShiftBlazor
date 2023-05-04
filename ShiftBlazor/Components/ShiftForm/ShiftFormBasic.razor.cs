@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.Localization;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -135,14 +137,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool DisableFooterToolbar { get; set; }
 
         [Parameter]
-        public EventCallback<EditContext> OnInvalidSubmit { get; set; }
+        public EventCallback<ShiftEvent<EditContext>> OnInvalidSubmit { get; set; }
         [Parameter]
-        public EventCallback<EditContext> OnValidSubmit { get; set; }
+        public EventCallback<ShiftEvent<EditContext>> OnValidSubmit { get; set; }
         [Parameter]
-        public EventCallback<EditContext> OnSubmit { get; set; }
+        public EventCallback<ShiftEvent<EditContext>> OnSubmit { get; set; }
 
         [Parameter]
-        public EventCallback<FormTasks> OnTaskStart { get; set; }
+        public EventCallback<ShiftEvent<FormTasks>> OnTaskStart { get; set; }
         [Parameter]
         public EventCallback<FormTasks> OnTaskFinished { get; set; }
 
@@ -255,19 +257,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal virtual async Task InvalidSubmitHandler(EditContext context)
         {
-            await OnInvalidSubmit.InvokeAsync(context);
+            await OnInvalidSubmit.PreventableInvokeAsync(context);
         }
 
         internal virtual async Task ValidSubmitHandler(EditContext context)
         {
-            await OnValidSubmit.InvokeAsync(context);
+            await OnValidSubmit.PreventableInvokeAsync(context);
         }
 
         internal virtual async Task SubmitHandler(EditContext context)
         {
             await RunTask(FormTasks.Save, async () =>
             {
-                await OnSubmit.InvokeAsync(context);
+                if (await OnSubmit.PreventableInvokeAsync(context)) return;
 
                 if (context.Validate())
                 {
@@ -308,8 +310,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return;
             }
 
-            await OnTaskStart.InvokeAsync(Task);
             await _OnTaskStart.InvokeAsync(Task);
+            if (await OnTaskStart.PreventableInvokeAsync(Task)) return;
 
             TaskInProgress = Task;
 
@@ -321,12 +323,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 MsgService.Error($"Could not {Task} the item.", e.Message, e.ToString());
             }
-            finally
-            {
-                TaskInProgress = FormTasks.None;
-                await OnTaskFinished.InvokeAsync(Task);
-                await _OnTaskFinished.InvokeAsync(Task);
-            }
+
+            TaskInProgress = FormTasks.None;
+            await _OnTaskFinished.InvokeAsync(Task);
+            await OnTaskFinished.InvokeAsync(Task);
         }
     }
 

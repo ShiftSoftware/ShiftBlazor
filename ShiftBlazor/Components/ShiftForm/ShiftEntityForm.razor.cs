@@ -208,7 +208,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal override async Task ValidSubmitHandler(EditContext context)
         {
-            await OnValidSubmit.InvokeAsync(context);
+            if (await OnValidSubmit.PreventableInvokeAsync(context)) return;
 
             HttpResponseMessage res;
             var message = "";
