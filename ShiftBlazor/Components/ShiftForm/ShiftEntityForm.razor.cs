@@ -154,15 +154,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             OriginalValue = JsonSerializer.Serialize(Value);
         }
 
-        internal void FieldChangeHandler(object? sender = null, FieldChangedEventArgs? args = null)
-        {
-            if (JsonSerializer.Serialize(Value).Equals(OriginalValue))
-            {
-                editContext.MarkAsUnmodified();
-            }
-            StateHasChanged();
-        }
-
         public async Task DeleteItem()
         {
             await RunTask(FormTasks.Delete, async () =>
@@ -276,8 +267,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             await base.SetValue(value);
-
-            editContext.OnFieldChanged += FieldChangeHandler;
 
             if (copyValue)
             {

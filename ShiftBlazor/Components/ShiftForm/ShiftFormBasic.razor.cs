@@ -174,8 +174,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        internal bool IsModified => editContext.IsModified();
-        internal bool _DisableSubmit => TaskInProgress != FormTasks.None || (!IsModified && Mode == FormModes.Edit);
+        internal bool DisableSubmit => TaskInProgress != FormTasks.None;
 
         protected override void OnInitialized()
         {
@@ -194,14 +193,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
             DocumentTitle = Title;
         }
 
-        internal ValueTask LocationChangingHandler(LocationChangingContext ctx)
-        {
-            if (editContext.IsModified())
-            {
-                ctx.PreventNavigation();
-            }
-            return new ValueTask();
-        }
+        //internal ValueTask LocationChangingHandler(LocationChangingContext ctx)
+        //{
+        //    if (editContext.IsModified())
+        //    {
+        //        ctx.PreventNavigation();
+        //    }
+        //    return new ValueTask();
+        //}
 
 
         internal async Task Cancel()
