@@ -168,6 +168,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string AlertMessage { get; set; } = default!;
 
         internal EditContext editContext = default!;
+        internal bool MadeChanges = false;
         internal string ContentCssClass
         {
             get
@@ -211,7 +212,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (MudDialog != null && await ConfirmClose())
             {
-                ShiftModal.Close(MudDialog);
+                ShiftModal.Close(MudDialog, MadeChanges);
             }
         }
 

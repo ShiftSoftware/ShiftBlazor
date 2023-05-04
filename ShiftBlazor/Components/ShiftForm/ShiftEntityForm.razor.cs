@@ -173,8 +173,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (result.HasValue && result.Value)
                 {
                     var url = ItemUrl + "?ignoreGlobalFilters";
-                    using var res = await Http.DeleteAsync(ItemUrl);
-                    await SetValue(await ParseEntityResponse(res));
+                    using (var res = await Http.DeleteAsync(ItemUrl))
+                    {
+                        await SetValue(await ParseEntityResponse(res));
+                    }
+                    MadeChanges = true;
                 }
             });
         }
@@ -231,9 +234,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return;
             }
 
-            if (Settings.CloseFormOnSave)
+            MadeChanges = true;
+
+            if (MudDialog != null && Settings.CloseFormOnSave)
             {
-                MudDialog?.Cancel();
+                ShiftModal.Close(MudDialog, MadeChanges);
             }
             else if (Settings.ResetFormOnSave)
             {

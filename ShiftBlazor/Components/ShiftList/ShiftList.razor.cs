@@ -274,8 +274,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
         {
             var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
-
-            if (Grid != null)
+            if (Grid != null && result?.Canceled != true)
             {
                 await Grid.Refresh();
             }

@@ -108,10 +108,17 @@ namespace ShiftSoftware.ShiftBlazor.Services
         ///     Close the form dialog.
         /// </summary>
         /// <param name="mudDialog">An instance of the MudDialog.</param>
-        public void Close(MudDialogInstance mudDialog)
+        public void Close(MudDialogInstance mudDialog, bool ok = false)
         {
             RemoveFrontModalFromUrl();
-            mudDialog.Cancel();
+            if (ok)
+            {
+                mudDialog.Close();
+            }
+            else
+            {
+                mudDialog.Cancel();
+            }
         }
 
         /// <summary>
