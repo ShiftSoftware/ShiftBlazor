@@ -139,14 +139,16 @@
                                 }
                                 else
                                 {
+                                    var isRtl = SettingManager.Settings.CurrentLanguage?.RTL == true;
+
                                     <MudStack Row="true" Spacing="6">
 
                                         <MudButtonGroup OverrideStyles="false">
                                             <MudTooltip Text="@Loc["GoToFirstPage"]">
-                                                <MudIconButton OnClick="() => GoToPage(1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@(SettingManager.Settings.CurrentLanguage.RTL ? Icons.Material.Filled.KeyboardDoubleArrowRight : Icons.Material.Filled.KeyboardDoubleArrowLeft)"></MudIconButton>
+                                                <MudIconButton OnClick="() => GoToPage(1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@(isRtl ? Icons.Material.Filled.KeyboardDoubleArrowRight : Icons.Material.Filled.KeyboardDoubleArrowLeft)"></MudIconButton>
                                             </MudTooltip>
                                             <MudTooltip Text="@Loc["GoToPreviousPage"]">
-                                                <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage - 1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@(SettingManager.Settings.CurrentLanguage.RTL ? Icons.Material.Filled.KeyboardArrowRight : Icons.Material.Filled.KeyboardArrowLeft)"></MudIconButton>
+                                                <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage - 1)" Disabled="@(ctx.CurrentPage == 1)" Icon="@(isRtl ? Icons.Material.Filled.KeyboardArrowRight : Icons.Material.Filled.KeyboardArrowLeft)"></MudIconButton>
                                             </MudTooltip>
                                             @for (var i = 1; i <= ctx.TotalPages; i++)
                                             {
@@ -154,10 +156,10 @@
                                                 <MudButton Color="ctx.CurrentPage == _page ? Color.Secondary : Color.Default" OnClick="() => GoToPage(_page)">@_page</MudButton>
                                             }
                                             <MudTooltip Text="@Loc["GoToNextPage"]">
-                                                <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage + 1)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@(SettingManager.Settings.CurrentLanguage.RTL ? Icons.Material.Filled.KeyboardArrowLeft : Icons.Material.Filled.KeyboardArrowRight)"></MudIconButton>
+                                                <MudIconButton OnClick="() => GoToPage(ctx.CurrentPage + 1)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@(isRtl ? Icons.Material.Filled.KeyboardArrowLeft : Icons.Material.Filled.KeyboardArrowRight)"></MudIconButton>
                                             </MudTooltip>
                                             <MudTooltip Text="@Loc["GoToLastPage"]">
-                                                <MudIconButton OnClick="() => GoToPage(ctx.TotalPages)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@(SettingManager.Settings.CurrentLanguage.RTL ? Icons.Material.Filled.KeyboardDoubleArrowLeft : Icons.Material.Filled.KeyboardDoubleArrowRight)"></MudIconButton>
+                                                <MudIconButton OnClick="() => GoToPage(ctx.TotalPages)" Disabled="@(ctx.CurrentPage == ctx.TotalPages || ctx.TotalPages == 0)" Icon="@(isRtl ? Icons.Material.Filled.KeyboardDoubleArrowLeft : Icons.Material.Filled.KeyboardDoubleArrowRight)"></MudIconButton>
                                             </MudTooltip>
 
                                         </MudButtonGroup>
