@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
 		<BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
-		<Version>1.4.1</Version>
+		<Version>1.4.2</Version>
 
 		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>
 		<PackageProjectUrl>https://github.com/ShiftSoftware/ShiftBlazor</PackageProjectUrl>

@@ -192,7 +192,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
             .Add(p => p.Action, path)
             .Add(p => p.Key, "1")
             .Add(p => p.OnPrint, () => invoked = true)
-            .Add(p => p.OnTaskStart, (task) => taskStarted = task == FormTasks.Print)
+            .Add(p => p.OnTaskStart, (task) => taskStarted = task.Data == FormTasks.Print)
             .Add(p => p.OnTaskFinished, (task) => taskFinished = task == FormTasks.Print)
         );
 
@@ -287,7 +287,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
             .Add(p => p.Key, "1")
             .Add(p => p.Action, path)
-            .Add(p => p.OnTaskStart, (task) => taskInprogress = task)
+            .Add(p => p.OnTaskStart, (task) => taskInprogress = task.Data)
         );
 
         Assert.Equal(FormTasks.Fetch, taskInprogress);
@@ -323,7 +323,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
             parameters => parameters
                 .Add(p => p.Key, "1")
                 .Add(p => p.Action, path)
-                .Add(p => p.OnTaskStart, (task) => deleteTaskStarted = task == FormTasks.Delete)
+                .Add(p => p.OnTaskStart, (task) => deleteTaskStarted = task.Data == FormTasks.Delete)
                 .Add(p => p.OnTaskFinished, (task) => deleteTaskFinished = task == FormTasks.Delete)
         ));
 
@@ -477,16 +477,17 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
 
         var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
             .Add(p => p.Action, path)
-            .Add(p => p.OnTaskStart, (task) => taskStarted = task == FormTasks.Save)
+            .Add(p => p.OnTaskStart, (task) => taskStarted = task.Data == FormTasks.Save)
             .Add(p => p.OnTaskFinished, (task) => taskFinished = task == FormTasks.Save)
             .Add(p => p.OnValidSubmit, () => submitHandled = true)
+            .Add(p => p.Value, value)
         );
 
-        await comp.Instance.ValidSubmitHandler(comp.Instance.editContext);
+        await comp.Instance.SubmitHandler(comp.Instance.editContext);
 
-        Assert.True(taskStarted);
-        Assert.True(taskFinished);
-        Assert.True(submitHandled);
+        Assert.True(taskStarted, "Task didn't start");
+        Assert.True(taskFinished, "Task didn't finish");
+        Assert.True(submitHandled, "Task didn't submit");
     }
 
     //[Fact]
