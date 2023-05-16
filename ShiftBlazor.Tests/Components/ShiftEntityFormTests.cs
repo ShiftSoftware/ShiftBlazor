@@ -290,8 +290,11 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
             .Add(p => p.OnTaskStart, (task) => taskInprogress = task.Data)
         );
 
-        Assert.Equal(FormTasks.Fetch, taskInprogress);
-        Assert.Equivalent(Values.First(), comp.Instance.Value);
+        comp.WaitForAssertion(() =>
+        {
+            Assert.Equal(FormTasks.Fetch, taskInprogress);
+            Assert.Equivalent(Values.First(), comp.Instance.Value);
+        });
     }
 
     [Fact]
@@ -302,7 +305,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
             .Add(p => p.Action, path)
         );
 
-        Assert.NotNull(comp.Instance.OriginalValue);
+        comp.WaitForAssertion(() => Assert.NotNull(comp.Instance.OriginalValue));
 
         var item = JsonSerializer.Deserialize<Sample>(comp.Instance.OriginalValue);
         Assert.Equivalent(comp.Instance.Value, item);
@@ -311,6 +314,8 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         await comp.Instance.RestoreOriginalValue();
 
         Assert.Equivalent(comp.Instance.Value, item);
+
+
     }
 
     [Fact]
