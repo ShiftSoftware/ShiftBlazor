@@ -14,15 +14,22 @@ namespace ShiftSoftware.ShiftBlazor.Services
         private readonly IJSRuntime JsRuntime;
         private readonly NavigationManager NavManager;
         private readonly IDialogService DialogService;
+        private readonly SettingManager SettingManager;
 
         private static readonly string QueryKey = "modal";
         private readonly Assembly ProjectAssembly = Assembly.GetEntryAssembly()!;
 
-        public ShiftModal(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService)
+        public ShiftModal(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService, SettingManager settingManager)
         {
             JsRuntime = jsRuntime;
             NavManager = navManager;
             DialogService = dialogService;
+            SettingManager = settingManager;
+
+            if (SettingManager.Configuration.Index != null)
+            {
+                ProjectAssembly = SettingManager.Configuration.Index.Assembly;
+            }
 
             ProjectName = ProjectAssembly.GetName().Name!.Replace('-', '_');
         }
@@ -63,8 +70,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 throw new Exception("ShiftModal: Object is not a component");
             }
 
-            var fullName = ComponentType!.FullName!.Substring(ProjectName.Length + 1);
-
             if (openMode == ModalOpenMode.NewTab)
             {
                 await JsRuntime.InvokeVoidAsync("open", $"{ComponentType.Name}/{key}{GenerateQueryString(parameters)}", "_blank");
@@ -83,7 +88,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
             else if (openMode == ModalOpenMode.Popup)
             {
-                UpdateModalQueryUrl(fullName, key, parameters);
+                if (ComponentType!.FullName!.Contains(ProjectName))
+                {
+                    var fullname = ComponentType!.FullName!.Substring(ProjectName.Length + 1);
+                    UpdateModalQueryUrl(fullname, key, parameters);
+                }
 
                 return await OpenDialog(ComponentType, key, parameters);
             }

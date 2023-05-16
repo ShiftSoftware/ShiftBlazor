@@ -21,6 +21,8 @@ public class AppConfiguration
         set => _ODataPath = value;
     }
 
+    public Type? Index { get; set; }
+
     public List<LanguageInfo> Languages = new();
 
     public AppConfiguration AddLanguage(string culture, string label, bool rtl = false)
