@@ -312,7 +312,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return new T();
             }
 
-            var result = await res.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>();
+            ShiftEntityResponse<T>? result = null;
+
+            try
+            {
+                result = await res.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>();
+            }
+            catch (Exception)
+            {
+                throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase));
+            }
 
             if (result == null)
             {
