@@ -11,8 +11,14 @@
     @foreach (var lang in LangManager.Configuration.Languages)
     {
         var selected = LangManager.Settings.CurrentLanguage?.CultureName == lang.CultureName;
-        var selectedStyle = "background-color: var(--mud-palette-action-default-hover);";
-        <MudMenuItem Style="@( selected ? selectedStyle : "")" OnClick="@(e => LangManager.SwitchLanguage(lang))">@lang.Label</MudMenuItem>
+        <MudMenuItem OnClick="@(e => LangManager.SwitchLanguage(lang))"
+                     Style="@( selected ? SelectedStyle : "")">
+            @lang.Label
+        </MudMenuItem>
     }
     
 </MudMenu>
+
+@code {
+    internal static string SelectedStyle = "background-color: var(--mud-palette-action-default-hover);";
+}
