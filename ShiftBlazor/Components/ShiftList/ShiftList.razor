@@ -13,6 +13,9 @@
 }
 
 <MudPaper Elevation="25">
+
+    <CascadingValue Value="this" IsFixed="true">
+
     <header>
         @if (!DisableHeaderToolbar)
         {
@@ -255,6 +258,8 @@
             }
         </div>
     }
+
+    </CascadingValue>
 </MudPaper>
 
 @code {
