@@ -10,7 +10,10 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
     {
         public static string AddUrlPath(this string text, params string?[] paths)
         {
+            if (string.IsNullOrWhiteSpace(text)) return text;
+
             var _paths = paths.Where(x => !string.IsNullOrWhiteSpace(x));
+            
             if (_paths.Count() == 0)
             {
                 return text;
