@@ -197,7 +197,13 @@
 
                     @foreach (var column in GeneratedColumns)
                     {
+                        if (column.IsComplex) {
+                            <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
+                        }
+                        else {
                         <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
+                    }
+
                     }
 
                     @ColumnTemplate

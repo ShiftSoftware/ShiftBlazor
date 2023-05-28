@@ -246,6 +246,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool IsReady = false;
 
         internal string GridId;
+        internal FilterSettings FilterSettingMenu = new FilterSettings { Type = Syncfusion.Blazor.Grids.FilterType.Menu };
 
         public ShiftList()
         {
@@ -455,6 +456,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (!IsSystemType(prop.PropertyType) && prop.PropertyType.IsClass)
                 {
                     complexColumns.Add(prop.Name);
+                    column.IsComplex = true;
                 }
 
                 GeneratedColumns.Add(column);
