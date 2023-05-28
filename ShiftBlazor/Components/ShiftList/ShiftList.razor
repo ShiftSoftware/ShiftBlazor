@@ -101,7 +101,7 @@
         <div class="@GridContainerCssClass">
             <SfGrid DataSource="Values"
                     TValue="T" @ref="Grid" class="pa-6"
-                    ID="@Guid.NewGuid().ToString()"
+                    ID="@GridId"
                     AllowPaging="!DisablePagination && !EnableVirtualization"
                     AllowSorting="!DisableSorting"
                     AllowMultiSorting="!DisableMultiSorting"

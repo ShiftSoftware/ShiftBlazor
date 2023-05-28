@@ -245,9 +245,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool ActionUrlBroken = false;
         internal bool IsReady = false;
 
+        internal string GridId;
+
         public ShiftList()
         {
-            HttpClient = new HttpClient(MessageHandler);
+            GridId = "Grid" + Guid.NewGuid().ToString().Replace("-", string.Empty);
         }
 
         private async Task RecordClickHandler(RecordClickEventArgs<T> args)
