@@ -122,8 +122,10 @@
                     <SfDataManager HttpClientInstance="HttpClient" Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true"/>
                 }
 
-                <GridEvents OnRecordClick="RecordClickHandler" OnDataBound="OnDataBoundHandler" OnActionFailure="ErrorHandler" TValue="T" />
-                <GridEditSettings AllowAdding="true" Mode="EditMode.Normal"></GridEditSettings>
+                <GridEvents OnRecordClick="RecordClickHandler"
+                            DataBound="DataBoundHandler"
+                            OnActionFailure="ErrorHandler"
+                            TValue="T" />
                 <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
                 <GridSelectionSettings CheckboxOnly="true" PersistSelection="true" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
 

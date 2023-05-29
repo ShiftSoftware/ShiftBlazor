@@ -1,0 +1,146 @@
+﻿@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.DropDowns
+@using System.Net.Http.Json
+@typeparam TValue where TValue : ShiftEntityDTOBase
+@typeparam TValue2 where TValue2 : ShiftEntityDTOBase, new()
+@inject ODataQuery OData
+@inject HttpClient Http
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<GridColumn HeaderText="@HeaderText"
+            AllowSorting="false"
+            AllowSearching="false"
+            AllowFiltering="AllowFiltering"
+            Field="@Field"
+            FilterSettings="FilterSettings">
+    <Template>
+        @if (IsReady)
+        {
+            var RowData = (TValue2)context;
+            var id = GetComplexPropertyValue(RowData, Field).ToString();
+            var data = RemoteData.FirstOrDefault(x => x.ID == id);
+            if (data != null)
+            {
+                ShowSkeleton = false;
+                <text>@GetComplexPropertyValue(data, Text)</text>
+            }
+        }
+
+        @if (ShowSkeleton)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="20px" />
+        }
+    </Template>
+    
+    <FilterTemplate>
+        <SfDropDownList Placeholder="@HeaderText" ID="@Field" @bind-Value="(context as PredicateModel<long>).Value" DataSource="@RemoteData" TValue="long" TItem="TValue">
+            <DropDownListFieldSettings Value="ID" Text="@Text"></DropDownListFieldSettings>
+        </SfDropDownList>
+    </FilterTemplate>
+    
+</GridColumn>
+
+@code {
+    [CascadingParameter]
+    public ShiftList<TValue2>? ShiftList { get; set; }
+
+    [Parameter, EditorRequired]
+    public string EntitySetName { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Field { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Text { get; set; }
+
+    [Parameter]
+    public string? HeaderText { get; set; }
+
+    [Parameter]
+    public bool AllowFiltering { get; set; }
+
+    internal bool IsReady = false;
+    internal bool ShowSkeleton = true;
+    internal List<TValue> RemoteData { get; set; } = new();
+    internal static FilterSettings FilterSettings = new FilterSettings { Type = Syncfusion.Blazor.Grids.FilterType.Menu };
+
+    internal bool DataBoundEventSubscribed = false;
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrWhiteSpace(EntitySetName))
+            throw new ArgumentNullException(nameof(EntitySetName));
+
+        if (string.IsNullOrWhiteSpace(Field))
+            throw new ArgumentNullException(nameof(Field));
+
+        if (string.IsNullOrWhiteSpace(Text))
+            throw new ArgumentNullException(nameof(Text));
+
+        if (string.IsNullOrWhiteSpace(HeaderText))
+            HeaderText = EntitySetName;
+
+        if (ShiftList != null && !DataBoundEventSubscribed)
+        {
+            ShiftList.OnDataBound += HandleEvent;
+        }
+    }
+
+    internal async void HandleEvent(object? sender, EventArgs args)
+    {
+        if (ShiftList?.Grid == null)
+        {
+            return;
+        }
+
+        var builder = OData.CreateQuery<TValue>(EntitySetName);
+
+        var items = await ShiftList.Grid.GetCurrentViewRecordsAsync();
+        var itemIds = items.Select(x => GetComplexPropertyValue(x, Field).ToString()).Distinct();
+        var url = builder.Where(x => itemIds.Contains(x.ID)).ToString();
+
+        var result = await Http.GetFromJsonAsync<ODataDTO<List<TValue>>>(url);
+
+        if (result != null)
+        {
+            RemoteData = result.Value;
+            IsReady = true;
+            await ShiftList.Grid.RefreshColumnsAsync();
+        }
+    }
+
+    internal string Serialize(object obj)
+    {
+        return System.Text.Json.JsonSerializer.Serialize(obj);
+    }
+
+    internal object GetComplexPropertyValue(object item, string complexProperty)
+    {
+        if (item == null)
+        {
+            throw new ArgumentNullException(nameof(item));
+        }
+
+        if (string.IsNullOrWhiteSpace(complexProperty))
+        {
+            throw new ArgumentNullException(nameof(complexProperty));
+        }
+
+        var propertyNames = complexProperty.Split('.');
+        var currentItem = item;
+        var type = currentItem.GetType();
+
+        foreach (var propertyName in propertyNames)
+        {
+            var prop = type.GetProperty(propertyName);
+            if (prop == null)
+            {
+                throw new ArgumentException($"Property '{propertyName}' does not exist.");
+            }
+            currentItem = prop.GetValue(currentItem);
+            type = prop.PropertyType;
+        }
+
+        return currentItem;
+    }
+}

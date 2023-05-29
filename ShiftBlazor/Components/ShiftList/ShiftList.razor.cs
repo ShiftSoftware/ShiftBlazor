@@ -253,6 +253,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             GridId = "Grid" + Guid.NewGuid().ToString().Replace("-", string.Empty);
         }
 
+        public event EventHandler<EventArgs>? OnDataBound;
+
         private async Task RecordClickHandler(RecordClickEventArgs<T> args)
         {
             if (OnRowClick.HasDelegate)
@@ -324,6 +326,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 ActionUrlBroken = true;
                 MsgService.Error(Loc["GetItemListError"], Loc["GetItemListError"], args.Error.ToString());
             }
+        }
+
+        public void DataBoundHandler()
+        {
+            if (!IsReady)
+            {
+                IsReady = true;
+            }
+
+            if (OnDataBound != null)
+            {
+                OnDataBound(this, new EventArgs());
+        }
         }
 
         public async Task<SelectedItems> GetSelectedItems()
