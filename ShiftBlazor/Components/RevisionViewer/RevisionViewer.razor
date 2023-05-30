@@ -38,12 +38,14 @@
     </HeaderTemplate>
 
     <ColumnTemplate>
-        <GridForeignColumn TValue="PublicUserListDTO"
-                           Field="@nameof(RevisionDTO.SavedByUserID)"
-                           ForeignKeyField="@nameof(PublicUserListDTO.ID)"
-                           ForeignKeyValue="@nameof(PublicUserListDTO.Name)">
-            <SfDataManager Url="@SettingManager.Configuration.UserListEndpoint" CrossDomain="true" Adaptor="Adaptors.ODataV4Adaptor" />
-        </GridForeignColumn>
+        <ShiftForeignColumn TValue="PublicUserListDTO"
+                            TValue2="RevisionDTO"
+                            ODataBaseUrl="@BaseUrl"
+                            Field="@nameof(RevisionDTO.SavedByUserID)"
+                            Text="@nameof(PublicUserListDTO.Name)"
+                            HeaderText="SavedByUserID"
+                            EntitySetName="@EntitySet">
+        </ShiftForeignColumn>
     </ColumnTemplate>
 </ShiftList>
 
@@ -64,6 +66,22 @@
     public string? Title { get; set; }
 
     public ShiftList<RevisionDTO>? ShiftList { get; set; }
+
+    internal string BaseUrl { get; set; }
+    internal string EntitySet { get; set; }
+
+    protected override void OnInitialized()
+    {
+        var url = SettingManager.Configuration.UserListEndpoint;
+
+        var index = url.LastIndexOf('/');
+
+        if (index >= 0)
+        {
+            BaseUrl = url.Substring(0, index);
+            EntitySet = url.Substring(index + 1);
+        }
+    }
 
     private async Task RowClickHandler(RecordClickEventArgs<RevisionDTO> args)
     {

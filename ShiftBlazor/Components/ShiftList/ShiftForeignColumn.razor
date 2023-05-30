@@ -1,4 +1,5 @@
-﻿@using Syncfusion.Blazor.Grids
+﻿@using Microsoft.OData.Client;
+@using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor.DropDowns
 @using System.Net.Http.Json
 @typeparam TValue where TValue : ShiftEntityDTOBase
@@ -21,12 +22,10 @@
             var data = RemoteData.FirstOrDefault(x => x.ID == id);
             if (data != null)
             {
-                ShowSkeleton = false;
                 <text>@GetComplexPropertyValue(data, Text)</text>
             }
         }
-
-        @if (ShowSkeleton)
+        else
         {
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="20px" />
         }
@@ -52,6 +51,9 @@
 
     [Parameter, EditorRequired]
     public string Text { get; set; }
+
+    [Parameter]
+    public string? ODataBaseUrl { get; set; }
 
     [Parameter]
     public string? HeaderText { get; set; }
@@ -93,7 +95,17 @@
             return;
         }
 
-        var builder = OData.CreateQuery<TValue>(EntitySetName);
+        DataServiceQuery<TValue> builder = null;
+
+
+        if (string.IsNullOrWhiteSpace(ODataBaseUrl))
+        {
+            builder = OData.CreateQuery<TValue>(EntitySetName);
+        }
+        else
+        {
+            builder = new ODataQuery(ODataBaseUrl).CreateQuery<TValue>(EntitySetName);
+        }
 
         var items = await ShiftList.Grid.GetCurrentViewRecordsAsync();
         var itemIds = items.Select(x => GetComplexPropertyValue(x, Field).ToString()).Distinct();
@@ -107,11 +119,6 @@
             IsReady = true;
             await ShiftList.Grid.RefreshColumnsAsync();
         }
-    }
-
-    internal string Serialize(object obj)
-    {
-        return System.Text.Json.JsonSerializer.Serialize(obj);
     }
 
     internal object GetComplexPropertyValue(object item, string complexProperty)
