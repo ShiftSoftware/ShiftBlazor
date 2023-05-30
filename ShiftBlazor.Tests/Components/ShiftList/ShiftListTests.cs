@@ -3,7 +3,7 @@ using MudBlazor;
 using Syncfusion.Blazor.Data;
 using Syncfusion.Blazor.Grids;
 
-namespace ShiftSoftware.ShiftBlazor.Tests.Components;
+namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList;
 
 public class ShiftListTests : ShiftBlazorTestContext
 {
@@ -421,7 +421,7 @@ public class ShiftListTests : ShiftBlazorTestContext
 
         var row = grid.Find(".e-table .e-row .e-rowcell[aria-label~='Actions']");
         row.FirstChild?.MarkupMatches($"<div><h1>{text}</h1></div>");
-        
+
     }
 
     [Fact]

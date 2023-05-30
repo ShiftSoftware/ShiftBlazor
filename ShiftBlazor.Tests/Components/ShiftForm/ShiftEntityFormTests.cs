@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 
-namespace ShiftSoftware.ShiftBlazor.Tests.Components;
+namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftForm;
 
 public class ShiftEntityFormTests : ShiftBlazorTestContext
 {

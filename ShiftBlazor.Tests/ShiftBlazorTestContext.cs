@@ -36,6 +36,10 @@ public class ShiftBlazorTestContext : TestContext
                 options.ApiPath = ApiBaseUrl;
                 options.ODataPath = ODataBaseUrl;
                 options.UserListEndpoint = "/odata/PublicUser";
+                options.AddLanguage("en-US", "EN")
+                       .AddLanguage("es-US", "EN")
+                       .AddLanguage("ar-AE", "EN")
+                       .AddLanguage("en-GB", "EN");
             };
             config.MudBlazorConfiguration = options =>
             {

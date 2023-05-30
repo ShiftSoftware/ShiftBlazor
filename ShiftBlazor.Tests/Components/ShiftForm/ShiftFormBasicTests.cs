@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 
-namespace ShiftSoftware.ShiftBlazor.Tests.Components;
+namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftForm;
 
 public class ShiftFormBasicTests : ShiftBlazorTestContext
 {

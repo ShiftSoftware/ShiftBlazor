@@ -1,7 +1,7 @@
 ﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 
-namespace ShiftSoftware.ShiftBlazor.Tests.Components;
+namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftAutocomplete;
 
 public class ShiftAutocompleteTests : ShiftBlazorTestContext
 {
@@ -61,6 +61,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
 
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet));
+
         comp.Find("input").Click();
 
         comp.WaitForAssertion(() =>
