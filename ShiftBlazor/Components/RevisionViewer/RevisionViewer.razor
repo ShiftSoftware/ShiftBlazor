@@ -38,14 +38,17 @@
     </HeaderTemplate>
 
     <ColumnTemplate>
-        <ShiftForeignColumn TValue="PublicUserListDTO"
-                            TValue2="RevisionDTO"
-                            ODataBaseUrl="@BaseUrl"
-                            Field="@nameof(RevisionDTO.SavedByUserID)"
-                            Text="@nameof(PublicUserListDTO.Name)"
-                            HeaderText="SavedByUserID"
-                            EntitySetName="@EntitySet">
-        </ShiftForeignColumn>
+        @if (!string.IsNullOrWhiteSpace(SettingManager.Configuration.UserListEndpoint))
+        {
+            <ShiftForeignColumn TValue="PublicUserListDTO"
+                                TValue2="RevisionDTO"
+                                ODataBaseUrl="@BaseUrl"
+                                Field="@nameof(RevisionDTO.SavedByUserID)"
+                                Text="@nameof(PublicUserListDTO.Name)"
+                                HeaderText="SavedByUserID"
+                                EntitySetName="@EntitySet">
+            </ShiftForeignColumn>
+        }
     </ColumnTemplate>
 </ShiftList>
 
@@ -73,6 +76,11 @@
     protected override void OnInitialized()
     {
         var url = SettingManager.Configuration.UserListEndpoint;
+
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return;
+        }
 
         var index = url.LastIndexOf('/');
 

@@ -28,7 +28,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
             config.Invoke(Configuration);
 
             if (string.IsNullOrWhiteSpace(Configuration.BaseAddress)) throw new ArgumentNullException(nameof(Configuration.BaseAddress));
-            if (string.IsNullOrWhiteSpace(Configuration.UserListEndpoint)) throw new ArgumentNullException(nameof(Configuration.UserListEndpoint));
 
             Settings = GetSettings();
 
