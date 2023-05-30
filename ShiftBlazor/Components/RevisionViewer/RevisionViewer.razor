@@ -42,7 +42,7 @@
                            Field="@nameof(RevisionDTO.SavedByUserID)"
                            ForeignKeyField="@nameof(PublicUserListDTO.ID)"
                            ForeignKeyValue="@nameof(PublicUserListDTO.Name)">
-            <SfDataManager HttpClientInstance="new HttpClient(ShiftList.MessageHandler)" Url="@SettingManager.Configuration.UserListEndpoint" CrossDomain="true" Adaptor="Adaptors.ODataV4Adaptor" />
+            <SfDataManager Url="@SettingManager.Configuration.UserListEndpoint" CrossDomain="true" Adaptor="Adaptors.ODataV4Adaptor" />
         </GridForeignColumn>
     </ColumnTemplate>
 </ShiftList>

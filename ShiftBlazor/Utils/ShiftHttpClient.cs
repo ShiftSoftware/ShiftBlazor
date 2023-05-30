@@ -1,4 +1,6 @@
-﻿namespace ShiftSoftware.ShiftBlazor.Utils
+﻿using ShiftSoftware.ShiftBlazor.Events;
+
+namespace ShiftSoftware.ShiftBlazor.Utils
 {
     public class CustomMessageHandler : DelegatingHandler
     {
@@ -8,21 +10,22 @@
             InnerHandler = new HttpClientHandler();
         }
 
-        public string? Query { get; set; }
-        public Uri? FailedUrl { get; set; }
-
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            Query = request.RequestUri?.Query;
+            EventComponentBase.TriggerRequestStarted(request.RequestUri);
 
             try
             {
                 var response = await base.SendAsync(request, cancellationToken);
+                if (response.StatusCode >= System.Net.HttpStatusCode.BadRequest)
+                {
+                    EventComponentBase.TriggerRequestFailed(request.RequestUri);
+                }
                 return response;
             }
             catch (Exception)
             {
-                FailedUrl = request.RequestUri;
+                EventComponentBase.TriggerRequestFailed(request.RequestUri);
                 throw;
             }
         }

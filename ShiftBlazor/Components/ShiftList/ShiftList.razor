@@ -6,6 +6,7 @@
 @using Syncfusion.Blazor.Navigations
 @typeparam T where T : ShiftEntityDTOBase, new()
 @namespace ShiftSoftware.ShiftBlazor.Components
+@inherits ShiftSoftware.ShiftBlazor.Events.EventComponentBase
 
 @if (!string.IsNullOrWhiteSpace(Title))
 {
@@ -119,7 +120,7 @@
 
                 @if (Values == null)
                 {
-                    <SfDataManager HttpClientInstance="HttpClient" Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true"/>
+                    <SfDataManager Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true"/>
                 }
 
                 <GridEvents OnRecordClick="RecordClickHandler"
@@ -206,8 +207,8 @@
                             <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
                         }
                         else {
-                        <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
-                    }
+                            <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
+                        }
 
                     }
 

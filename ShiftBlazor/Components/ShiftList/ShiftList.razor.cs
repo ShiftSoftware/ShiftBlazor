@@ -9,17 +9,19 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftBlazor.Enums;
 using Microsoft.Extensions.Localization;
+using ShiftSoftware.ShiftBlazor.Events;
+using ShiftSoftware.ShiftBlazor.Extensions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftList<T> : ComponentBase
-        where T : ShiftEntityDTOBase, new() 
+    public partial class ShiftList<T> : EventComponentBase
+        where T : ShiftEntityDTOBase, new()
     {
         [Inject] private MessageService MsgService { get; set; } = default!;
         [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
-        [Inject] protected HttpClient HttpClient { get; set; }
+        [Inject] private HttpClient HttpClient { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
 
         [CascadingParameter]
@@ -226,7 +228,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool ShowIDColumn { get; set; } = false;
 
         public SfGrid<T>? Grid;
-        public CustomMessageHandler MessageHandler = new();
         internal List<ListColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
@@ -248,6 +249,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string GridId;
         internal FilterSettings FilterSettingMenu = new FilterSettings { Type = Syncfusion.Blazor.Grids.FilterType.Menu };
 
+        internal Uri LastRequestUri { get; set; }
+        internal Uri LastFailedRequestUri { get; set; }
+
         public ShiftList()
         {
             GridId = "Grid" + Guid.NewGuid().ToString().Replace("-", string.Empty);
@@ -265,6 +269,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
+            OnRequestFailed += (o, args) => {
+
+                if (args.Uri != null)
+                {
+                    LastFailedRequestUri = args.Uri;
+                }
+            };
+
+            OnRequestStarted += (o, args) => {
+
+                if (args.Uri != null && args.Uri.AbsoluteUriWithoutQuery() == Grid.DataManager.Url)
+                {
+                    LastRequestUri = args.Uri;
+                }
+            };
+
             if (SettingManager.Settings.ListPageSize != null)
             {
                 PageSize = SettingManager.Settings.ListPageSize.Value;
@@ -295,8 +315,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 .ToList()
                 .ForEach(column =>
                 {
-                    var failedUrl = MessageHandler.FailedUrl;
-                    if (failedUrl != null && failedUrl.AbsoluteUri.Replace(failedUrl.Query, "") == column.DataManager.Url)
+                    if (LastFailedRequestUri.AbsoluteUriWithoutQuery() == column.DataManager.Url)
                     {
                         var type = column.GetType().GetGenericArguments().First();
 
@@ -338,7 +357,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (OnDataBound != null)
             {
                 OnDataBound(this, new EventArgs());
-        }
+            }
         }
 
         public async Task<SelectedItems> GetSelectedItems()
@@ -348,7 +367,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var result = new SelectedItems
             {
                 All = AllSelected,
-                Query = this.MessageHandler.Query,
+                Query = LastRequestUri?.Query,
             };
 
             if (!result.All)
@@ -434,14 +453,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (pageSize == null || pageSize != size)
             {
                 SettingManager.SetListPageSize(size);
-            }
-        }
-
-        public void OnDataBoundHandler(BeforeDataBoundArgs<T> args)
-        {
-            if (!IsReady)
-            {
-                IsReady = true;
             }
         }
 
