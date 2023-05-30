@@ -2,9 +2,9 @@
 
 namespace ShiftSoftware.ShiftBlazor.Utils
 {
-    public class CustomMessageHandler : DelegatingHandler
+    public class ShiftHttpMessageHandler : DelegatingHandler
     {
-        public CustomMessageHandler()
+        public ShiftHttpMessageHandler()
         {
             //add this to solve "The inner handler has not been assigned"
             InnerHandler = new HttpClientHandler();
