@@ -436,7 +436,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        internal async Task GoToPage(double page)
+        internal async Task GoToPage(int page)
         {
             if (Grid!.PageSettings.CurrentPage != page)
             {

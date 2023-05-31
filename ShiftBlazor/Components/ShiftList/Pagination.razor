@@ -1,0 +1,107 @@
+﻿@using Syncfusion.Blazor.Navigations
+@typeparam TValue where TValue : ShiftEntityDTOBase, new()
+@inject SettingManager SettingManager
+@inject IStringLocalizer<Resources.Components.ShiftList> Loc
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<MudToolBar Dense="true" DisableGutters="false" Class="mt-4" Style="display: flex;">
+
+    @if (!ShiftList.IsReady)
+    {
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="500px" Height="25px" />
+
+        <MudSpacer></MudSpacer>
+        <MudSkeleton Width="160px" />
+    }
+    else
+    {
+        <MudStack Row="true" Spacing="6">
+
+            <MudButtonGroup OverrideStyles="false">
+                <MudTooltip Text="@Loc["GoToFirstPage"]">
+                    <MudIconButton OnClick="() => GoToPage(1)" Disabled="@GoFirstDisabled" Icon="@GoFirstIcon"></MudIconButton>
+                </MudTooltip>
+                <MudTooltip Text="@Loc["GoToPreviousPage"]">
+                    <MudIconButton OnClick="() => GoToPage(Context.CurrentPage - 1)" Disabled="@GoPrevDisabled" Icon="@GoPrevIcon"></MudIconButton>
+                </MudTooltip>
+
+                @if (Context.CurrentPage > ItemsPerPageGroup)
+                {
+                    <MudTooltip Text="@Loc["GoToPage", LastItemInPrevGroup]">
+                        <MudButton OnClick="() => GoToPage(LastItemInPrevGroup)">…</MudButton>
+                    </MudTooltip>
+                }
+
+                @for (var i = LastItemInPrevGroup + 1; i <= Math.Min(Context.TotalPages, LastItemInPrevGroup + ItemsPerPageGroup); i++)
+                {
+                    var _page = i;
+                    <MudButton Color="Context.CurrentPage == _page ? Color.Secondary : Color.Default" OnClick="() => GoToPage(_page)">@_page</MudButton>
+                }
+
+                @if (Context.TotalPages > ItemsPerPageGroup && Context.TotalPages > LastItemInCurrentGroup )
+                {
+                    <MudTooltip Text="@Loc["GoToPage", LastItemInCurrentGroup + 1]">
+                        <MudButton OnClick="() => GoToPage(LastItemInCurrentGroup + 1)">…</MudButton>
+                    </MudTooltip>
+                }
+
+                <MudTooltip Text="@Loc["GoToNextPage"]">
+                    <MudIconButton OnClick="() => GoToPage(Context.CurrentPage + 1)" Disabled="@GoNextDisabled" Icon="@GoNextIcon"></MudIconButton>
+                </MudTooltip>
+                <MudTooltip Text="@Loc["GoToLastPage"]">
+                    <MudIconButton OnClick="() => GoToPage(Context.TotalPages)" Disabled="@GoLastDisabled" Icon="@GoLastIcon"></MudIconButton>
+                </MudTooltip>
+
+            </MudButtonGroup>
+
+            <MudSelect T="int" Label="@Loc["ItemsPerPage"]" Value="ShiftList.PageSize" ValueChanged="ShiftList.PageSizeChangeHandler" Dense="true" Style="width: 150px;display: flex;">
+                @foreach (var size in ShiftList.PageSizes)
+                {
+                    <MudSelectItem Value="@size">@size</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
+
+        <MudSpacer />
+
+        <MudText>@Loc["PageCountAndTotal", Context.TotalItemsCount > 0 ? Context.CurrentPage : 0, Context.TotalPages, Context.TotalItemsCount]</MudText>
+    }
+</MudToolBar>
+
+
+@code {
+    [CascadingParameter]
+    public ShiftList<TValue> ShiftList { get; set; }
+
+    [Parameter]
+    public PagerTemplateContext Context { get; set; }
+
+    internal bool CurrentLangIsRtl { get; set; }
+    internal string GoFirstIcon => CurrentLangIsRtl ? Icons.Material.Filled.KeyboardDoubleArrowRight : Icons.Material.Filled.KeyboardDoubleArrowLeft;
+    internal string GoPrevIcon => CurrentLangIsRtl ? Icons.Material.Filled.KeyboardArrowRight : Icons.Material.Filled.KeyboardArrowLeft;
+    internal string GoNextIcon => CurrentLangIsRtl ? Icons.Material.Filled.KeyboardArrowLeft : Icons.Material.Filled.KeyboardArrowRight;
+    internal string GoLastIcon => CurrentLangIsRtl ? Icons.Material.Filled.KeyboardDoubleArrowLeft : Icons.Material.Filled.KeyboardDoubleArrowRight;
+
+    internal bool GoFirstDisabled => Context.CurrentPage <= ItemsPerPageGroup;
+    internal bool GoPrevDisabled => Context.CurrentPage == 1;
+    internal bool GoNextDisabled => Context.CurrentPage == Context.TotalPages || Context.TotalPages == 0;
+    internal bool GoLastDisabled => Context.TotalPages < ItemsPerPageGroup || Context.TotalPages < LastItemInCurrentGroup;
+
+    internal readonly int ItemsPerPageGroup = 8;
+    internal int PageGroupCount => (int)Math.Ceiling((double)Context.CurrentPage / ItemsPerPageGroup);
+    internal int LastItemInCurrentGroup => PageGroupCount * ItemsPerPageGroup;
+    internal int LastItemInPrevGroup => (PageGroupCount - 1) * ItemsPerPageGroup;
+
+    protected override void OnInitialized()
+    {
+        CurrentLangIsRtl = SettingManager.Settings.CurrentLanguage?.RTL == true;
+    }
+
+    internal async Task GoToPage(int page)
+    {
+        if (ShiftList!.Grid!.PageSettings.CurrentPage != page)
+        {
+            await ShiftList!.Grid!.GoToPageAsync(page);
+        }
+    }
+}

@@ -169,6 +169,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Page {0}.
+        /// </summary>
+        internal static string GoToPage {
+            get {
+                return ResourceManager.GetString("GoToPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Previous Page.
         /// </summary>
         internal static string GoToPreviousPage {

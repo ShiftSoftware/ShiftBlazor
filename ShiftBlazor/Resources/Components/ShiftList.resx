@@ -153,6 +153,9 @@
   <data name="GoToNextPage" xml:space="preserve">
     <value>Next Page</value>
   </data>
+  <data name="GoToPage" xml:space="preserve">
+    <value>Page {0}</value>
+  </data>
   <data name="GoToPreviousPage" xml:space="preserve">
     <value>Previous Page</value>
   </data>
