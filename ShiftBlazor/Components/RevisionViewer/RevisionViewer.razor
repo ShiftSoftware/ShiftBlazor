@@ -12,7 +12,6 @@
            DisableSelection="@true"
            OnRowClick="@RowClickHandler"
            DisableHeaderToolbar="@true"
-           @ref="ShiftList"
            ExcludedColumns="@(new List<string> {nameof(RevisionDTO.SavedByUserID)})">
 
     <HeaderTemplate>
@@ -67,8 +66,6 @@
 
     [Parameter]
     public string? Title { get; set; }
-
-    public ShiftList<RevisionDTO>? ShiftList { get; set; }
 
     internal string BaseUrl { get; set; }
     internal string EntitySet { get; set; }
