@@ -116,7 +116,8 @@
                     AllowSelection="!DisableSelection"
                     EnableVirtualization="EnableVirtualization"
                     EnableVirtualMaskRow="EnableVirtualization"
-                    Height="@GridHeight">
+                    Height="@GridHeight"
+                    Width="100%">
 
                 @if (Values == null)
                 {
@@ -140,35 +141,36 @@
                 </GridPageSettings>
 
                 <GridColumns>
-                    <GridColumn IsPrimaryKey="true" Visible="@(ShowIDColumn)" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
+                        <GridColumn AutoFit="!DisableAutoFit" IsPrimaryKey="true" Visible="@(ShowIDColumn)" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
 
                     @if (EnableVirtualization && !DisableSelection)
                     {
-                        <GridColumn Type="ColumnType.CheckBox" Width="50">
+                        <GridColumn AutoFit="!DisableAutoFit" Type="ColumnType.CheckBox" Width="50">
                             <HeaderTemplate/>
                         </GridColumn>
                     }
                     else if (!DisableSelection)
                     {
-                        <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
+                            <GridColumn AutoFit="!DisableAutoFit" Type="ColumnType.CheckBox" Width="50"></GridColumn>
                     }
 
                     @foreach (var column in GeneratedColumns)
                     {
-                        if (column.IsComplex) {
-                            <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
+                        if (column.IsComplex)
+                        {
+                                <GridColumn AutoFit="!DisableAutoFit" HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
                         }
-                        else {
-                            <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
+                        else
+                        {
+                                <GridColumn AutoFit="!DisableAutoFit" HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
                         }
-
                     }
 
                     @ColumnTemplate
 
                     @if (!ExcludedColumns.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
                     {
-                        <GridColumn HeaderText="@Loc["ActionsColumnTitle"]" TextAlign="TextAlign.Center" Width="@ActionColumnWidth">
+                            <GridColumn HeaderText="@Loc["ActionsColumnTitle"]" TextAlign="TextAlign.Center" AutoFit="!DisableAutoFit">
                             <Template>
                                 @if (ActionsTemplate == null)
                                 {
