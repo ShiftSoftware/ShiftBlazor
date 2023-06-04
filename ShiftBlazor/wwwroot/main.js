@@ -1,7 +1,14 @@
-﻿function GetUrl() {
+﻿window.GetUrl = function() {
     return window.location.href;
 }
 
-function GridAllSelected(id) {
+window.GridAllSelected = function(id) {
     return document.querySelector(`#${id} .e-checkselectall + .e-check`) != null
 }
+
+window.getWindowDimensions = function() {
+    return {
+        width: window.innerWidth,
+        height: window.innerHeight
+    };
+}; 

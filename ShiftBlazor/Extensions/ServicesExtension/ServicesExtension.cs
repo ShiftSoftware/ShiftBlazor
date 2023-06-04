@@ -6,6 +6,7 @@ using Syncfusion.Licensing;
 using Syncfusion.Blazor;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace ShiftSoftware.ShiftBlazor.Extensions
 {
@@ -42,6 +43,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
                 settingManager = new SettingManager(x.GetRequiredService<ISyncLocalStorageService>(),
                                    x.GetRequiredService<NavigationManager>(),
                                    x.GetRequiredService<HttpClient>(),
+                                   x.GetRequiredService<IJSRuntime>(),
                                    config =>
                                    {
                                        options.ShiftConfiguration.Invoke(config);

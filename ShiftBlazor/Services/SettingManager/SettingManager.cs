@@ -1,5 +1,6 @@
 ﻿using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 using System.Globalization;
 using System.Net.Http.Headers;
@@ -11,23 +12,32 @@ namespace ShiftSoftware.ShiftBlazor.Services
         private readonly ISyncLocalStorageService SyncLocalStorage;
         private readonly NavigationManager? NavManager;
         private readonly HttpClient? Http;
+        private readonly IJSRuntime? JsRuntime;
 
         private readonly string Key = "ShiftSettings";
         public AppSetting Settings { get; set; }
+        public DeviceInfo Device { get; set; } = new DeviceInfo();
         public AppConfiguration Configuration { get; set; } = new();
         private string DefaultCultureName = "en-US";
 
         public SettingManager(ISyncLocalStorageService syncLocalStorage,
                               NavigationManager? navManager,
                               HttpClient? http,
+                              IJSRuntime? jsRuntime,
                               Action<AppConfiguration> config)
         {
             SyncLocalStorage = syncLocalStorage;
             NavManager = navManager;
             Http = http;
+            JsRuntime = jsRuntime;
             config.Invoke(Configuration);
 
             if (string.IsNullOrWhiteSpace(Configuration.BaseAddress)) throw new ArgumentNullException(nameof(Configuration.BaseAddress));
+
+            GetDeviceInfo().ContinueWith(async x =>
+            {
+                Device = await x;
+            });
 
             Settings = GetSettings();
 
@@ -92,6 +102,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
 
             return settings;
+        }
+
+        private async Task<DeviceInfo> GetDeviceInfo()
+        {
+            return await JsRuntime!.InvokeAsync<DeviceInfo>("getWindowDimensions");
         }
 
         private void UpdateCulture()
