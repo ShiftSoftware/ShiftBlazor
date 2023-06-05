@@ -1,8 +1,8 @@
 ﻿using System.Net;
 using System.Reflection;
 using System.Text.Json;
+using System.Web;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
@@ -108,9 +108,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public string GenerateQueryString(Dictionary<string, string>? parameters)
         {
             if (parameters == null || parameters.Count == 0)
-                return "";
+                return string.Empty;
 
-            return QueryHelpers.AddQueryString("", parameters);
+            var queries = parameters.Select(x => $"{x.Key}={x.Value}");
+
+            return "?" + string.Join("&", queries);
         }
 
         /// <summary>
@@ -217,9 +219,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
         {
             var uri = NavManager.ToAbsoluteUri(url);
 
-            if (QueryHelpers.ParseQuery(uri.Query).TryGetValue(QueryKey, out var valueFromQueryString))
+            var modalString = HttpUtility.ParseQueryString(uri.Query).Get(QueryKey);
+
+            if (modalString != null)
             {
-                var decodedString = WebUtility.UrlDecode(valueFromQueryString);
+                var decodedString = WebUtility.UrlDecode(modalString);
                 try
                 {
                     return JsonSerializer.Deserialize<List<ModalInfo>>(decodedString) ?? new List<ModalInfo>();
