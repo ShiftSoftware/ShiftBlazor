@@ -468,8 +468,9 @@ public class ShiftListTests : ShiftBlazorTestContext
             .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
+        var column = grid.Columns.First(x => x.HeaderText.Equals("Actions"));
 
-        Assert.Equal(width, grid.Columns.First(x => x.HeaderText.Equals("Actions")).Width);
+        Assert.Equal(width, column.Width);
     }
 
     [Fact]

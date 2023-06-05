@@ -170,7 +170,10 @@
 
                     @if (!ExcludedColumns.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
                     {
-                            <GridColumn HeaderText="@Loc["ActionsColumnTitle"]" TextAlign="TextAlign.Center" AutoFit="!DisableAutoFit">
+                            <GridColumn HeaderText="@Loc["ActionsColumnTitle"]"
+                                        TextAlign="TextAlign.Center"
+                                        Width="@ActionColumnWidth"
+                                        AutoFit="!DisableAutoFit">
                             <Template>
                                 @if (ActionsTemplate == null)
                                 {
