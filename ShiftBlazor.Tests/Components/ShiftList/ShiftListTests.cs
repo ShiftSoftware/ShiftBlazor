@@ -7,7 +7,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList;
 
 public class ShiftListTests : ShiftBlazorTestContext
 {
-    public static bool DisablePaging = false;
+    public static bool DisablePaging = true;
 
     [Fact]
     public void ShouldShowErrorIfActionAndValueAreNull()
