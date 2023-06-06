@@ -342,7 +342,8 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
 
         deleteButton.Click();
 
-        Assert.True(deleteTaskStarted, "deleteTaskStarted failed");
+        comp.WaitForAssertion(() => Assert.True(deleteTaskStarted, "deleteTaskStarted failed"));
+
 
         var msgBox = comp.FindComponent<MudMessageBox>();
         Assert.Equal("Delete", msgBox.Instance.YesText);
