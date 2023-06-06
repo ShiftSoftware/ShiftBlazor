@@ -117,13 +117,14 @@
                     EnableVirtualization="EnableVirtualization"
                     EnableVirtualMaskRow="EnableVirtualization"
                     Height="@GridHeight"
-                    Width="100%">
+                    Width="">
+                    
+                    @*Width="" is required for horizontal scroll*@
 
                 @if (Values == null)
                 {
                     <SfDataManager Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true"/>
                 }
-
                 <GridEvents OnRecordClick="RecordClickHandler"
                             DataBound="DataBoundHandler"
                             OnActionFailure="ErrorHandler"
@@ -141,28 +142,28 @@
                 </GridPageSettings>
 
                 <GridColumns>
-                        <GridColumn AutoFit="!DisableAutoFit" IsPrimaryKey="true" Visible="@(ShowIDColumn)" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
+                        <GridColumn IsPrimaryKey="true" Visible="@(ShowIDColumn)" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
 
                     @if (EnableVirtualization && !DisableSelection)
                     {
-                        <GridColumn AutoFit="!DisableAutoFit" Type="ColumnType.CheckBox" Width="50">
+                        <GridColumn Type="ColumnType.CheckBox" Width="50">
                             <HeaderTemplate/>
                         </GridColumn>
                     }
                     else if (!DisableSelection)
                     {
-                            <GridColumn AutoFit="!DisableAutoFit" Type="ColumnType.CheckBox" Width="50"></GridColumn>
+                            <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
                     }
 
                     @foreach (var column in GeneratedColumns)
                     {
                         if (column.IsComplex)
                         {
-                                <GridColumn AutoFit="!DisableAutoFit" HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
+                                <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
                         }
                         else
                         {
-                                <GridColumn AutoFit="!DisableAutoFit" HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
+                                <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
                         }
                     }
 
@@ -172,8 +173,7 @@
                     {
                             <GridColumn HeaderText="@Loc["ActionsColumnTitle"]"
                                         TextAlign="TextAlign.Center"
-                                        Width="@ActionColumnWidth"
-                                        AutoFit="!DisableAutoFit">
+                                        Width="@ActionColumnWidth">
                             <Template>
                                 @if (ActionsTemplate == null)
                                 {

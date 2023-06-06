@@ -1,14 +1,14 @@
-﻿window.GetUrl = function() {
+﻿window.GetUrl = function () {
     return window.location.href;
-}
+};
 
-window.GridAllSelected = function(id) {
+window.GridAllSelected = function (id) {
     return document.querySelector(`#${id} .e-checkselectall + .e-check`) != null
-}
+};
 
-window.getWindowDimensions = function() {
+window.getWindowDimensions = function () {
     return {
         width: window.innerWidth,
-        height: window.innerHeight
+        height: window.innerHeight,
     };
-}; 
+};

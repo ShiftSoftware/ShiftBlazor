@@ -227,9 +227,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool ShowIDColumn { get; set; } = false;
 
-        [Parameter]
-        public bool DisableAutoFit { get; set; }
-
         public SfGrid<T>? Grid;
         internal List<ListColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
