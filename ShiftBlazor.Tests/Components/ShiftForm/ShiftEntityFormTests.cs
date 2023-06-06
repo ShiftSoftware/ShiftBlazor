@@ -206,10 +206,9 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
 
         button.Find("button").Click();
 
-        Assert.True(taskStarted, "Print task failed to start");
-
         comp.WaitForAssertion(() =>
         {
+            Assert.True(taskStarted, "Print task failed to start");
             Assert.True(invoked);
             Assert.True(taskFinished, "Print task failed to finish");
         });
