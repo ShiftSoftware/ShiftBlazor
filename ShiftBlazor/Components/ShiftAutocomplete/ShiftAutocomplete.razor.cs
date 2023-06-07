@@ -53,13 +53,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             QueryBuilder = OData.CreateQuery<T>(EntitySet);
 
-            SearchFunc = Search;
+            SearchFuncWithCancel = Search;
         }
 
-        internal async Task<IEnumerable<T>> Search(string val)
+        internal async Task<IEnumerable<T>> Search(string val, CancellationToken token)
         {
             var url = GetODataUrl(val);
-            return await GetODataResult(url);
+            return await GetODataResult(url, token);
         }
 
         internal string GetODataUrl(string q)
@@ -76,11 +76,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return url.ToString()!;
         }
 
-        internal async Task<List<T>> GetODataResult(string url)
+        internal async Task<List<T>> GetODataResult(string url, CancellationToken token)
         {
             try
             {
-                var text = await Http.GetStringAsync(url);
+                var text = await Http.GetStringAsync(url, token);
                 var json = JsonNode.Parse(text);
                 return json?["value"].Deserialize<List<T>>() ?? new List<T>();
             }
