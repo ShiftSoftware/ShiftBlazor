@@ -4,7 +4,7 @@
 @inject IStringLocalizer<Resources.Components.ShiftList> Loc
 @namespace ShiftSoftware.ShiftBlazor.Components
 
-<MudToolBar Dense="true" DisableGutters="false" Class="mt-4" Style="display: flex;" WrapContent="true">
+<MudToolBar Dense="true" DisableGutters="false" Class="mt-4" Style="display: flex; overflow: hidden;" WrapContent="true">
 
     @if (!ShiftList.IsReady)
     {
@@ -63,7 +63,6 @@
                 <MudSelectItem Value="@size">@size</MudSelectItem>
             }
         </MudSelect>
-
         <MudSpacer />
 
         <MudText Style="white-space: nowrap;">@Loc["PageCountAndTotal", Context.TotalItemsCount > 0 ? Context.CurrentPage : 0, Context.TotalPages, Context.TotalItemsCount]</MudText>
@@ -88,7 +87,7 @@
     internal bool GoNextDisabled => Context.CurrentPage == Context.TotalPages || Context.TotalPages == 0;
     internal bool GoLastDisabled => Context.TotalPages < ItemsPerPageGroup || Context.TotalPages < LastItemInCurrentGroup;
 
-    internal readonly int ItemsPerPageGroup = 8;
+    internal readonly int ItemsPerPageGroup = 10;
     internal int PageGroupCount => (int)Math.Ceiling((double)Context.CurrentPage / ItemsPerPageGroup);
     internal int LastItemInCurrentGroup => PageGroupCount * ItemsPerPageGroup;
     internal int LastItemInPrevGroup => (PageGroupCount - 1) * ItemsPerPageGroup;

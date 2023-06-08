@@ -104,7 +104,10 @@
     {
         <div class="@GridContainerCssClass">
             <SfGrid DataSource="Values"
-                    TValue="T" @ref="Grid" class="pa-6"
+                    TValue="T"
+                    @ref="Grid"
+                    class="pa-6"
+                    style="border: 0;"
                     ID="@GridId"
                     AllowPaging="!DisablePagination && !EnableVirtualization"
                     AllowSorting="!DisableSorting"
