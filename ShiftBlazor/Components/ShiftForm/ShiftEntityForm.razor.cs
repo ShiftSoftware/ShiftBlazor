@@ -238,7 +238,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (MudDialog != null && Settings.CloseFormOnSave)
             {
-                ShiftModal.Close(MudDialog, MadeChanges);
+                var val = MadeChanges ? Value : null;
+                ShiftModal.Close(MudDialog, val);
             }
             else if (Settings.ResetFormOnSave)
             {

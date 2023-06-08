@@ -65,7 +65,7 @@
                                    Variant="Variant.Text"
                                    Size="Size.Medium"
                                    Color="Color.Primary"
-                                   OnClick="AddItem">
+                                   OnClick="() => ViewAddItem()">
                             <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.AddCircle" />
                         </MudButton>
                     </MudTooltip>
@@ -188,7 +188,7 @@
                                         {
                                             throw new Exception();
                                         }
-                                        <MudButton OnClick="@(() => OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters))"
+                                        <MudButton OnClick="@(() => ViewAddItem(key))"
                                                    Variant="@Variant.Outlined"
                                                    EndIcon="@Icons.Material.Filled.OpenInNew"
                                                    Color="@Color.Primary"

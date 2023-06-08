@@ -223,6 +223,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public EventCallback<RecordClickEventArgs<T>> OnRowClick { get; set; }
+        [Parameter]
+        public EventCallback<object?> OnFormClosed { get; set; }
 
         [Parameter]
         public bool ShowIDColumn { get; set; } = false;
@@ -299,7 +301,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
         {
             var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
-            if (Grid != null && result?.Canceled != true)
+            if (Grid != null && result != null && result.Canceled != true)
             {
                 await Grid.Refresh();
             }
@@ -378,11 +380,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return result;
         }
 
-        public async Task AddItem()
+        public async Task ViewAddItem(object? key = null)
         {
             if (ComponentType != null)
             {
-                await OpenDialog(ComponentType, null, ModalOpenMode.Popup, this.AddDialogParameters);
+                var result = await OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters);
+                await OnFormClosed.InvokeAsync(result?.Data);
             }
         }
 
