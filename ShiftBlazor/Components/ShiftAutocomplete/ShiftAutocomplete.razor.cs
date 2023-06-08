@@ -22,25 +22,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [EditorRequired]
         public string? EntitySet { get; set; }
 
-        ///// <summary>
-        /////     Name of the column to filter when user types in the input field.
-        ///// </summary>
-        //[Parameter]
-        //public string FilterFieldName { get; set; } = "Name";
-
         [CascadingParameter]
         public FormModes? Mode { get; set; }
 
         [CascadingParameter]
         public FormTasks? TaskInProgress { get; set; }
 
-        internal IQueryable<T> QueryBuilder { get; set; } = default!;
-
         [Parameter]
         public Func<string, Expression<Func<T, bool>>> Where { get; set; }
 
         [Parameter]
-        public Type? ComponentType { get; set; }
+        public Type? QuickAddComponentType { get; set; }
+        [Parameter]
+        public string? QuickAddParameterName { get; set; }
+
+        internal IQueryable<T> QueryBuilder { get; set; } = default!;
+        internal string LastTypedValue = "";
 
         public ShiftAutocomplete ()
         {
@@ -66,7 +63,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public override Task SetParametersAsync(ParameterView parameters)
         {
             Type? type;
-            parameters.TryGetValue(nameof(ComponentType), out type);
+            parameters.TryGetValue(nameof(QuickAddComponentType), out type);
 
             if (type == null)
             {
@@ -99,6 +96,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task<IEnumerable<T>> Search(string val, CancellationToken token)
         {
+            LastTypedValue = val;
             var url = GetODataUrl(val);
             return await GetODataResult(url, token);
         }
@@ -133,11 +131,23 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task AddNewItem(MouseEventArgs args)
         {
-            if (ComponentType == null)
+
+            if (QuickAddComponentType == null)
             {
                 return;
             }
-            var result = await ShiftModal.Open(ComponentType, null, ModalOpenMode.Popup, null);
+
+            Dictionary<string, string>? parameters = null;
+
+            if (QuickAddParameterName != null)
+            {
+                parameters = new Dictionary<string, string>
+                {
+                    {QuickAddParameterName, LastTypedValue }
+                };
+            }
+
+            var result = await ShiftModal.Open(QuickAddComponentType, null, ModalOpenMode.Popup, parameters);
             if (result?.Canceled != true)
             {
                 // selected the new item
