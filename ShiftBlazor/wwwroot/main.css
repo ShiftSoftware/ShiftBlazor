@@ -14,3 +14,7 @@
 .e-pager div .mud-input-adornment-end {
     display: flex;
 }
+
+.shiftlist-pagination button.mud-button {
+    min-width: 50px;
+}

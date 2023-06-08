@@ -12,7 +12,7 @@
     }
     else
     {
-        <MudButtonGroup OverrideStyles="false" Style="white-space: nowrap;">
+        <MudButtonGroup OverrideStyles="false" Style="white-space: nowrap; margin-inline-end: 8px;" Size="Size.Small" Class="shiftlist-pagination">
             <MudTooltip Text="@Loc["GoToFirstPage"]">
                 <MudIconButton OnClick="() => GoToPage(1)" Disabled="@GoFirstDisabled" Icon="@GoFirstIcon"></MudIconButton>
             </MudTooltip>
