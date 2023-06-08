@@ -39,6 +39,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal IQueryable<T> QueryBuilder { get; set; } = default!;
         internal string LastTypedValue = "";
 
+        internal bool AdornmentIconIsNotSet = false;
+        internal bool AdornmentAriaLabelIsNotSet = false;
+        internal bool OnAdornmentClickIsNotSet = false;
+
         public ShiftAutocomplete ()
         {
             OnlyValidateIfDirty = true;
@@ -78,18 +82,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             parameters.TryGetValue(nameof(AdornmentAriaLabel), out adornmentAriaLabel);
             parameters.TryGetValue(nameof(OnAdornmentClick), out onAdornmentClick);
 
-            if (adornmentIcon == null)
-            {
-                AdornmentIcon = Icons.Material.Filled.AddCircle;
-            }
-            if (adornmentAriaLabel == null)
-            {
-                AdornmentAriaLabel = "Add new item";
-            }
-            if (onAdornmentClick == null)
-            {
-                OnAdornmentClick = new EventCallback<MouseEventArgs>(this, AddNewItem);
-            }
+            Console.WriteLine(adornmentIcon);
+
+            AdornmentIconIsNotSet = adornmentIcon == null;
+            AdornmentAriaLabelIsNotSet = adornmentAriaLabel == null;
+            OnAdornmentClickIsNotSet = onAdornmentClick == null;
 
             return base.SetParametersAsync(parameters);
         }
@@ -129,9 +126,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        internal async Task AddNewItem(MouseEventArgs args)
+        internal async Task AddEditItem(object? key = null)
         {
-
             if (QuickAddComponentType == null)
             {
                 return;
@@ -147,7 +143,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 };
             }
 
-            var result = await ShiftModal.Open(QuickAddComponentType, null, ModalOpenMode.Popup, parameters);
+            var result = await ShiftModal.Open(QuickAddComponentType, key, ModalOpenMode.Popup, parameters);
             if (result != null && result.Canceled != true)
             {
                 Value = (T)result.Data;
