@@ -148,9 +148,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             var result = await ShiftModal.Open(QuickAddComponentType, null, ModalOpenMode.Popup, parameters);
-            if (result?.Canceled != true)
+            if (result != null && result.Canceled != true)
             {
-                // selected the new item
+                Value = (T)result.Data;
+                await ValueChanged.InvokeAsync(Value);
             }
         }
 
