@@ -15,8 +15,15 @@
 
     base.NoItemsTemplate =
     @<MudText Align="Align.Center" Class="px-4 py-1">
-        No items found
+        @if (QuickAddComponentType == null)
+        {
+            <text>No Items Found</text>
+        }
+        else
+        {
+            <MudButton OnClick="AddNewItem">No Items Found, Add New</MudButton>
+        }
     </MudText>;
-
+    
     base.BuildRenderTree(__builder);
 }
