@@ -46,8 +46,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             parameters.TryGetValue(nameof(AdornmentAriaLabel), out adornmentAriaLabel);
             parameters.TryGetValue(nameof(OnAdornmentClick), out onAdornmentClick);
 
-            Console.WriteLine(adornmentIcon);
-
             AdornmentIconIsNotSet = adornmentIcon == null;
             AdornmentAriaLabelIsNotSet = adornmentAriaLabel == null;
             OnAdornmentClickIsNotSet = onAdornmentClick == null;
