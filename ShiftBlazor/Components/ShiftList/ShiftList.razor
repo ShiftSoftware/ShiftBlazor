@@ -32,6 +32,15 @@
 
                 @if (IsEmbedded != true)
                 {
+                    @if (true)
+                    {
+                        <MudTooltip Text="Column Chooser">
+                            <MudIconButton Icon="@Icons.Material.Filled.Architecture"
+                                            Color="Color.Warning"
+                                            OnClick="ChooseColumn" />
+                        </MudTooltip> 
+                    }
+
                     @if (EnablePrint)
                     {
                         <MudTooltip Text="@Loc["PrintButton"]">
@@ -120,16 +129,17 @@
                     EnableVirtualization="EnableVirtualization"
                     EnableVirtualMaskRow="EnableVirtualization"
                     Height="@GridHeight"
+                        ShowColumnChooser="true"
                     Width="">
                     
                     @*Width="" is required for horizontal scroll*@
-
                 @if (Values == null)
                 {
                     <SfDataManager Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true"/>
                 }
                 <GridEvents OnRecordClick="RecordClickHandler"
                             DataBound="DataBoundHandler"
+                            OnActionComplete="ActionCompletedHandler"
                             OnActionFailure="ErrorHandler"
                             TValue="T" />
                 <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
@@ -145,7 +155,6 @@
                 </GridPageSettings>
 
                 <GridColumns>
-                        <GridColumn IsPrimaryKey="true" Visible="@(ShowIDColumn)" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
 
                     @if (EnableVirtualization && !DisableSelection)
                     {
@@ -158,15 +167,22 @@
                             <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
                     }
 
+                    @{
+                        var idField = nameof(ShiftEntityDTOBase.ID);
+                        var idVisible = !HiddenColumns.Contains(idField) || ShowIDColumn;
+                    }
+                    <GridColumn IsPrimaryKey="true" Visible="@idVisible" Field="@idField"></GridColumn>
+
                     @foreach (var column in GeneratedColumns)
                     {
+                        var isVisible = !HiddenColumns.Contains(column.Field);
                         if (column.IsComplex)
                         {
-                                <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
+                                <GridColumn HeaderText="@column.Label" Field="@column.Field" Visible="isVisible" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
                         }
                         else
                         {
-                                <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
+                                <GridColumn HeaderText="@column.Label" Field="@column.Field" Visible="isVisible" TextAlign="TextAlign.Left"></GridColumn>
                         }
                     }
 
@@ -174,9 +190,11 @@
 
                     @if (!ExcludedColumns.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
                     {
-                            <GridColumn HeaderText="@Loc["ActionsColumnTitle"]"
-                                        TextAlign="TextAlign.Center"
-                                        Width="@ActionColumnWidth">
+                        var ActionVisible = !HiddenColumns.Contains(@Loc["ActionsColumnTitle"]);
+                        <GridColumn HeaderText="@Loc["ActionsColumnTitle"]"
+                                    TextAlign="@TextAlign.Center"
+                                    Visible="@ActionVisible"
+                                    Width="@ActionColumnWidth">
                             <Template>
                                 @if (ActionsTemplate == null)
                                 {

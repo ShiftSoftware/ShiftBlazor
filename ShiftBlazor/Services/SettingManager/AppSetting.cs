@@ -13,5 +13,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public LanguageInfo? CurrentLanguage { get; set; }
         public int? ListPageSize { get; set; }
         public DialogPosition ModalPosition { get; set; } = DialogPosition.Center;
+        public Dictionary<string, List<string>> HiddenColumns { get; set; } = new();
     }
 }

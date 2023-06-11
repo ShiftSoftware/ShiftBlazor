@@ -58,6 +58,18 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
         }
 
+        public void SetHiddenColumns(string id, List<string> columnNames)
+        {
+            Settings.HiddenColumns.Remove(id);
+            Settings.HiddenColumns.Add(id, columnNames);
+            SyncLocalStorage.SetItem(Key, Settings);
+        }
+
+        public List<string> GetHiddenColumns(string id)
+        {
+            return Settings.HiddenColumns.GetValueOrDefault(id) ?? new();
+        }
+
         public void SetListPageSize(int? size)
         {
             Settings.ListPageSize = size;

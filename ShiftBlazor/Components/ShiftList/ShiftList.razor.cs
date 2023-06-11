@@ -254,6 +254,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal Uri LastRequestUri { get; set; }
         internal Uri LastFailedRequestUri { get; set; }
 
+        internal List<string> HiddenColumns = new();
+
         public ShiftList()
         {
             GridId = "Grid" + Guid.NewGuid().ToString().Replace("-", string.Empty);
@@ -271,6 +273,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
+            HiddenColumns = SettingManager.GetHiddenColumns(GetListIdentifier());
+
             OnRequestFailed += (o, args) => {
 
                 if (args.Uri != null)
@@ -457,6 +461,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 SettingManager.SetListPageSize(size);
             }
+        }
+
+        public async Task ActionCompletedHandler(ActionEventArgs<T> args)
+        {
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.ColumnState)
+            {
+                var hiddenColumns = await Grid.GetHiddenColumnsAsync();
+                var columnNames = hiddenColumns.Select(x => x.Field ?? x.HeaderText).ToList();
+                SettingManager.SetHiddenColumns(GetListIdentifier(), columnNames);
+            }
+        }
+
+        public string GetListIdentifier()
+        {
+            return $"{Action}_{typeof(T).Name}";
+        }
+
+        internal async Task ChooseColumn()
+        {
+            await Grid!.OpenColumnChooserAsync(null, 0);
         }
 
         public enum DownloadType
