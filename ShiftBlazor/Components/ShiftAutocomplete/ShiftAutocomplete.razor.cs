@@ -13,7 +13,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
     {
         [Inject] private ODataQuery OData { get; set; } = default!;
         [Inject] private HttpClient Http { get; set; } = default!;
-        [Inject] private ShiftModal ShiftModal { get; set; } = default!;
 
         /// <summary>
         ///     The OData EntitySet name.
@@ -31,17 +30,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public Func<string, Expression<Func<T, bool>>> Where { get; set; }
 
-        [Parameter]
-        public Type? QuickAddComponentType { get; set; }
-        [Parameter]
-        public string? QuickAddParameterName { get; set; }
-
         internal IQueryable<T> QueryBuilder { get; set; } = default!;
         internal string LastTypedValue = "";
-
-        internal bool AdornmentIconIsNotSet = false;
-        internal bool AdornmentAriaLabelIsNotSet = false;
-        internal bool OnAdornmentClickIsNotSet = false;
 
         public ShiftAutocomplete ()
         {
@@ -62,33 +52,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             QueryBuilder = OData.CreateQuery<T>(EntitySet);
 
             SearchFuncWithCancel = Search;
-        }
-
-        public override Task SetParametersAsync(ParameterView parameters)
-        {
-            Type? type;
-            parameters.TryGetValue(nameof(QuickAddComponentType), out type);
-
-            if (type == null)
-            {
-                return base.SetParametersAsync(parameters);
-            }
-
-            string? adornmentIcon;
-            string? adornmentAriaLabel;
-            EventCallback<MouseEventArgs>? onAdornmentClick;
-
-            parameters.TryGetValue(nameof(AdornmentIcon), out adornmentIcon);
-            parameters.TryGetValue(nameof(AdornmentAriaLabel), out adornmentAriaLabel);
-            parameters.TryGetValue(nameof(OnAdornmentClick), out onAdornmentClick);
-
-            Console.WriteLine(adornmentIcon);
-
-            AdornmentIconIsNotSet = adornmentIcon == null;
-            AdornmentAriaLabelIsNotSet = adornmentAriaLabel == null;
-            OnAdornmentClickIsNotSet = onAdornmentClick == null;
-
-            return base.SetParametersAsync(parameters);
         }
 
         internal async Task<IEnumerable<T>> Search(string val, CancellationToken token)
@@ -123,31 +86,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             catch (Exception)
             {
                 throw;
-            }
-        }
-
-        internal async Task AddEditItem(object? key = null)
-        {
-            if (QuickAddComponentType == null)
-            {
-                return;
-            }
-
-            Dictionary<string, string>? parameters = null;
-
-            if (QuickAddParameterName != null)
-            {
-                parameters = new Dictionary<string, string>
-                {
-                    {QuickAddParameterName, LastTypedValue }
-                };
-            }
-
-            var result = await ShiftModal.Open(QuickAddComponentType, key, ModalOpenMode.Popup, parameters);
-            if (result != null && result.Canceled != true)
-            {
-                Value = (T)result.Data;
-                await ValueChanged.InvokeAsync(Value);
             }
         }
 

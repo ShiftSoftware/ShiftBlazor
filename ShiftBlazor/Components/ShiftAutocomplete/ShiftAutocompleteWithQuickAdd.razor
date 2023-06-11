@@ -1,0 +1,34 @@
+﻿@typeparam T
+@typeparam TQuickAdd
+@inherits ShiftAutocomplete<T>
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@{
+    if (AdornmentIconIsNotSet)
+    {
+        base.AdornmentIcon = Value == null ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit;
+    }
+    if (AdornmentAriaLabelIsNotSet)
+    {
+        base.AdornmentAriaLabel = "Add new item";
+    }
+    if (OnAdornmentClickIsNotSet)
+    {
+        var key = Value?.GetType().GetProperty("ID")?.GetValue(Value);
+        base.OnAdornmentClick = new EventCallback<MouseEventArgs>(this, () => AddEditItem(key));
+    }
+
+    base.BuildRenderTree(__builder);
+
+    base.NoItemsTemplate =
+    @<MudText Align="Align.Center" Class="px-4 py-1">
+        @if (QuickAddComponentType == null)
+        {
+            <text>No Items Found</text>
+        }
+        else
+        {
+            <MudButton OnClick="() => { _ = AddEditItem(); base.Clear();}">No Items Found, Add New</MudButton>
+        }
+    </MudText>;
+}
