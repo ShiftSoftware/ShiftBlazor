@@ -254,8 +254,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal Uri LastRequestUri { get; set; }
         internal Uri LastFailedRequestUri { get; set; }
 
-        internal List<string> HiddenColumns = new();
-
         public ShiftList()
         {
             GridId = "Grid" + Guid.NewGuid().ToString().Replace("-", string.Empty);
@@ -273,8 +271,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            HiddenColumns = SettingManager.GetHiddenColumns(GetListIdentifier());
-
             OnRequestFailed += (o, args) => {
 
                 if (args.Uri != null)
@@ -310,6 +306,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 await Grid.Refresh();
             }
             return result;
+        }
+
+        internal async Task GridCreatedHandler()
+        {
+            if (Grid != null)
+            {
+                var columnsToHide = SettingManager.GetHiddenColumns(GetListIdentifier()).ToArray();
+                await Grid.HideColumnsAsync(columnsToHide);
+            }
         }
 
         private void ErrorHandler(FailureEventArgs args)
@@ -467,8 +472,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (args.RequestType == Syncfusion.Blazor.Grids.Action.ColumnState)
             {
-                var hiddenColumns = await Grid.GetHiddenColumnsAsync();
-                var columnNames = hiddenColumns.Select(x => x.Field ?? x.HeaderText).ToList();
+                var hiddenColumns = await Grid!.GetHiddenColumnsAsync();
+                var columnNames = hiddenColumns.Select(x => x.HeaderText ?? x.Field).ToList();
                 SettingManager.SetHiddenColumns(GetListIdentifier(), columnNames);
             }
         }

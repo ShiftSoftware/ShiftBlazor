@@ -141,6 +141,7 @@
                             DataBound="DataBoundHandler"
                             OnActionComplete="ActionCompletedHandler"
                             OnActionFailure="ErrorHandler"
+                            Created="GridCreatedHandler"
                             TValue="T" />
                 <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
                 <GridSelectionSettings CheckboxOnly="true" PersistSelection="true" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
@@ -167,22 +168,17 @@
                             <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
                     }
 
-                    @{
-                        var idField = nameof(ShiftEntityDTOBase.ID);
-                        var idVisible = !HiddenColumns.Contains(idField) || ShowIDColumn;
-                    }
-                    <GridColumn IsPrimaryKey="true" Visible="@idVisible" Field="@idField"></GridColumn>
+                    <GridColumn IsPrimaryKey="true" Visible="@ShowIDColumn" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
 
                     @foreach (var column in GeneratedColumns)
                     {
-                        var isVisible = !HiddenColumns.Contains(column.Field);
                         if (column.IsComplex)
                         {
-                                <GridColumn HeaderText="@column.Label" Field="@column.Field" Visible="isVisible" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
+                                <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
                         }
                         else
                         {
-                                <GridColumn HeaderText="@column.Label" Field="@column.Field" Visible="isVisible" TextAlign="TextAlign.Left"></GridColumn>
+                                <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
                         }
                     }
 
@@ -190,10 +186,8 @@
 
                     @if (!ExcludedColumns.Contains("Actions", StringComparer.CurrentCultureIgnoreCase) && ComponentType != null)
                     {
-                        var ActionVisible = !HiddenColumns.Contains(@Loc["ActionsColumnTitle"]);
                         <GridColumn HeaderText="@Loc["ActionsColumnTitle"]"
                                     TextAlign="@TextAlign.Center"
-                                    Visible="@ActionVisible"
                                     Width="@ActionColumnWidth">
                             <Template>
                                 @if (ActionsTemplate == null)
