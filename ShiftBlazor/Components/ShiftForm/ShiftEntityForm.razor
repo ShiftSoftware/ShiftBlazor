@@ -192,12 +192,26 @@
                         @Loc["CloseRevisions"]
                     </MudButton>
                 }
-             </text>;
+            </text>
+    ;
+    }
+
+    public RenderFragment Loading
+    {
+        get =>
+            @<text>
+                @if (TaskInProgress == FormTasks.Fetch)
+                {
+                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                }
+            </text>;
     }
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
+
+        base.ToolbarStartTemplate += Loading;
 
         base.HeaderTemplate += Header;
 
