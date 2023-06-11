@@ -18,7 +18,7 @@
         @if (IsReady)
         {
             var RowData = (TValue2)context;
-            var id = GetComplexPropertyValue(RowData, Field).ToString();
+            var id = GetComplexPropertyValue(RowData, Field)?.ToString();
             var data = RemoteData.FirstOrDefault(x => x.ID == id);
             if (data != null)
             {
@@ -97,7 +97,6 @@
 
         DataServiceQuery<TValue> builder = null;
 
-
         if (string.IsNullOrWhiteSpace(ODataBaseUrl))
         {
             builder = OData.CreateQuery<TValue>(EntitySetName);
@@ -108,20 +107,30 @@
         }
 
         var items = await ShiftList.Grid.GetCurrentViewRecordsAsync();
-        var itemIds = items.Select(x => GetComplexPropertyValue(x, Field).ToString()).Distinct();
-        var url = builder.Where(x => itemIds.Contains(x.ID)).ToString();
 
-        var result = await Http.GetFromJsonAsync<ODataDTO<List<TValue>>>(url);
-
-        if (result != null)
+        if (items.Count > 0)
         {
-            RemoteData = result.Value;
-            IsReady = true;
-            await ShiftList.Grid.RefreshColumnsAsync();
+            var itemIds = items
+                .Select(x => GetComplexPropertyValue(x, Field)?.ToString())
+                .Distinct()
+                .Where(x => !string.IsNullOrWhiteSpace(x));
+            if (itemIds.Count() > 0)
+            {
+                var url = builder.Where(x => itemIds.Contains(x.ID)).ToString();
+                var result = await Http.GetFromJsonAsync<ODataDTO<List<TValue>>>(url);
+
+                if (result != null)
+                {
+                    RemoteData = result.Value;
+                }
+            }
         }
+
+        IsReady = true;
+        await ShiftList.Grid.RefreshColumnsAsync();
     }
 
-    internal object GetComplexPropertyValue(object item, string complexProperty)
+    internal object? GetComplexPropertyValue(object item, string complexProperty)
     {
         if (item == null)
         {
@@ -147,7 +156,6 @@
             currentItem = prop.GetValue(currentItem);
             type = prop.PropertyType;
         }
-
         return currentItem;
     }
 }
