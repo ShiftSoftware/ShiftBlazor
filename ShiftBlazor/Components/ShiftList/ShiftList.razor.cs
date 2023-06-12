@@ -22,6 +22,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] private HttpClient HttpClient { get; set; } = default!;
+        [Inject] private NavigationManager NavManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
 
         [CascadingParameter]
@@ -311,11 +312,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return result;
         }
 
-        internal async Task RestoreColumnsDefaultVisiblity(ColumnChooserFooterTemplateContext ctx)
+        internal void RestoreColumnsDefaultVisiblity(ColumnChooserFooterTemplateContext ctx)
         {
             SettingManager.SetHiddenColumns(GetListIdentifier(), new List<string>());
-            await ctx.CancelAsync();
-            await OnLoadHandler();
+            NavManager.NavigateTo(NavManager.Uri, true);
         }
 
         internal async Task ChooseVisibleColumns(ColumnChooserFooterTemplateContext ctx)
@@ -339,7 +339,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var hiddenColumns = SettingManager.GetHiddenColumns(GetListIdentifier()).ToArray();
                 var visibleColumns = Grid
                     .Columns
-                    .Where(x => !hiddenColumns.Contains(x.HeaderText))
+                    .Where(x => !hiddenColumns.Contains(x.HeaderText) && x.Visible)
                     .Select(x => x.HeaderText)
                     .ToArray();
                 await Grid.HideColumnsAsync(hiddenColumns);
