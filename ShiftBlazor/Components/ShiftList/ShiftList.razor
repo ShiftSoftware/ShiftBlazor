@@ -32,11 +32,11 @@
 
                 @if (IsEmbedded != true)
                 {
-                    @if (true)
+                    @if (!DisableColumnChooser)
                     {
                         <MudTooltip Text="Column Chooser">
-                            <MudIconButton Icon="@Icons.Material.Filled.Architecture"
-                                            Color="Color.Warning"
+                            <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
+                                        Color="Color.Default"
                                             OnClick="ChooseColumn" />
                         </MudTooltip> 
                     }
@@ -129,7 +129,7 @@
                     EnableVirtualization="EnableVirtualization"
                     EnableVirtualMaskRow="EnableVirtualization"
                     Height="@GridHeight"
-                        ShowColumnChooser="true"
+                    ShowColumnChooser="!DisableColumnChooser"
                     Width="">
                     
                     @*Width="" is required for horizontal scroll*@
@@ -139,12 +139,25 @@
                 }
                 <GridEvents OnRecordClick="RecordClickHandler"
                             DataBound="DataBoundHandler"
-                            OnActionComplete="ActionCompletedHandler"
                             OnActionFailure="ErrorHandler"
-                            Created="GridCreatedHandler"
+                            OnLoad="OnLoadHandler"
                             TValue="T" />
                 <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
                 <GridSelectionSettings CheckboxOnly="true" PersistSelection="true" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
+
+                @if (!DisableColumnChooser)
+                {
+                    <GridColumnChooserSettings>
+                        <FooterTemplate>
+                            @{
+                                var ctx = context as ColumnChooserFooterTemplateContext;
+                            }
+                            <MudButton Color="Color.Primary" OnClick="@(() => ChooseVisibleColumns(ctx))">Ok</MudButton>
+                            <MudButton OnClick="@(() => RestoreColumnsDefaultVisiblity(ctx))">Restore</MudButton>
+                            @*<MudButton OnClick="@(async () => await ctx.CancelAsync())">Cancel</MudButton>*@
+                        </FooterTemplate>
+                    </GridColumnChooserSettings>
+                }
 
                 <GridPageSettings PageSize="@PageSize" PageSizes="@PageSizes">
                     <Template>

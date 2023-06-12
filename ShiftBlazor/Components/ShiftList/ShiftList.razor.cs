@@ -229,6 +229,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool ShowIDColumn { get; set; } = false;
 
+        [Parameter]
+        public bool DisableColumnChooser { get; set; }
+
         public SfGrid<T>? Grid;
         internal List<ListColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
@@ -308,12 +311,39 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return result;
         }
 
-        internal async Task GridCreatedHandler()
+        internal async Task RestoreColumnsDefaultVisiblity(ColumnChooserFooterTemplateContext ctx)
         {
-            if (Grid != null)
+            SettingManager.SetHiddenColumns(GetListIdentifier(), new List<string>());
+            await ctx.CancelAsync();
+            await OnLoadHandler();
+        }
+
+        internal async Task ChooseVisibleColumns(ColumnChooserFooterTemplateContext ctx)
+        {
+            var visibles = ctx.Columns.Where(x => x.Visible).Select(x => x.HeaderText).ToArray();
+            var hiddens = ctx.Columns.Where(x => !x.Visible).Select(x => x.HeaderText).ToArray();
+
+            await ctx.CancelAsync();
+
+            await Grid!.ShowColumnsAsync(visibles);
+            await Grid!.HideColumnsAsync(hiddens);
+
+            SettingManager.SetHiddenColumns(GetListIdentifier(), hiddens.ToList());
+
+        }
+
+        internal async Task OnLoadHandler()
+        {
+            if (Grid != null && !DisableColumnChooser)
             {
-                var columnsToHide = SettingManager.GetHiddenColumns(GetListIdentifier()).ToArray();
-                await Grid.HideColumnsAsync(columnsToHide);
+                var hiddenColumns = SettingManager.GetHiddenColumns(GetListIdentifier()).ToArray();
+                var visibleColumns = Grid
+                    .Columns
+                    .Where(x => !hiddenColumns.Contains(x.HeaderText))
+                    .Select(x => x.HeaderText)
+                    .ToArray();
+                await Grid.HideColumnsAsync(hiddenColumns);
+                await Grid.ShowColumnsAsync(visibleColumns);
             }
         }
 
@@ -468,15 +498,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        public async Task ActionCompletedHandler(ActionEventArgs<T> args)
-        {
-            if (args.RequestType == Syncfusion.Blazor.Grids.Action.ColumnState)
-            {
-                var hiddenColumns = await Grid!.GetHiddenColumnsAsync();
-                var columnNames = hiddenColumns.Select(x => x.HeaderText ?? x.Field).ToList();
-                SettingManager.SetHiddenColumns(GetListIdentifier(), columnNames);
-            }
-        }
 
         public string GetListIdentifier()
         {
