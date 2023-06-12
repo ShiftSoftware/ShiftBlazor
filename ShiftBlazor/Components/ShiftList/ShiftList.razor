@@ -37,7 +37,7 @@
                         <MudTooltip Text="Column Chooser">
                             <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
                                         Color="Color.Default"
-                                            OnClick="ChooseColumn" />
+                                        OnClick="ChooseColumn" />
                         </MudTooltip> 
                     }
 
@@ -159,14 +159,17 @@
                     </GridColumnChooserSettings>
                 }
 
-                <GridPageSettings PageSize="@PageSize" PageSizes="@PageSizes">
-                    <Template>
-                        @{
-                            var ctx = (PagerTemplateContext)context;
-                            <Pagination Context="ctx" TValue="T"></Pagination>
-                        }
-                    </Template>
-                </GridPageSettings>
+                @if (!EnableVirtualization)
+                {
+                    <GridPageSettings PageSize="@PageSize" PageSizes="@PageSizes">
+                        <Template>
+                            @{
+                                var ctx = (PagerTemplateContext)context;
+                                <Pagination Context="ctx" TValue="T"></Pagination>
+                            }
+                        </Template>
+                    </GridPageSettings>
+                }
 
                 <GridColumns>
 
