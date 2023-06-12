@@ -84,6 +84,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         public CultureInfo GetCulture()
         {
+            if (Settings.CurrentLanguage?.CultureName == null)
+            {
+                SwitchLanguage(Configuration.Languages.First(), false);
+            }
+
             return new CultureInfo(Settings.CurrentLanguage?.CultureName ?? DefaultCultureName)
             {
                 DateTimeFormat = new DateTimeFormatInfo
