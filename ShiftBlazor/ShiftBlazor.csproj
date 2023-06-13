@@ -24,8 +24,8 @@
 		<PackageReference Include="MudBlazor" Version="6.3.1" />
 		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="1.5.0.5" />
 		<PackageReference Include="ShiftSoftware.ShiftIdentity.Model" Version="1.5.1" />
-		<PackageReference Include="Syncfusion.Blazor.Grid" Version="20.4.0.38" />
-		<PackageReference Include="Syncfusion.Blazor.Themes" Version="20.4.0.38" />
+		<PackageReference Include="Syncfusion.Blazor.Grid" Version="21.1.35" />
+		<PackageReference Include="Syncfusion.Blazor.Themes" Version="21.1.35" />
 	</ItemGroup>
 
 	<ItemGroup>
