@@ -52,6 +52,8 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
                 return settingManager;
             });
 
+            SyncfusionLicenseProvider.RegisterLicense(options.SyncfusionLicense);
+
             services.AddSyncfusionBlazor(syncConfig =>
             {
                 syncConfig.EnableRtl = settingManager?.Settings.CurrentLanguage?.RTL ?? false;
@@ -59,8 +61,6 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
             });
 
             services.AddLocalization();
-
-            SyncfusionLicenseProvider.RegisterLicense(options.SyncfusionLicense);
 
             return services;
         }

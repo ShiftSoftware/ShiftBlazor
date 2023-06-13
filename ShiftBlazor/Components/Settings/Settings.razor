@@ -1,0 +1,150 @@
+﻿@page "/settings"
+@inject SettingManager SettingManager
+@inject NavigationManager NavManager
+@using System.Text.RegularExpressions
+
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<style>
+    .settings {
+        display: grid;
+        grid-template-columns: 1fr 3fr;
+        align-items: center;
+    }
+</style>
+
+<MudDialog>
+    <DialogContent>
+        <h2>Settings</h2>
+
+        <div class="settings">
+
+            <MudText>Language</MudText>
+
+            <LanguageSwitcher></LanguageSwitcher>
+
+            <MudText>DateTime format</MudText>
+            <MudSelect T="string" Value="DateTimeFormat" ValueChanged="DateTimeFormatChangedHandler">
+                @foreach (var format in DateTimeFormats)
+                {
+                    <MudSelectItem Value="@format">@format</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudText>DataGrid Items per page</MudText>
+
+            <MudSelect T="int" Label="Items per page" Value="PageSize" ValueChanged="PageSizeChangeHandler" Dense="true" Style="@($"width: 150px;display: flex;")">
+                @foreach (var size in PageSizes)
+                {
+                    <MudSelectItem Value="@size">@size</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudText>Modal Position</MudText>
+    
+            <MudSelect T="DialogPosition" Value="DialogPosition" ValueChanged="DialogPositionChangeHandler">
+                @foreach (var pos in Enum.GetValues<DialogPosition>().Where(x => x != DialogPosition.Custom))
+                {
+                    <MudSelectItem Value="@pos">@Regex.Replace(pos.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                }
+            </MudSelect>
+
+            
+
+            <MudText>Modal Size</MudText>
+            <MudSelect T="MaxWidth" Value="ModalWidth" ValueChanged="ModalWidthChangedHandler">
+                @foreach (var pos in Enum.GetValues<MaxWidth>())
+                {
+                    <MudSelectItem Value="@pos">@Regex.Replace(pos.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudText>Form Close Behavior</MudText>
+            <MudSelect T="string" Value="FormBehavior">
+                <MudSelectItem Value="nameof(FormSettings.CloseFormOnSave)">@Regex.Replace(nameof(FormSettings.CloseFormOnSave), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                <MudSelectItem Value="nameof(FormSettings.ResetFormOnSave)">@Regex.Replace(nameof(FormSettings.ResetFormOnSave), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+            </MudSelect>
+        </div>
+
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="ReloadPage">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+
+    internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
+    public int PageSize { get; set; } = 10;
+    public DialogPosition DialogPosition { get; set; } = DialogPosition.Center;
+    public MaxWidth ModalWidth { get; set; } = MaxWidth.Large;
+    public string FormBehavior { get; set; } = "";
+
+    internal string DateTimeFormat = "";
+    internal string[] DateTimeFormats = new string[] { "yyyy-MM-dd", "yyyy/MM/dd", "yy-M-d", "yy/M/d", "dd-MM-yyyy", "dd/MM/yyyy", "d-M-yy", "d/M/yy" };
+
+    protected override void OnInitialized()
+    {
+        if (SettingManager.Settings.ListPageSize != null)
+        {
+            PageSize = SettingManager.Settings.ListPageSize.Value;
+        };
+
+        DateTimeFormat = SettingManager.Settings.DateTimeFormat;
+        DialogPosition = SettingManager.Settings.ModalPosition;
+        ModalWidth = SettingManager.Settings.ModalWidth;
+    }
+
+    internal void PageSizeChangeHandler(int size)
+    {
+        PageSize = size;
+
+        var pageSize = SettingManager.Settings.ListPageSize;
+
+        if (pageSize == null || pageSize != size)
+        {
+            SettingManager.SetListPageSize(size);
+        }
+    }
+
+    internal void DialogPositionChangeHandler(DialogPosition position)
+    {
+        DialogPosition = position;
+
+        var pos = SettingManager.Settings.ModalPosition;
+
+        if (pos != position)
+        {
+            SettingManager.SetModalPosition(position);
+        }
+    }
+
+    internal void DateTimeFormatChangedHandler(string format)
+    {
+        DateTimeFormat = format;
+
+        var currentFormat = SettingManager.Settings.DateTimeFormat;
+
+        if (currentFormat != format)
+        {
+            SettingManager.SetDateTimeFormat(format);
+        }
+    }
+
+    internal void ModalWidthChangedHandler(MaxWidth width)
+    {
+        ModalWidth = width;
+
+        var currentWidth = SettingManager.Settings.ModalWidth;
+
+        if (currentWidth != width)
+        {
+            SettingManager.SetModalWidth(width);
+        }
+    }
+
+    internal void ReloadPage()
+    {
+        NavManager.NavigateTo(NavManager.Uri, true);
+    }
+}

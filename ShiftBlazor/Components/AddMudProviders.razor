@@ -39,7 +39,7 @@
         _DialogOptions.FullWidth = true;
         _DialogOptions.NoHeader = false;
         _DialogOptions.CloseButton = true;
-        _DialogOptions.MaxWidth = MaxWidth.Large;
+        _DialogOptions.MaxWidth = SettingManager.Settings.ModalWidth;
 
         DialogOptions?.Invoke(_DialogOptions);
     }

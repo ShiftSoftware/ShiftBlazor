@@ -82,6 +82,18 @@ namespace ShiftSoftware.ShiftBlazor.Services
             SyncLocalStorage.SetItem(Key, Settings);
         }
 
+        public void SetModalWidth(MaxWidth width)
+        {
+            Settings.ModalWidth = width;
+            SyncLocalStorage.SetItem(Key, Settings);
+        }
+
+        public void SetDateTimeFormat(string format)
+        {
+            Settings.DateTimeFormat = format;
+            SyncLocalStorage.SetItem(Key, Settings);
+        }
+
         public CultureInfo GetCulture()
         {
             if (Settings.CurrentLanguage?.CultureName == null)
