@@ -236,16 +236,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             MadeChanges = true;
 
-            if (MudDialog != null && Settings.CloseFormOnSave)
+            if (MudDialog != null && OnSaveAction == FormOnSaveAction.CloseFormOnSave)
             {
                 var val = MadeChanges ? Value : null;
                 ShiftModal.Close(MudDialog, val);
             }
-            else if (Settings.ResetFormOnSave)
+            else if (OnSaveAction == FormOnSaveAction.ResetFormOnSave)
             {
                 await SetValue(new T());
             }
-            else
+            else if (OnSaveAction == FormOnSaveAction.ViewFormOnSave)
             {
                 ShowAlert(message, Severity.Success, 5);
 

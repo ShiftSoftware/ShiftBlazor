@@ -16,6 +16,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
         [Inject] IDialogService DialogService { get; set; } = default!;
+        [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftFormBasic> Loc { get; set; } = default!;
 
         [CascadingParameter]
@@ -155,7 +156,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? DocumentTitle { get; set; }
 
         [Parameter]
-        public FormSettings Settings { get; set; } = new FormSettings();
+        public FormOnSaveAction OnSaveAction { get; set; } = FormOnSaveAction.ViewFormOnSave;
 
         [Parameter]
         public string? SubmitText { get; set; }
@@ -183,6 +184,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
+            OnSaveAction = SettingManager.Settings.FormOnSaveAction;
+
             editContext = new EditContext(Value);
 
             _SubmitText = string.IsNullOrWhiteSpace(SubmitText)
