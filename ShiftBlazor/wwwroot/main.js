@@ -12,3 +12,7 @@ window.getWindowDimensions = function () {
         height: window.innerHeight,
     };
 };
+
+window.reloadPage = function () {
+    window.location.reload();
+}

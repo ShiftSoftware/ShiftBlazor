@@ -1,7 +1,10 @@
 ﻿@page "/settings"
+@using System.Text.RegularExpressions
+@using Microsoft.JSInterop;
+@using ShiftSoftware.ShiftBlazor.Enums;
 @inject SettingManager SettingManager
 @inject NavigationManager NavManager
-@using System.Text.RegularExpressions
+@inject  IJSRuntime JsRuntime
 
 @namespace ShiftSoftware.ShiftBlazor.Components
 
@@ -15,56 +18,108 @@
 
 <MudDialog>
     <DialogContent>
-        <h2>Settings</h2>
+        <h1>Settings</h1>
+        <br />
 
-        <div class="settings">
+        <h3>App Settings</h3>
+        <MudGrid Style="align-items: end;" Spacing="0">
 
-            <MudText>Language</MudText>
+            <MudItem xs="3">
+                <MudText>Language</MudText>
+            </MudItem>
 
-            <LanguageSwitcher></LanguageSwitcher>
+            <MudItem xs="9">
+                <MudSelect Margin="Margin.Dense" T="LanguageInfo" Value="@Language" ValueChanged="LanguageChangedHandler" ToStringFunc="(lang) => lang.Label">
+                    @foreach (var lang in SettingManager.Configuration.Languages)
+                    {
+                        <MudSelectItem Value="@lang">@lang.Label</MudSelectItem>
+                    }
 
-            <MudText>DateTime format</MudText>
-            <MudSelect T="string" Value="DateTimeFormat" ValueChanged="DateTimeFormatChangedHandler">
-                @foreach (var format in DateTimeFormats)
-                {
-                    <MudSelectItem Value="@format">@format</MudSelectItem>
-                }
-            </MudSelect>
+                </MudSelect>
+            </MudItem>
 
-            <MudText>DataGrid Items per page</MudText>
+            <MudItem xs="3">
+                <MudText>DateTime format</MudText>
+            </MudItem>
 
-            <MudSelect T="int" Label="Items per page" Value="PageSize" ValueChanged="PageSizeChangeHandler" Dense="true" Style="@($"width: 150px;display: flex;")">
-                @foreach (var size in PageSizes)
-                {
-                    <MudSelectItem Value="@size">@size</MudSelectItem>
-                }
-            </MudSelect>
+            <MudItem xs="9">
+                <MudSelect Margin="Margin.Dense" T="string" Value="DateTimeFormat" ValueChanged="DateTimeFormatChangedHandler">
+                    @foreach (var format in DateTimeFormats)
+                    {
+                        <MudSelectItem Value="@format">@format</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
 
-            <MudText>Modal Position</MudText>
-    
-            <MudSelect T="DialogPosition" Value="DialogPosition" ValueChanged="DialogPositionChangeHandler">
-                @foreach (var pos in Enum.GetValues<DialogPosition>().Where(x => x != DialogPosition.Custom))
-                {
-                    <MudSelectItem Value="@pos">@Regex.Replace(pos.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
-                }
-            </MudSelect>
+        </MudGrid>
 
-            
+        <br />
+        <br />
 
-            <MudText>Modal Size</MudText>
-            <MudSelect T="MaxWidth" Value="ModalWidth" ValueChanged="ModalWidthChangedHandler">
-                @foreach (var pos in Enum.GetValues<MaxWidth>())
-                {
-                    <MudSelectItem Value="@pos">@Regex.Replace(pos.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
-                }
-            </MudSelect>
+        <h3>DataGrid Settings</h3>
+        <MudGrid Style="align-items: center;" Spacing="0">
 
-            <MudText>Form Close Behavior</MudText>
-            <MudSelect T="string" Value="FormBehavior">
-                <MudSelectItem Value="nameof(FormSettings.CloseFormOnSave)">@Regex.Replace(nameof(FormSettings.CloseFormOnSave), "([A-Z])", " $1").TrimStart()</MudSelectItem>
-                <MudSelectItem Value="nameof(FormSettings.ResetFormOnSave)">@Regex.Replace(nameof(FormSettings.ResetFormOnSave), "([A-Z])", " $1").TrimStart()</MudSelectItem>
-            </MudSelect>
-        </div>
+            <MudItem xs="3">
+                <MudText>DataGrid Items per page</MudText>
+            </MudItem>
+
+            <MudItem xs="9">
+                <MudSelect Margin="Margin.Dense" T="int" Label="Items per page" Value="PageSize" ValueChanged="PageSizeChangedHandler" Dense="true" Style="@($"width: 150px;display: flex;")">
+                    @foreach (var size in PageSizes)
+                    {
+                        <MudSelectItem Value="@size">@size</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+        </MudGrid>
+
+        <br />
+        <br />
+
+        <h3>Form Settings</h3>
+        <MudGrid Style="align-items: center;" Spacing="0">
+
+            <MudItem xs="3">
+                <MudText>Modal Position</MudText>
+            </MudItem>
+
+            <MudItem xs="9">
+                <MudSelect Margin="Margin.Dense" T="DialogPosition" Value="DialogPosition" ValueChanged="DialogPositionChangedHandler">
+                    @foreach (var pos in Enum.GetValues<DialogPosition>().Where(x => x != DialogPosition.Custom))
+                    {
+                        <MudSelectItem Value="@pos">@Regex.Replace(pos.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="3">
+                <MudText>Modal Size</MudText>
+            </MudItem>
+
+            <MudItem xs="9">
+                <MudSelect Margin="Margin.Dense" T="MaxWidth" Value="ModalWidth" ValueChanged="ModalWidthChangedHandler">
+                    @foreach (var width in Enum.GetValues<MaxWidth>())
+                    {
+                        <MudSelectItem Value="@width">@Regex.Replace(width.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="3">
+                <MudText>Form Close Behavior</MudText>
+            </MudItem>
+
+            <MudItem xs="9">
+                <MudSelect Margin="Margin.Dense" T="FormOnSaveAction" Value="FormCloseAction" ValueChanged="FormCloseActionChangedHandler">
+                    @foreach (var action in Enum.GetValues<FormOnSaveAction>())
+                    {
+                        <MudSelectItem Value="@action">@Regex.Replace(action.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+        </MudGrid>
 
     </DialogContent>
 
@@ -78,73 +133,61 @@
     public int PageSize { get; set; } = 10;
     public DialogPosition DialogPosition { get; set; } = DialogPosition.Center;
     public MaxWidth ModalWidth { get; set; } = MaxWidth.Large;
+    public FormOnSaveAction FormCloseAction { get; set; } = FormOnSaveAction.ViewFormOnSave;
     public string FormBehavior { get; set; } = "";
+    public LanguageInfo Language { get; set; } = default!;
 
     internal string DateTimeFormat = "";
     internal string[] DateTimeFormats = new string[] { "yyyy-MM-dd", "yyyy/MM/dd", "yy-M-d", "yy/M/d", "dd-MM-yyyy", "dd/MM/yyyy", "d-M-yy", "d/M/yy" };
 
     protected override void OnInitialized()
     {
-        if (SettingManager.Settings.ListPageSize != null)
-        {
-            PageSize = SettingManager.Settings.ListPageSize.Value;
-        };
-
+        PageSize = SettingManager.Settings.ListPageSize;
         DateTimeFormat = SettingManager.Settings.DateTimeFormat;
         DialogPosition = SettingManager.Settings.ModalPosition;
         ModalWidth = SettingManager.Settings.ModalWidth;
+        FormCloseAction = SettingManager.Settings.FormOnSaveAction;
+        Language = SettingManager.Settings.CurrentLanguage;
     }
 
-    internal void PageSizeChangeHandler(int size)
+    internal void PageSizeChangedHandler(int size)
     {
         PageSize = size;
-
-        var pageSize = SettingManager.Settings.ListPageSize;
-
-        if (pageSize == null || pageSize != size)
-        {
-            SettingManager.SetListPageSize(size);
-        }
+        SettingManager.SetListPageSize(size);
     }
 
-    internal void DialogPositionChangeHandler(DialogPosition position)
+    internal void DialogPositionChangedHandler(DialogPosition position)
     {
         DialogPosition = position;
-
-        var pos = SettingManager.Settings.ModalPosition;
-
-        if (pos != position)
-        {
-            SettingManager.SetModalPosition(position);
-        }
+        SettingManager.SetModalPosition(position);
     }
 
     internal void DateTimeFormatChangedHandler(string format)
     {
         DateTimeFormat = format;
-
-        var currentFormat = SettingManager.Settings.DateTimeFormat;
-
-        if (currentFormat != format)
-        {
-            SettingManager.SetDateTimeFormat(format);
-        }
+        SettingManager.SetDateTimeFormat(format);
     }
 
     internal void ModalWidthChangedHandler(MaxWidth width)
     {
         ModalWidth = width;
-
-        var currentWidth = SettingManager.Settings.ModalWidth;
-
-        if (currentWidth != width)
-        {
-            SettingManager.SetModalWidth(width);
-        }
+        SettingManager.SetModalWidth(width);
     }
 
-    internal void ReloadPage()
+    internal void FormCloseActionChangedHandler(FormOnSaveAction action)
     {
-        NavManager.NavigateTo(NavManager.Uri, true);
+        FormCloseAction = action;
+        SettingManager.SetFormSaveAction(action);
+    }
+
+    internal void LanguageChangedHandler(LanguageInfo lang)
+    {
+        Language = lang;
+        SettingManager.SwitchLanguage(lang, false);
+    }
+
+    internal async Task ReloadPage()
+    {
+        await JsRuntime.InvokeVoidAsync("reloadPage");
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Enums;
 using System.Globalization;
 using System.Net.Http.Headers;
 
@@ -18,7 +19,12 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public AppSetting Settings { get; set; }
         public DeviceInfo Device { get; set; } = new DeviceInfo();
         public AppConfiguration Configuration { get; set; } = new();
-        private string DefaultCultureName = "en-US";
+        public static LanguageInfo DefaultLanguage { get; set; } = new LanguageInfo
+        {
+            CultureName = "en-US",
+            Label = "English",
+            RTL = false,
+        };
 
         public SettingManager(ISyncLocalStorageService syncLocalStorage,
                               NavigationManager? navManager,
@@ -70,38 +76,54 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return Settings.HiddenColumns.GetValueOrDefault(id) ?? new();
         }
 
-        public void SetListPageSize(int? size)
+        public void SetListPageSize(int size)
         {
-            Settings.ListPageSize = size;
-            SyncLocalStorage.SetItem(Key, Settings);
+            if (Settings.ListPageSize != size)
+            {
+                Settings.ListPageSize = size;
+                SyncLocalStorage.SetItem(Key, Settings);
+            }
         }
 
         public void SetModalPosition(DialogPosition position)
         {
-            Settings.ModalPosition = position;
-            SyncLocalStorage.SetItem(Key, Settings);
+            if (Settings.ModalPosition != position)
+            {
+                Settings.ModalPosition = position;
+                SyncLocalStorage.SetItem(Key, Settings);
+            }
         }
 
         public void SetModalWidth(MaxWidth width)
         {
-            Settings.ModalWidth = width;
-            SyncLocalStorage.SetItem(Key, Settings);
+            if (Settings.ModalWidth != width)
+            {
+                Settings.ModalWidth = width;
+                SyncLocalStorage.SetItem(Key, Settings);
+            }
         }
 
         public void SetDateTimeFormat(string format)
         {
-            Settings.DateTimeFormat = format;
-            SyncLocalStorage.SetItem(Key, Settings);
+            if (Settings.DateTimeFormat != format)
+            {
+                Settings.DateTimeFormat = format;
+                SyncLocalStorage.SetItem(Key, Settings);
+            }
+        }
+
+        public void SetFormSaveAction(FormOnSaveAction action)
+        {
+            if (Settings.FormOnSaveAction != action)
+            {
+                Settings.FormOnSaveAction = action;
+                SyncLocalStorage.SetItem(Key, Settings);
+            }
         }
 
         public CultureInfo GetCulture()
         {
-            if (Settings.CurrentLanguage?.CultureName == null)
-            {
-                SwitchLanguage(Configuration.Languages.First(), false);
-            }
-
-            return new CultureInfo(Settings.CurrentLanguage?.CultureName ?? DefaultCultureName)
+            return new CultureInfo(Settings.CurrentLanguage.CultureName)
             {
                 DateTimeFormat = new DateTimeFormatInfo
                 {
@@ -127,6 +149,10 @@ namespace ShiftSoftware.ShiftBlazor.Services
             if (settings == null)
             {
                 settings = new AppSetting();
+                if (Configuration.Languages.Count > 0)
+                {
+                    settings.CurrentLanguage = Configuration.Languages.First();
+                }
                 SyncLocalStorage.SetItem(Key, settings);
             }
 

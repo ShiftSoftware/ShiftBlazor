@@ -291,10 +291,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
             };
 
-            if (SettingManager.Settings.ListPageSize != null)
-            {
-                PageSize = SettingManager.Settings.ListPageSize.Value;
-            };
+            PageSize = SettingManager.Settings.ListPageSize;
 
             if (AutoGenerateColumns)
             {
@@ -489,13 +486,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal void PageSizeChangeHandler(int size)
         {
             PageSize = size;
-
-            var pageSize = SettingManager.Settings.ListPageSize;
-
-            if (pageSize == null || pageSize != size)
-            {
-                SettingManager.SetListPageSize(size);
-            }
+            SettingManager.SetListPageSize(size);
         }
 
 
