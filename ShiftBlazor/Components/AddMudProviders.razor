@@ -24,7 +24,7 @@
     public bool DefaultScrollbar { get; set; }
 
     [Parameter]
-    public MudTheme? Theme { get; set; }
+    public MudTheme? Theme { get; set; } = new();
 
     [Parameter]
     public Action<DialogOptions>? DialogOptions { get; set; }
@@ -33,15 +33,39 @@
 
     protected override void OnInitialized()
     {
-        _DialogOptions.Position = SettingManager.Settings.ModalPosition;
         _DialogOptions.CloseOnEscapeKey = true;
         _DialogOptions.DisableBackdropClick = true;
         _DialogOptions.FullWidth = true;
         _DialogOptions.NoHeader = false;
         _DialogOptions.CloseButton = true;
-        _DialogOptions.MaxWidth = SettingManager.Settings.ModalWidth;
 
         DialogOptions?.Invoke(_DialogOptions);
-    }
 
+
+        if (SettingManager.Settings.ModalPosition != null)
+        {
+            _DialogOptions.Position = SettingManager.Settings.ModalPosition;
+        }
+        else if (_DialogOptions.Position == null)
+        {
+            _DialogOptions.Position = DefaultAppSetting.ModalPosition;
+        }
+        else
+        {
+            SettingManager.SetModalPosition((DialogPosition)_DialogOptions.Position);
+        }
+
+        if (SettingManager.Settings.ModalWidth != null)
+        {
+            _DialogOptions.MaxWidth = SettingManager.Settings.ModalWidth;
+        }
+        else if (_DialogOptions.MaxWidth == null)
+        {
+            _DialogOptions.MaxWidth = DefaultAppSetting.ModalWidth;
+        }
+        else
+        {
+            SettingManager.SetModalWidth((MaxWidth)_DialogOptions.MaxWidth);
+        }
+    }
 }
