@@ -1,4 +1,4 @@
-﻿@inject SettingManager LangManager
+﻿@inject SettingManager SettingManager
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 <MudMenu Class="mr-4"
@@ -9,10 +9,10 @@
          ActivationEvent="@MouseEvent.MouseOver"
          AnchorOrigin="Origin.BottomCenter"
          TransformOrigin="Origin.TopCenter">
-    @foreach (var lang in LangManager.Configuration.Languages)
+    @foreach (var lang in SettingManager.Configuration.Languages)
     {
-        var selected = LangManager.Settings.CurrentLanguage?.CultureName == lang.CultureName;
-        <MudMenuItem OnClick="@(e => LangManager.SwitchLanguage(lang))"
+        var selected = SettingManager.GetLanguage().CultureName == lang.CultureName;
+        <MudMenuItem OnClick="@(e => SettingManager.SwitchLanguage(lang))"
                      Style="@( selected ? SelectedStyle : "")">
             @lang.Label
         </MudMenuItem>

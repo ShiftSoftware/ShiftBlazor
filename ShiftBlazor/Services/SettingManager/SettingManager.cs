@@ -19,12 +19,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public AppSetting Settings { get; set; }
         public DeviceInfo Device { get; set; } = new DeviceInfo();
         public AppConfiguration Configuration { get; set; } = new();
-        public static LanguageInfo DefaultLanguage { get; set; } = new LanguageInfo
-        {
-            CultureName = "en-US",
-            Label = "English",
-            RTL = false,
-        };
 
         public SettingManager(ISyncLocalStorageService syncLocalStorage,
                               NavigationManager? navManager,
@@ -50,32 +44,19 @@ namespace ShiftSoftware.ShiftBlazor.Services
             UpdateCulture();
         }
 
-        public void SwitchLanguage(LanguageInfo lang, bool forceReload = true)
+        public void SetDateTimeFormat(string format)
         {
-            Settings.CurrentLanguage = lang;
-
-            SyncLocalStorage.SetItem(Key, Settings);
-
-            UpdateCulture();
-
-            if (forceReload)
+            if (Settings.DateTimeFormat != format)
             {
-                NavManager?.NavigateTo(NavManager.Uri, forceLoad: true);
+                Settings.DateTimeFormat = format;
+                SyncLocalStorage.SetItem(Key, Settings);
             }
         }
-
-        public void SetHiddenColumns(string id, List<string> columnNames)
+        public string GetDateTimeFormat()
         {
-            Settings.HiddenColumns.Remove(id);
-            Settings.HiddenColumns.Add(id, columnNames);
-            SyncLocalStorage.SetItem(Key, Settings);
+            return Settings.DateTimeFormat ?? DefaultAppSetting.DateTimeFormat;
         }
-
-        public List<string> GetHiddenColumns(string id)
-        {
-            return Settings.HiddenColumns.GetValueOrDefault(id) ?? new();
-        }
-
+        
         public void SetListPageSize(int size)
         {
             if (Settings.ListPageSize != size)
@@ -84,7 +65,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 SyncLocalStorage.SetItem(Key, Settings);
             }
         }
-
+        public int GetListPageSize()
+        {
+            return Settings.ListPageSize ?? DefaultAppSetting.ListPageSize;
+        }
+        
         public void SetModalPosition(DialogPosition position)
         {
             if (Settings.ModalPosition != position)
@@ -92,6 +77,10 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 Settings.ModalPosition = position;
                 SyncLocalStorage.SetItem(Key, Settings);
             }
+        }
+        public DialogPosition GetModalPosition()
+        {
+            return Settings.ModalPosition ?? DefaultAppSetting.ModalPosition;
         }
 
         public void SetModalWidth(MaxWidth width)
@@ -102,14 +91,9 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 SyncLocalStorage.SetItem(Key, Settings);
             }
         }
-
-        public void SetDateTimeFormat(string format)
+        public MaxWidth GetModalWidth()
         {
-            if (Settings.DateTimeFormat != format)
-            {
-                Settings.DateTimeFormat = format;
-                SyncLocalStorage.SetItem(Key, Settings);
-            }
+            return Settings.ModalWidth ?? DefaultAppSetting.ModalWidth;
         }
 
         public void SetFormSaveAction(FormOnSaveAction action)
@@ -120,14 +104,50 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 SyncLocalStorage.SetItem(Key, Settings);
             }
         }
+        public FormOnSaveAction GetFormOnSaveAction()
+        {
+            return Settings.FormOnSaveAction ?? DefaultAppSetting.FormOnSaveAction;
+        }
+        
+        public void SetHiddenColumns(string id, List<string> columnNames)
+        {
+            if (Settings.HiddenColumns != null)
+            {
+                Settings.HiddenColumns.Remove(id);
+                Settings.HiddenColumns.Add(id, columnNames);
+                SyncLocalStorage.SetItem(Key, Settings);
+            }
+        }
+        public List<string> GetHiddenColumns(string id)
+        {
+            return Settings.HiddenColumns?.GetValueOrDefault(id) ?? new();
+        }
+
+        public void SwitchLanguage(LanguageInfo lang, bool forceReload = true)
+        {
+            Settings.Language = lang;
+
+            SyncLocalStorage.SetItem(Key, Settings);
+
+            UpdateCulture();
+
+            if (forceReload)
+            {
+                NavManager?.NavigateTo(NavManager.Uri, forceLoad: true);
+            }
+        }
+        public LanguageInfo GetLanguage()
+        {
+            return Settings.Language ?? DefaultAppSetting.Language;
+        }
 
         public CultureInfo GetCulture()
         {
-            return new CultureInfo(Settings.CurrentLanguage.CultureName)
+            return new CultureInfo(GetLanguage().CultureName)
             {
                 DateTimeFormat = new DateTimeFormatInfo
                 {
-                    ShortDatePattern = Settings.DateTimeFormat,
+                    ShortDatePattern = GetDateTimeFormat(),
                 },
                 NumberFormat = new NumberFormatInfo
                 {
@@ -149,10 +169,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
             if (settings == null)
             {
                 settings = new AppSetting();
-                if (Configuration.Languages.Count > 0)
-                {
-                    settings.CurrentLanguage = Configuration.Languages.First();
-                }
                 SyncLocalStorage.SetItem(Key, settings);
             }
 

@@ -98,7 +98,7 @@
 
     protected override void OnInitialized()
     {
-        CurrentLangIsRtl = SettingManager.Settings.CurrentLanguage?.RTL == true;
+        CurrentLangIsRtl = SettingManager.GetLanguage().RTL;
     }
 
     internal async Task GoToPage(int page)

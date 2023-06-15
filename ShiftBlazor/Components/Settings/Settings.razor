@@ -85,7 +85,7 @@
             </MudItem>
 
             <MudItem xs="9">
-                <MudSelect Margin="Margin.Dense" T="DialogPosition" Value="DialogPosition" ValueChanged="DialogPositionChangedHandler">
+                <MudSelect Margin="Margin.Dense" T="DialogPosition" Value="ModalPosition" ValueChanged="DialogPositionChangedHandler">
                     @foreach (var pos in Enum.GetValues<DialogPosition>().Where(x => x != DialogPosition.Custom))
                     {
                         <MudSelectItem Value="@pos">@Regex.Replace(pos.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
@@ -128,26 +128,25 @@
     </DialogActions>
 </MudDialog>
 @code {
+    private int PageSize { get; set; } = default!;
+    private DialogPosition ModalPosition { get; set; } = default!;
+    private MaxWidth ModalWidth { get; set; } = default!;
+    private FormOnSaveAction FormCloseAction { get; set; } = default!;
+    private string DateTimeFormat = default!;
+    private LanguageInfo Language { get; set; } = default!;
 
-    internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
-    public int PageSize { get; set; } = 10;
-    public DialogPosition DialogPosition { get; set; } = DialogPosition.Center;
-    public MaxWidth ModalWidth { get; set; } = MaxWidth.Large;
-    public FormOnSaveAction FormCloseAction { get; set; } = FormOnSaveAction.ViewFormOnSave;
-    public string FormBehavior { get; set; } = "";
-    public LanguageInfo Language { get; set; } = default!;
-
-    internal string DateTimeFormat = "";
-    internal string[] DateTimeFormats = new string[] { "yyyy-MM-dd", "yyyy/MM/dd", "yy-M-d", "yy/M/d", "dd-MM-yyyy", "dd/MM/yyyy", "d-M-yy", "d/M/yy" };
+    private int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
+    private string FormBehavior { get; set; } = "";
+    private string[] DateTimeFormats = new string[] { "yyyy-MM-dd", "yyyy/MM/dd", "yy-M-d", "yy/M/d", "dd-MM-yyyy", "dd/MM/yyyy", "d-M-yy", "d/M/yy" };
 
     protected override void OnInitialized()
     {
-        PageSize = SettingManager.Settings.ListPageSize;
-        DateTimeFormat = SettingManager.Settings.DateTimeFormat;
-        DialogPosition = SettingManager.Settings.ModalPosition;
-        ModalWidth = SettingManager.Settings.ModalWidth;
-        FormCloseAction = SettingManager.Settings.FormOnSaveAction;
-        Language = SettingManager.Settings.CurrentLanguage;
+        PageSize = SettingManager.GetListPageSize();
+        DateTimeFormat = SettingManager.GetDateTimeFormat();
+        ModalPosition = SettingManager.GetModalPosition();
+        ModalWidth = SettingManager.GetModalWidth();
+        FormCloseAction = SettingManager.GetFormOnSaveAction();
+        Language = SettingManager.GetLanguage();
     }
 
     internal void PageSizeChangedHandler(int size)
@@ -158,7 +157,7 @@
 
     internal void DialogPositionChangedHandler(DialogPosition position)
     {
-        DialogPosition = position;
+        ModalPosition = position;
         SettingManager.SetModalPosition(position);
     }
 

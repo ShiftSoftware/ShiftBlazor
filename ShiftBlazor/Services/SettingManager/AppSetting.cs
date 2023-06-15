@@ -10,12 +10,28 @@ namespace ShiftSoftware.ShiftBlazor.Services
 {
     public class AppSetting
     {
-        public string DateTimeFormat { get; set; } = "yyyy-MM-dd";
-        public LanguageInfo CurrentLanguage { get; set; } = SettingManager.DefaultLanguage;
-        public int ListPageSize { get; set; } = 10;
-        public DialogPosition ModalPosition { get; set; } = DialogPosition.Center;
-        public MaxWidth ModalWidth { get; set; } = MaxWidth.Large;
-        public FormOnSaveAction FormOnSaveAction { get; set; } = FormOnSaveAction.ViewFormOnSave;
-        public Dictionary<string, List<string>> HiddenColumns { get; set; } = new();
+        public virtual string? DateTimeFormat { get; set; }
+        public virtual int? ListPageSize { get; set; }
+        public virtual DialogPosition? ModalPosition { get; set; }
+        public virtual MaxWidth? ModalWidth { get; set; }
+        public virtual FormOnSaveAction? FormOnSaveAction { get; set; }
+        public virtual Dictionary<string, List<string>>? HiddenColumns { get; set; }
+        public virtual LanguageInfo? Language { get; set; }
+    }
+
+    public static class DefaultAppSetting
+    {
+        public static string DateTimeFormat = "yyyy-MM-dd";
+        public static int ListPageSize = 10;
+        public static DialogPosition ModalPosition = DialogPosition.Center;
+        public static MaxWidth ModalWidth = MaxWidth.Large;
+        public static FormOnSaveAction FormOnSaveAction = FormOnSaveAction.ViewFormOnSave;
+        public static Dictionary<string, List<string>> HiddenColumns = new();
+        public static LanguageInfo Language = new LanguageInfo
+        {
+            CultureName = "en-US",
+            Label = "English",
+            RTL = false,
+        };
     }
 }

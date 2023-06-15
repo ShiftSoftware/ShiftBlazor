@@ -22,7 +22,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            FormSetting = SettingManager.Settings.FormOnSaveAction;
+            FormSetting = SettingManager.GetFormOnSaveAction();
             base.OnInitialized();
         }
 

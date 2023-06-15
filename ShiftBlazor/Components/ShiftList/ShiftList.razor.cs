@@ -291,7 +291,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
             };
 
-            PageSize = SettingManager.Settings.ListPageSize;
+            PageSize = SettingManager.GetListPageSize();
 
             if (AutoGenerateColumns)
             {

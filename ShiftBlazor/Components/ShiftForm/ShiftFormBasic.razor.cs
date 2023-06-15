@@ -184,7 +184,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            OnSaveAction = SettingManager.Settings.FormOnSaveAction;
+            OnSaveAction = SettingManager.GetFormOnSaveAction();
 
             editContext = new EditContext(Value);
 

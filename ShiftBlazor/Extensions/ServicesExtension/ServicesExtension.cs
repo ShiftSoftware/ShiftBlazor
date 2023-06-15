@@ -56,7 +56,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
 
             services.AddSyncfusionBlazor(syncConfig =>
             {
-                syncConfig.EnableRtl = settingManager?.Settings.CurrentLanguage?.RTL ?? false;
+                syncConfig.EnableRtl = settingManager?.GetLanguage().RTL ?? false;
                 options.SyncfusionConfiguration?.Invoke(syncConfig);
             });
 
