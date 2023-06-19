@@ -57,7 +57,7 @@
 
         </MudButtonGroup>
 
-        <MudSelect T="int" Label="@Loc["ItemsPerPage"]" Value="ShiftList.PageSize" ValueChanged="ShiftList.PageSizeChangeHandler" Dense="true" Style="@($"width: {ItemPerPageSelectSize};display: flex;")" Class="adwar">
+        <MudSelect T="int" Label="@Loc["ItemsPerPage"]" Value="ShiftList.PageSize!.Value" ValueChanged="ShiftList.PageSizeChangeHandler" Dense="true" Style="@($"width: {ItemPerPageSelectSize};display: flex;")">
             @foreach (var size in ShiftList.PageSizes)
             {
                 <MudSelectItem Value="@size">@size</MudSelectItem>

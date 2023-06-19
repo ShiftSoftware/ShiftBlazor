@@ -159,7 +159,7 @@
 
                 @if (!EnableVirtualization)
                 {
-                    <GridPageSettings PageSize="@PageSize" PageSizes="@PageSizes">
+                    <GridPageSettings PageSize="@PageSize!.Value" PageSizes="@PageSizes">
                         <Template>
                             @{
                                 var ctx = (PagerTemplateContext)context;

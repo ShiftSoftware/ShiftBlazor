@@ -62,7 +62,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         ///     The number of items to be displayed per page.
         /// </summary>
         [Parameter]
-        public int PageSize { get; set; } = 10;
+        public int? PageSize { get; set; }
 
         /// <summary>
         ///     A list of columns names to hide them in the UI.
@@ -288,7 +288,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
             };
 
-            PageSize = SettingManager.GetListPageSize();
+            PageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
 
             if (AutoGenerateColumns)
             {
