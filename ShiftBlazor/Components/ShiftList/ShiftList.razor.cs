@@ -183,12 +183,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public Query Query { get; set; } = new();
         
         /// <summary>
-        ///     To set the Action Column's fixed width.
-        /// </summary>
-        [Parameter]
-        public string ActionColumnWidth { get; set; } = "150";
-        
-        /// <summary>
         ///     To set the list's fixed height.
         /// </summary>
         [Parameter]

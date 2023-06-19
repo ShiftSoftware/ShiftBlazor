@@ -115,7 +115,7 @@
             <SfGrid DataSource="Values"
                     TValue="T"
                     @ref="Grid"
-                    class="pa-6"
+                    class="@(IsReady ? "grid-loaded pa-6" : "pa-6")"
                     style="border: 0;"
                     ID="@GridId"
                     AllowPaging="!DisablePagination && !EnableVirtualization"
@@ -129,11 +129,9 @@
                     EnableVirtualization="EnableVirtualization"
                     EnableVirtualMaskRow="EnableVirtualization"
                     Height="@GridHeight"
-                    ShowColumnChooser="!DisableColumnChooser"
-                    Width="">
-                    
-                    @*Width="" is required for horizontal scroll*@
-                @if (Values == null)
+                    ShowColumnChooser="!DisableColumnChooser">
+                
+                    @if (Values == null)
                 {
                     <SfDataManager Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true"/>
                 }
@@ -175,26 +173,26 @@
 
                     @if (EnableVirtualization && !DisableSelection)
                     {
-                        <GridColumn Type="ColumnType.CheckBox" Width="50">
+                        <GridColumn Type="ColumnType.CheckBox" Width="60" >
                             <HeaderTemplate/>
                         </GridColumn>
                     }
                     else if (!DisableSelection)
                     {
-                            <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
+                        <GridColumn Type="ColumnType.CheckBox" Width="60" ></GridColumn>
                     }
 
-                    <GridColumn IsPrimaryKey="true" Visible="@ShowIDColumn" Field="@nameof(ShiftEntityDTOBase.ID)"></GridColumn>
+                    <GridColumn IsPrimaryKey="true" Visible="@ShowIDColumn" Field="@nameof(ShiftEntityDTOBase.ID)" AutoFit></GridColumn>
 
                     @foreach (var column in GeneratedColumns)
                     {
                         if (column.IsComplex)
                         {
-                                <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
+                            <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
                         }
                         else
                         {
-                                <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
+                            <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
                         }
                     }
 
@@ -204,7 +202,7 @@
                     {
                         <GridColumn HeaderText="@Loc["ActionsColumnTitle"]"
                                     TextAlign="@TextAlign.Center"
-                                    Width="@ActionColumnWidth">
+                                    AutoFit>
                             <Template>
                                 @if (ActionsTemplate == null)
                                 {
@@ -252,6 +250,30 @@
 
     </CascadingValue>
 </MudPaper>
+
+@if (IsReady)
+{
+    var generatedColumnWidth = 200;
+    var fixedColumnWidth = 100;
+    // find how many fixed columns are visible
+    var fixedColumns = Grid!.Columns
+                            .Where(x => x.HeaderText == @Loc["ActionsColumnTitle"] || x.IsPrimaryKey)
+                            .Where(x => x.Visible)
+                            .Count();
+    if (!DisableSelection)
+    {
+        fixedColumns++;
+    }
+    // find how many generated columns are visible
+    var columns = Grid!.Columns.Where(x => x.Visible).Count() - fixedColumns;
+    // calculate the table min-width
+    var width = (fixedColumns * fixedColumnWidth) + (columns * generatedColumnWidth);
+    <style>
+        #@(GridId).grid-loaded.e-grid .e-table {
+            min-width: @(width)px !important;
+        }
+    </style>
+}
 
 @code {
     public RenderFragment UnableToLoadDataTemplate = @<text></text>;
