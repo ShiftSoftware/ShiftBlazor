@@ -156,7 +156,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? DocumentTitle { get; set; }
 
         [Parameter]
-        public FormOnSaveAction OnSaveAction { get; set; } = FormOnSaveAction.ViewFormOnSave;
+        public FormOnSaveAction? OnSaveAction { get; set; }
 
         [Parameter]
         public string? SubmitText { get; set; }
@@ -184,7 +184,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            OnSaveAction = SettingManager.GetFormOnSaveAction();
+            OnSaveAction = SettingManager.Settings.FormOnSaveAction ?? OnSaveAction ?? DefaultAppSetting.FormOnSaveAction;
 
             editContext = new EditContext(Value);
 
