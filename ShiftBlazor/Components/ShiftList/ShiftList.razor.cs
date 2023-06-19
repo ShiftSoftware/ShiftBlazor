@@ -227,6 +227,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool DisableColumnChooser { get; set; }
 
+        [Parameter]
+        public List<string>? ColumnText { get; set; }
+
         public SfGrid<T>? Grid;
         internal List<ListColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };

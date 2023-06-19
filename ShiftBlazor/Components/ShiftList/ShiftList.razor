@@ -131,7 +131,7 @@
                     Height="@GridHeight"
                     ShowColumnChooser="!DisableColumnChooser">
                 
-                    @if (Values == null)
+                @if (Values == null)
                 {
                     <SfDataManager Url="@SettingManager.Configuration.ODataPath.AddUrlPath(Action)" Adaptor="Adaptors.ODataV4Adaptor" CrossDomain="true"/>
                 }
@@ -182,17 +182,24 @@
                         <GridColumn Type="ColumnType.CheckBox" Width="60" ></GridColumn>
                     }
 
-                    <GridColumn IsPrimaryKey="true" Visible="@ShowIDColumn" Field="@nameof(ShiftEntityDTOBase.ID)" AutoFit></GridColumn>
+                    @{
+                        var idHeaderText = ColumnText?.ElementAtOrDefault(0) ?? nameof(ShiftEntityDTOBase.ID);
+                    }
+                    <GridColumn IsPrimaryKey="true" Visible="@ShowIDColumn" Field="@nameof(ShiftEntityDTOBase.ID)" HeaderText="@idHeaderText" AutoFit></GridColumn>
 
-                    @foreach (var column in GeneratedColumns)
+                    @for (var i = 0; i < GeneratedColumns.Count; i++)
                     {
+                        var j = i;
+                        var column = GeneratedColumns[j];
+                        var label = ColumnText?.ElementAtOrDefault(j + 1) ?? column.Label;
+                        
                         if (column.IsComplex)
                         {
-                            <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
+                            <GridColumn HeaderText="@label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>
                         }
                         else
                         {
-                            <GridColumn HeaderText="@column.Label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
+                            <GridColumn HeaderText="@label" Field="@column.Field" TextAlign="TextAlign.Left"></GridColumn>
                         }
                     }
 
