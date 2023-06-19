@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Enums;
-using Microsoft.AspNetCore.Components.Web;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -88,6 +87,5 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 throw;
             }
         }
-
     }
 }
