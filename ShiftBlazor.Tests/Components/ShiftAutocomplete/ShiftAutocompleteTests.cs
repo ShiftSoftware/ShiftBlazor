@@ -204,7 +204,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
         var comp = RenderComponent<ShiftAutocomplete<Sample>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet));
 
-        var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}");
+        var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}", default);
 
         comp.WaitForAssertion(() =>
         {
@@ -227,7 +227,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
             .Add(p => p.Where, q => x => x.ID == q)
         );
 
-        var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}");
+        var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}", default);
         comp.WaitForAssertion(() =>
         {
 

@@ -228,7 +228,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.False(grid.AllowPdfExport);
         Assert.True(grid.AllowExcelExport);
 
-        comp.FindAll("button.mud-button-root")[0].Click();
+        comp.FindAll(".mud-menu button.mud-button-root")[0].Click();
 
         comp.WaitForAssertion(() =>
         {
@@ -257,7 +257,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.False(grid.AllowExcelExport);
         Assert.True(grid.AllowPdfExport);
 
-        comp.FindAll("button.mud-button-root")[0].Click();
+        comp.FindAll(".mud-menu button.mud-button-root")[0].Click();
 
         comp.WaitForAssertion(() =>
         {
@@ -298,7 +298,8 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.True(grid.EnableVirtualization);
         Assert.True(grid.EnableVirtualMaskRow);
         Assert.False(grid.AllowPaging);
-        Assert.NotNull(grid.Columns.ElementAt(1).HeaderTemplate);
+        // HeaderTemplate should have a value (an empty fragment) to replace the checkbox
+        Assert.NotNull(grid.Columns.ElementAt(0).HeaderTemplate);
     }
 
     [Fact]
@@ -457,20 +458,18 @@ public class ShiftListTests : ShiftBlazorTestContext
     }
 
     [Fact]
-    public void ShouldSetActionColumnWidth()
+    public void ShouldEnableAutoFitOnActionColumn()
     {
-        var width = "250";
-
         var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.ActionColumnWidth, width)
             .Add(p => p.DisablePagination, DisablePaging)
         );
+
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
         var column = grid.Columns.First(x => x.HeaderText.Equals("Actions"));
 
-        Assert.Equal(width, column.Width);
+        Assert.True(column.AutoFit);
     }
 
     [Fact]

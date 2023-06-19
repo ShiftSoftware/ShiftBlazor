@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using AngleSharp.Css.Dom;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
@@ -53,11 +54,29 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
         );
 
         var SettingManager = Services.GetRequiredService<SettingManager>();
-        var selectedLangauge = SettingManager.Settings.CurrentLanguage?.CultureName;
+        var selectedLangauge = SettingManager.Settings.Language?.CultureName;
 
         comp.FindAll("button.mud-button-root")[0].Click();
-        comp.FindAll("div.mud-list-item")[0].Click();
+        comp.FindAll("div.mud-list-item")[1].Click();
 
-        Assert.NotEqual(selectedLangauge, SettingManager.Settings.CurrentLanguage?.CultureName);
+        Assert.NotEqual(selectedLangauge, SettingManager.Settings.Language?.CultureName);
+    }
+
+    [Fact]
+    public void ShouldHaveDefaultSelectedValue()
+    {
+        var comp = RenderComponent<IncludeMudProviders>(parameters => parameters
+            .AddChildContent<ShiftBlazor.Components.LanguageSwitcher>()
+        );
+        
+        comp.FindAll("button.mud-button-root")[0].Click();
+        var items = comp.FindAll("div.mud-list-item");
+        var selected = items.Where(x =>
+        {
+            var css = x.GetStyle().CssText;
+            return css.Contains("background-color");
+        });
+
+        Assert.Single(selected);
     }
 }
