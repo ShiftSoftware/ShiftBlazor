@@ -111,12 +111,13 @@ namespace ShiftSoftware.ShiftBlazor.Services
         
         public void SetHiddenColumns(string id, List<string> columnNames)
         {
-            if (Settings.HiddenColumns != null)
+            if (Settings.HiddenColumns == null)
             {
-                Settings.HiddenColumns.Remove(id);
-                Settings.HiddenColumns.Add(id, columnNames);
-                SyncLocalStorage.SetItem(Key, Settings);
+                Settings.HiddenColumns = new();
             }
+            Settings.HiddenColumns.Remove(id);
+            Settings.HiddenColumns.Add(id, columnNames);
+            SyncLocalStorage.SetItem(Key, Settings);
         }
         public List<string> GetHiddenColumns(string id)
         {
