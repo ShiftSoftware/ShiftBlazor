@@ -115,7 +115,7 @@
             <SfGrid DataSource="Values"
                     TValue="T"
                     @ref="Grid"
-                    class="@(IsReady ? "grid-loaded pa-6" : "pa-6")"
+                    class="@GridCssClass"
                     style="border: 0;"
                     ID="@GridId"
                     AllowPaging="!DisablePagination && !EnableVirtualization"
@@ -190,7 +190,7 @@
                     @foreach (var column in GeneratedColumns)
                     {
                         var label = HeaderTexts?.GetValueOrDefault(column.Label) ?? column.Label;
-                        
+
                         if (column.IsComplex)
                         {
                             <GridColumn HeaderText="@label" Field="@column.Field" TextAlign="TextAlign.Left" FilterSettings="FilterSettingMenu"></GridColumn>

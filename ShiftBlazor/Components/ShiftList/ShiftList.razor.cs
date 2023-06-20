@@ -229,21 +229,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public Dictionary<string, string>? HeaderTexts { get; set; }
+        [Parameter]
+        public bool MultiLineCells { get; set; }
 
         public SfGrid<T>? Grid;
         internal List<ListColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
-        internal string GridContainerCssClass
-        {
-            get
-            {
-                var cssClasses = "";
-                cssClasses += MudDialog != null ? "shift-scrollable-content-wrapper" : "";
-                cssClasses += ActionUrlBroken ? " disable-grid" : "";
-                return cssClasses;
-            }
-        }
 
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null);
         internal bool ActionUrlBroken = false;
@@ -254,6 +246,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal Uri LastRequestUri { get; set; }
         internal Uri LastFailedRequestUri { get; set; }
+        internal string GridContainerCssClass
+        {
+            get
+            {
+                var cssClasses = "";
+                if (MudDialog != null) cssClasses += " shift-scrollable-content-wrapper";
+                if (ActionUrlBroken) cssClasses += " disable-grid";
+                return cssClasses;
+            }
+        }
+        internal string GridCssClass
+        { 
+            get
+            {
+                var cssClass = "pa-6";
+                if (IsReady) cssClass += " grid-loaded";
+                if (MultiLineCells) cssClass += " multiline";
+                return cssClass;
+            }
+        }
 
         public ShiftList()
         {
