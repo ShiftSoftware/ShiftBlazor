@@ -12,7 +12,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
 {
     public static class ServicesExtension
     {
-        public static IServiceCollection AddShiftServices(this IServiceCollection services, Action<AppStartupOptions> configure)
+        public static IServiceCollection AddShiftBlazor(this IServiceCollection services, Action<AppStartupOptions> configure)
         {
             SettingManager settingManager = null;
             var options = new AppStartupOptions();

@@ -28,7 +28,7 @@ public class ShiftBlazorTestContext : TestContext
         mock.When(HttpMethod.Put, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<Sample> { Entity = Values.First() });
         mock.When(HttpMethod.Delete, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<Sample> { Entity = Values.First(x => x.IsDeleted == true) });
 
-        Services.AddShiftServices(config =>
+        Services.AddShiftBlazor(config =>
         {
             config.ShiftConfiguration = options =>
             {
