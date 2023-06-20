@@ -214,9 +214,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public Type? ComponentType { get; set; }
 
         [Parameter]
-        public List<IStringLocalizer> Localizers { get; set; } = new();
-
-        [Parameter]
         public EventCallback<RecordClickEventArgs<T>> OnRowClick { get; set; }
         [Parameter]
         public EventCallback<object?> OnFormClosed { get; set; }
@@ -236,7 +233,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal List<ListColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
-
+        
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null);
         internal bool ActionUrlBroken = false;
         internal bool IsReady = false;
@@ -350,9 +347,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     .ToArray();
                 try
                 {
-                await Grid.HideColumnsAsync(hiddenColumns);
-                await Grid.ShowColumnsAsync(visibleColumns);
-            }
+                    await Grid.HideColumnsAsync(hiddenColumns);
+                    await Grid.ShowColumnsAsync(visibleColumns);
+                }
                 catch (Exception)
                 {
                     SettingManager.SetHiddenColumns(GetListIdentifier(), new());
@@ -536,7 +533,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var column = new ListColumn();
 
-                column.Label = GetLocalizedColumnLabel(prop.Name);
+                column.Label = prop.Name;
                 column.Field = GetFieldName(prop);
 
                 if (!IsSystemType(prop.PropertyType) && prop.PropertyType.IsClass)
@@ -549,17 +546,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             Query.Expand(complexColumns);
-        }
-
-        internal string GetLocalizedColumnLabel(string name)
-        {
-            var label = name;
-            foreach (var localizer in Localizers)
-            {
-                label = localizer[name];
-                if (label != name) break;
-            }
-            return label;
         }
 
         internal string GetFieldName(PropertyInfo property)
