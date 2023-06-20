@@ -183,15 +183,13 @@
                     }
 
                     @{
-                        var idHeaderText = ColumnText?.ElementAtOrDefault(0) ?? nameof(ShiftEntityDTOBase.ID);
+                        var idHeaderText = HeaderTexts?.GetValueOrDefault(nameof(ShiftEntityDTOBase.ID)) ?? nameof(ShiftEntityDTOBase.ID);
                     }
                     <GridColumn IsPrimaryKey="true" Visible="@ShowIDColumn" Field="@nameof(ShiftEntityDTOBase.ID)" HeaderText="@idHeaderText" AutoFit></GridColumn>
 
-                    @for (var i = 0; i < GeneratedColumns.Count; i++)
+                    @foreach (var column in GeneratedColumns)
                     {
-                        var j = i;
-                        var column = GeneratedColumns[j];
-                        var label = ColumnText?.ElementAtOrDefault(j + 1) ?? column.Label;
+                        var label = HeaderTexts?.GetValueOrDefault(column.Label) ?? column.Label;
                         
                         if (column.IsComplex)
                         {

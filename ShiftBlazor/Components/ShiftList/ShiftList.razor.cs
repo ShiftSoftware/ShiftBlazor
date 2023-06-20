@@ -228,7 +228,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool DisableColumnChooser { get; set; }
 
         [Parameter]
-        public List<string>? ColumnText { get; set; }
+        public Dictionary<string, string>? HeaderTexts { get; set; }
 
         public SfGrid<T>? Grid;
         internal List<ListColumn> GeneratedColumns = new();
@@ -336,8 +336,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     .Where(x => !hiddenColumns.Contains(x.HeaderText) && x.Visible)
                     .Select(x => x.HeaderText)
                     .ToArray();
+                try
+                {
                 await Grid.HideColumnsAsync(hiddenColumns);
                 await Grid.ShowColumnsAsync(visibleColumns);
+            }
+                catch (Exception)
+                {
+                    SettingManager.SetHiddenColumns(GetListIdentifier(), new());
+                }
             }
         }
 
