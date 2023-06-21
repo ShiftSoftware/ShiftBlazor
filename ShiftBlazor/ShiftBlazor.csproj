@@ -80,7 +80,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!--Shift Framework References will be removed by pre-commit-->
+	  <ProjectReference Include="..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj" Condition="Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')"/>
 	</ItemGroup>
 
 
