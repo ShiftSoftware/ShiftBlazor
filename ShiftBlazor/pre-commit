@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Temporarily modify the project file to remove shift framework references. Linux
+sed -i '/<ProjectReference Include="..\\..\\ShiftEntity\\ShiftEntity.Model\\ShiftEntity.Model.csproj" \\/d' ShiftBlazor/ShiftBlazor.csproj
+
+# Temporarily modify the project file to remove shift framework references. Windows
+sed -i "/<ProjectReference Include=\"..\\\\..\\\\ShiftEntity\\\\ShiftEntity.Model\\\\ShiftEntity.Model.csproj\" \\/>/d" ShiftBlazor/ShiftBlazor.csproj
+
+
+# Stage the modified file
+git add ShiftBlazor/ShiftBlazor.csproj
+
