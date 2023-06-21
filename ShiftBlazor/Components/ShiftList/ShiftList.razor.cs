@@ -214,9 +214,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public Type? ComponentType { get; set; }
 
         [Parameter]
-        public List<IStringLocalizer> Localizers { get; set; } = new();
-
-        [Parameter]
         public EventCallback<RecordClickEventArgs<T>> OnRowClick { get; set; }
         [Parameter]
         public EventCallback<object?> OnFormClosed { get; set; }
@@ -228,23 +225,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool DisableColumnChooser { get; set; }
 
         [Parameter]
-        public List<string>? ColumnText { get; set; }
+        public Dictionary<string, string>? HeaderTexts { get; set; }
+        [Parameter]
+        public bool MultiLineCells { get; set; }
 
         public SfGrid<T>? Grid;
         internal List<ListColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
-        internal string GridContainerCssClass
-        {
-            get
-            {
-                var cssClasses = "";
-                cssClasses += MudDialog != null ? "shift-scrollable-content-wrapper" : "";
-                cssClasses += ActionUrlBroken ? " disable-grid" : "";
-                return cssClasses;
-            }
-        }
-
+        
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null);
         internal bool ActionUrlBroken = false;
         internal bool IsReady = false;
@@ -254,6 +243,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal Uri LastRequestUri { get; set; }
         internal Uri LastFailedRequestUri { get; set; }
+        internal string GridContainerCssClass
+        {
+            get
+            {
+                var cssClasses = "";
+                if (MudDialog != null) cssClasses += " shift-scrollable-content-wrapper";
+                if (ActionUrlBroken) cssClasses += " disable-grid";
+                return cssClasses;
+            }
+        }
+        internal string GridCssClass
+        { 
+            get
+            {
+                var cssClass = "pa-6";
+                if (IsReady) cssClass += " grid-loaded";
+                if (MultiLineCells) cssClass += " multiline";
+                return cssClass;
+            }
+        }
 
         public ShiftList()
         {
@@ -336,8 +345,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     .Where(x => !hiddenColumns.Contains(x.HeaderText) && x.Visible)
                     .Select(x => x.HeaderText)
                     .ToArray();
-                await Grid.HideColumnsAsync(hiddenColumns);
-                await Grid.ShowColumnsAsync(visibleColumns);
+                try
+                {
+                    await Grid.HideColumnsAsync(hiddenColumns);
+                    await Grid.ShowColumnsAsync(visibleColumns);
+                }
+                catch (Exception)
+                {
+                    SettingManager.SetHiddenColumns(GetListIdentifier(), new());
+                }
             }
         }
 
@@ -517,7 +533,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var column = new ListColumn();
 
-                column.Label = GetLocalizedColumnLabel(prop.Name);
+                column.Label = prop.Name;
                 column.Field = GetFieldName(prop);
 
                 if (!IsSystemType(prop.PropertyType) && prop.PropertyType.IsClass)
@@ -530,17 +546,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             Query.Expand(complexColumns);
-        }
-
-        internal string GetLocalizedColumnLabel(string name)
-        {
-            var label = name;
-            foreach (var localizer in Localizers)
-            {
-                label = localizer[name];
-                if (label != name) break;
-            }
-            return label;
         }
 
         internal string GetFieldName(PropertyInfo property)

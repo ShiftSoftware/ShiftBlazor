@@ -18,3 +18,7 @@
 .shiftlist-pagination button.mud-button {
     min-width: 50px;
 }
+
+.e-grid.multiline td.e-rowcell {
+    white-space: break-spaces;
+}
