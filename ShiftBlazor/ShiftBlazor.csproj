@@ -84,7 +84,7 @@
 	</ItemGroup>
 
 
-	<Target Name="CopyPreCommitHook" BeforeTargets="Build" Condition=" '$(IsCrossTargetingBuild)' != 'true' ">
+	<Target Name="CopyPreCommitHook" BeforeTargets="Build" Condition="'$(IsCrossTargetingBuild)'!='true' And '$(Configuration)'=='Debug'">
 		<Exec Command="xcopy /Y /I pre-commit ..\.git\hooks\" />
 	</Target>
 
