@@ -403,7 +403,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await RunTask(FormTasks.FetchRevisions, async () =>
             {
                 var path = SettingManager.Configuration.ODataPath.AddUrlPath(Action, Key?.ToString(), "revisions");
-                var res = await Http.GetFromJsonAsync<ODataDTO<List<RevisionDTO>>>(path);
+                var res = await Http.GetFromJsonAsync<ODataDTO<RevisionDTO>>(path);
 
                 if (res == null)
                 {
