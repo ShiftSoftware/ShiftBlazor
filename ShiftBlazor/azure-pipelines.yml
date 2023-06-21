@@ -6,7 +6,7 @@ pool:
 
 steps:
 
- - script: dotnet test --logger trx
+ - script: dotnet test -c release --logger trx
    displayName: 'dotnet test'
 
  - task: PublishTestResults@2
