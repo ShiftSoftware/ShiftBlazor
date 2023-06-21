@@ -83,9 +83,4 @@
 	  <ProjectReference Include="..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj" Condition="Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')"/>
 	</ItemGroup>
 
-
-	<Target Name="CopyPreCommitHook" BeforeTargets="Build" Condition="'$(IsCrossTargetingBuild)'!='true' And '$(Configuration)'=='Debug'">
-		<Exec Command="xcopy /Y /I pre-commit ..\.git\hooks\" />
-	</Target>
-
 </Project>
