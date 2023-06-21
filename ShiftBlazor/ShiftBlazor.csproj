@@ -38,45 +38,53 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="Resources\Components\ResourceViewer.Designer.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>ResourceViewer.resx</DependentUpon>
-	  </Compile>
-	  <Compile Update="Resources\Components\ShiftEntityForm.Designer.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>ShiftEntityForm.resx</DependentUpon>
-	  </Compile>
-	  <Compile Update="Resources\Components\ShiftFormBasic.Designer.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>ShiftFormBasic.resx</DependentUpon>
-	  </Compile>
-	  <Compile Update="Resources\Components\ShiftList.Designer.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>ShiftList.resx</DependentUpon>
-	  </Compile>
+		<Compile Update="Resources\Components\ResourceViewer.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ResourceViewer.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Resources\Components\ShiftEntityForm.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ShiftEntityForm.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Resources\Components\ShiftFormBasic.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ShiftFormBasic.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Resources\Components\ShiftList.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ShiftList.resx</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EmbeddedResource Update="Resources\Components\ResourceViewer.resx">
-	    <Generator>ResXFileCodeGenerator</Generator>
-	    <LastGenOutput>ResourceViewer.Designer.cs</LastGenOutput>
-	  </EmbeddedResource>
-	  <EmbeddedResource Update="Resources\Components\ShiftEntityForm.resx">
-	    <Generator>ResXFileCodeGenerator</Generator>
-	    <LastGenOutput>ShiftEntityForm.Designer.cs</LastGenOutput>
-	  </EmbeddedResource>
-	  <EmbeddedResource Update="Resources\Components\ShiftFormBasic.resx">
-	    <Generator>ResXFileCodeGenerator</Generator>
-	    <LastGenOutput>ShiftFormBasic.Designer.cs</LastGenOutput>
-	  </EmbeddedResource>
-	  <EmbeddedResource Update="Resources\Components\ShiftList.resx">
-	    <Generator>ResXFileCodeGenerator</Generator>
-	    <LastGenOutput>ShiftList.Designer.cs</LastGenOutput>
-	  </EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\ResourceViewer.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>ResourceViewer.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\ShiftEntityForm.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>ShiftEntityForm.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\ShiftFormBasic.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>ShiftFormBasic.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\ShiftList.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>ShiftList.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
 	</ItemGroup>
+
+	<ItemGroup>
+	</ItemGroup>
+
+
+	<Target Name="CopyPreCommitHook" BeforeTargets="Build" Condition=" '$(IsCrossTargetingBuild)' != 'true' ">
+		<Exec Command="xcopy /Y /I pre-commit ..\.git\hooks\" />
+	</Target>
 
 </Project>

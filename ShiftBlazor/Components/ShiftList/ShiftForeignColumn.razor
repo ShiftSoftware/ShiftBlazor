@@ -117,7 +117,7 @@
             if (itemIds.Count() > 0)
             {
                 var url = builder.Where(x => itemIds.Contains(x.ID)).ToString();
-                var result = await Http.GetFromJsonAsync<ODataDTO<List<TValue>>>(url);
+                var result = await Http.GetFromJsonAsync<ODataDTO<TValue>>(url);
 
                 if (result != null)
                 {
