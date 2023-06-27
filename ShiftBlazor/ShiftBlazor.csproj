@@ -79,8 +79,8 @@
 		</EmbeddedResource>
 	</ItemGroup>
 
-	<ItemGroup>
-		<!--Shift Framework References will be removed by pre-commit-->
+	<ItemGroup><!--Shift Framework References will be removed by pre-commit-->
+	
 	</ItemGroup>
 
 
