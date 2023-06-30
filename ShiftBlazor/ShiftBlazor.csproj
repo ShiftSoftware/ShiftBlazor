@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
 		<BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
-		<Version>1.5.2</Version>
+		<Version>1.5.3</Version>
 
 		<AssemblyName>ShiftSoftware.ShiftBlazor</AssemblyName>
 		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>

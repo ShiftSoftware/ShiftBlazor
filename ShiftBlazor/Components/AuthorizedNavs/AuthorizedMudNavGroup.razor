@@ -1,0 +1,7 @@
+@inherits MudNavGroup
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@{
+    if (TypeAuthActions is null || TypeAuthActions.Any(x => TypeAuthService.Can(x, TypeAuth.Core.Access.Read) || TypeAuthService.Can(x, TypeAuth.Core.Access.Write) || TypeAuthService.Can(x, TypeAuth.Core.Access.Delete)))
+        base.BuildRenderTree(__builder);
+}
