@@ -19,6 +19,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftFormBasic> Loc { get; set; } = default!;
 
+        [Inject] internal TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
+
         [CascadingParameter]
         internal MudDialogInstance? MudDialog { get; set; }
 
@@ -160,6 +162,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public string? SubmitText { get; set; }
+
+        [Parameter]
+        public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
 
         internal virtual bool HideSubmit { get; set; }
         internal virtual string _SubmitText { get; set; }

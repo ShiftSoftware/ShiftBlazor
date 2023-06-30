@@ -28,66 +28,93 @@
                         <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Print" />
                     }
                 </MudButton>
-            </MudTooltip>;
+            </MudTooltip>
+    ;
     }
 
     private RenderFragment DeleteButton
     {
-        get =>
-            @<MudTooltip Text="@Loc["Delete"]">
-                <MudButton Style="min-width:40px;"
-                           Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
-                           Variant="Variant.Text"
-                           Size="Size.Medium"
-                           Color="Color.Error"
-                           OnClick="DeleteItem">
-                    @if (TaskInProgress == FormTasks.Delete)
-                    {
-                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                    }
-                    else
-                    {
-                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
-                    }
-                </MudButton>
-            </MudTooltip>;
+        get
+        {
+            if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))
+            {
+                return
+    @<MudTooltip Text="@Loc["Delete"]">
+        <MudButton Style="min-width:40px;"
+                   Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
+                   Variant="Variant.Text"
+                   Size="Size.Medium"
+                   Color="Color.Error"
+                   OnClick="DeleteItem">
+            @if (TaskInProgress == FormTasks.Delete)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+            }
+
+            else
+            {
+                <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
+            }
+        </MudButton>
+    </MudTooltip>
+    ;
+            }
+
+            return@<span></span>;
+        }
     }
 
     private RenderFragment EditButton
     {
-        get =>
-            @<MudTooltip Text="@Loc["Edit"]">
-                <MudButton Style="min-width:40px;"
-                           Disabled="DisableEdit || Mode > FormModes.View || TaskInProgress != FormTasks.None"
-                           Variant="Variant.Text"
-                           Size="Size.Medium"
-                           Color="Color.Primary"
-                           OnClick="EditItem">
-                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
-                </MudButton>
-            </MudTooltip>;
+        get
+        {
+            if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write))
+            {
+                return
+    @<MudTooltip Text="@Loc["Edit"]">
+        <MudButton Style="min-width:40px;"
+                   Disabled="DisableEdit || Mode > FormModes.View || TaskInProgress != FormTasks.None"
+                   Variant="Variant.Text"
+                   Size="Size.Medium"
+                   Color="Color.Primary"
+                   OnClick="EditItem">
+            <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
+        </MudButton>
+        </MudTooltip>
+    ;
+            }
+
+            return@<span></span>;
+        }
     }
 
     private RenderFragment RevisionButton
     {
-        get =>
-            @<MudTooltip Text="@Loc["Revisions"]">
-                <MudButton Style="min-width:40px;"
-                           Disabled="DisableRevisions || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
-                           Variant="Variant.Text"
-                           Size="Size.Medium"
-                           Color="Color.Warning"
-                           OnClick="ViewRevisions">
-                    @if (TaskInProgress == FormTasks.FetchRevisions)
-                    {
-                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                    }
-                    else
-                    {
-                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.History" />
-                    }
-                </MudButton>
-            </MudTooltip>;
+        get
+        {
+            if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
+            {
+                return @<MudTooltip Text="@Loc["Revisions"]">
+        <MudButton Style="min-width:40px;"
+                   Disabled="DisableRevisions || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
+                   Variant="Variant.Text"
+                   Size="Size.Medium"
+                   Color="Color.Warning"
+                   OnClick="ViewRevisions">
+            @if (TaskInProgress == FormTasks.FetchRevisions)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+            }
+            else
+            {
+                <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.History" />
+            }
+        </MudButton>
+    </MudTooltip>;
+            }
+
+            return@<span></span>;
+        }
     }
 
     public RenderFragment? ToolbarEnd

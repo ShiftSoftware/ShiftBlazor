@@ -123,7 +123,13 @@
   <data name="ModalClose" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="ReadAccessDenied" xml:space="preserve">
+    <value>You can't View ({0})</value>
+  </data>
   <data name="SubmitTextDefault" xml:space="preserve">
     <value>Submit</value>
+  </data>
+  <data name="WriteAccessDenied" xml:space="preserve">
+    <value>You can't Create/Modify ({0})</value>
   </data>
 </root>

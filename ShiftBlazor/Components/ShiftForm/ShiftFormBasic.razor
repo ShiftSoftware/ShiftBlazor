@@ -29,11 +29,11 @@
                         <MudIcon Icon="@IconSvg"></MudIcon>
                         <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FormDefaultTitle"])</MudText>
 
-                        @ToolbarStartTemplate
+                            @ToolbarStartTemplate
 
-                        <MudSpacer></MudSpacer>
+                            <MudSpacer></MudSpacer>
 
-                        @if (ToolbarCenterTemplate != null)
+                            @if (ToolbarCenterTemplate != null)
                         {
                             @ToolbarCenterTemplate
                             <MudSpacer></MudSpacer>
@@ -76,7 +76,35 @@
                     <CascadingValue Name="FormChild" Value="@true" IsFixed="@true">
                         <CascadingValue Value="@Mode">
                             <CascadingValue Value="@TaskInProgress">
-                                @ChildContent
+                                @if (TypeAuthAction is null)
+                                {
+                                    @ChildContent
+                                }
+                                else
+                                {
+                                    if (Mode == FormModes.Create || Mode == FormModes.Edit)
+                                    {
+                                        if (TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write))
+                                        {
+                                            @ChildContent
+                                        }
+                                        else
+                                        {
+                                            <MudAlert Severity="Severity.Error">@Loc["WriteAccessDenied", Title]</MudAlert>
+                                        }
+                                    }
+                                    else if (Mode == FormModes.View || Mode == FormModes.Archive)
+                                    {
+                                        if (TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
+                                        {
+                                            @ChildContent
+                                        }
+                                        else
+                                        {
+                                            <MudAlert Severity="Severity.Error">@Loc["ReadAccessDenied", Title]</MudAlert>
+                                        }
+                                    }
+                                }
                             </CascadingValue>
                         </CascadingValue>
                     </CascadingValue>
@@ -102,7 +130,7 @@
 
                         @FooterToolbarEndTemplate
 
-                        @if (!HideSubmit)
+                        @if (!HideSubmit && (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)))
                         {
                             <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
                                 @if (TaskInProgress == FormTasks.Save)

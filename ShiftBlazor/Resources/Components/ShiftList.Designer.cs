@@ -250,6 +250,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You can&apos;t access ({0}).
+        /// </summary>
+        internal static string ReadAccessDenied {
+            get {
+                return ResourceManager.GetString("ReadAccessDenied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reload.
         /// </summary>
         internal static string RefreshList {
