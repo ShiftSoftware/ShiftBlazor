@@ -1,5 +1,6 @@
 ﻿@using ShiftSoftware.ShiftBlazor.Enums
-@typeparam T
+@typeparam T where T : ShiftEntitySelectDTO, new()
+@typeparam TEntitySet
 @inherits MudAutocomplete<T>
 @namespace ShiftSoftware.ShiftBlazor.Components
 
