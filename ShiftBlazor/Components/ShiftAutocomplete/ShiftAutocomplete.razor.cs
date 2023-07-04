@@ -32,9 +32,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public Func<string, Expression<Func<TEntitySet, bool>>> Where { get; set; }
 
 
-        [Parameter]
+        [Parameter, EditorRequired]
         public string DataValueField { get; set; }
-        [Parameter]
+        [Parameter, EditorRequired]
         public string DataTextField { get; set; }
 
         internal IQueryable<TEntitySet> QueryBuilder { get; set; } = default!;
