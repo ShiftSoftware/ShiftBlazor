@@ -16,3 +16,7 @@ window.getWindowDimensions = function () {
 window.reloadPage = function () {
     window.location.reload();
 }
+
+window.ClickElementById = function (id) {
+    document.getElementById(id)?.click();
+}
