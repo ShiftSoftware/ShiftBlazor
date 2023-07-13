@@ -1,0 +1,51 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
+@using static MudBlazor.Icons.Material
+
+<MudPaper title="@Item.GetFileName()" Style="position: relative;display: flex;overflow: hidden;flex-direction: column;">
+    @if (!Uploader.ReadOnly)
+    {
+        <MudToolBar Dense Style="position: absolute; top: 0; left: 0;width: 100%;padding: 0">
+            <MudSpacer></MudSpacer>
+            @if (Item.Message != null)
+            {
+                <MudTooltip Text="@(Item.Message?.Title ?? "Error")">
+                    <MudIconButton OnClick="@(() => Uploader.UploadFile(Item))" Icon="@Filled.Error"></MudIconButton>
+                </MudTooltip>
+            }
+            <MudIconButton Title="Remove" OnClick="@(() => Uploader.Remove(Item))" Icon="@Filled.RemoveCircle" Color="Color.Dark"></MudIconButton>
+        </MudToolBar>
+    }
+
+    @if (Item.IsImage() && Item.File != null)
+    {
+        <MudImage draggable="false" Src="@($"{Item.File.Url}")" Alt="@Item.GetFileName()" Height="@Height" Width="@Width" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center"></MudImage>
+    }
+    else
+    {
+        <MudIcon Icon="@(Item.IsImage() ? Filled.Image : Filled.InsertDriveFile)" Style=@($"height: {Height}px;width: {Width}px;")></MudIcon>
+    }
+
+    @if (Item.IsWaitingForUpload())
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (Item.LocalFile != null)
+    {
+        <MudProgressLinear Color="Item.Message == null ? Color.Success : Color.Error" Value="100" />
+    }
+
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public UploaderItem Item { get; set; } = default!;
+
+    [Parameter]
+    public int Width { get; set; } = 150;
+
+    [Parameter]
+    public int Height { get; set; } = 150;
+
+    [CascadingParameter]
+    public FileUploader Uploader { get; set; } = default!;
+}

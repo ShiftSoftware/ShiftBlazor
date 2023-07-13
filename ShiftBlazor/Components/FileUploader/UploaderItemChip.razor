@@ -1,0 +1,49 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
+@using static MudBlazor.Icons.Material
+
+@if (Uploader.ReadOnly)
+{
+    <MudChip>
+        @renderFragment
+    </MudChip>
+}
+else
+{
+    <MudChip OnClose="@(() => Uploader.Remove(Item))">
+        @renderFragment
+    </MudChip>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public UploaderItem Item { get; set; } = default!;
+
+    [CascadingParameter]
+    public FileUploader Uploader { get; set; } = default!;
+
+    internal string Icon => Item.IsImage() ? Filled.Image : Filled.InsertDriveFile;
+
+    internal RenderFragment renderFragment =>
+        @<div style="display: flex;gap: 10px;">
+            
+            @if (Item.Message != null)
+            {
+                 <MudTooltip Text="@(Item.Message?.Title ?? "Error")">
+                    <MudIconButton OnClick="@(() => Uploader.UploadFile(Item))" Icon="@Filled.Error" Color="@Color.Error" Style="padding: 0;"></MudIconButton>
+                </MudTooltip>
+            }
+            else if (Item.IsWaitingForUpload())
+            {
+                <MudProgressCircular Color="@Color.Primary" Size="@Size.Small" Indeterminate="true" />
+            }
+            else if (Uploader.ReadOnly || (Item.LocalFile == null && Item.File != null))
+            {
+                <MudIcon Icon="@Icon" />
+            }
+            else if (Item.IsNew())
+            {
+                <MudIcon Icon="@Filled.CheckCircle" Color="@Color.Success" />
+            }
+            <MudText>@Item.GetFileName()</MudText>
+        </div>;
+}
