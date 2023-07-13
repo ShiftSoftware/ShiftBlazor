@@ -23,7 +23,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftEntityForm> Loc { get; set; } = default!;
-
+        
         /// <summary>
         ///     The URL endpoint that processes the CRUD operations.
         /// </summary>
@@ -146,7 +146,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (Mode != FormModes.Create)
             {
-                await FetchItem();
+                if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
+                    await FetchItem();
             }
 
             SetTitle();

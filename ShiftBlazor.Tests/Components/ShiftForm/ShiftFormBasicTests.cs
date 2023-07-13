@@ -114,10 +114,10 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     public void ShouldCascadeValuesToChildContent()
     {
         var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters
-            .AddChildContent<ShiftAutocomplete<Sample>>(_params => _params.Add(p => p.EntitySet, "Product"))
+            .AddChildContent<ShiftAutocomplete<ShiftEntitySelectDTO, Sample>>(_params => _params.Add(p => p.EntitySet, "Product"))
         );
 
-        var auto = cut.FindComponent<ShiftAutocomplete<Sample>>().Instance;
+        var auto = cut.FindComponent<ShiftAutocomplete<ShiftEntitySelectDTO, Sample>>().Instance;
 
         Assert.NotNull(auto.Mode);
         Assert.NotNull(auto.TaskInProgress);

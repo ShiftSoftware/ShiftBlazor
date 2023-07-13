@@ -24,6 +24,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private HttpClient HttpClient { get; set; } = default!;
         [Inject] private NavigationManager NavManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
+        [Inject] private TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
@@ -229,12 +230,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool MultiLineCells { get; set; }
 
+        [Parameter]
+        public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
+
         public SfGrid<T>? Grid;
         internal List<ListColumn> GeneratedColumns = new();
         internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
-        
-        internal bool RenderAddButton => !(DisableAdd || ComponentType == null);
+
+        internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));
         internal bool ActionUrlBroken = false;
         internal bool IsReady = false;
 

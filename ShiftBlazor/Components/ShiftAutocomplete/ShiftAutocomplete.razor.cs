@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftEntity.Model.Dtos;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftAutocomplete<T> : MudAutocomplete<T>
+    public partial class ShiftAutocomplete<T, TEntitySet> : MudAutocomplete<T>
+        where T : ShiftEntitySelectDTO, new()
     {
         [Inject] private ODataQuery OData { get; set; } = default!;
         [Inject] private HttpClient Http { get; set; } = default!;
@@ -27,9 +29,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public FormTasks? TaskInProgress { get; set; }
 
         [Parameter]
-        public Func<string, Expression<Func<T, bool>>> Where { get; set; }
+        public Func<string, Expression<Func<TEntitySet, bool>>> Where { get; set; }
 
-        internal IQueryable<T> QueryBuilder { get; set; } = default!;
+
+        [Parameter, EditorRequired]
+        public string DataValueField { get; set; }
+        [Parameter, EditorRequired]
+        public string DataTextField { get; set; }
+
+        internal IQueryable<TEntitySet> QueryBuilder { get; set; } = default!;
         internal string LastTypedValue = "";
 
         public ShiftAutocomplete ()
@@ -48,7 +56,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 throw new ArgumentNullException(nameof(EntitySet));
             }
 
-            QueryBuilder = OData.CreateQuery<T>(EntitySet);
+            QueryBuilder = OData.CreateQuery<TEntitySet>(EntitySet);
 
             SearchFuncWithCancel = Search;
         }
@@ -80,7 +88,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var text = await Http.GetStringAsync(url, token);
                 var json = JsonNode.Parse(text);
-                return json?["value"].Deserialize<List<T>>() ?? new List<T>();
+
+                var odataResult = json?["value"].Deserialize<List<TEntitySet>>() ?? new List<TEntitySet>();
+
+                var odataResultType = typeof(TEntitySet);
+
+                return odataResult.Select(x => new T
+                {
+                    Value = odataResultType.GetProperty(DataValueField)!.GetValue(x)!.ToString(),
+                    Text = odataResultType.GetProperty(DataTextField)!.GetValue(x)!.ToString(),
+                }).ToList();
             }
             catch (Exception)
             {

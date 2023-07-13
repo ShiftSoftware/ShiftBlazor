@@ -1,5 +1,7 @@
-﻿using RichardSzalay.MockHttp;
+﻿using Bunit.TestDoubles;
+using RichardSzalay.MockHttp;
 using ShiftSoftware.ShiftEntity.Model;
+using ShiftSoftware.TypeAuth.Blazor.Extensions;
 
 namespace ShiftSoftware.ShiftBlazor.Tests;
 
@@ -48,5 +50,9 @@ public class ShiftBlazorTestContext : TestContext
             };
         });
         JSInterop.Mode = JSRuntimeMode.Loose;
+
+        Services.AddTypeAuth(o => { });
+
+        this.AddTestAuthorization();
     }
 }

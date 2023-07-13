@@ -5,7 +5,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftAutocompleteWithQuickAdd<T, TQuickAdd> : ShiftAutocomplete<T>
+    public partial class ShiftAutocompleteWithQuickAdd<T, TEntitySet, TQuickAdd> : ShiftAutocomplete<T, TEntitySet>
     {
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
 

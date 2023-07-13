@@ -79,11 +79,29 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You can&apos;t View ({0}).
+        /// </summary>
+        internal static string ReadAccessDenied {
+            get {
+                return ResourceManager.GetString("ReadAccessDenied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Submit.
         /// </summary>
         internal static string SubmitTextDefault {
             get {
                 return ResourceManager.GetString("SubmitTextDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can&apos;t Create/Modify ({0}).
+        /// </summary>
+        internal static string WriteAccessDenied {
+            get {
+                return ResourceManager.GetString("WriteAccessDenied", resourceCulture);
             }
         }
     }

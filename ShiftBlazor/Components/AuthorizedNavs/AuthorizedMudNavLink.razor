@@ -1,0 +1,7 @@
+﻿@inherits MudNavLink
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@{
+    if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))
+        base.BuildRenderTree(__builder);
+}

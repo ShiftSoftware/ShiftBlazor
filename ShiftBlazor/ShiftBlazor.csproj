@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
 		<BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
-		<Version>1.5.1</Version>
+		<Version>1.5.6</Version>
 
 		<AssemblyName>ShiftSoftware.ShiftBlazor</AssemblyName>
 		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>
@@ -27,7 +27,8 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="MudBlazor" Version="6.4.1" />
-		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="1.6.0.12" />
+		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="1.6.6" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
+		<PackageReference Include="ShiftSoftware.TypeAuth.Blazor" Version="1.4.2" Condition="!Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
 		<PackageReference Include="Syncfusion.Blazor.Grid" Version="21.1.35" />
 		<PackageReference Include="Syncfusion.Blazor.Themes" Version="21.1.35" />
 	</ItemGroup>
@@ -83,17 +84,9 @@
 		</EmbeddedResource>
 	</ItemGroup>
 
-	<ItemGroup><!--Shift Framework References will be removed by pre-commit-->
-	
-	
-	
-	
-	
+	<ItemGroup>
+		<ProjectReference Include="..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj" Condition="Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
+		<ProjectReference Include="..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj" />
 	</ItemGroup>
-
-
-	<Target Name="CopyPreCommitHook" BeforeTargets="Build" Condition="'$(IsCrossTargetingBuild)'!='true' And '$(Configuration)'=='Debug'">
-		<Exec Command="xcopy /Y /I pre-commit ..\.git\hooks\" />
-	</Target>
 
 </Project>

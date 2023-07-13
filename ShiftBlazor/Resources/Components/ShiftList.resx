@@ -181,6 +181,9 @@
   <data name="PrintMessage" xml:space="preserve">
     <value>Opening Print Window, this might take a while</value>
   </data>
+  <data name="ReadAccessDenied" xml:space="preserve">
+    <value>You can't access ({0})</value>
+  </data>
   <data name="RefreshList" xml:space="preserve">
     <value>Reload</value>
   </data>
