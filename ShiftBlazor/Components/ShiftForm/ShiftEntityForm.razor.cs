@@ -336,6 +336,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return value;
             }
 
+            // Use a component instead of html string
             if (TaskInProgress == FormTasks.Save && result.Message != null)
             {
                 await DialogService.ShowMessageBox(result.Message.Title, MessageToHtml(result.Message), options: new DialogOptions

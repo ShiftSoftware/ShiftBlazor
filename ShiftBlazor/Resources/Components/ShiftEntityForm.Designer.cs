@@ -151,7 +151,7 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Editing {0} {1}.
+        ///   Looks up a localized string similar to Editing {0} ({1}).
         /// </summary>
         internal static string EditingForm {
             get {
@@ -250,7 +250,7 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Viewing {0} {1}.
+        ///   Looks up a localized string similar to Viewing {0} ({1}).
         /// </summary>
         internal static string ViewingForm {
             get {

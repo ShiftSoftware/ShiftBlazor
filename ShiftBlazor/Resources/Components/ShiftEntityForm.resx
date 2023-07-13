@@ -149,7 +149,7 @@
     <value>Edit</value>
   </data>
   <data name="EditingForm" xml:space="preserve">
-    <value>Editing {0} {1}</value>
+    <value>Editing {0} ({1})</value>
     <comment>0=title,1=id</comment>
   </data>
   <data name="ItemCreated" xml:space="preserve">
@@ -184,7 +184,7 @@
     <value>Save</value>
   </data>
   <data name="ViewingForm" xml:space="preserve">
-    <value>Viewing {0} {1}</value>
+    <value>Viewing {0} ({1})</value>
     <comment>0=title,1=id</comment>
   </data>
   <data name="Warning" xml:space="preserve">
