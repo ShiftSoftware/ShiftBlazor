@@ -162,9 +162,9 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         /// <summary>
         ///   Looks up a localized string similar to Settings.
         /// </summary>
-        internal static string Settings {
+        internal static string SettingsHeader {
             get {
-                return ResourceManager.GetString("Settings", resourceCulture);
+                return ResourceManager.GetString("SettingsHeader", resourceCulture);
             }
         }
     }

@@ -150,7 +150,7 @@
   <data name="OkButton" xml:space="preserve">
     <value>Ok</value>
   </data>
-  <data name="Settings" xml:space="preserve">
+  <data name="SettingsHeader" xml:space="preserve">
     <value>Settings</value>
   </data>
 </root>
