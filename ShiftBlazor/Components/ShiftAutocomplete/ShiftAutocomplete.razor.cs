@@ -29,7 +29,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public FormTasks? TaskInProgress { get; set; }
 
         [Parameter]
-        public Func<string, Expression<Func<TEntitySet, bool>>> Where { get; set; }
+        public Func<string, Expression<Func<TEntitySet, bool>>>? Where { get; set; }
 
 
         [Parameter, EditorRequired]
@@ -61,6 +61,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
             SearchFuncWithCancel = Search;
         }
 
+        protected override void OnParametersSet()
+        {
+            if (ToStringFunc == null)
+            {
+                ToStringFunc = (e) => e?.Text;
+            }
+        }
+
         internal async Task<IEnumerable<T>> Search(string val, CancellationToken token)
         {
             LastTypedValue = val;
@@ -72,14 +80,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             var url = QueryBuilder.AsQueryable();
 
-            //if (!string.IsNullOrWhiteSpace(q))
+            if (Where != null)
             {
                 url = QueryBuilder
-                    //.AddQueryOption("$filter", $"contains(tolower({FilterFieldName}),'{q}')")
-                    .Where(Where(q ?? ""))
-                    .Take(100);
+                    .Where(Where(q ?? ""));
             }
-            return url.ToString()!;
+
+            return url.Take(100).ToString()!;
         }
 
         internal async Task<List<T>> GetODataResult(string url, CancellationToken token)
@@ -95,9 +102,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 return odataResult.Select(x => new T
                 {
-                    Value = odataResultType.GetProperty(DataValueField)!.GetValue(x)!.ToString(),
-                    Text = odataResultType.GetProperty(DataTextField)!.GetValue(x)!.ToString(),
-                }).ToList();
+                    Value = odataResultType.GetProperty(DataValueField)?.GetValue(x)?.ToString()!,
+                    Text = odataResultType.GetProperty(DataTextField)?.GetValue(x)?.ToString(),
+                }).Where(x => !string.IsNullOrWhiteSpace(x.Value)).ToList();
             }
             catch (Exception)
             {

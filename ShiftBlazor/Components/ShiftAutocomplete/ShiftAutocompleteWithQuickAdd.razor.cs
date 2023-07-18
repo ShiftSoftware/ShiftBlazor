@@ -9,7 +9,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
     {
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
 
-        [Parameter]
+        [Parameter, EditorRequired]
         public Type? QuickAddComponentType { get; set; }
         [Parameter]
         public string? QuickAddParameterName { get; set; }
@@ -64,18 +64,29 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             var result = await ShiftModal.Open(QuickAddComponentType, key, ModalOpenMode.Popup, parameters);
-            if (result != null && result.Canceled != true)
+
+            if (result == null || result.Canceled == true)
             {
-                if (Convert == null)
-                {
-                    Value = (T)result.Data;
-                }
-                else
-                {
-                    Value = Convert((TQuickAdd)result.Data);
-                }
-                await ValueChanged.InvokeAsync(Value);
+                return;
             }
+
+            var odataResultType = typeof(TQuickAdd);
+
+            var value = odataResultType.GetProperty(DataValueField)?.GetValue(result.Data)?.ToString();
+            var text = odataResultType.GetProperty(DataTextField)?.GetValue(result.Data)?.ToString();
+
+            if (string.IsNullOrWhiteSpace(value) || string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+                
+            Value = new T
+            {
+                Value = value,
+                Text = text,
+            };
+
+            await ValueChanged.InvokeAsync(Value);
         }
     }
 }
