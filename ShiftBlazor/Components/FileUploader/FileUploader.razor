@@ -1,5 +1,6 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.AspNetCore.Components.Forms
+@inject IStringLocalizer<Resources.Components.FileUploader> Loc
 
 @inherits Events.EventComponentBase
 @implements IDisposable
@@ -33,7 +34,7 @@
                         }
                         else
                         {
-                            <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput">Add</MudChip>
+                            <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput">@Loc["AddChipButton"]</MudChip>
                         }
                     </MudItem>
                 }
@@ -44,6 +45,6 @@
     }
     else
     {
-        <MudText Typo="Typo.h6">No files attached</MudText>
+        <MudText Typo="Typo.h6">@Loc["NoFilesSelected"]</MudText>
     }
 </MudPaper>

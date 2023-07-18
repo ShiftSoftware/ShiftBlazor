@@ -4,6 +4,7 @@
 @inject SettingManager SettingManager
 @inject NavigationManager NavManager
 @inject  IJSRuntime JsRuntime
+@inject IStringLocalizer<Resources.Components.Settings> Loc
 
 @namespace ShiftSoftware.ShiftBlazor.Components
 
@@ -17,14 +18,14 @@
 
 <MudDialog>
     <DialogContent>
-        <h1>Settings</h1>
+        <h1>@Loc["Settings"]</h1>
         <br />
 
-        <h3>App Settings</h3>
+        <h3>@Loc["AppSettings"]</h3>
         <MudGrid Style="align-items: end;" Spacing="0">
 
             <MudItem xs="3">
-                <MudText>Language</MudText>
+                <MudText>@Loc["Language"]</MudText>
             </MudItem>
 
             <MudItem xs="9">
@@ -38,7 +39,7 @@
             </MudItem>
 
             <MudItem xs="3">
-                <MudText>DateTime format</MudText>
+                <MudText>@Loc["DateTimeFormat"]</MudText>
             </MudItem>
 
             <MudItem xs="9">
@@ -55,15 +56,15 @@
         <br />
         <br />
 
-        <h3>DataGrid Settings</h3>
+        <h3>@Loc["DataGridSettings"]</h3>
         <MudGrid Style="align-items: center;" Spacing="0">
 
             <MudItem xs="3">
-                <MudText>DataGrid Items per page</MudText>
+                <MudText>@Loc["DataGridItemPerPage"]</MudText>
             </MudItem>
 
             <MudItem xs="9">
-                <MudSelect Margin="Margin.Dense" T="int" Label="Items per page" Value="PageSize" ValueChanged="PageSizeChangedHandler" Dense="true" Style="@($"width: 150px;display: flex;")">
+                <MudSelect Margin="Margin.Dense" T="int" Label="@Loc["DataGridItemPerPageLabel"]" Value="PageSize" ValueChanged="PageSizeChangedHandler" Dense="true" Style=@($"width: 150px;display: flex;")>
                     @foreach (var size in PageSizes)
                     {
                         <MudSelectItem Value="@size">@size</MudSelectItem>
@@ -76,11 +77,11 @@
         <br />
         <br />
 
-        <h3>Form Settings</h3>
+        <h3>@Loc["FormSettings"]</h3>
         <MudGrid Style="align-items: center;" Spacing="0">
 
             <MudItem xs="3">
-                <MudText>Modal Position</MudText>
+                <MudText>@Loc["ModalPosition"]</MudText>
             </MudItem>
 
             <MudItem xs="9">
@@ -93,7 +94,7 @@
             </MudItem>
 
             <MudItem xs="3">
-                <MudText>Modal Size</MudText>
+                <MudText>@Loc["ModalSize"]</MudText>
             </MudItem>
 
             <MudItem xs="9">
@@ -106,7 +107,7 @@
             </MudItem>
 
             <MudItem xs="3">
-                <MudText>Form Close Behavior</MudText>
+                <MudText>@Loc["FormCloseBehavior"]</MudText>
             </MudItem>
 
             <MudItem xs="9">
@@ -123,7 +124,7 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton Color="Color.Primary" OnClick="ReloadPage">Ok</MudButton>
+        <MudButton Color="Color.Primary" OnClick="ReloadPage">@Loc["OkButton"]</MudButton>
     </DialogActions>
 </MudDialog>
 @code {

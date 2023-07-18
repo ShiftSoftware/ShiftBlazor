@@ -43,10 +43,20 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="Resources\Components\ResourceViewer.Designer.cs">
+		<Compile Update="Resources\Components\FileUploader.Designer.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>FileUploader.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Resources\Components\RevisionViewer.Designer.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
-			<DependentUpon>ResourceViewer.resx</DependentUpon>
+			<DependentUpon>RevisionViewer.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Resources\Components\Settings.Designer.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Settings.resx</DependentUpon>
 		</Compile>
 		<Compile Update="Resources\Components\ShiftEntityForm.Designer.cs">
 			<DesignTime>True</DesignTime>
@@ -66,9 +76,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Update="Resources\Components\ResourceViewer.resx">
+		<EmbeddedResource Update="Resources\Components\FileUploader.resx">
+		  <Generator>ResXFileCodeGenerator</Generator>
+		  <LastGenOutput>FileUploader.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\RevisionViewer.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
-			<LastGenOutput>ResourceViewer.Designer.cs</LastGenOutput>
+			<LastGenOutput>RevisionViewer.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\Settings.resx">
+		  <Generator>ResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Settings.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 		<EmbeddedResource Update="Resources\Components\ShiftEntityForm.resx">
 			<Generator>ResXFileCodeGenerator</Generator>

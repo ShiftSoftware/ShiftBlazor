@@ -31,6 +31,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public Func<string, Expression<Func<TEntitySet, bool>>>? Where { get; set; }
 
+        [Parameter]
+        public bool Tags { get; set; }
 
         [Parameter, EditorRequired]
         public string DataValueField { get; set; }
