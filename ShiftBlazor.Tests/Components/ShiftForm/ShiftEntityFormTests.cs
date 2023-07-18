@@ -432,12 +432,12 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         await comp.Instance.ValidSubmitHandler(comp.Instance.editContext);
 
         Assert.StartsWith("Viewing", comp.Instance.DocumentTitle);
-        Assert.EndsWith(title + " " + comp.Instance.Value.ID, comp.Instance.DocumentTitle);
+        Assert.EndsWith($"{title} ({comp.Instance.Value.ID})", comp.Instance.DocumentTitle);
 
         await comp.Instance.EditItem();
 
         Assert.StartsWith("Editing", comp.Instance.DocumentTitle);
-        Assert.EndsWith(title + " " + comp.Instance.Value.ID, comp.Instance.DocumentTitle);
+        Assert.EndsWith($"{title} ({comp.Instance.Value.ID})", comp.Instance.DocumentTitle);
     }
 
     [Fact]
