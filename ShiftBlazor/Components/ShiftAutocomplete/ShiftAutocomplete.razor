@@ -1,6 +1,6 @@
 ﻿@using ShiftSoftware.ShiftBlazor.Enums
 @typeparam T where T : ShiftEntitySelectDTO, new()
-@typeparam TEntitySet
+@typeparam TEntitySet where TEntitySet : ShiftEntityDTOBase
 @inherits MudAutocomplete<T>
 @namespace ShiftSoftware.ShiftBlazor.Components
 
@@ -8,17 +8,12 @@
     base.ReadOnly = Mode < FormModes.Edit;
     base.Disabled = TaskInProgress != null && TaskInProgress != FormTasks.None;
 
-    base.ProgressIndicatorInPopoverTemplate =
-    @<MudList Clickable="false">
-        <MudListItem>
-            Loading...
-        </MudListItem>
-    </MudList>;
+    base.NoItemsTemplate = @<MudText Align="Align.Center" Class="px-4 py-1">No items found</MudText>;
 
-    base.NoItemsTemplate =
-    @<MudText Align="Align.Center" Class="px-4 py-1">
-        No items found
-    </MudText>;
+    if (ShiftItemTemplate != null)
+    {
+        base.ItemTemplate = (e) => @RenderItem(e.Value);
+    }
 
     base.BuildRenderTree(__builder);
 }

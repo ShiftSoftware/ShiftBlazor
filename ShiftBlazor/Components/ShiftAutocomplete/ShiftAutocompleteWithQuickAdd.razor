@@ -1,5 +1,5 @@
 ﻿@typeparam T where T : ShiftEntitySelectDTO, new()
-@typeparam TEntitySet
+@typeparam TEntitySet where TEntitySet : ShiftEntityDTOBase
 @typeparam TQuickAdd
 @inherits ShiftAutocomplete<T, TEntitySet>
 @namespace ShiftSoftware.ShiftBlazor.Components

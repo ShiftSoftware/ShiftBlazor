@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Components;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftEntity.Model.Dtos;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     public partial class ShiftAutocompleteWithQuickAdd<T, TEntitySet, TQuickAdd> : ShiftAutocomplete<T, TEntitySet>
+        where T : ShiftEntitySelectDTO, new()
+        where TEntitySet : ShiftEntityDTOBase
     {
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
 

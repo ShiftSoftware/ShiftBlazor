@@ -6,11 +6,14 @@ using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using System.Net.Http.Json;
+using Microsoft.OData.Client;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     public partial class ShiftAutocomplete<T, TEntitySet> : MudAutocomplete<T>
         where T : ShiftEntitySelectDTO, new()
+        where TEntitySet : ShiftEntityDTOBase
     {
         [Inject] private ODataQuery OData { get; set; } = default!;
         [Inject] private HttpClient Http { get; set; } = default!;
@@ -39,8 +42,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter, EditorRequired]
         public string DataTextField { get; set; }
 
-        internal IQueryable<TEntitySet> QueryBuilder { get; set; } = default!;
+        [Parameter]
+        public RenderFragment<TEntitySet> ShiftItemTemplate { get; set; }
+
+        internal DataServiceQuery<TEntitySet> QueryBuilder { get; set; } = default!;
         internal string LastTypedValue = "";
+        internal List<TEntitySet> Items = new();
 
         public ShiftAutocomplete ()
         {
@@ -49,6 +56,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             Strict = false;
             Clearable = true;
             Variant = Variant.Text;
+            ShowProgressIndicator = true;
         }
 
         protected override void OnInitialized()
@@ -58,16 +66,42 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 throw new ArgumentNullException(nameof(EntitySet));
             }
 
+            if (ToStringFunc == null)
+            {
+                ToStringFunc = (e) => e?.Text ?? "";
+            }
+
             QueryBuilder = OData.CreateQuery<TEntitySet>(EntitySet);
 
             SearchFuncWithCancel = Search;
+
+            _ = UpdateInitialValue();
+
+            base.OnInitialized();
         }
 
-        protected override void OnParametersSet()
+        internal async Task UpdateInitialValue()
         {
-            if (ToStringFunc == null)
+            if (Value != null && !string.IsNullOrWhiteSpace(Value.Value) && string.IsNullOrWhiteSpace(Value.Text))
             {
-                ToStringFunc = (e) => e?.Text;
+                Placeholder = "Loading...";
+                var url = QueryBuilder.Where(x => x.ID == Value.Value).Take(1);
+                var value = await GetODataResult(url.ToString()!);
+                var text = value.First().Text;
+
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    return;
+                }
+
+                Value = new T
+                {
+                    Value = Value.Value,
+                    Text = text,
+                };
+
+                Placeholder = "";
+                await ValueChanged.InvokeAsync(Value);
             }
         }
 
@@ -78,27 +112,37 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return await GetODataResult(url, token);
         }
 
-        internal string GetODataUrl(string q)
+        internal string GetODataUrl(string q = "")
         {
             var url = QueryBuilder.AsQueryable();
 
             if (Where != null)
             {
                 url = QueryBuilder
-                    .Where(Where(q ?? ""));
+                    .Where(Where(q));
+            }
+            else if (!string.IsNullOrWhiteSpace(q))
+            {
+                url = QueryBuilder
+                    .AddQueryOption("$filter", $"contains(tolower({DataTextField}),'{q}')");
             }
 
             return url.Take(100).ToString()!;
         }
 
-        internal async Task<List<T>> GetODataResult(string url, CancellationToken token)
+        internal async Task<List<T>> GetODataResult(string url, CancellationToken token = default)
         {
             try
             {
-                var text = await Http.GetStringAsync(url, token);
-                var json = JsonNode.Parse(text);
+                var res = await Http.GetFromJsonAsync<ODataDTO<TEntitySet>>(url, token);
 
-                var odataResult = json?["value"].Deserialize<List<TEntitySet>>() ?? new List<TEntitySet>();
+                if (res == null)
+                {
+                    throw new Exception("Could not get OData response");
+                }
+
+                var odataResult = res.Value;
+                Items = odataResult;
 
                 var odataResultType = typeof(TEntitySet);
 
@@ -112,6 +156,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 throw;
             }
+        }
+
+        public RenderFragment RenderItem(string id)
+        {
+            var item = Items.First(x => x.ID == id);
+
+            return ShiftItemTemplate(item);
         }
     }
 }
