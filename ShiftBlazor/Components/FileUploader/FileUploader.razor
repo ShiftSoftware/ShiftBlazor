@@ -5,11 +5,12 @@
 @inherits Events.EventComponentBase
 @implements IDisposable
 
-<MudPaper id="@UploaderId" Class="@(DefaultClass + (ReadOnly ? " readonly" : ""))" Elevation="0" Outlined="true">
+<MudField id="@UploaderId" Label="@Label" Class="@("FileUpload relative my-4 z-10" + (ReadOnly ? " readonly" : ""))" Variant="Variant.Outlined">
+
     @if (Items.Count > 0 || !ReadOnly)
     {
-        <CascadingValue Value="this" IsFixed="true">
-            <MudGrid Spacing="@(ShowThumbnail ? 2 : 1)">
+        <MudGrid Spacing="@(ShowThumbnail ? 2 : 1)">
+            <CascadingValue Value="this" IsFixed="true">
                 @foreach (var item in Items)
                 {
                     <MudItem @key="item.Id" Style="cursor: grab;" data-guid="@item.Id">
@@ -24,22 +25,22 @@
                         }
                     </MudItem>
                 }
+            </CascadingValue>
 
-                @if (!ReadOnly)
-                {
-                    <MudItem @key="@("add-file")" Class="add-file">
-                        @if (ShowThumbnail)
-                        {
-                            <MudIconButton OnClick="OpenInput" Icon="@Icons.Material.Filled.Add" Size="Size.Large" Variant="Variant.Filled" Style=@($"width: {ThumbnailSize}px;height: {ThumbnailSize}px;")></MudIconButton>
-                        }
-                        else
-                        {
-                            <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput">@Loc["AddChipButton"]</MudChip>
-                        }
-                    </MudItem>
-                }
-            </MudGrid>
-        </CascadingValue>
+            @if (!ReadOnly)
+            {
+                <MudItem @key="@("add-file")" Class="add-file">
+                    @if (ShowThumbnail)
+                    {
+                        <MudIconButton OnClick="OpenInput" Icon="@Icons.Material.Filled.Add" Size="Size.Large" Variant="Variant.Filled" Style=@($"width: {ThumbnailSize}px;height: {ThumbnailSize}px;")></MudIconButton>
+                    }
+                    else
+                    {
+                        <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput">@Loc["AddChipButton"]</MudChip>
+                    }
+                </MudItem>
+            }
+        </MudGrid>
         <InputFile id="@InputId" OnChange="OnInputFileChanged" hidden multiple accept="@InputAccept" />
 
     }
@@ -47,4 +48,4 @@
     {
         <MudText Typo="Typo.h6">@Loc["NoFilesSelected"]</MudText>
     }
-</MudPaper>
+</MudField>

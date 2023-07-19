@@ -36,6 +36,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string Url { get; set; }
 
         [Parameter]
+        public string? Label { get; set; }
+
+        [Parameter]
         public string Accept { get; set; } = "";
 
         [Parameter]
@@ -91,8 +94,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public bool ReadOnly => Mode < FormModes.Edit;
         public bool Disabled => TaskInProgress != null && TaskInProgress != FormTasks.None;
-
-        private static readonly string DefaultClass = "FileUpload relative rounded-lg border-2 border-dashed pa-4 my-4 mud-width-full mud-height-full z-10";
 
         protected override void OnInitialized()
         {
