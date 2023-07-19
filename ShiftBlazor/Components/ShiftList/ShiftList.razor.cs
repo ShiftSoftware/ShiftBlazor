@@ -11,10 +11,11 @@ using ShiftSoftware.ShiftBlazor.Enums;
 using Microsoft.Extensions.Localization;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Events.CustomEventArgs;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftList<T> : EventComponentBase
+    public partial class ShiftList<T> : EventComponentBase, IDisposable
         where T : ShiftEntityDTOBase, new()
     {
         [Inject] private MessageService MsgService { get; set; } = default!;
@@ -285,21 +286,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            OnRequestFailed += (o, args) => {
-
-                if (args.Uri != null)
-                {
-                    LastFailedRequestUri = args.Uri;
-                }
-            };
-
-            OnRequestStarted += (o, args) => {
-
-                if (args.Uri != null && args.Uri.AbsoluteUriWithoutQuery() == Grid.DataManager.Url)
-                {
-                    LastRequestUri = args.Uri;
-                }
-            };
+            OnRequestFailed += HandleRequestFailed;
+            OnRequestStarted += HandleRequestStarted;
 
             PageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
 
@@ -574,6 +562,28 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal static bool IsSystemType(Type type)
         {
             return type.Namespace == "System";
+        }
+
+        private void HandleRequestFailed(object? sender, UriEventArgs args)
+        {
+            if (args.Uri != null)
+            {
+                LastFailedRequestUri = args.Uri;
+            }
+        }
+
+        private void HandleRequestStarted(object? sender, UriEventArgs args)
+        {
+            if (args.Uri != null && args.Uri.AbsoluteUriWithoutQuery() == Grid.DataManager.Url)
+            {
+                LastRequestUri = args.Uri;
+            }
+        }
+
+        void IDisposable.Dispose()
+        {
+            OnRequestFailed -= HandleRequestFailed;
+            OnRequestStarted -= HandleRequestStarted;
         }
     }
 }
