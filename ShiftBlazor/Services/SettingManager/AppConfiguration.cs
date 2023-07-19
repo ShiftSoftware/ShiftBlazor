@@ -1,4 +1,5 @@
 ﻿using ShiftSoftware.ShiftBlazor.Extensions;
+using System.Reflection;
 
 namespace ShiftSoftware.ShiftBlazor.Services;
 
@@ -21,7 +22,7 @@ public class AppConfiguration
         set => _ODataPath = value;
     }
 
-    public Type? Index { get; set; }
+    public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
 
     public List<LanguageInfo> Languages = new();
 

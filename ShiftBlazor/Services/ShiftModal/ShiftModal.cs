@@ -17,7 +17,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         private readonly SettingManager SettingManager;
 
         private static readonly string QueryKey = "modal";
-        private readonly Assembly ProjectAssembly = Assembly.GetEntryAssembly()!;
+        private readonly List<Assembly> Assemblies;
 
         public ShiftModal(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService, SettingManager settingManager)
         {
@@ -26,15 +26,15 @@ namespace ShiftSoftware.ShiftBlazor.Services
             DialogService = dialogService;
             SettingManager = settingManager;
 
-            if (SettingManager.Configuration.Index != null)
+            Assemblies = new List<Assembly> { Assembly.GetEntryAssembly()! };
+
+            if (SettingManager.Configuration.AdditionalAssemblies != null)
             {
-                ProjectAssembly = SettingManager.Configuration.Index.Assembly;
+                Assemblies.AddRange(SettingManager.Configuration.AdditionalAssemblies);
             }
 
-            ProjectName = ProjectAssembly.GetName().Name!.Replace('-', '_');
         }
 
-        private string ProjectName { get; }
 
         /// <summary>
         ///     Open a form modal or page.
@@ -88,12 +88,16 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
             else if (openMode == ModalOpenMode.Popup)
             {
-                if (ComponentType!.FullName!.Contains(ProjectName))
+                foreach (var assembly in Assemblies)
                 {
-                    var fullname = ComponentType!.FullName!.Substring(ProjectName.Length + 1);
-                    UpdateModalQueryUrl(fullname, key, parameters);
+                    var assemblyName = assembly.GetName().Name!;
+                    if (ComponentType!.FullName!.Contains(assemblyName))
+                    {
+                        var fullname = ComponentType!.FullName!.Substring(assemblyName.Length + 1);
+                        UpdateModalQueryUrl(fullname, key, parameters);
+                    }
                 }
-
+                
                 return await OpenDialog(ComponentType, key, parameters);
             }
 
@@ -189,8 +193,18 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         internal Type? GetComponentType(string name)
         {
-            var CompNamespace = $"{ProjectName}.{name}";
-            return ProjectAssembly.GetType(CompNamespace);
+            foreach (var assembly in Assemblies)
+            {
+                var assemblyName = assembly.GetName().Name;
+                var compName = $"{assemblyName}.{name}";
+                var type = assembly.GetType(compName);
+
+                if (type != null)
+                {
+                    return type;
+                }
+            }
+            return null;
         }
 
         private async Task<DialogResult> OpenDialog(Type TComponent, object? key = null, Dictionary<string, string>? parameters = null)
