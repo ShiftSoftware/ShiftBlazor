@@ -7,7 +7,7 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 <ShiftList T="RevisionDTO"
-           Values="@_Revisions"
+           Values="@Revisions"
            DisableSelection="@true"
            OnRowClick="@RowClickHandler"
            DisableHeaderToolbar="@true"
@@ -58,10 +58,6 @@
     [Parameter]
     [EditorRequired]
     public List<RevisionDTO> Revisions { get; set; } = new();
-
-    private List<RevisionDTO> _Revisions => Revisions.Where(x =>
-        x.ValidTo.HasValue && x.ValidTo.Value.Year <= DateTime.UtcNow.Year
-    ).ToList();
 
     [Parameter]
     public string? Title { get; set; }
