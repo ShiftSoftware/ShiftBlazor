@@ -6,8 +6,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
 		<BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
-		<Version>1.5.7</Version>
-
+		<Version>1.5.8</Version>
+		<Authors>Saman-00,ShiftSoftware</Authors>
 		<AssemblyName>ShiftSoftware.ShiftBlazor</AssemblyName>
 		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>
 		<PackageProjectUrl>https://github.com/ShiftSoftware/ShiftBlazor</PackageProjectUrl>
@@ -23,11 +23,11 @@
 		<PackageReference Include="Microsoft.Extensions.Localization" Version="7.0.7" />
 		<PackageReference Include="Microsoft.OData.Client" Version="7.16.0" />
 		<PackageReference Include="MimeTypes" Version="2.4.1">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="MudBlazor" Version="6.4.1" />
-		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="1.6.7" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
+		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="1.6.11" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
 		<PackageReference Include="ShiftSoftware.TypeAuth.Blazor" Version="1.4.2" Condition="!Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
 		<PackageReference Include="Syncfusion.Blazor.Grid" Version="21.1.35" />
 		<PackageReference Include="Syncfusion.Blazor.Themes" Version="21.1.35" />
@@ -44,9 +44,9 @@
 
 	<ItemGroup>
 		<Compile Update="Resources\Components\FileUploader.Designer.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>FileUploader.resx</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>FileUploader.resx</DependentUpon>
 		</Compile>
 		<Compile Update="Resources\Components\RevisionViewer.Designer.cs">
 			<DesignTime>True</DesignTime>
@@ -54,9 +54,9 @@
 			<DependentUpon>RevisionViewer.resx</DependentUpon>
 		</Compile>
 		<Compile Update="Resources\Components\Settings.Designer.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>Settings.resx</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.resx</DependentUpon>
 		</Compile>
 		<Compile Update="Resources\Components\ShiftEntityForm.Designer.cs">
 			<DesignTime>True</DesignTime>
@@ -77,16 +77,16 @@
 
 	<ItemGroup>
 		<EmbeddedResource Update="Resources\Components\FileUploader.resx">
-		  <Generator>ResXFileCodeGenerator</Generator>
-		  <LastGenOutput>FileUploader.Designer.cs</LastGenOutput>
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>FileUploader.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 		<EmbeddedResource Update="Resources\Components\RevisionViewer.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
 			<LastGenOutput>RevisionViewer.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 		<EmbeddedResource Update="Resources\Components\Settings.resx">
-		  <Generator>ResXFileCodeGenerator</Generator>
-		  <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 		<EmbeddedResource Update="Resources\Components\ShiftEntityForm.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
