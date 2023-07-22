@@ -107,8 +107,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task<IEnumerable<T>> Search(string val, CancellationToken token)
         {
-            LastTypedValue = val;
-            var url = GetODataUrl(val);
+            LastTypedValue = val ?? "";
+            var url = GetODataUrl(LastTypedValue);
             return await GetODataResult(url, token);
         }
 
