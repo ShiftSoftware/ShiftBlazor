@@ -12,7 +12,10 @@
                     <MudIconButton OnClick="@(() => Uploader.UploadFile(Item))" Icon="@Filled.Error"></MudIconButton>
                 </MudTooltip>
             }
-            <MudIconButton Title="Remove" OnClick="@(() => Uploader.Remove(Item))" Icon="@Filled.RemoveCircle" Color="Color.Dark"></MudIconButton>
+            @if (CanDelete)
+            {
+                <MudIconButton Title="Remove" OnClick="@(() => Uploader.Remove(Item))" Icon="@Filled.RemoveCircle" Color="Color.Dark"></MudIconButton>
+            }
         </MudToolBar>
     }
 
@@ -48,4 +51,7 @@
 
     [CascadingParameter]
     public FileUploader Uploader { get; set; } = default!;
+
+    [Parameter]
+    public bool CanDelete { get; set; }
 }
