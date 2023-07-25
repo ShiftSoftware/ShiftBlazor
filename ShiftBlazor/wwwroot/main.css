@@ -22,3 +22,11 @@
 .e-grid.multiline td.e-rowcell {
     white-space: break-spaces;
 }
+
+.e-grid .is-deleted .e-rowcell {
+    background-color: #ffc7c7;
+}
+
+.e-grid .is-deleted:hover .e-rowcell {
+    background-color: #ffaeae !important;
+}

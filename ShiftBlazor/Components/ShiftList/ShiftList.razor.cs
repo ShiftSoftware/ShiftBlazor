@@ -182,7 +182,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         ///     To pass Syncfusion's OData query data.
         /// </summary>
         [Parameter]
-        public Query Query { get; set; } = new();
+        public Query? Query { get; set; }
         
         /// <summary>
         ///     To set the list's fixed height.
@@ -227,6 +227,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool DisableColumnChooser { get; set; }
 
         [Parameter]
+        public bool DisableDeleteFilter { get; set; }
+
+        [Parameter]
         public Dictionary<string, string>? HeaderTexts { get; set; }
 
         [Parameter]
@@ -249,6 +252,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));
         internal bool ActionUrlBroken = false;
         internal bool IsReady = false;
+
+        internal Query? GridQuery;
+        internal int ShowDeleted = 0;
 
         internal string GridId;
         internal FilterSettings FilterSettingMenu = new FilterSettings { Type = Syncfusion.Blazor.Grids.FilterType.Menu };
@@ -302,7 +308,41 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 GenerateColumns();
             }
+
+            GridQuery = Query;
+
         }
+
+        internal void FilterDeleted()
+        {
+            var query = Query ?? new Query();
+            var filter = GetDeleteFilter();
+            var states = 3;
+            ShowDeleted = (ShowDeleted + 1) % states;
+
+            if (ShowDeleted == 1)
+            {
+                filter.value = true;
+            }
+            else if (ShowDeleted == 2)
+            {
+                filter.value = true;
+                filter = filter.Or(GetDeleteFilter());
+            }
+
+            query.Where(filter);
+            GridQuery = query;
+        }
+
+        private static WhereFilter GetDeleteFilter()
+        {
+            return new WhereFilter
+            {
+                Field = nameof(ShiftEntityDTOBase.IsDeleted),
+                Operator = "equal",
+                value = false,
+            };
+        } 
 
         public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
         {
@@ -407,6 +447,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (OnDataBound != null)
             {
                 OnDataBound(this, new EventArgs());
+            }
+        }
+
+        internal void RowBound(RowDataBoundEventArgs<T> args)
+        {
+            if (args.Data.IsDeleted)
+            {
+                args.Row.AddClass(new string[] { "is-deleted" });
             }
         }
 
@@ -544,7 +592,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 GeneratedColumns.Add(column);
             }
 
-            Query.Expand(complexColumns);
+            GridQuery?.Expand(complexColumns);
         }
 
         internal string GetFieldName(PropertyInfo property)

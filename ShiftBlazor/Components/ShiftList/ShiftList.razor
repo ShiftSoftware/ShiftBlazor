@@ -34,6 +34,15 @@
 
                     @if (IsEmbedded != true)
                     {
+                        if (!DisableDeleteFilter)
+                        {
+                            <MudTooltip Text="Show deleted items">
+                            <MudIconButton Icon="@Icons.Material.Filled.RestoreFromTrash"
+                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                           OnClick="@FilterDeleted"/>
+                            </MudTooltip>
+                        }
+                        
                         @if (!DisableColumnChooser)
                         {
                             <MudTooltip Text="Column Chooser">
@@ -126,7 +135,7 @@
                         AllowExcelExport="EnableCsvExcelExport"
                         AllowPdfExport="EnablePdfExport"
                         AllowFiltering="!DisableFilters"
-                        Query="Query"
+                        Query="GridQuery"
                         AllowSelection="!DisableSelection"
                         EnableVirtualization="EnableVirtualization"
                         EnableVirtualMaskRow="EnableVirtualization"
@@ -141,6 +150,7 @@
                                 DataBound="DataBoundHandler"
                                 OnActionFailure="ErrorHandler"
                                 OnLoad="OnLoadHandler"
+                                RowDataBound="RowBound"
                                 TValue="T" />
                     <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
                     <GridSelectionSettings CheckboxOnly="true" PersistSelection="true" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
