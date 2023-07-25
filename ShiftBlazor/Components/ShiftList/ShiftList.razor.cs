@@ -125,12 +125,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         public bool DisableFilters { get; set; }
-        
+
         /// <summary>
         ///     Disable select
         /// </summary>
         [Parameter]
-        public bool DisableSelection { get; set; }
+        public bool DisableSelection { get; set; } = true;
 
         /// <summary>
         ///     If true, the toolbar in the header will not be rendered.
