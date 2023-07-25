@@ -46,7 +46,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public bool ShowThumbnail { get; set; }
-
+       
         [Parameter]
         public long MaxThumbnailSizeInMegaBytes { get; set; } = 10;
 
@@ -79,6 +79,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string ImageTypes = "image/*";
         internal int ThumbnailSize = 150;
 
+        [Inject] internal TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
+        [Parameter]
+        public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
         internal string InputAccept
         {
             get
@@ -188,8 +191,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task Remove(UploaderItem item)
         {
-            Items.Remove(item);
-            await SetValue(Items);
+            if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))
+            {
+                Items.Remove(item);
+                await SetValue(Items);
+            }
         }
 
         internal async void HandleGridSort(object? sender, KeyValuePair<string, List<Guid>> order)

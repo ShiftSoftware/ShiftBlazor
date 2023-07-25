@@ -1,7 +1,7 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using static MudBlazor.Icons.Material
 
-@if (Uploader.ReadOnly)
+@if (Uploader.ReadOnly && !CanDelete)
 {
     <MudChip>
         @renderFragment
@@ -20,6 +20,10 @@ else
 
     [CascadingParameter]
     public FileUploader Uploader { get; set; } = default!;
+
+    [Parameter]
+    public bool CanDelete { get; set; } = default!;
+
 
     internal string Icon => Item.IsImage() ? Filled.Image : Filled.InsertDriveFile;
 
