@@ -166,6 +166,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
 
+        [Parameter]
+        public string? NavColor { get; set; }
+
+        [Parameter]
+        public bool NavIconFlatColor { get; set; }
+
         internal virtual bool HideSubmit { get; set; }
         internal virtual string _SubmitText { get; set; }
         internal FormTasks TaskInProgress { get; set; }

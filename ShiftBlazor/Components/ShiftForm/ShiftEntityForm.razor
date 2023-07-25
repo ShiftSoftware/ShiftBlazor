@@ -14,7 +14,7 @@
         get =>
             @<MudTooltip Text="@Loc["Print"]">
                 <MudButton Style="min-width:40px;"
-                           Color="Color.Warning"
+                           Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
                            Variant="Variant.Text"
                            Size="Size.Medium"
                            Disabled="DisablePrint || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
@@ -44,7 +44,7 @@
                    Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
                    Variant="Variant.Text"
                    Size="Size.Medium"
-                   Color="Color.Error"
+                   Color="NavIconFlatColor ? Color.Inherit : Color.Error"
                    OnClick="DeleteItem">
             @if (TaskInProgress == FormTasks.Delete)
             {
@@ -76,7 +76,7 @@
                    Disabled="DisableEdit || Mode > FormModes.View || TaskInProgress != FormTasks.None"
                    Variant="Variant.Text"
                    Size="Size.Medium"
-                   Color="Color.Primary"
+                   Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
                    OnClick="EditItem">
             <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
         </MudButton>
@@ -99,7 +99,7 @@
                    Disabled="DisableRevisions || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
                    Variant="Variant.Text"
                    Size="Size.Medium"
-                   Color="Color.Warning"
+                   Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
                    OnClick="ViewRevisions">
             @if (TaskInProgress == FormTasks.FetchRevisions)
             {
@@ -157,7 +157,7 @@
         get =>
             @<MudTooltip Text="@Loc["NewTab"]">
                 <MudButton Variant="Variant.Text"
-                           Color="Color.Default"
+                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                            Style="min-width:40px;"
                            OnClick="OpenInNewTab">
                     <MudIcon Icon="@Icons.Material.Filled.OpenInNew"></MudIcon>
@@ -172,7 +172,7 @@
                 <MudButton Style="min-width:40px;"
                            Variant="Variant.Text"
                            Size="Size.Medium"
-                           Color="Color.Default"
+                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                            OnClick="ResizeForm">
                     <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
                 </MudButton>
@@ -229,7 +229,7 @@
             @<text>
                 @if (TaskInProgress == FormTasks.Fetch)
                 {
-                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                    <MudProgressCircular Color="NavIconFlatColor ? Color.Inherit : Color.Default" Indeterminate="true" />
                 }
             </text>;
     }

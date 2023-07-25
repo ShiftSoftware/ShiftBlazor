@@ -22,7 +22,7 @@
         <header>
             @if (!DisableHeaderToolbar)
             {
-                <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
+                <MudToolBar Style="@ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)" Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
                     <MudIcon Icon="@IconSvg"></MudIcon>
                     <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["ListDefaultTitle"])</MudText>
 
@@ -38,7 +38,7 @@
                         {
                             <MudTooltip Text="Column Chooser">
                                 <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
-                                            Color="Color.Default"
+                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                                             OnClick="ChooseColumn" />
                             </MudTooltip> 
                         }
@@ -47,14 +47,14 @@
                         {
                             <MudTooltip Text="@Loc["PrintButton"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Print"
-                                               Color="Color.Warning"
+                                               Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
                                                OnClick="PrintList" />
                             </MudTooltip>
                         }
                         @if (EnableCsvExcelExport || EnablePdfExport)
                         {
                             <MudTooltip Text="@Loc["DownloadButton"]">
-                                <MudMenu Icon="@Icons.Material.Filled.FileDownload" Color="Color.Warning">
+                                <MudMenu Icon="@Icons.Material.Filled.FileDownload" Color="NavIconFlatColor ? Color.Inherit : Color.Warning">
                                     @if (EnableCsvExcelExport)
                                     {
                                         <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">@Loc["CSVExportButton"]</MudMenuItem>
@@ -75,7 +75,7 @@
                             <MudButton Style="min-width:40px;"
                                        Variant="Variant.Text"
                                        Size="Size.Medium"
-                                       Color="Color.Primary"
+                                       Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
                                        OnClick="() => ViewAddItem()">
                                 <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.AddCircle" />
                             </MudButton>
@@ -94,7 +94,7 @@
                             <MudButton Style="min-width:40px; z-index: 100;"
                                        Variant="Variant.Text"
                                        Size="Size.Medium"
-                                       Color="Color.Default"
+                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                                        OnClick="CloseDialog">
                                 <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
                             </MudButton>

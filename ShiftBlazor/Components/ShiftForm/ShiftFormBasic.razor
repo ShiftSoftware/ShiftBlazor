@@ -25,7 +25,7 @@
             <header>
                 @if (!DisableHeaderToolbar)
                 {
-                    <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
+                    <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header" Style="@ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)">
                         <MudIcon Icon="@IconSvg"></MudIcon>
                         <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FormDefaultTitle"])</MudText>
 
@@ -54,7 +54,7 @@
                                 <MudButton Style="min-width:40px;"
                                            Variant="Variant.Text"
                                            Size="Size.Medium"
-                                           Color="Color.Default"
+                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                                            OnClick="() => Cancel()">
                                     <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
                                 </MudButton>

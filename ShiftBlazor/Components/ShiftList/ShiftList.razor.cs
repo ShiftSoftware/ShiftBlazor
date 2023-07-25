@@ -228,8 +228,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public Dictionary<string, string>? HeaderTexts { get; set; }
+
         [Parameter]
         public bool MultiLineCells { get; set; }
+
+        [Parameter]
+        public string? NavColor { get; set; }
+
+        [Parameter]
+        public bool NavIconFlatColor { get; set; }
 
         [Parameter]
         public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
