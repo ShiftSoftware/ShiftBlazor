@@ -107,8 +107,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task<IEnumerable<T>> Search(string val, CancellationToken token)
         {
-            LastTypedValue = val ?? "";
-            var url = GetODataUrl(LastTypedValue);
+            LastTypedValue = val;
+            var url = GetODataUrl(val);
             return await GetODataResult(url, token);
         }
 
@@ -116,15 +116,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             var url = QueryBuilder.AsQueryable();
 
-            if (Where != null)
+            if (!string.IsNullOrWhiteSpace(q))
             {
-                url = QueryBuilder
-                    .Where(Where(q));
-            }
-            else if (!string.IsNullOrWhiteSpace(q))
-            {
-                url = QueryBuilder
-                    .AddQueryOption("$filter", $"contains(tolower({DataTextField}),'{q}')");
+                if (Where != null)
+                {
+                    url = QueryBuilder
+                        .Where(Where(q));
+                }
+                else
+                {
+                    url = QueryBuilder
+                        .AddQueryOption("$filter", $"contains({DataTextField},'{q}')");
+                }
             }
 
             return url.Take(100).ToString()!;
