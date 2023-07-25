@@ -18,109 +18,108 @@
 
 <MudDialog>
     <DialogContent>
-        <h1>@Loc["Settings"]</h1>
+        <h2>@Loc["Settings"]</h2>
         <br />
 
-        <h3>@Loc["AppSettings"]</h3>
-        <MudGrid Style="align-items: end;" Spacing="0">
+        <MudStack Spacing="6">
+            <MudField Label="@Loc["AppSettings"]" Variant="Variant.Outlined">
+                <MudGrid Style="align-items: end;" Spacing="0">
 
-            <MudItem xs="3">
-                <MudText>@Loc["Language"]</MudText>
-            </MudItem>
+                    <MudItem xs="3">
+                        <MudText>@Loc["Language"]</MudText>
+                    </MudItem>
 
-            <MudItem xs="9">
-                <MudSelect Margin="Margin.Dense" T="LanguageInfo" Value="@Language" ValueChanged="LanguageChangedHandler" ToStringFunc="(lang) => lang.Label">
-                    @foreach (var lang in SettingManager.Configuration.Languages)
-                    {
-                        <MudSelectItem Value="@lang">@lang.Label</MudSelectItem>
-                    }
+                    <MudItem xs="9">
+                        <MudSelect Margin="Margin.Dense" T="LanguageInfo" Value="@Language" ValueChanged="LanguageChangedHandler" ToStringFunc="(lang) => lang.Label">
+                            @foreach (var lang in SettingManager.Configuration.Languages)
+                            {
+                                <MudSelectItem Value="@lang">@lang.Label</MudSelectItem>
+                            }
 
-                </MudSelect>
-            </MudItem>
+                        </MudSelect>
+                    </MudItem>
 
-            <MudItem xs="3">
-                <MudText>@Loc["DateTimeFormat"]</MudText>
-            </MudItem>
+                    <MudItem xs="3">
+                        <MudText>@Loc["DateTimeFormat"]</MudText>
+                    </MudItem>
 
-            <MudItem xs="9">
-                <MudSelect Margin="Margin.Dense" T="string" Value="DateTimeFormat" ValueChanged="DateTimeFormatChangedHandler">
-                    @foreach (var format in DateTimeFormats)
-                    {
-                        <MudSelectItem Value="@format">@format</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                    <MudItem xs="9">
+                        <MudSelect Margin="Margin.Dense" T="string" Value="DateTimeFormat" ValueChanged="DateTimeFormatChangedHandler">
+                            @foreach (var format in DateTimeFormats)
+                            {
+                                <MudSelectItem Value="@format">@format</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
 
-        </MudGrid>
+                </MudGrid>
+            </MudField>
 
-        <br />
-        <br />
+            <MudField Label="@Loc["DataGridSettings"]" Variant="Variant.Outlined">
 
-        <h3>@Loc["DataGridSettings"]</h3>
-        <MudGrid Style="align-items: center;" Spacing="0">
+                <MudGrid Style="align-items: center;" Spacing="0">
 
-            <MudItem xs="3">
-                <MudText>@Loc["DataGridItemPerPage"]</MudText>
-            </MudItem>
+                    <MudItem xs="3">
+                        <MudText>@Loc["DataGridItemPerPage"]</MudText>
+                    </MudItem>
 
-            <MudItem xs="9">
-                <MudSelect Margin="Margin.Dense" T="int" Label="@Loc["DataGridItemPerPageLabel"]" Value="PageSize" ValueChanged="PageSizeChangedHandler" Dense="true" Style=@($"width: 150px;display: flex;")>
-                    @foreach (var size in PageSizes)
-                    {
-                        <MudSelectItem Value="@size">@size</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                    <MudItem xs="9">
+                        <MudSelect Margin="Margin.Dense" T="int" Label="@Loc["DataGridItemPerPageLabel"]" Value="PageSize" ValueChanged="PageSizeChangedHandler" Dense="true" Style=@($"width: 150px;display: flex;")>
+                            @foreach (var size in PageSizes)
+                            {
+                                <MudSelectItem Value="@size">@size</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
 
-        </MudGrid>
+                </MudGrid>
+            </MudField>
 
-        <br />
-        <br />
+            <MudField Label="@Loc["FormSettings"]" Variant="Variant.Outlined">
+                <MudGrid Style="align-items: center;" Spacing="0">
 
-        <h3>@Loc["FormSettings"]</h3>
-        <MudGrid Style="align-items: center;" Spacing="0">
+                    <MudItem xs="3">
+                        <MudText>@Loc["ModalPosition"]</MudText>
+                    </MudItem>
 
-            <MudItem xs="3">
-                <MudText>@Loc["ModalPosition"]</MudText>
-            </MudItem>
+                    <MudItem xs="9">
+                        <MudSelect Margin="Margin.Dense" T="DialogPosition" Value="ModalPosition" ValueChanged="DialogPositionChangedHandler">
+                            @foreach (var pos in Enum.GetValues<DialogPosition>().Where(x => x != DialogPosition.Custom))
+                            {
+                                <MudSelectItem Value="@pos">@Regex.Replace(pos.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
 
-            <MudItem xs="9">
-                <MudSelect Margin="Margin.Dense" T="DialogPosition" Value="ModalPosition" ValueChanged="DialogPositionChangedHandler">
-                    @foreach (var pos in Enum.GetValues<DialogPosition>().Where(x => x != DialogPosition.Custom))
-                    {
-                        <MudSelectItem Value="@pos">@Regex.Replace(pos.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                    <MudItem xs="3">
+                        <MudText>@Loc["ModalSize"]</MudText>
+                    </MudItem>
 
-            <MudItem xs="3">
-                <MudText>@Loc["ModalSize"]</MudText>
-            </MudItem>
+                    <MudItem xs="9">
+                        <MudSelect Margin="Margin.Dense" T="MaxWidth" Value="ModalWidth" ValueChanged="ModalWidthChangedHandler">
+                            @foreach (var width in Enum.GetValues<MaxWidth>())
+                            {
+                                <MudSelectItem Value="@width">@Regex.Replace(width.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
 
-            <MudItem xs="9">
-                <MudSelect Margin="Margin.Dense" T="MaxWidth" Value="ModalWidth" ValueChanged="ModalWidthChangedHandler">
-                    @foreach (var width in Enum.GetValues<MaxWidth>())
-                    {
-                        <MudSelectItem Value="@width">@Regex.Replace(width.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                    <MudItem xs="3">
+                        <MudText>@Loc["FormCloseBehavior"]</MudText>
+                    </MudItem>
 
-            <MudItem xs="3">
-                <MudText>@Loc["FormCloseBehavior"]</MudText>
-            </MudItem>
+                    <MudItem xs="9">
+                        <MudSelect Margin="Margin.Dense" T="FormOnSaveAction" Value="FormCloseAction" ValueChanged="FormCloseActionChangedHandler">
+                            @foreach (var action in Enum.GetValues<FormOnSaveAction>())
+                            {
+                                <MudSelectItem Value="@action">@Regex.Replace(action.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
 
-            <MudItem xs="9">
-                <MudSelect Margin="Margin.Dense" T="FormOnSaveAction" Value="FormCloseAction" ValueChanged="FormCloseActionChangedHandler">
-                    @foreach (var action in Enum.GetValues<FormOnSaveAction>())
-                    {
-                        <MudSelectItem Value="@action">@Regex.Replace(action.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-
-        </MudGrid>
-
+                </MudGrid>
+            </MudField>
+        </MudStack>
     </DialogContent>
 
     <DialogActions>
