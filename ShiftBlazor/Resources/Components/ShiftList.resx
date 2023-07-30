@@ -129,6 +129,9 @@
   <data name="CloseButton" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="ColumnChooser" xml:space="preserve">
+    <value>Column Chooser</value>
+  </data>
   <data name="CSVExportButton" xml:space="preserve">
     <value>CSV Export</value>
   </data>
@@ -140,6 +143,9 @@
   </data>
   <data name="ExcelExportButton" xml:space="preserve">
     <value>Excel Export</value>
+  </data>
+  <data name="FilterDeletedItems" xml:space="preserve">
+    <value>Filter deleted items</value>
   </data>
   <data name="GetItemListError" xml:space="preserve">
     <value>Error getting list of items</value>
@@ -186,6 +192,15 @@
   </data>
   <data name="RefreshList" xml:space="preserve">
     <value>Reload</value>
+  </data>
+  <data name="ShowActiveOnly" xml:space="preserve">
+    <value>Show Active Only</value>
+  </data>
+  <data name="ShowBothDeletedAndActive" xml:space="preserve">
+    <value>Show all</value>
+  </data>
+  <data name="ShowDeletedOnly" xml:space="preserve">
+    <value>Show Deleted Only</value>
   </data>
   <data name="ViewButton" xml:space="preserve">
     <value>View</value>

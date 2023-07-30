@@ -36,16 +36,20 @@
                     {
                         if (!DisableDeleteFilter)
                         {
-                            <MudTooltip Text="Show deleted items">
-                            <MudIconButton Icon="@Icons.Material.Filled.RestoreFromTrash"
-                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                           OnClick="@FilterDeleted"/>
+                            <MudTooltip Text="@Loc["FilterDeletedItems"]">
+                                <MudMenu Icon="@Icons.Material.Filled.RestoreFromTrash"
+                                         Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                         AnchorOrigin="Origin.BottomLeft">
+                                    <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.All)">@Loc["ShowBothDeletedAndActive"]</MudMenuItem>
+                                    <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.Deleted)">@Loc["ShowDeletedOnly"]</MudMenuItem>
+                                    <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.Active)">@Loc["ShowActiveOnly"]</MudMenuItem>
+                                </MudMenu>
                             </MudTooltip>
                         }
                         
                         @if (!DisableColumnChooser)
                         {
-                            <MudTooltip Text="Column Chooser">
+                            <MudTooltip Text="@Loc["ColumnChooser"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
                                             Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                                             OnClick="ChooseColumn" />
@@ -63,7 +67,9 @@
                         @if (EnableCsvExcelExport || EnablePdfExport)
                         {
                             <MudTooltip Text="@Loc["DownloadButton"]">
-                                <MudMenu Icon="@Icons.Material.Filled.FileDownload" Color="NavIconFlatColor ? Color.Inherit : Color.Warning">
+                                <MudMenu Icon="@Icons.Material.Filled.FileDownload"
+                                         Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                         AnchorOrigin="Origin.BottomLeft">
                                     @if (EnableCsvExcelExport)
                                     {
                                         <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">@Loc["CSVExportButton"]</MudMenuItem>

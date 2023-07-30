@@ -254,7 +254,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool IsReady = false;
 
         internal Query? GridQuery;
-        internal int ShowDeleted = 0;
 
         internal string GridId;
         internal FilterSettings FilterSettingMenu = new FilterSettings { Type = Syncfusion.Blazor.Grids.FilterType.Menu };
@@ -313,21 +312,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         }
 
-        internal void FilterDeleted()
+        internal void FilterDeleted(DeleteFilter _filter)
         {
             var query = Query ?? new Query();
             var filter = GetDeleteFilter();
-            var states = 3;
-            ShowDeleted = (ShowDeleted + 1) % states;
 
-            if (ShowDeleted == 1)
+            switch(_filter)
             {
-                filter.value = true;
-            }
-            else if (ShowDeleted == 2)
-            {
-                filter.value = true;
-                filter = filter.Or(GetDeleteFilter());
+                case DeleteFilter.Deleted: filter.value = true; break;
+                case DeleteFilter.All:
+                    filter.value = true;
+                    filter = filter.Or(GetDeleteFilter()); 
+                    break;
             }
 
             query.Where(filter);
@@ -565,6 +561,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             CSV,
             PDF,
             Excel,
+        }
+
+        public enum DeleteFilter
+        {
+            All,
+            Deleted,
+            Active,
         }
 
         internal void GenerateColumns()

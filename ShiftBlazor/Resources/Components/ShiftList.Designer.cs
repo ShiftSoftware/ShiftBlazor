@@ -97,6 +97,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Column Chooser.
+        /// </summary>
+        internal static string ColumnChooser {
+            get {
+                return ResourceManager.GetString("ColumnChooser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CSV Export.
         /// </summary>
         internal static string CSVExportButton {
@@ -129,6 +138,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string ExcelExportButton {
             get {
                 return ResourceManager.GetString("ExcelExportButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter deleted items.
+        /// </summary>
+        internal static string FilterDeletedItems {
+            get {
+                return ResourceManager.GetString("FilterDeletedItems", resourceCulture);
             }
         }
         
@@ -264,6 +282,33 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string RefreshList {
             get {
                 return ResourceManager.GetString("RefreshList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Active Only.
+        /// </summary>
+        internal static string ShowActiveOnly {
+            get {
+                return ResourceManager.GetString("ShowActiveOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show all.
+        /// </summary>
+        internal static string ShowBothDeletedAndActive {
+            get {
+                return ResourceManager.GetString("ShowBothDeletedAndActive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Deleted Only.
+        /// </summary>
+        internal static string ShowDeletedOnly {
+            get {
+                return ResourceManager.GetString("ShowDeletedOnly", resourceCulture);
             }
         }
         
