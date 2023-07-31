@@ -30,3 +30,7 @@
 .e-grid .is-deleted:hover .e-rowcell {
     background-color: #ffaeae !important;
 }
+
+.user-avatar-dropdown .mud-list-item-icon {
+    min-width: 40px;
+}
