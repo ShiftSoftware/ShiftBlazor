@@ -123,11 +123,10 @@ public class ShiftListTests : ShiftBlazorTestContext
 
         var columns = grid.Instance.Columns;
         var properties = typeof(Sample).GetProperties();
-        // +1 because Actions column
-        Assert.Equal(properties.Count() - excludedColumns.Count + 1, columns.Count());
+
+        // we have an extra Actions column in columns variable but also missing Revision column since we hide it by default
+        Assert.Equal(properties.Count() - excludedColumns.Count, columns.Count());
         Assert.All(columns, x => excludedColumns.Contains(x.Field).Equals(false));
-
-
     }
 
     [Fact]
@@ -208,7 +207,8 @@ public class ShiftListTests : ShiftBlazorTestContext
             .Add(p => p.DisablePagination, DisablePaging)
         );
 
-        Assert.Throws<ComponentNotFoundException>(() => comp.FindComponent<MudMenu>());
+        var menu = comp.FindComponents<MudMenu>().FirstOrDefault(x => x.Instance.Class == "download-options");
+        Assert.Null(menu);
     }
 
     [Fact]
@@ -228,7 +228,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.False(grid.AllowPdfExport);
         Assert.True(grid.AllowExcelExport);
 
-        comp.FindAll(".mud-menu button.mud-button-root")[0].Click();
+        comp.FindAll(".mud-menu.download-options button.mud-button-root")[0].Click();
 
         comp.WaitForAssertion(() =>
         {
@@ -257,7 +257,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.False(grid.AllowExcelExport);
         Assert.True(grid.AllowPdfExport);
 
-        comp.FindAll(".mud-menu button.mud-button-root")[0].Click();
+        comp.FindAll(".mud-menu.download-options button.mud-button-root")[0].Click();
 
         comp.WaitForAssertion(() =>
         {
@@ -290,6 +290,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
+            .Add(p => p.DisableSelection, false)
             .Add(p => p.EnableVirtualization, true)
         );
 

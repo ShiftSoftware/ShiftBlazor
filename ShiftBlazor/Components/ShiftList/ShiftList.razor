@@ -39,7 +39,8 @@
                             <MudTooltip Text="@Loc["FilterDeletedItems"]">
                                 <MudMenu Icon="@Icons.Material.Filled.RestoreFromTrash"
                                          Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                         AnchorOrigin="Origin.BottomLeft">
+                                         AnchorOrigin="Origin.BottomLeft"
+                                         Class="delete-filter-options">
                                     <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.All)">@Loc["ShowBothDeletedAndActive"]</MudMenuItem>
                                     <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.Deleted)">@Loc["ShowDeletedOnly"]</MudMenuItem>
                                     <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.Active)">@Loc["ShowActiveOnly"]</MudMenuItem>
@@ -69,7 +70,8 @@
                             <MudTooltip Text="@Loc["DownloadButton"]">
                                 <MudMenu Icon="@Icons.Material.Filled.FileDownload"
                                          Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                         AnchorOrigin="Origin.BottomLeft">
+                                         AnchorOrigin="Origin.BottomLeft"
+                                         Class="download-options">
                                     @if (EnableCsvExcelExport)
                                     {
                                         <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">@Loc["CSVExportButton"]</MudMenuItem>
