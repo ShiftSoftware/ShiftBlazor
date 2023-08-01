@@ -2,37 +2,60 @@
 @using static MudBlazor.Icons.Material
 
 <MudPaper title="@Item.GetFileName()" Style="position: relative;display: flex;overflow: hidden;flex-direction: column;">
-    <MudToolBar Dense Style="position: absolute; top: 0; left: 0;width: 100%;padding: 0">
-        <MudSpacer></MudSpacer>
 
-        @if (Item.File != null)
-        {
-            <MudIconButton Title="Download" OnClick="@(() => Uploader.DownloadFile(Item.File))" Icon="@Filled.Download" Color="Color.Dark"></MudIconButton>
-        }
+    @*top row icons*@
+    @if (!Uploader.ReadOnly && CanDelete)
+    {
+        <MudToolBar Dense Style="position: absolute;top: 0;left: 0;width: 100%;padding: 0;z-index: 100;">
+            <MudSpacer/>
 
-        @if (!Uploader.ReadOnly)
-        {
-            @if (Item.Message != null)
-            {
-                <MudTooltip Text="@(Item.Message?.Title ?? "Error")">
-                    <MudIconButton OnClick="@(() => Uploader.UploadFile(Item))" Icon="@Filled.Error"></MudIconButton>
-                </MudTooltip>
-            }
+            <MudIconButton Title="Remove"
+                           OnClick="@(() => Uploader.Remove(Item))"
+                           Icon="@Filled.RemoveCircle"
+                           Color="Color.Dark"/>
+        </MudToolBar>
+    }
 
-            @if (CanDelete)
-            {
-                <MudIconButton Title="Remove" OnClick="@(() => Uploader.Remove(Item))" Icon="@Filled.RemoveCircle" Color="Color.Dark"></MudIconButton>
-            }
-        }
-    </MudToolBar>
+    @*bottom row icons*@
+    @if (Item.File != null)
+    {
+        <MudToolBar Dense Style="position: absolute; bottom: 0; left: 0;width: 100%;padding: 0">
+            <MudSpacer/>
+            
+            <MudIconButton Title="Download"
+                           OnClick="@(() => Uploader.DownloadFile(Item.File))"
+                           Icon="@Filled.Download"
+                           Color="Color.Dark"/>
+        </MudToolBar>
+    }
+
+    @if (Item.Message != null)
+    {
+        <div style="position:absolute;top: 0;left: 0;height: 100%;width: 100%;display: flex;align-items: center;justify-content: center;z-index: 10;background-color: #011c2d2e;">
+            <MudTooltip Text="@(Item.Message?.Title ?? "Error")">
+                <MudIconButton OnClick="@(() => Uploader.UploadFile(Item))"
+                               Icon="@Filled.Error"
+                               Color="Color.Error"
+                               Size="Size.Large"
+                               />
+            </MudTooltip>
+
+        </div>
+    }
 
     @if (Item.IsImage() && Item.File != null)
     {
-        <MudImage draggable="false" Src="@($"{Item.File.Url}")" Alt="@Item.GetFileName()" Height="@Height" Width="@Width" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center"></MudImage>
+        <MudImage draggable="false"
+                  Src="@($"{Item.File.Url}")"
+                  Alt="@Item.GetFileName()"
+                  Height="@Height"
+                  Width="@Width"
+                  ObjectFit="ObjectFit.Cover"
+                  ObjectPosition="ObjectPosition.Center"/>
     }
     else
     {
-        <MudIcon Icon="@(Item.IsImage() ? Filled.Image : Filled.InsertDriveFile)" Style=@($"height: {Height}px;width: {Width}px;")></MudIcon>
+        <MudIcon Icon="@(Item.IsImage() ? Filled.Image : Filled.InsertDriveFile)" Style=@($"height: {Height}px;width: {Width}px;")/>
     }
 
     @if (Item.IsWaitingForUpload())
