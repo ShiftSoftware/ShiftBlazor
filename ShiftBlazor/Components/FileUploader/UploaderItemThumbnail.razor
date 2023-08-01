@@ -2,22 +2,29 @@
 @using static MudBlazor.Icons.Material
 
 <MudPaper title="@Item.GetFileName()" Style="position: relative;display: flex;overflow: hidden;flex-direction: column;">
-    @if (!Uploader.ReadOnly)
-    {
-        <MudToolBar Dense Style="position: absolute; top: 0; left: 0;width: 100%;padding: 0">
-            <MudSpacer></MudSpacer>
+    <MudToolBar Dense Style="position: absolute; top: 0; left: 0;width: 100%;padding: 0">
+        <MudSpacer></MudSpacer>
+
+        @if (Item.File != null)
+        {
+            <MudIconButton Title="Download" OnClick="@(() => Uploader.DownloadFile(Item.File))" Icon="@Filled.Download" Color="Color.Dark"></MudIconButton>
+        }
+
+        @if (!Uploader.ReadOnly)
+        {
             @if (Item.Message != null)
             {
                 <MudTooltip Text="@(Item.Message?.Title ?? "Error")">
                     <MudIconButton OnClick="@(() => Uploader.UploadFile(Item))" Icon="@Filled.Error"></MudIconButton>
                 </MudTooltip>
             }
+
             @if (CanDelete)
             {
                 <MudIconButton Title="Remove" OnClick="@(() => Uploader.Remove(Item))" Icon="@Filled.RemoveCircle" Color="Color.Dark"></MudIconButton>
             }
-        </MudToolBar>
-    }
+        }
+    </MudToolBar>
 
     @if (Item.IsImage() && Item.File != null)
     {

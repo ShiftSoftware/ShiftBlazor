@@ -212,6 +212,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await ValuesChanged.InvokeAsync(Values);
         }
 
+        internal async Task DownloadFile(ShiftFileDTO file)
+        {
+            await JsRuntime.InvokeVoidAsync("downloadFileFromUrl", file.Name, file.Url);
+        }
+
         [JSInvokable]
         public static void ReorderGrid(KeyValuePair<string, List<Guid>> order)
         {
