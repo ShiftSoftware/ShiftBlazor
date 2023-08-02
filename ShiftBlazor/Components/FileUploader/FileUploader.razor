@@ -18,7 +18,6 @@
                         <MudItem @key="item.Id" Style="cursor: grab;" data-guid="@item.Id">
                             @if (ShowThumbnail)
                             {
-
                                 <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize"></UploaderItemThumbnail>
                             }
                             else

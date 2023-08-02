@@ -1,7 +1,7 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using static MudBlazor.Icons.Material
 
-<MudPaper title="@Item.GetFileName()" Style="position: relative;display: flex;overflow: hidden;flex-direction: column;">
+<MudPaper title="@Item.GetFileName()" Class="uploader-thumbnail" Style="position: relative;display: flex;overflow: hidden;flex-direction: column;color: #fff;">
 
     @*top row icons*@
     @if (!Uploader.ReadOnly && CanDelete)
@@ -12,7 +12,7 @@
             <MudIconButton Title="Remove"
                            OnClick="@(() => Uploader.Remove(Item))"
                            Icon="@Filled.RemoveCircle"
-                           Color="Color.Dark"/>
+                           Color="Color.Inherit"/>
         </MudToolBar>
     }
 
@@ -25,7 +25,7 @@
             <MudIconButton Title="Download"
                            OnClick="@(() => Uploader.DownloadFile(Item.File))"
                            Icon="@Filled.Download"
-                           Color="Color.Dark"/>
+                           Color="Color.Inherit"/>
         </MudToolBar>
     }
 

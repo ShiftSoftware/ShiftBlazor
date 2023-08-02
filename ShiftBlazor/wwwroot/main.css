@@ -38,3 +38,7 @@
 .e-grid .e-emptyrow td {
     padding-inline-start: 21px !important;
 }
+
+.uploader-thumbnail svg {
+    filter: drop-shadow(0 0 4px black);
+}
