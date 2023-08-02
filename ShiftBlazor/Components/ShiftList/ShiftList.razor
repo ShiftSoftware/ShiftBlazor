@@ -32,9 +32,8 @@
 
                     @ToolbarEndTemplate
 
-                    @if (IsEmbedded != true)
-                    {
-                        if (!DisableDeleteFilter)
+                    
+                    @if (!DisableDeleteFilter)
                         {
                             <MudTooltip Text="@Loc["FilterDeletedItems"]">
                                 <MudMenu Icon="@Icons.Material.Filled.RestoreFromTrash"
@@ -48,6 +47,8 @@
                             </MudTooltip>
                         }
                         
+                    @if (IsEmbedded != true)
+                    {
                         @if (!DisableColumnChooser)
                         {
                             <MudTooltip Text="@Loc["ColumnChooser"]">

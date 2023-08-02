@@ -312,31 +312,41 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         }
 
-        internal void FilterDeleted(DeleteFilter _filter)
+        internal async Task FilterDeleted(DeleteFilter _filter)
         {
-            var query = Query ?? new Query();
+            var query = Query?.Clone() ?? new Query();
             var filter = GetDeleteFilter();
 
             switch(_filter)
             {
                 case DeleteFilter.Deleted: filter.value = true; break;
                 case DeleteFilter.All:
-                    filter.value = true;
-                    filter = filter.Or(GetDeleteFilter()); 
+                    filter = new WhereFilter
+                    {
+                        Field = "1",
+                        Operator = "equal",
+                        value = 1,
+                    }.And(filter.Or(GetDeleteFilter(true)));
                     break;
             }
 
             query.Where(filter);
             GridQuery = query;
+
+            if (Query != null && Grid != null)
+            {
+                await Task.Delay(1);
+                await Grid.Refresh();
+            }
         }
 
-        private static WhereFilter GetDeleteFilter()
+        private static WhereFilter GetDeleteFilter(bool value = false)
         {
             return new WhereFilter
             {
                 Field = nameof(ShiftEntityDTOBase.IsDeleted),
                 Operator = "equal",
-                value = false,
+                value = value,
             };
         } 
 
