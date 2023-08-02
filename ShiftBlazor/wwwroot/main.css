@@ -27,7 +27,8 @@
     background-color: #ffc7c7;
 }
 
-.e-grid .is-deleted:hover .e-rowcell {
+.e-grid .is-deleted:hover .e-rowcell,
+.e-grid .is-deleted .e-rowcell.e-active {
     background-color: #ffaeae !important;
 }
 
