@@ -34,3 +34,7 @@
 .user-avatar-dropdown .mud-list-item-icon {
     min-width: 40px;
 }
+
+.e-grid .e-emptyrow td {
+    padding-inline-start: 21px !important;
+}

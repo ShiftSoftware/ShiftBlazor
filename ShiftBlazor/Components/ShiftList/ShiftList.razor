@@ -34,19 +34,19 @@
 
                     
                     @if (!DisableDeleteFilter)
-                        {
-                            <MudTooltip Text="@Loc["FilterDeletedItems"]">
-                                <MudMenu Icon="@Icons.Material.Filled.RestoreFromTrash"
-                                         Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                         AnchorOrigin="Origin.BottomLeft"
-                                         Class="delete-filter-options">
-                                    <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.All)">@Loc["ShowBothDeletedAndActive"]</MudMenuItem>
-                                    <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.Deleted)">@Loc["ShowDeletedOnly"]</MudMenuItem>
-                                    <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.Active)">@Loc["ShowActiveOnly"]</MudMenuItem>
-                                </MudMenu>
-                            </MudTooltip>
-                        }
-                        
+                    {
+                        <MudTooltip Text="@Loc["FilterDeletedItems"]">
+                            <MudMenu Icon="@Icons.Material.Filled.RestoreFromTrash"
+                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                        AnchorOrigin="Origin.BottomLeft"
+                                        Class="delete-filter-options">
+                                <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.All)">@Loc["ShowBothDeletedAndActive"]</MudMenuItem>
+                                <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.Deleted)">@Loc["ShowDeletedOnly"]</MudMenuItem>
+                                <MudMenuItem OnClick="() => FilterDeleted(DeleteFilter.Active)">@Loc["ShowActiveOnly"]</MudMenuItem>
+                            </MudMenu>
+                        </MudTooltip>
+                    }
+
                     @if (IsEmbedded != true)
                     {
                         @if (!DisableColumnChooser)
@@ -136,7 +136,6 @@
                         TValue="T"
                         @ref="Grid"
                         class="@GridCssClass"
-                        style="border: 0;"
                         ID="@GridId"
                         AllowPaging="!DisablePagination && !EnableVirtualization"
                         AllowSorting="!DisableSorting"

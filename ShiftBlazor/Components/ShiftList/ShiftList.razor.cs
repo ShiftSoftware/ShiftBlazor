@@ -274,7 +274,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         { 
             get
             {
-                var cssClass = "pa-6";
+                var cssClass = "pb-4";
                 if (IsReady) cssClass += " grid-loaded";
                 if (MultiLineCells) cssClass += " multiline";
                 return cssClass;
