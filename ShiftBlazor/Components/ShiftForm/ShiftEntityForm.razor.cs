@@ -159,19 +159,27 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             await RunTask(FormTasks.Delete, async () =>
             {
-                var dialogOptions = new DialogOptions
+                var message = new Message
                 {
-                    MaxWidth = MaxWidth.ExtraSmall,
+                    Title = Loc["DeleteWarningTitle"],
+                    Body = Loc["DeleteWarningMessage"],
                 };
 
-                var result = await DialogService.ShowMessageBox(
-                        Loc["Warning"],
-                        Loc["DeleteConfirmation"],
-                        yesText: Loc["DeleteAccept"],
-                        cancelText: Loc["DeleteDecline"],
-                        options: dialogOptions);
+                var parameters = new DialogParameters
+                {
+                    { "Message", message },
+                    { "Color", Color.Error },
+                    { "ConfirmText",  Loc["DeleteAccept"].ToString()},
+                    { "CancelText",  Loc["DeleteDecline"].ToString()}
+                };
 
-                if (result.HasValue && result.Value)
+                var result = await DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+                {
+                    MaxWidth = MaxWidth.ExtraSmall,
+                    NoHeader = true,
+                }).Result;
+
+                if (!result.Canceled)
                 {
                     var url = ItemUrl + "?ignoreGlobalFilters";
                     using (var res = await Http.DeleteAsync(ItemUrl))
@@ -337,12 +345,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return value;
             }
 
-            // Use a component instead of html string
             if (TaskInProgress == FormTasks.Save && result.Message != null)
             {
-                await DialogService.ShowMessageBox(result.Message.Title, MessageToHtml(result.Message), options: new DialogOptions
+                var parameters = new DialogParameters {
+                    { "Message", result.Message },
+                    { "Color", Color.Error },
+                    { "Icon", Icons.Material.Filled.Error },
+                };
+
+                DialogService.Show<PopupMessage>("", parameters, new DialogOptions
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
+                    NoHeader = true,
                 });
 
                 return null;
@@ -459,30 +473,5 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        //helpers
-        internal string? MessageToHtml(Message message)
-        {
-            var body = message?.Body;
-            var subMessages = "";
-
-            if (message?.SubMessages != null)
-            {
-                foreach (var item in message.SubMessages)
-                {
-                    subMessages += $"<strong>{item.Title}</strong>";
-                    if (!string.IsNullOrWhiteSpace(item.Body))
-                    {
-                        subMessages += $": {item.Body}";
-                    }
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(subMessages))
-            {
-                body += $"<br/><ul>{subMessages}</ul>";
-            }
-
-            return body;
-        }
     }
 }

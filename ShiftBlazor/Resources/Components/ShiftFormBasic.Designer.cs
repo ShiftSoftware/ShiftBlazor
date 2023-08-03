@@ -61,6 +61,42 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Yes.
+        /// </summary>
+        internal static string CancelConfirmText {
+            get {
+                return ResourceManager.GetString("CancelConfirmText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No.
+        /// </summary>
+        internal static string CancelDeclineText {
+            get {
+                return ResourceManager.GetString("CancelDeclineText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have unsaved changes, do you want to cancel?.
+        /// </summary>
+        internal static string CancelWarningMessage {
+            get {
+                return ResourceManager.GetString("CancelWarningMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning.
+        /// </summary>
+        internal static string CancelWarningTitle {
+            get {
+                return ResourceManager.GetString("CancelWarningTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Form.
         /// </summary>
         internal static string FormDefaultTitle {

@@ -1,0 +1,96 @@
+﻿@using ShiftSoftware.ShiftEntity.Model
+@using static MudBlazor.Icons.Material
+@inject ClipboardService Clip
+@inject MessageService MsgService
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<MudPaper Elevation="25" Style="height: 100%;">
+    <MudAppBar Color="@Color" Fixed="false" Dense Elevation="0">
+        <MudIcon Icon="@Icon"/>
+        <MudText title="@Message.Title" Class="px-4 text-overflow-ellipsis" Style="margin:0;">@Message.Title</MudText>
+
+        <MudSpacer/>
+
+        <MudIconButton Size="Size.Medium"
+                       OnClick="() => Close(true)"
+                       Icon="@Icons.Material.Filled.Close"
+                       Edge="Edge.End"
+                       Color="Color.Inherit"
+                       Title="Close"/>
+    </MudAppBar>
+
+    <div class="pa-6">
+
+        <MudText>@Message.Body</MudText>
+        
+        @if (Message.SubMessages != null && Message.SubMessages.Count > 0)
+        {
+            <MudList>
+                @foreach (var msg in Message.SubMessages)
+                {
+                   <MessageList Message="msg"></MessageList>
+                }
+            </MudList>
+        }
+
+
+    </div>
+
+    <MudToolBar Dense DisableGutters>
+        <MudSpacer/>
+        @if (ReportButton)
+        {
+            <MudButton Variant="Variant.Text" OnClick="CopyToClipboard">Copy</MudButton>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(CancelText))
+        {
+            <MudButton Variant="Variant.Text" OnClick="() => Close(true)" Class="me-2">@CancelText</MudButton>
+        }
+
+        <MudButton Variant="Variant.Text" Color="@Color" OnClick="() => Close()" Class="me-2">@ConfirmText</MudButton>
+    </MudToolBar>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public Message Message { get; set; } = default!;
+
+    [Parameter]
+    public Color Color { get; set; } = Color.Warning;
+
+    [Parameter]
+    public string Icon { get; set; } = Filled.Warning;
+
+    [Parameter]
+    public string ConfirmText { get; set; } = "Ok";
+
+    [Parameter]
+    public string? CancelText { get; set; }
+
+    [Parameter]
+    public bool ReportButton { get; set; }
+
+
+    [CascadingParameter]
+    internal MudDialogInstance? MudDialog { get; set; }
+
+    private void Close(bool cancel = false)
+    {
+        if (cancel)
+        {
+            MudDialog?.Cancel();
+        }
+        else
+        {
+            MudDialog?.Close();
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        var msg = System.Text.Json.JsonSerializer.Serialize(Message);
+        await Clip.WriteTextAsync(msg);
+        MsgService.Success("Copied to clipboard");
+    }
+}

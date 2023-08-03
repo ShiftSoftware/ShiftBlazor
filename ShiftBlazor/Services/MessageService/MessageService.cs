@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Components;
+using ShiftSoftware.ShiftEntity.Model;
 
 namespace ShiftSoftware.ShiftBlazor.Services
 {
@@ -26,7 +27,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <remarks>If either title or details is null the Action button will not be rendered.</remarks>
         public void Error(string text, string? title = null, string? detail = null, string? buttonText = null)
         {
-            this.Show(text, title, detail, severity: Severity.Error, buttonText: buttonText);
+            this.Show(text, title, detail, severity: Severity.Error, buttonText: buttonText, modalColor: Color.Error);
         }
 
         /// <summary>
@@ -39,7 +40,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <remarks>If either title or details is null the Action button will not be rendered.</remarks>
         public void Info(string text, string? title = null, string? detail = null, string? buttonText = null)
         {
-            this.Show(text, title, detail, severity: Severity.Info, buttonText: buttonText);
+            this.Show(text, title, detail, severity: Severity.Info, buttonText: buttonText, modalColor: Color.Info);
         }
 
         /// <summary>
@@ -52,7 +53,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <remarks>If either title or details is null the Action button will not be rendered.</remarks>
         public void Success(string text, string? title = null, string? detail = null, string? buttonText = null)
         {
-            this.Show(text, title, detail, severity: Severity.Success, buttonText: buttonText);
+            this.Show(text, title, detail, severity: Severity.Success, buttonText: buttonText, modalColor: Color.Success);
         }
 
         /// <summary>
@@ -78,7 +79,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <remarks>If either title or details is null the Action button will not be rendered.</remarks>
         public void Warning(string text, string? title = null, string? detail = null, string? buttonText = null)
         {
-            this.Show(text, title, detail, severity: Severity.Warning, buttonText: buttonText);
+            this.Show(text, title, detail, severity: Severity.Warning, buttonText: buttonText, modalColor: Color.Warning);
         }
 
         public void Show(string text, Severity severity = Severity.Normal, Action<SnackbarOptions>? configure = null)
@@ -90,7 +91,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             );
         }
 
-        public void Show(string text, string? title = null, string? detail = null, Severity severity = Severity.Normal, string? buttonText = null, Variant? buttonVariant = null, Color buttonColor = Color.Inherit)
+        public void Show(string text, string? title = null, string? detail = null, Severity severity = Severity.Normal, string? buttonText = null, Variant? buttonVariant = null, Color buttonColor = Color.Inherit, Color modalColor = Color.Inherit, string? icon = Icons.Material.Outlined.Info)
         {
 
             Show(text, severity, config =>
@@ -101,7 +102,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
                     config.ActionColor = buttonColor;
                     config.Onclick = snackbar =>
                     {
-                        ShowDialog(text, title, detail);
+                        ShowDialog(title, detail, modalColor, icon);
                         return Task.CompletedTask;
                     };
 
@@ -109,6 +110,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
                     {
                         config.ActionVariant = buttonVariant.Value;
                     }
+
+                    config.Icon = icon;
 
                     if (severity == Severity.Error)
                     {
@@ -119,20 +122,30 @@ namespace ShiftSoftware.ShiftBlazor.Services
             });
         }
 
-        private void ShowDialog(string text, string title, string detail)
+        private void ShowDialog(string title, string detail, Color color, string? Icon)
         {
             var dialogOptions = new DialogOptions
             {
                 MaxWidth = MaxWidth.Medium,
+                NoHeader = true,
+            };
+
+            var message = new Message
+            {
+                Title = title,
+                Body = detail,
             };
 
             var dialogParams = new DialogParameters
             {
-                {"Title", title},
-                {"Body", detail},
+                { "Message", message },
+                { "Color", color },
+                { "Icon", Icon },
+                { "ConfirmText", "Close" },
+                { "ReportButton", true },
             };
 
-            DialogService.Show<ShiftMessageBox>(text, dialogParams, dialogOptions);
+            DialogService.Show<PopupMessage>("", dialogParams, dialogOptions);
         }
 
     }

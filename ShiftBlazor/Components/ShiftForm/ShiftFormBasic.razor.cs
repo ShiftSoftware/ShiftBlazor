@@ -8,6 +8,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Model;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -231,24 +232,32 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        internal async Task<bool> ConfirmClose(string message = "You have unsaved changes, do you want to cancel?")
+        internal async Task<bool> ConfirmClose(string? messageBody = null)
         {
             if (editContext.IsModified())
             {
-                var dialogOptions = new DialogOptions
+
+                var message = new Message
                 {
-                    MaxWidth = MaxWidth.ExtraSmall,
+                    Title = Loc["CancelWarningTitle"],
+                    Body = messageBody ?? Loc["CancelWarningMessage"],
                 };
 
-                var result = await DialogService.ShowMessageBox(
-                        "Warning",
-                        message,
-                        yesText: "Yes",
-                        cancelText: "No",
-                        options: dialogOptions);
+                var parameters = new DialogParameters
+                {
+                    { "Message", message },
+                    { "Color", Color.Warning },
+                    { "ConfirmText",  Loc["CancelConfirmText"].ToString() },
+                    { "CancelText",  Loc["CancelDeclineText"].ToString() },
+                };
 
+                var result = await DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+                {
+                    MaxWidth = MaxWidth.ExtraSmall,
+                    NoHeader = true,
+                }).Result;
 
-                return result.HasValue && result.Value;
+                return !result.Canceled;
             }
 
             return true;

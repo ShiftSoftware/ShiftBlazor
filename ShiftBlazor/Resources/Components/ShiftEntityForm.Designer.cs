@@ -115,15 +115,6 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do you want to delete this item.
-        /// </summary>
-        internal static string DeleteConfirmation {
-            get {
-                return ResourceManager.GetString("DeleteConfirmation", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         internal static string DeleteDecline {
@@ -138,6 +129,24 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string DeletedIndicator {
             get {
                 return ResourceManager.GetString("DeletedIndicator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to delete this item?.
+        /// </summary>
+        internal static string DeleteWarningMessage {
+            get {
+                return ResourceManager.GetString("DeleteWarningMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning.
+        /// </summary>
+        internal static string DeleteWarningTitle {
+            get {
+                return ResourceManager.GetString("DeleteWarningTitle", resourceCulture);
             }
         }
         
@@ -255,15 +264,6 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string ViewingForm {
             get {
                 return ResourceManager.GetString("ViewingForm", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning.
-        /// </summary>
-        internal static string Warning {
-            get {
-                return ResourceManager.GetString("Warning", resourceCulture);
             }
         }
     }

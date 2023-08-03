@@ -43,3 +43,9 @@
 .uploader-thumbnail svg {
     filter: drop-shadow(0 0 4px black);
 }
+
+.text-overflow-ellipsis {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}

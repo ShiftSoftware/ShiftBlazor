@@ -1,0 +1,48 @@
+﻿@using ShiftSoftware.ShiftEntity.Model
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@if (NestedLists == null)
+{
+    <MudListItem>
+        @MessageBody
+    </MudListItem>
+}
+else
+{
+    <MudListItem NestedList="@NestedLists">
+        @MessageBody
+    </MudListItem>
+}
+
+
+@code {
+    [Parameter, EditorRequired]
+    public Message Message { get; set; } = default!;
+
+    public RenderFragment MessageBody =>
+    @<MudText>
+        <span style=@(string.IsNullOrWhiteSpace(Message.Body) ? "" : "font-weight: bold;")>@Message.Title</span>
+        @if (!string.IsNullOrWhiteSpace(Message.Body))
+        {
+            <span>: @Message.Body</span>
+        }
+    </MudText>;
+
+    private RenderFragment? NestedLists
+    {
+        get
+        {
+            if (Message.SubMessages != null && Message.SubMessages.Count > 0)
+            {
+                return 
+                @<text>
+                    @foreach (var msg in Message.SubMessages)
+                    {
+                        <MessageList Message="@msg" />
+                    }
+                </text>;
+            }
+            return null;
+        }
+    }
+}

@@ -136,14 +136,17 @@
   <data name="DeleteAccept" xml:space="preserve">
     <value>Delete</value>
   </data>
-  <data name="DeleteConfirmation" xml:space="preserve">
-    <value>Do you want to delete this item</value>
-  </data>
   <data name="DeleteDecline" xml:space="preserve">
     <value>Cancel</value>
   </data>
   <data name="DeletedIndicator" xml:space="preserve">
     <value>This item is deleted.</value>
+  </data>
+  <data name="DeleteWarningMessage" xml:space="preserve">
+    <value>Do you want to delete this item?</value>
+  </data>
+  <data name="DeleteWarningTitle" xml:space="preserve">
+    <value>Warning</value>
   </data>
   <data name="Edit" xml:space="preserve">
     <value>Edit</value>
@@ -186,8 +189,5 @@
   <data name="ViewingForm" xml:space="preserve">
     <value>Viewing {0} ({1})</value>
     <comment>0=title,1=id</comment>
-  </data>
-  <data name="Warning" xml:space="preserve">
-    <value>Warning</value>
   </data>
 </root>
