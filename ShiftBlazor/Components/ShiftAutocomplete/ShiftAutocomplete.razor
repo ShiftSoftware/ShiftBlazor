@@ -15,5 +15,10 @@
         base.ItemTemplate = (e) => @RenderItem(e.Value);
     }
 
+    if (this.For != null)
+    {
+        base.Required = FormHelper.IsRequired<T>(this.For);
+    }
+
     base.BuildRenderTree(__builder);
 }

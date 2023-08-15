@@ -1,0 +1,24 @@
+﻿@typeparam T
+@inherits MudSwitch<T>
+
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftBlazor.Enums;
+
+@{
+    base.ReadOnly = Mode < FormModes.Edit;
+    base.Disabled = TaskInProgress != null && TaskInProgress != FormTasks.None;
+
+    if (this.For != null)
+    {
+        base.Required = FormHelper.IsRequired<T?>(this.For);
+    }
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+    [CascadingParameter]
+    public FormModes? Mode { get; set; }
+
+    [CascadingParameter]
+    public FormTasks? TaskInProgress { get; set; }
+}
