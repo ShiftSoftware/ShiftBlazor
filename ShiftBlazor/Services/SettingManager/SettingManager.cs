@@ -36,7 +36,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             GetDeviceInfo().ContinueWith(async x =>
             {
-                Device = await x;
+                Device = await x ?? new();
             });
 
             Settings = GetSettings();

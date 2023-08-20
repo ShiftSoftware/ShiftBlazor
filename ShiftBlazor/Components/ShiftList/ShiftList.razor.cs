@@ -257,6 +257,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal string GridId;
         internal FilterSettings FilterSettingMenu = new FilterSettings { Type = Syncfusion.Blazor.Grids.FilterType.Menu };
+        internal SelectedItems<string> SelectedItems = new();
 
         internal Uri LastRequestUri { get; set; }
         internal Uri LastFailedRequestUri { get; set; }
@@ -464,22 +465,32 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        public async Task<SelectedItems> GetSelectedItems()
+        public async Task<SelectedItems<string>> GetSelectedItems()
         {
-            var AllSelected = await JsRuntime.InvokeAsync<bool>("GridAllSelected", this.Grid!.ID);
-
-            var result = new SelectedItems
+            var result = new SelectedItems<string>
             {
-                All = AllSelected,
+                All = await JsRuntime.InvokeAsync<bool>("GridAllSelected", this.Grid!.ID),
                 Query = LastRequestUri?.Query,
             };
 
             if (!result.All)
             {
-                result.Items = this.Grid.SelectedRecords.Select(x => (object)x.ID).ToList();
+                result.Items = this.Grid.SelectedRecords.Select(x => x.ID!).ToList();
             }
 
             return result;
+        }
+
+        internal async Task RowSelectHandler(RowSelectEventArgs<T> args)
+        {
+            await Task.Delay(1);
+            SelectedItems = await GetSelectedItems();
+        }
+
+        internal async Task RowDeselectHandler(RowDeselectEventArgs<T> args)
+        {
+            await Task.Delay(1);
+            SelectedItems = await GetSelectedItems();
         }
 
         public async Task ViewAddItem(object? key = null)
@@ -553,8 +564,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             PageSize = size;
             SettingManager.SetListPageSize(size);
+            StateHasChanged();
         }
-
 
         public string GetListIdentifier()
         {
