@@ -11,15 +11,17 @@ public class ShiftBlazorTestContext : TestContext
     public static string ODataBaseUrl = "/odata";
     public static string ApiBaseUrl = "/api";
 
-    public List<Sample> Values = new()
-    {
-        new Sample { Name = "Sample 1", ID = "1" },
-        new Sample { Name = "Sample 2", ID = "2" },
-        new Sample { Name = "Sample 3", ID = "3", IsDeleted = true },
-    };
+    public List<Sample> Values = new();
 
     public ShiftBlazorTestContext()
     {
+        for (var i = 0; i < 100; i++ )
+        {
+            Values.Add(new Sample { Name = "Sample " + i, ID = i.ToString() });
+        }
+
+        Values[3].IsDeleted = true;
+
         var mock = Services.AddMockHttpClient();
         mock.When(ODataBaseUrl + "/Product").RespondJson(new ODataResult<Sample>
         {

@@ -1,7 +1,9 @@
-﻿using Bunit.Rendering;
+﻿using Bunit;
+using Bunit.Rendering;
 using MudBlazor;
 using Syncfusion.Blazor.Data;
 using Syncfusion.Blazor.Grids;
+using static MudBlazor.CategoryTypes;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList;
 
@@ -24,28 +26,33 @@ public class ShiftListTests : ShiftBlazorTestContext
         });
     }
 
-    //[Fact]
-    //public void ShouldShowErrorSnackbarWhenBadUrl()
-    //{
-    //    var cut = RenderComponent<ShiftList<ShiftEntityDTO>>(parameters => parameters.Add(p => p.Action, "/404-url"));
+    [Fact]
+    public void ShouldShowErrorSnackbarWhenBadUrl()
+    {
+        var cut = RenderComponent<ShiftList<Sample>>(parameters => parameters.Add(p => p.Action, "/404-url"));
 
-    //    cut.WaitForElement(".disable-grid");
-    //}
+        var x = cut.Instance.GridContainerCssClass;
 
+        cut.WaitForElement(".disable-grid");
+
+    }
+
+
+    // // SfGrid always returns total rows instead of rows per page, this might be due to the lack of JS Runtime
     //[Fact]
     //public void ShouldRenderRowsPerPageCorrectly()
     //{
-    //    var cut = Render(@<ShiftList T="Sample" Action="@("/Product")"></ShiftList>);
+    //    var cut = RenderComponent<ShiftList<Sample>>(parameters => parameters
+    //        .Add(p => p.Action, "/Product")
+    //    );
 
-    //    var grid = cut.FindComponent<SfGrid<Sample>>();
-
-    //    var rows = grid.FindAll(".e-content .e-table > tbody > .e-row");
+    //    var grid = cut.FindComponent<SfGrid<Sample>>().Instance;
 
     //    cut.WaitForAssertion(() =>
     //    {
-    //        Assert.Equal(grid.Instance.PageSettings.PageSize, grid.FindAll(".e-row").Count);
+    //        var rows = grid.GetCurrentViewRecordsAsync().Result;
+    //        Assert.Equal(grid.PageSettings.PageSize, rows.Count);
     //    });
-
     //}
 
     /// <summary>

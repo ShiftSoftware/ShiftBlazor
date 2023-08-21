@@ -344,8 +344,9 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         comp.WaitForAssertion(() => Assert.True(deleteTaskStarted, "deleteTaskStarted failed"));
 
 
-        var msgBox = comp.FindComponent<MudMessageBox>();
-        Assert.Equal("Delete", msgBox.Instance.YesText);
+        var msgBox = comp.FindComponent<PopupMessage>();
+
+        Assert.Equal("Delete", msgBox.Instance.ConfirmText);
 
         var confirmButton = msgBox.FindAll("button").First(x => x.TextContent.Contains("Delete"));
 
@@ -380,16 +381,10 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     [Fact]
     public async Task ShouldRevertChanges()
     {
-        var itemName = "Sample 1";
-
-        var value = new Sample
-        {
-            Name = itemName,
-        };
+        var value = Values.First();
 
         var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
             .Add(p => p.Key, "1")
-            .Add(p => p.Value, value)
             .Add(p => p.Action, path)
         );
 
@@ -406,7 +401,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         // This is not supposed to work because EditContext.IsModified should return true
         // and the function should hang until user clicks on confirm button
         // but instead it returns false and processed to execute the rest of the function
-        Assert.Equal(itemName, comp.Instance.Value.Name);
+        Assert.Equal(value.Name, comp.Instance.Value.Name);
     }
 
     [Fact]
