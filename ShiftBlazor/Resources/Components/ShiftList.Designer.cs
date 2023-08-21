@@ -160,33 +160,6 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to First Page.
-        /// </summary>
-        internal static string GoToFirstPage {
-            get {
-                return ResourceManager.GetString("GoToFirstPage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Last Page.
-        /// </summary>
-        internal static string GoToLastPage {
-            get {
-                return ResourceManager.GetString("GoToLastPage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Next Page.
-        /// </summary>
-        internal static string GoToNextPage {
-            get {
-                return ResourceManager.GetString("GoToNextPage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Page {0}.
         /// </summary>
         internal static string GoToPage {
@@ -196,20 +169,11 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Previous Page.
-        /// </summary>
-        internal static string GoToPreviousPage {
-            get {
-                return ResourceManager.GetString("GoToPreviousPage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Items per page.
         /// </summary>
-        internal static string ItemsPerPage {
+        internal static string ItemsPerPageLabel {
             get {
-                return ResourceManager.GetString("ItemsPerPage", resourceCulture);
+                return ResourceManager.GetString("ItemsPerPageLabel", resourceCulture);
             }
         }
         
@@ -286,6 +250,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Selected Items.
+        /// </summary>
+        internal static string SelectedItemsCounterLabel {
+            get {
+                return ResourceManager.GetString("SelectedItemsCounterLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Active Only.
         /// </summary>
         internal static string ShowActiveOnly {
@@ -309,6 +282,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string ShowDeletedOnly {
             get {
                 return ResourceManager.GetString("ShowDeletedOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Items.
+        /// </summary>
+        internal static string TotalItemsLabel {
+            get {
+                return ResourceManager.GetString("TotalItemsLabel", resourceCulture);
             }
         }
         

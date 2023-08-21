@@ -150,22 +150,10 @@
   <data name="GetItemListError" xml:space="preserve">
     <value>Error getting list of items</value>
   </data>
-  <data name="GoToFirstPage" xml:space="preserve">
-    <value>First Page</value>
-  </data>
-  <data name="GoToLastPage" xml:space="preserve">
-    <value>Last Page</value>
-  </data>
-  <data name="GoToNextPage" xml:space="preserve">
-    <value>Next Page</value>
-  </data>
   <data name="GoToPage" xml:space="preserve">
     <value>Page {0}</value>
   </data>
-  <data name="GoToPreviousPage" xml:space="preserve">
-    <value>Previous Page</value>
-  </data>
-  <data name="ItemsPerPage" xml:space="preserve">
+  <data name="ItemsPerPageLabel" xml:space="preserve">
     <value>Items per page</value>
   </data>
   <data name="ListDefaultTitle" xml:space="preserve">
@@ -193,6 +181,9 @@
   <data name="RefreshList" xml:space="preserve">
     <value>Reload</value>
   </data>
+  <data name="SelectedItemsCounterLabel" xml:space="preserve">
+    <value>Selected Items</value>
+  </data>
   <data name="ShowActiveOnly" xml:space="preserve">
     <value>Show Active Only</value>
   </data>
@@ -201,6 +192,9 @@
   </data>
   <data name="ShowDeletedOnly" xml:space="preserve">
     <value>Show Deleted Only</value>
+  </data>
+  <data name="TotalItemsLabel" xml:space="preserve">
+    <value>Total Items</value>
   </data>
   <data name="ViewButton" xml:space="preserve">
     <value>View</value>

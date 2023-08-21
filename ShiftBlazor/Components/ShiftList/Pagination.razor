@@ -3,7 +3,7 @@
 @inject IStringLocalizer<Resources.Components.ShiftList> Loc
 @namespace ShiftSoftware.ShiftBlazor.Components
 
-<MudToolBar Dense="true" DisableGutters="false" Class="my-4" Style="display: flex; overflow: hidden;" WrapContent="true">
+<MudToolBar Dense="true" DisableGutters="false" Class="my-2" Style="display: flex; overflow: hidden;" WrapContent="true">
     
     <MudPagination Count="Context?.TotalPages ?? 1"
                    BoundaryCount="1"
@@ -14,14 +14,14 @@
 
     <MudSpacer />
 
-    @if (!ShiftList.DisableSelection)
+    @if (!ShiftList.DisableSelection && (ShiftList.SelectedItems?.Items?.Count > 0 || ShiftList.SelectedItems?.All == true))
     {
-        <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.Check" title="Selected Items">@(ShiftList.SelectedItems.All ? "All" : ShiftList.SelectedItems?.Items?.Count ?? 0)</MudChip>
+        <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.Check" title="@Loc["SelectedItemsCounterLabel"]" OnClose="() => ShiftList.Grid!.ClearRowSelectionAsync()">@(ShiftList.SelectedItems.All ? "All" : ShiftList.SelectedItems?.Items?.Count)</MudChip>
     }
     
     <MudMenu AnchorOrigin="Origin.BottomLeft">
         <ActivatorContent>
-            <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.List" title="Items Per Page">@ShiftList.PageSize!.Value</MudChip>
+            <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.List" title="@Loc["ItemsPerPageLabel"]">@ShiftList.PageSize!.Value</MudChip>
         </ActivatorContent>
         <ChildContent>
             @foreach (var size in ShiftList.PageSizes)
@@ -31,14 +31,8 @@
         </ChildContent>
     </MudMenu>
 
-    <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.Spoke" title="Total Items">@Context?.TotalItemsCount</MudChip>
+    <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.Spoke" title="@Loc["TotalItemsLabel"]">@Context?.TotalItemsCount</MudChip>
 </MudToolBar>
-
-<style>
-    .e-pager .mud-select {
-        display: block;
-    }
-</style>
 
 @code {
     [CascadingParameter]
@@ -53,16 +47,11 @@
     { 
         get
         {
-            return ShiftList!.Grid!.PageSettings.CurrentPage;
+            return ShiftList.Grid!.PageSettings.CurrentPage;
         }
         set
         {
-            _ = ShiftList!.Grid!.GoToPageAsync(value);
+            _ = ShiftList.Grid!.GoToPageAsync(value);
         }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        SelectedItems = await ShiftList.GetSelectedItems();
     }
 }
