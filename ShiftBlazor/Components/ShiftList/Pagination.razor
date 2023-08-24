@@ -14,7 +14,7 @@
 
     <MudSpacer />
 
-    @if (!ShiftList.DisableSelection && (ShiftList.SelectedItems?.Items?.Count > 0 || ShiftList.SelectedItems?.All == true))
+    @if (ShiftList.EnableSelection && (ShiftList.SelectedItems?.Items?.Count > 0 || ShiftList.SelectedItems?.All == true))
     {
         <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.Check" title="@Loc["SelectedItemsCounterLabel"]" OnClose="() => ShiftList.Grid!.ClearRowSelectionAsync()">@(ShiftList.SelectedItems.All ? "All" : ShiftList.SelectedItems?.Items?.Count)</MudChip>
     }

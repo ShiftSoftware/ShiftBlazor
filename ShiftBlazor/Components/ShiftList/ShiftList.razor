@@ -143,7 +143,7 @@
                         AllowPdfExport="EnablePdfExport"
                         AllowFiltering="!DisableFilters"
                         Query="GridQuery"
-                        AllowSelection="!DisableSelection"
+                        AllowSelection="EnableSelection"
                         EnableVirtualization="EnableVirtualization"
                         EnableVirtualMaskRow="EnableVirtualization"
                         Height="@GridHeight"
@@ -192,13 +192,13 @@
 
                     <GridColumns>
 
-                        @if (EnableVirtualization && !DisableSelection)
+                        @if (EnableVirtualization && EnableSelection)
                         {
                             <GridColumn Type="ColumnType.CheckBox" Width="60" >
                                 <HeaderTemplate/>
                             </GridColumn>
                         }
-                        else if (!DisableSelection)
+                        else if (EnableSelection)
                         {
                             <GridColumn Type="ColumnType.CheckBox" Width="60" ></GridColumn>
                         }
@@ -286,7 +286,7 @@
                                 .Where(x => x.HeaderText == @Loc["ActionsColumnTitle"] || x.IsPrimaryKey)
                                 .Where(x => x.Visible)
                                 .Count();
-        if (!DisableSelection)
+        if (EnableSelection)
         {
             fixedColumns++;
         }

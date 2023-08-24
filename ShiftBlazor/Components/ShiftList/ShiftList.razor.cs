@@ -95,7 +95,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         public bool EnableVirtualization { get; set; }
-        
+
+        /// <summary>
+        ///     Enable select
+        /// </summary>
+        [Parameter]
+        public bool EnableSelection { get; set; }
+
         /// <summary>
         ///     Disable the add item button to open a form.
         /// </summary>
@@ -125,12 +131,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         public bool DisableFilters { get; set; }
-
-        /// <summary>
-        ///     Disable select
-        /// </summary>
-        [Parameter]
-        public bool DisableSelection { get; set; } = true;
 
         /// <summary>
         ///     If true, the toolbar in the header will not be rendered.

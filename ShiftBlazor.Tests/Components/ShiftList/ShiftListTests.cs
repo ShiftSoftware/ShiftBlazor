@@ -297,7 +297,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisableSelection, false)
+            .Add(p => p.EnableSelection, true)
             .Add(p => p.EnableVirtualization, true)
         );
 
@@ -389,7 +389,6 @@ public class ShiftListTests : ShiftBlazorTestContext
         var comp = RenderComponent<ShiftList<Sample>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisableSelection, true)
             .Add(p => p.DisablePagination, DisablePaging)
         );
         var grid = comp.FindComponent<SfGrid<Sample>>().Instance;
