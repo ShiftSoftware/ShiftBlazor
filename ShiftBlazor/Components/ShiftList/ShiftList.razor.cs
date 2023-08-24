@@ -246,7 +246,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public SfGrid<T>? Grid;
         internal List<ListColumn> GeneratedColumns = new();
-        internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), "Revisions" };
+        internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), nameof(ShiftEntityDTOBase.IsDeleted), "Revisions" };
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
 
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));
