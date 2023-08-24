@@ -1,6 +1,4 @@
-﻿using MudBlazor;
-using Syncfusion.Blazor.Navigations;
-
+﻿
 namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList
 {
     public class PaginationTests : ShiftBlazorTestContext

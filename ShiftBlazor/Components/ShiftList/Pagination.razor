@@ -19,19 +19,19 @@
         <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.Check" title="@Loc["SelectedItemsCounterLabel"]" OnClose="() => ShiftList.Grid!.ClearRowSelectionAsync()">@(ShiftList.SelectedItems.All ? "All" : ShiftList.SelectedItems?.Items?.Count)</MudChip>
     }
     
-    <MudMenu AnchorOrigin="Origin.BottomLeft">
+    <MudMenu AnchorOrigin="Origin.BottomLeft" Dense>
         <ActivatorContent>
             <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.List" title="@Loc["ItemsPerPageLabel"]">@ShiftList.PageSize!.Value</MudChip>
         </ActivatorContent>
         <ChildContent>
             @foreach (var size in ShiftList.PageSizes)
             {
-                <MudMenuItem OnClick="() => { ShiftList.PageSizeChangeHandler(size);}">@size</MudMenuItem>
+                <MudMenuItem Style="text-align: center;" OnClick="() => { ShiftList.PageSizeChangeHandler(size);}">@size</MudMenuItem>
             }
         </ChildContent>
     </MudMenu>
 
-    <MudChip Style="display: inline-flex;" Icon="@Icons.Material.Rounded.Spoke" title="@Loc["TotalItemsLabel"]">@Context?.TotalItemsCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Style="display: inline-flex;" Icon="@Icons.Material.Rounded.Spoke" title="@Loc["TotalItemsLabel"]">Total: @Context?.TotalItemsCount</MudChip>
 </MudToolBar>
 
 @code {
