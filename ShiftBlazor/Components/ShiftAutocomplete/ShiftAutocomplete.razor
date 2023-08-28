@@ -10,9 +10,42 @@
 
     base.NoItemsTemplate = @<MudText Align="Align.Center" Class="px-4 py-1">No items found</MudText>;
 
-    if (ShiftItemTemplate != null)
+    if (ShiftItemTemplate != null && !MultiSelect)
     {
         base.ItemTemplate = (e) => @RenderItem(e.Value);
+    }
+
+
+    if (MultiSelect)
+    {
+        base.ItemTemplate = (e) =>
+        {
+            return
+            @<MudStack Row>
+                <MudIcon Icon="@(SelectedValues.Any(x => x.Value == e.Value) ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)" Class="mb-n1 mr-3" />
+                <MudText>
+                    @e.Text
+                </MudText>
+                <MudSpacer/>
+                @if (ShiftItemTemplate != null)
+                {
+                    @RenderItem(e.Value);
+                }
+            </MudStack>;
+        };
+
+        var MultiSelectText = string.Join(", ", SelectedValues.Select(x => x.Text));
+
+        if (!string.IsNullOrWhiteSpace(_Placeholder) && string.IsNullOrWhiteSpace(MultiSelectText))
+        {
+            Class = _Class;
+            Placeholder = _Placeholder;
+        }
+        else
+        {
+            Class = _Class + " " + MultiSelectClassName;
+            Placeholder = MultiSelectText;
+        }
     }
 
     if (this.For != null)

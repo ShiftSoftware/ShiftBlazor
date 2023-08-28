@@ -49,3 +49,7 @@
     white-space: nowrap;
     overflow: hidden;
 }
+
+.multi-select input.mud-input-root::placeholder {
+    opacity: 1 !important;
+}

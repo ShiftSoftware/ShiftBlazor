@@ -7,7 +7,7 @@
 @{
     if (AdornmentIconIsNotSet)
     {
-        base.AdornmentIcon = Value == null ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.RemoveRedEye;
+        base.AdornmentIcon = Value == null || MultiSelect ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.RemoveRedEye;
     }
     if (AdornmentAriaLabelIsNotSet)
     {
@@ -17,6 +17,20 @@
     {
         var key = Value?.GetType().GetProperty("ID")?.GetValue(Value);
         base.OnAdornmentClick = new EventCallback<MouseEventArgs>(this, () => AddEditItem(key));
+    }
+
+    if (QuickAddComponentType != null)
+    {
+        base.ShiftItemTemplate = (e) =>
+        @<div>
+            <MudButton OnClick="@(() => ShiftModal.Open(QuickAddComponentType, e.ID, Enums.ModalOpenMode.Popup))"
+                       Variant="@Variant.Outlined"
+                       EndIcon="@Icons.Material.Filled.OpenInNew"
+                       Color="@Color.Primary"
+                       Size="@Size.Small">
+                View
+            </MudButton>
+        </div>;
     }
 
     base.BuildRenderTree(__builder);

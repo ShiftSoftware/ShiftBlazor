@@ -17,34 +17,27 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string? QuickAddParameterName { get; set; }
 
-        internal bool AdornmentIconIsNotSet = false;
-        internal bool AdornmentAriaLabelIsNotSet = false;
-        internal bool OnAdornmentClickIsNotSet = false;
+        internal bool AdornmentIconIsNotSet;
+        internal bool AdornmentAriaLabelIsNotSet;
+        internal bool OnAdornmentClickIsNotSet;
 
         [Parameter]
         public Func<TQuickAdd, T>? Convert { get; set; }
 
         public override Task SetParametersAsync(ParameterView parameters)
         {
-            Type? type;
-            parameters.TryGetValue(nameof(QuickAddComponentType), out type);
+            parameters.TryGetValue(nameof(QuickAddComponentType), out Type? type);
 
-            if (type == null)
+            if (type != null)
             {
-                return base.SetParametersAsync(parameters);
+                parameters.TryGetValue(nameof(AdornmentIcon), out string? adornmentIcon);
+                parameters.TryGetValue(nameof(AdornmentAriaLabel), out string? adornmentAriaLabel);
+                parameters.TryGetValue(nameof(OnAdornmentClick), out EventCallback<MouseEventArgs>? onAdornmentClick);
+
+                AdornmentIconIsNotSet = adornmentIcon == null;
+                AdornmentAriaLabelIsNotSet = adornmentAriaLabel == null;
+                OnAdornmentClickIsNotSet = onAdornmentClick == null;
             }
-
-            string? adornmentIcon;
-            string? adornmentAriaLabel;
-            EventCallback<MouseEventArgs>? onAdornmentClick;
-
-            parameters.TryGetValue(nameof(AdornmentIcon), out adornmentIcon);
-            parameters.TryGetValue(nameof(AdornmentAriaLabel), out adornmentAriaLabel);
-            parameters.TryGetValue(nameof(OnAdornmentClick), out onAdornmentClick);
-
-            AdornmentIconIsNotSet = adornmentIcon == null;
-            AdornmentAriaLabelIsNotSet = adornmentAriaLabel == null;
-            OnAdornmentClickIsNotSet = onAdornmentClick == null;
 
             return base.SetParametersAsync(parameters);
         }

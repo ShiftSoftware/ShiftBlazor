@@ -8,6 +8,7 @@ using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Net.Http.Json;
 using Microsoft.OData.Client;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -45,9 +46,23 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public RenderFragment<TEntitySet> ShiftItemTemplate { get; set; }
 
+        [Parameter]
+        public bool MultiSelect { get; set; }
+
+        [Parameter]
+        public List<T> SelectedValues { get; set; } = new List<T>();
+
+        [Parameter]
+        public EventCallback<List<T>> SelectedValuesChanged { get; set; }
+
         internal DataServiceQuery<TEntitySet> QueryBuilder { get; set; } = default!;
         internal string LastTypedValue = "";
         internal List<TEntitySet> Items = new();
+
+        private string? _Placeholder = null;
+        private string? _Class = null;
+        private EventCallback<T>? _ValueChanged = null;
+        private string MultiSelectClassName = "multi-select";
 
         public ShiftAutocomplete ()
         {
@@ -77,7 +92,56 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             _ = UpdateInitialValue();
 
+            if (MultiSelect)
+            {
+                OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
+
+                if (_ValueChanged != null)
+                {
+                    throw new Exception($"{nameof(ValueChanged)} parameter cannot have a value when {nameof(MultiSelect)} is true");
+                }
+
+                ValueChanged = new EventCallback<T>(this, async () =>
+                {
+                    if (Value == null)
+                    {
+                        return;
+                    }
+
+                    var findMatch = SelectedValues.FirstOrDefault(x => x.Value == Value.Value);
+                    if (findMatch == null)
+                    {
+                        SelectedValues.Add(Value);
+                    }
+                    else
+                    {
+                        SelectedValues.Remove(findMatch);
+                    }
+                    Value = new();
+                    await Clear();
+                    await SelectedValuesChanged.InvokeAsync(SelectedValues);
+                });
+            }
+
             base.OnInitialized();
+        }
+
+        public override Task SetParametersAsync(ParameterView parameters)
+        {
+            parameters.TryGetValue(nameof(Placeholder), out _Placeholder);
+            parameters.TryGetValue(nameof(Class), out _Class);
+            parameters.TryGetValue(nameof(ValueChanged), out _ValueChanged);
+
+            return base.SetParametersAsync(parameters);
+        }
+
+        private async Task HandleKeyDown(KeyboardEventArgs args)
+        {
+            if (args.Code == "Backspace" && string.IsNullOrWhiteSpace(Text) && SelectedValues.Count > 0)
+            {
+                SelectedValues.Remove(SelectedValues.Last());
+                await SelectedValuesChanged.InvokeAsync(SelectedValues);
+            }
         }
 
         internal async Task UpdateInitialValue()
