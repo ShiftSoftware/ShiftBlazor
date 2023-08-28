@@ -2,19 +2,11 @@
 @inherits MudFileUpload<T>
 
 @namespace ShiftSoftware.ShiftBlazor.Components
-@using ShiftSoftware.ShiftBlazor.Enums;
 
 @{
-    base.Disabled = TaskInProgress != null && TaskInProgress != FormTasks.None;
-
     if (this.For != null)
     {
         base.Required = FormHelper.IsRequired<T>(this.For);
     }
     base.BuildRenderTree(__builder);
-}
-
-@code {
-    [CascadingParameter]
-    public FormTasks? TaskInProgress { get; set; }
 }
