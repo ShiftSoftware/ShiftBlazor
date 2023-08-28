@@ -8,6 +8,7 @@ using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using System.Linq.Expressions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -19,10 +20,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
         [Parameter]
-        public List<ShiftFileDTO> Values { get; set; } = new();
+        public List<ShiftFileDTO>? Values { get; set; }
 
         [Parameter]
-        public EventCallback<List<ShiftFileDTO>> ValuesChanged { get; set; }
+        public EventCallback<List<ShiftFileDTO>?> ValuesChanged { get; set; }
 
         internal List<UploaderItem> Items { get; set; } = new();
 
@@ -46,7 +47,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public bool ShowThumbnail { get; set; }
-       
+
         [Parameter]
         public long MaxThumbnailSizeInMegaBytes { get; set; } = 10;
 
@@ -62,7 +63,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 if (_mode != value)
                 {
-                    Items = Values.Select(x => new UploaderItem(x)).ToList();
+                    Items = Values?.Select(x => new UploaderItem(x)).ToList() ?? new();
                 }
                 _mode = value;
             }
@@ -98,11 +99,29 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool ReadOnly => Mode < FormModes.Edit;
         public bool Disabled => TaskInProgress != null && TaskInProgress != FormTasks.None;
 
+        [CascadingParameter]
+        public EditContext? EditContext { get; set; }
+
+        [Parameter]
+        public Expression<Func<List<ShiftFileDTO>>>? For { get; set; }
+
+        private FieldIdentifier _FieldIdentifier;
+        private string? ErrorText;
+
         protected override void OnInitialized()
         {
             OnGridSort += HandleGridSort;
-        }
 
+            if (For != null && EditContext != null)
+            {
+                _FieldIdentifier = FieldIdentifier.Create(For);
+                EditContext.NotifyFieldChanged(_FieldIdentifier);
+                EditContext.OnValidationStateChanged += (o, args) =>
+                {
+                    ErrorText = EditContext.GetValidationMessages(_FieldIdentifier).FirstOrDefault();
+                };
+            }
+        }
         protected override void OnAfterRender(bool firstRender)
         {
             if (firstRender)
@@ -208,7 +227,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task SetValue(List<UploaderItem> items)
         {
-            Values = items.Where(x => x.File != null).Select(x => x.File!).ToList();
+            var _values = items.Where(x => x.File != null).Select(x => x.File!).ToList();
+            Values = _values.Count > 0 ? _values : null;
+
+            ErrorText = null;
             await ValuesChanged.InvokeAsync(Values);
         }
 
