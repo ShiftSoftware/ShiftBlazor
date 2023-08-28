@@ -115,13 +115,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (For != null && EditContext != null)
             {
                 _FieldIdentifier = FieldIdentifier.Create(For);
-                EditContext.NotifyFieldChanged(_FieldIdentifier);
                 EditContext.OnValidationStateChanged += (o, args) =>
                 {
                     ErrorText = EditContext.GetValidationMessages(_FieldIdentifier).FirstOrDefault();
                 };
             }
         }
+
         protected override void OnAfterRender(bool firstRender)
         {
             if (firstRender)

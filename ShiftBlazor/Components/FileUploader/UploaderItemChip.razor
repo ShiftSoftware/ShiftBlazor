@@ -1,7 +1,7 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using static MudBlazor.Icons.Material
 
-@if (Uploader.ReadOnly && !CanDelete)
+@if (Uploader.ReadOnly || !CanDelete)
 {
     <MudChip>
         @renderFragment
