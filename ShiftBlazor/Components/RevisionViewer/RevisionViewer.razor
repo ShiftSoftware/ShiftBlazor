@@ -8,7 +8,6 @@
 
 <ShiftList T="RevisionDTO"
            Values="@Revisions"
-           DisableSelection="@true"
            OnRowClick="@RowClickHandler"
            DisableHeaderToolbar="@true"
            ExcludedColumns="@(new List<string> {nameof(RevisionDTO.SavedByUserID)})">
