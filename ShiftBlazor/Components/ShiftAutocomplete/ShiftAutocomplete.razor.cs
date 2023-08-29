@@ -18,6 +18,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
     {
         [Inject] private ODataQuery OData { get; set; } = default!;
         [Inject] private HttpClient Http { get; set; } = default!;
+        [Inject] private MessageService Message { get; set; } = default!;
 
         /// <summary>
         ///     The OData EntitySet name.
@@ -149,8 +150,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (Value != null && !string.IsNullOrWhiteSpace(Value.Value) && string.IsNullOrWhiteSpace(Value.Text))
             {
                 Placeholder = "Loading...";
-                var url = QueryBuilder.Where(x => x.ID == Value.Value).Take(1);
-                var value = await GetODataResult(url.ToString()!);
+                var url = "";
+
+                try
+                {
+                    url = QueryBuilder.Where(x => x.ID == Value.Value).Take(1).ToString();
+                }
+                catch (Exception e)
+                {
+                    Message.Error("Failed to retrieve data", "Failed to retrieve data", e.Message);
+                }
+
+                var value = await GetODataResult(url!);
                 var text = value.First().Text;
 
                 if (string.IsNullOrWhiteSpace(text))

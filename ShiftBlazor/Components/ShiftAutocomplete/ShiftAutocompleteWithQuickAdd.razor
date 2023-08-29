@@ -15,11 +15,11 @@
     }
     if (OnAdornmentClickIsNotSet)
     {
-        var key = Value?.GetType().GetProperty("ID")?.GetValue(Value);
+        var key = Value?.GetType().GetProperty("Value")?.GetValue(Value);
         base.OnAdornmentClick = new EventCallback<MouseEventArgs>(this, () => AddEditItem(key));
     }
 
-    if (QuickAddComponentType != null)
+    if (QuickAddComponentType != null && MultiSelect)
     {
         base.ShiftItemTemplate = (e) =>
         @<div>
