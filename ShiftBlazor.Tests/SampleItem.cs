@@ -2,7 +2,7 @@
 
 namespace ShiftSoftware.ShiftBlazor.Tests;
 
-public class Sample : ShiftEntityDTO
+public class SampleDTO : ShiftEntityDTO
 {
     public override string? ID { get; set; }
     public int Age { get; set; }
@@ -23,6 +23,8 @@ public class SampleListDTO : ShiftEntityListDTO
     public string City { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 }
+
+public class SampleValidator : AbstractValidator<SampleDTO>
 {
     public SampleValidator()
     {

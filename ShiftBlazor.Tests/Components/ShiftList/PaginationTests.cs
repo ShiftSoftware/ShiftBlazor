@@ -6,11 +6,11 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList
         [Fact]
         public void ShouldHaveShiftListCascadingParameter()
         {
-            var cut = RenderComponent<ShiftList<Sample>>(parameters => parameters
+            var cut = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
                 .Add(p => p.Action, "/Product")
             );
 
-            var pagination = cut.FindComponent<Pagination<Sample>>();
+            var pagination = cut.FindComponent<Pagination<SampleDTO>>();
 
             Assert.NotNull(pagination.Instance.ShiftList);
         }

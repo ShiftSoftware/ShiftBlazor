@@ -11,26 +11,26 @@ public class ShiftBlazorTestContext : TestContext
     public static string ODataBaseUrl = "/odata";
     public static string ApiBaseUrl = "/api";
 
-    public List<Sample> Values = new();
+    public List<SampleDTO> Values = new();
 
     public ShiftBlazorTestContext()
     {
         for (var i = 0; i < 100; i++ )
         {
-            Values.Add(new Sample { Name = "Sample " + i, ID = i.ToString() });
+            Values.Add(new SampleDTO { Name = "Sample " + i, ID = i.ToString() });
         }
 
         Values[3].IsDeleted = true;
 
         var mock = Services.AddMockHttpClient();
-        mock.When(ODataBaseUrl + "/Product").RespondJson(new ODataResult<Sample>
+        mock.When(ODataBaseUrl + "/Product").RespondJson(new ODataResult<SampleDTO>
         {
             value = Values
         });
-        mock.When(HttpMethod.Get, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<Sample> { Entity = Values.First() });
-        mock.When(HttpMethod.Post, ApiBaseUrl.AddUrlPath("Product")).RespondJson(new ShiftEntityResponse<Sample> { Entity = Values.First() });
-        mock.When(HttpMethod.Put, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<Sample> { Entity = Values.First() });
-        mock.When(HttpMethod.Delete, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<Sample> { Entity = Values.First(x => x.IsDeleted == true) });
+        mock.When(HttpMethod.Get, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
+        mock.When(HttpMethod.Post, ApiBaseUrl.AddUrlPath("Product")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
+        mock.When(HttpMethod.Put, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
+        mock.When(HttpMethod.Delete, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First(x => x.IsDeleted == true) });
 
         Services.AddShiftBlazor(config =>
         {

@@ -203,7 +203,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public async Task ShouldReturnCorrectODataItems()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntitySelectDTO, Sample>>(parameters =>
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntitySelectDTO, SampleDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name")
         );
 
@@ -225,7 +225,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     {
         var id = "ab49Q";
 
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntitySelectDTO, Sample>>(parameters => parameters
+        var comp = RenderComponent<ShiftAutocomplete<ShiftEntitySelectDTO, SampleDTO>>(parameters => parameters
             .Add(p => p.EntitySet, EntitytSet)
             .Add(p => p.Where, q => x => x.ID == q)
             .Add(p => p.DataValueField, "ID")
