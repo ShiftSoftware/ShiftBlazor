@@ -1,16 +1,14 @@
 ﻿@using Syncfusion.Blazor.Data
 @using Syncfusion.Blazor.Grids
-@using Syncfusion.Blazor;
-@inject ShiftModal ShiftModal
-@inject SettingManager SettingManager
-@inject IStringLocalizer<Resources.Components.RevisionViewer> Loc
+@using Syncfusion.Blazor
+
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 <ShiftList T="RevisionDTO"
-           Values="@Revisions"
-           OnRowClick="@RowClickHandler"
-           DisableHeaderToolbar="@true"
-           ExcludedColumns="@(new List<string> {nameof(RevisionDTO.SavedByUserID)})">
+            Values="@Revisions"
+            OnRowClick="@RowClickHandler"
+            DisableHeaderToolbar="@true"
+            ExcludedColumns="@(new List<string> {nameof(RevisionDTO.SavedByUserID)})">
 
     <HeaderTemplate>
         <MudToolBar Dense="@true" DisableGutters="@false" Class="light-toolbar shift-toolbar-header">
@@ -23,10 +21,10 @@
             {
                 <MudTooltip Text="@Loc["CloseButton"]">
                     <MudButton Style="min-width:40px;"
-                           Variant="@Variant.Text"
-                           Size="@Size.Medium"
-                           Color="@Color.Default"
-                           OnClick="@Close">
+                                Variant="@Variant.Text"
+                                Size="@Size.Medium"
+                                Color="@Color.Default"
+                                OnClick="@Close">
                         <MudIcon Size="@Size.Medium" Icon="@Icons.Material.Filled.Close" />
                     </MudButton>
                 </MudTooltip>
@@ -35,62 +33,16 @@
     </HeaderTemplate>
 
     <ColumnTemplate>
-        @if (!string.IsNullOrWhiteSpace(SettingManager.Configuration.UserListEndpoint))
+        @if (!string.IsNullOrWhiteSpace(EntitySet))
         {
             <ShiftForeignColumn TValue="UserDetails"
                                 TValue2="RevisionDTO"
                                 ODataBaseUrl="@BaseUrl"
                                 Field="@nameof(RevisionDTO.SavedByUserID)"
                                 Text="@nameof(UserDetails.Name)"
-                                HeaderText="SavedByUserID"
+                                HeaderText="Saved By User"
                                 EntitySetName="@EntitySet">
             </ShiftForeignColumn>
         }
     </ColumnTemplate>
 </ShiftList>
-
-@code {
-
-    [CascadingParameter]
-    public MudDialogInstance? MudDialog { get; set; }
-
-    [Parameter]
-    [EditorRequired]
-    public List<RevisionDTO> Revisions { get; set; } = new();
-
-    [Parameter]
-    public string? Title { get; set; }
-
-    internal string BaseUrl { get; set; }
-    internal string EntitySet { get; set; }
-
-    protected override void OnInitialized()
-    {
-        var url = SettingManager.Configuration.UserListEndpoint;
-
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            return;
-        }
-
-        var index = url.LastIndexOf('/');
-
-        if (index >= 0)
-        {
-            BaseUrl = url.Substring(0, index);
-            EntitySet = url.Substring(index + 1);
-        }
-    }
-
-    private async Task RowClickHandler(RecordClickEventArgs<RevisionDTO> args)
-    {
-        await Task.Delay(1);
-        MudDialog?.Close(args.RowData.ValidTo);
-    }
-
-    private void Close()
-    {
-        MudDialog?.Close();
-    }
-
-}
