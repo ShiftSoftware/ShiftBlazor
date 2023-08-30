@@ -315,10 +315,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task FilterDeleted(DeleteFilter _filter)
         {
+            GridQuery = CreateDeleteQuery(_filter);
+
+            if (Query != null && Grid != null)
+            {
+                await Task.Delay(1);
+                await Grid.Refresh();
+            }
+        }
+
+        internal Query CreateDeleteQuery(DeleteFilter _filter)
+        {
             var query = Query?.Clone() ?? new Query();
             var filter = GetDeleteFilter();
 
-            switch(_filter)
+            switch (_filter)
             {
                 case DeleteFilter.Deleted: filter.value = true; break;
                 case DeleteFilter.All:
@@ -332,13 +343,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             query.Where(filter);
-            GridQuery = query;
 
-            if (Query != null && Grid != null)
-            {
-                await Task.Delay(1);
-                await Grid.Refresh();
-            }
+            return query;
         }
 
         private static WhereFilter GetDeleteFilter(bool value = false)

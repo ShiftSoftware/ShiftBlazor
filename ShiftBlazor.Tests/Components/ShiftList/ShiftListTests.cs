@@ -3,7 +3,6 @@ using Bunit.Rendering;
 using MudBlazor;
 using Syncfusion.Blazor.Data;
 using Syncfusion.Blazor.Grids;
-using static MudBlazor.CategoryTypes;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList;
 
@@ -540,5 +539,113 @@ public class ShiftListTests : ShiftBlazorTestContext
 
         Assert.Empty(tooltips);
         Assert.Empty(divider);
+    }
+
+    [Fact]
+    public void ShouldCreateCorrectDeleteQuery()
+    {
+        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+            .Add(p => p.Action, "/Product")
+            .Add(p => p.DisablePagination, DisablePaging)
+        );
+
+        var shiftList = comp.Instance;
+
+        // Show only items that are not deleted
+        var active = shiftList.CreateDeleteQuery(ShiftList<SampleDTO>.DeleteFilter.Active);
+        Assert.Single(active.Queries.Where);
+        var activeWhere = active.Queries.Where.First();
+        Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), activeWhere.Field);
+        Assert.Equal("equal", activeWhere.Operator);
+        Assert.False((bool)activeWhere.value);
+        Assert.False(activeWhere.IsComplex);
+        Assert.Null(activeWhere.predicates);
+        Assert.Null(activeWhere.Condition);
+
+        // Show only items that are deleted
+        var deleted = shiftList.CreateDeleteQuery(ShiftList<SampleDTO>.DeleteFilter.Deleted);
+        Assert.Single(deleted.Queries.Where);
+        var deletedWhere = deleted.Queries.Where.First();
+        Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), deletedWhere.Field);
+        Assert.Equal("equal", deletedWhere.Operator);
+        Assert.True((bool)deletedWhere.value);
+        Assert.False(activeWhere.IsComplex);
+        Assert.Null(deletedWhere.predicates);
+        Assert.Null(deletedWhere.Condition);
+
+        // Show all items
+        var all = shiftList.CreateDeleteQuery(ShiftList<SampleDTO>.DeleteFilter.All);
+        Assert.Single(all.Queries.Where);
+        var allWhereGrouping = all.Queries.Where.First();
+        Assert.Null(allWhereGrouping.Field);
+        Assert.Null(allWhereGrouping.Operator);
+        Assert.Null(allWhereGrouping.value);
+        Assert.True(allWhereGrouping.IsComplex);
+        Assert.Equal("and", allWhereGrouping.Condition);
+        Assert.Equal(2, allWhereGrouping.predicates.Count);
+
+        // we have an extra always true filter to force syncfusion to create a correct grouped sql (1 or 1)
+        var allExtraPredicate = allWhereGrouping.predicates.First();
+        Assert.Equal("1", allExtraPredicate.Field);
+        Assert.Equal("equal", allExtraPredicate.Operator);
+        Assert.Equal(1, (int)allExtraPredicate.value);
+
+        var allWheres = allWhereGrouping.predicates.ElementAt(1);
+        Assert.Equal("or", allWheres.Condition);
+        Assert.Null(allWheres.value);
+        Assert.Equal(2, allWheres.predicates.Count);
+
+        var allActive = allWheres.predicates.First();
+        var allDeleted = allWheres.predicates.ElementAt(1);
+        Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), allActive.Field);
+        Assert.Equal("equal", allActive.Operator);
+        Assert.False((bool)allActive.value);
+        Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), allDeleted.Field);
+        Assert.Equal("equal", allDeleted.Operator);
+        Assert.True((bool)allDeleted.value);
+    }
+
+    // when filtering multiple times, it should add all of them to the query, only the current selected one
+    [Fact]
+    public void ShouldNotStackDeleteFilters()
+    {
+        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+            .Add(p => p.Action, "/Product")
+            .Add(p => p.DisablePagination, DisablePaging)
+        );
+
+        var shiftList = comp.Instance;
+
+        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Active);
+        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Deleted);
+        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Deleted);
+        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.All);
+        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Active);
+
+        Assert.Single(shiftList.GridQuery!.Queries.Where);
+    }
+
+    [Fact]
+    public async Task ShouldCombineDeleteFiltersButKeepOriginal()
+    {
+        var originalQuery = new Query().Where(nameof(SampleDTO.Name), "equal", "Sample 1");
+
+        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+            .Add(p => p.Action, "/Product")
+            .Add(p => p.DisablePagination, DisablePaging)
+            .Add(p => p.Query, originalQuery)
+        );
+
+        var shiftList = comp.Instance;
+
+        await shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Active);
+
+        Assert.Single(shiftList.Query!.Queries.Where);
+        var originalWhere = shiftList.Query!.Queries.Where.First();
+        Assert.Equal(nameof(SampleDTO.Name), originalWhere.Field);
+        Assert.Equal("equal", originalWhere.Operator);
+        Assert.Equal("Sample 1", (string)originalWhere.value);
+
+        Assert.Equal(2, shiftList.GridQuery!.Queries.Where.Count);
     }
 }
