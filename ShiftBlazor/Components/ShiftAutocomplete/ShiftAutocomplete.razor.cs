@@ -154,7 +154,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 try
                 {
-                    url = QueryBuilder.Where(x => x.ID == Value.Value).Take(1).ToString();
+                    url = QueryBuilder.Where(x => 1 == 1 && x.ID == Value.Value).Take(1).ToString();
                 }
                 catch (Exception e)
                 {
