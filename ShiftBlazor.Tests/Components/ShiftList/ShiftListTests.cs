@@ -115,24 +115,31 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         List<string> excludedColumns = new()
         {
-            nameof(Sample.LastName),
-            nameof(Sample.City)
+            nameof(SampleListDTO.LastName),
+            nameof(SampleListDTO.City)
         };
 
-        var cut = RenderComponent<ShiftList<Sample>>(parameters => parameters
+        var cut = RenderComponent<ShiftList<SampleListDTO>>(parameters => parameters
             .Add(p => p.Action, "/Product")
             .Add(p => p.ExcludedColumns, excludedColumns)
             .Add(p => p.ComponentType, typeof(DummyComponent))
             .Add(p => p.DisablePagination, DisablePaging)
         );
 
-        var grid = cut.FindComponent<SfGrid<Sample>>();
+        var grid = cut.FindComponent<SfGrid<SampleListDTO>>();
 
         var columns = grid.Instance.Columns;
-        var properties = typeof(Sample).GetProperties();
+        var properties = typeof(SampleListDTO).GetProperties();
 
-        // we have an extra Actions column in columns variable but also missing Revision column since we hide it by default
-        Assert.Equal(properties.Count() - excludedColumns.Count, columns.Count());
+        var defaultExcluded = cut.Instance.DefaultExcludedColumns;
+        var defaultExcludedCount = properties.Where(x => defaultExcluded.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase)).Count();
+
+        // We always create ID column even when excluded so we subtract one to the count
+        var totalExcludedCount = defaultExcludedCount + excludedColumns.Count - 1;
+        // We have an extra Actions column in columns variable so we add one
+        var totalColumnCount = properties.Count() - totalExcludedCount + 1;
+
+        Assert.Equal(totalColumnCount, columns.Count());
         Assert.All(columns, x => excludedColumns.Contains(x.Field).Equals(false));
     }
 

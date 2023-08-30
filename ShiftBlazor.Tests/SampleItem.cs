@@ -14,7 +14,15 @@ public class Sample : ShiftEntityDTO
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 }
 
-public class SampleValidator : AbstractValidator<Sample>
+public class SampleListDTO : ShiftEntityListDTO
+{
+    public override string? ID { get; set; }
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    public string Name { get; set; }
+    public string LastName { get; set; }
+    public string City { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+}
 {
     public SampleValidator()
     {
