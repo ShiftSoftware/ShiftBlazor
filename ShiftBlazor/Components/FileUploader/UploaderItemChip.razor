@@ -3,13 +3,13 @@
 
 @if (Uploader.ReadOnly || !CanDelete)
 {
-    <MudChip>
+    <MudChip @ondblclick="DownloadFile" OnClick="@DownloadTip">
         @renderFragment
     </MudChip>
 }
 else
 {
-    <MudChip OnClose="@(() => Uploader.Remove(Item))">
+    <MudChip @ondblclick="DownloadFile" OnClick="@DownloadTip" OnClose="@RemoveFile">
         @renderFragment
     </MudChip>
 }
@@ -50,4 +50,22 @@ else
             }
             <MudText>@Item.GetFileName()</MudText>
         </div>;
+
+    internal async Task RemoveFile()
+    {
+        await Uploader.Remove(Item);
+    }
+
+    internal async Task DownloadFile()
+    {
+        if (Item.File != null)
+        {
+            await Uploader.DownloadFile(Item.File);
+        }
+    }
+
+    internal void DownloadTip()
+    {
+        Uploader.MessageService.Info("Double click to download file");
+    }
 }

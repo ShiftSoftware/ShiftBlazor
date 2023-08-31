@@ -8,8 +8,8 @@
 @if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))
 {
     <MudField id="@UploaderId"
-              Label="@(Label + (For != null && FormHelper.IsRequired(For) ? "*" : "") )"
-              Class="@("FileUpload relative my-4 z-10" + (ReadOnly ? " readonly" : ""))"
+              Label="@FieldLabel"
+              Class="@Classes"
               Variant="Variant.Outlined"
               Error="!string.IsNullOrWhiteSpace(ErrorText)"
               ErrorText="@ErrorText">
@@ -26,7 +26,7 @@
                                 <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize"></UploaderItemThumbnail>
                             }
                             else
-                            {
+                            {   
                                 <UploaderItemChip CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item"></UploaderItemChip>
                             }
                         </MudItem>

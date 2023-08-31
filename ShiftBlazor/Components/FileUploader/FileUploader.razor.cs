@@ -9,12 +9,13 @@ using System.Net.Http.Headers;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Linq.Expressions;
+using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     public partial class FileUploader : Events.EventComponentBase, IDisposable
     {
-        [Inject] MessageService MessageService { get; set; } = default!;
+        [Inject] internal MessageService MessageService { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
@@ -93,6 +94,30 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     val += "," + ImageTypes;
                 }
                 return val.Trim(',');
+            }
+        }
+
+        internal string Classes {
+            get
+            {
+                var classNames = "FileUpload relative my-4 z-10";
+                if (ReadOnly) classNames += " readonly";
+                return classNames;
+            }
+        }
+
+        internal string FieldLabel
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(Label))
+                {
+                    var label = Label;
+                    if (For != null && FormHelper.IsRequired(For)) label += "*";
+                    return label;
+                }
+
+                return string.Empty;
             }
         }
 
