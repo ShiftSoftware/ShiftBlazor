@@ -96,6 +96,15 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             Show(text, severity, config =>
             {
+                if (severity == Severity.Error)
+                {
+                    config.RequireInteraction = true;
+                    config.CloseAfterNavigation = false;
+                }
+
+                config.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+                config.Icon = icon;
+
                 if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(detail))
                 {
                     config.Action = string.IsNullOrWhiteSpace(buttonText) ? "View" : buttonText;
@@ -111,13 +120,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
                         config.ActionVariant = buttonVariant.Value;
                     }
 
-                    config.Icon = icon;
-
-                    if (severity == Severity.Error)
-                    {
-                        config.RequireInteraction = true;
-                        config.CloseAfterNavigation = false;
-                    }
                 }
             });
         }
