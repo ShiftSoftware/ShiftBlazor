@@ -291,6 +291,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task RecordClickHandler(RecordClickEventArgs<T> args)
         {
+            args.PreventRender = true;
             if (OnRowClick.HasDelegate)
             {
                 await OnRowClick.InvokeAsync(args);
@@ -315,6 +316,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task FilterDeleted(DeleteFilter _filter)
         {
+            Grid?.PreventRender();
             GridQuery = CreateDeleteQuery(_filter);
 
             if (Query != null && Grid != null)
@@ -364,6 +366,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 await Grid.Refresh();
             }
+            Grid?.PreventRender();
             return result;
         }
 
@@ -375,6 +378,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task ChooseVisibleColumns(ColumnChooserFooterTemplateContext ctx)
         {
+            //Grid?.PreventRender();
             var visibles = ctx.Columns.Where(x => x.Visible).Select(x => x.HeaderText).ToArray();
             var hiddens = ctx.Columns.Where(x => !x.Visible).Select(x => x.HeaderText).ToArray();
 
@@ -383,6 +387,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await Grid!.ShowColumnsAsync(visibles);
             await Grid!.HideColumnsAsync(hiddens);
 
+            //Grid?.PreventRender();
             SettingManager.SetHiddenColumns(GetListIdentifier(), hiddens.ToList());
 
         }
@@ -465,6 +470,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal void RowBound(RowDataBoundEventArgs<T> args)
         {
+            args.PreventRender = true;
             if (args.Data.IsDeleted)
             {
                 args.Row.AddClass(new string[] { "is-deleted" });
@@ -489,18 +495,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task RowSelectHandler(RowSelectEventArgs<T> args)
         {
+            args.PreventRender = true;
             await Task.Delay(1);
             SelectedItems = await GetSelectedItems();
         }
 
         internal async Task RowDeselectHandler(RowDeselectEventArgs<T> args)
         {
+            args.PreventRender = true;
             await Task.Delay(1);
             SelectedItems = await GetSelectedItems();
         }
 
         public async Task ViewAddItem(object? key = null)
         {
+            Grid?.PreventRender();
             if (ComponentType != null)
             {
                 var result = await OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters);
@@ -510,10 +519,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public async Task PrintList()
         {
+            Grid?.PreventRender();
             if (this.Grid != null)
             {
                 MsgService.Info(Loc["PrintMessage"]);
                 await this.Grid.PrintAsync();
+                Grid?.PreventRender();
                 return;
             }
 
@@ -522,6 +533,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public async Task DownloadList(DownloadType type)
         {
+            Grid?.PreventRender();
             if (this.Grid == null)
             {
                 MsgService.Error(Loc["DownloadFailed"]);
@@ -568,9 +580,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal void PageSizeChangeHandler(int size)
         {
-            PageSize = size;
-            SettingManager.SetListPageSize(size);
-            StateHasChanged();
+            if (PageSize != size)
+            {
+                PageSize = size;
+                SettingManager.SetListPageSize(size);
+                StateHasChanged();
+            }
         }
 
         public string GetListIdentifier()
@@ -578,9 +593,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return $"{Action}_{typeof(T).Name}";
         }
 
-        internal async Task ChooseColumn()
+        internal void ChooseColumn()
         {
-            await Grid!.OpenColumnChooserAsync(null, 0);
+            Grid?.PreventRender();
+            _ = Grid!.OpenColumnChooserAsync(null, 0);
         }
 
         public enum DownloadType
