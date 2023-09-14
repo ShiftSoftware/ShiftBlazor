@@ -1,31 +1,23 @@
 ﻿using Microsoft.AspNetCore.Components;
-using MudBlazor;
-using Syncfusion.Blazor.Grids;
-using System.Reflection;
-using Syncfusion.Blazor.Data;
-using ShiftSoftware.ShiftEntity.Model.Dtos;
-using Microsoft.JSInterop;
-using ShiftSoftware.ShiftBlazor.Services;
-using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftBlazor.Enums;
 using Microsoft.Extensions.Localization;
-using ShiftSoftware.ShiftBlazor.Events;
-using ShiftSoftware.ShiftBlazor.Extensions;
-using ShiftSoftware.ShiftBlazor.Events.CustomEventArgs;
+using Microsoft.OData.Client;
+using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftEntity.Model.Dtos;
+using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftList<T> : EventComponentBase, IDisposable
-        where T : ShiftEntityDTOBase, new()
+    [CascadingTypeParameter(nameof(T))]
+    public partial class ShiftList<T> where T : ShiftEntityDTOBase, new()
     {
-        [Inject] private MessageService MsgService { get; set; } = default!;
-        [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
-        [Inject] private ShiftModal ShiftModal { get; set; } = default!;
-        [Inject] private SettingManager SettingManager { get; set; } = default!;
-        [Inject] private HttpClient HttpClient { get; set; } = default!;
-        [Inject] private NavigationManager NavManager { get; set; } = default!;
+        [Inject] ODataQuery OData { get; set; } = default!;
+        [Inject] HttpClient HttpClient { get; set; } = default!;
+        [Inject] ShiftModal ShiftModal { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
         [Inject] private TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
+        [Inject] private SettingManager SettingManager { get; set; } = default!;
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
@@ -48,53 +40,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public EventCallback<T> ValuesChanged { get; set; }
 
-        /// <summary>
-        ///     The URL endpoint that processes the CRUD operations.
-        /// </summary>
         [Parameter]
-        public string? Action { get; set; }
+        public string? EntitySet { get; set; }
 
         /// <summary>
-        ///     The title to render on the form header.
+        ///     The type of the component to open when clicking on Add or the Action button.
+        ///     If empty, Add and Action button column will be hidden.
         /// </summary>
         [Parameter]
-        public string? Title { get; set; }
+        public Type? ComponentType { get; set; }
 
         /// <summary>
-        ///     The number of items to be displayed per page.
+        ///     To pass additional parameters to the ShiftFormContainer componenet.
         /// </summary>
         [Parameter]
-        public int? PageSize { get; set; }
-
-        /// <summary>
-        ///     A list of columns names to hide them in the UI.
-        /// </summary>
-        [Parameter]
-        public List<string> ExcludedColumns { get; set; } = new();
-
-        /// <summary>
-        ///     Enable CSV And Excel format Download button.
-        /// </summary>
-        [Parameter]
-        public bool EnableCsvExcelExport { get; set; }
-
-        /// <summary>
-        ///     Enable PDF format Download button.
-        /// </summary>
-        [Parameter]
-        public bool EnablePdfExport { get; set; }
-        
-        /// <summary>
-        ///     Enable Print button.
-        /// </summary>
-        [Parameter]
-        public bool EnablePrint { get; set; }
-
-        /// <summary>
-        ///     Enable Virtualization and disable Paging.
-        /// </summary>
-        [Parameter]
-        public bool EnableVirtualization { get; set; }
+        public Dictionary<string, string>? AddDialogParameters { get; set; }
 
         /// <summary>
         ///     Enable select
@@ -103,34 +63,25 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool EnableSelection { get; set; }
 
         /// <summary>
-        ///     Disable the add item button to open a form.
+        ///     Enable Virtualization and disable Paging.
         /// </summary>
         [Parameter]
-        public bool DisableAdd { get; set; }
-        
+        public bool EnableVirtualization { get; set; }
+
         /// <summary>
-        ///     Disable paging.
+        ///     To set the list's fixed height.
         /// </summary>
         [Parameter]
-        public bool DisablePagination { get; set; }
-        
+        public string Height { get; set; } = string.Empty;
+
         /// <summary>
-        ///     Disable sorting.
+        ///     The title to render on the form header.
         /// </summary>
         [Parameter]
-        public bool DisableSorting { get; set; }
-        
-        /// <summary>
-        ///     Disable multisorting.
-        /// </summary>
+        public string? Title { get; set; }
+
         [Parameter]
-        public bool DisableMultiSorting { get; set; }
-        
-        /// <summary>
-        ///     Disable filtering.
-        /// </summary>
-        [Parameter]
-        public bool DisableFilters { get; set; }
+        public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
 
         /// <summary>
         ///     If true, the toolbar in the header will not be rendered.
@@ -139,25 +90,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool DisableHeaderToolbar { get; set; }
 
         [Parameter]
-        public RenderFragment? ChildContent { get; set; }
+        public bool DisableActionColumn { get; set; }
+
+        [Parameter]
+        public string? NavColor { get; set; }
+
+        [Parameter]
+        public bool NavIconFlatColor { get; set; }
 
         /// <summary>
-        ///     An element used to insert GridColumn elements before the Action column.
+        /// The icon displayed before the Form Title, in a string in SVG format.
         /// </summary>
         [Parameter]
-        public RenderFragment? ColumnTemplate { get; set; }
-        
-        /// <summary>
-        ///     Used to override any element in the Action column.
-        /// </summary>
-        [Parameter]
-        public RenderFragment<T>? ActionsTemplate { get; set; }
+        public string IconSvg { get; set; } = @Icons.Material.Filled.List;
 
-        /// <summary>
-        ///     Used to add custom elements to the header.
-        /// </summary>
-        [Parameter]
-        public RenderFragment? HeaderTemplate { get; set; }
 
         /// <summary>
         ///     Used to add custom elements to the start of the header toolbar.
@@ -172,394 +118,149 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public RenderFragment? ToolbarEndTemplate { get; set; }
 
         /// <summary>
+        ///     Used to add custom elements to the header.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? HeaderTemplate { get; set; }
+
+        /// <summary>
         ///     Used to add custom elements to the controls section of the header toolbar.
         ///     This section is only visible when the form is opened in a dialog.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarControlsTemplate { get; set; }
 
-        /// <summary>
-        ///     To pass Syncfusion's OData query data.
-        /// </summary>
-        [Parameter]
-        public Query? Query { get; set; }
-        
-        /// <summary>
-        ///     To set the list's fixed height.
-        /// </summary>
-        [Parameter]
-        public string GridHeight { get; set; } = string.Empty;
-
-        /// <summary>
-        ///     To pass additional parameters to the ShiftFormContainer componenet.
-        /// </summary>
-        [Parameter]
-        public Dictionary<string, string>? AddDialogParameters { get; set; }
-        
-        /// <summary>
-        ///     To specify whether to generate the Syncfusion columns automatically or not.
-        /// </summary>
-        [Parameter]
-        public bool AutoGenerateColumns { get; set; } = true;
-
-        /// <summary>
-        /// The icon displayed before the Form Title, in a string in SVG format.
-        /// </summary>
-        [Parameter]
-        public string IconSvg { get; set; } = @Icons.Material.Filled.List;
-
-        /// <summary>
-        ///     The type of the component to open when clicking on Add or the Action button.
-        ///     If empty, Add and Action button column will be hidden.
-        /// </summary>
-        [Parameter]
-        public Type? ComponentType { get; set; }
-
-        [Parameter]
-        public EventCallback<RecordClickEventArgs<T>> OnRowClick { get; set; }
-        [Parameter]
-        public EventCallback<object?> OnFormClosed { get; set; }
-
-        [Parameter]
-        public bool ShowIDColumn { get; set; } = false;
-
-        [Parameter]
-        public bool DisableColumnChooser { get; set; }
-
         [Parameter]
         public bool DisableDeleteFilter { get; set; }
 
         [Parameter]
-        public Dictionary<string, string>? HeaderTexts { get; set; }
+        public bool DisableColumnChooser { get; set; }
+
+        /// <summary>
+        ///     Disable the add item button to open a form.
+        /// </summary>
+        [Parameter]
+        public bool DisableAdd { get; set; }
+
+        /// <summary>
+        ///     Enable Print button.
+        /// </summary>
+        [Parameter]
+        public bool EnablePrint { get; set; }
 
         [Parameter]
-        public bool MultiLineCells { get; set; }
+        public bool Dense { get; set; }
 
         [Parameter]
-        public string? NavColor { get; set; }
+        public EventCallback<DataGridRowClickEventArgs<T>> OnRowClick { get; set; }
 
         [Parameter]
-        public bool NavIconFlatColor { get; set; }
+        public EventCallback OnLoad { get; set; }
 
         [Parameter]
-        public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
+        public RenderFragment? ChildContent { get; set; }
 
-        public SfGrid<T>? Grid;
-        internal List<ListColumn> GeneratedColumns = new();
-        internal readonly List<string> DefaultExcludedColumns = new() { nameof(ShiftEntityDTOBase.ID), nameof(ShiftEntityDTOBase.IsDeleted), "Revisions" };
-        internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
+        [Parameter]
+        public bool ShowIDColumn { get; set; }
 
+        internal Size IconSize => Dense ? Size.Medium : Size.Large;
+        internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));
-        internal bool ActionUrlBroken = false;
-        internal bool IsReady = false;
 
-        internal Query? GridQuery;
-
-        internal string GridId;
-        internal FilterSettings FilterSettingMenu = new FilterSettings { Type = Syncfusion.Blazor.Grids.FilterType.Menu };
-        internal SelectedItems<string> SelectedItems = new();
-
-        internal Uri LastRequestUri { get; set; }
-        internal Uri LastFailedRequestUri { get; set; }
-        internal string GridContainerCssClass
+        private MudDataGrid<T>? _DataGrid;
+        private MudDataGrid<T>? DataGrid
         {
             get
             {
-                var cssClasses = "";
-                if (MudDialog != null) cssClasses += " shift-scrollable-content-wrapper";
-                if (ActionUrlBroken) cssClasses += " disable-grid";
-                return cssClasses;
+                return _DataGrid;
             }
-        }
-        internal string GridCssClass
-        { 
-            get
+            set
             {
-                var cssClass = "";
-                if (IsReady) cssClass += " grid-loaded";
-                if (MultiLineCells) cssClass += " multiline";
-                return cssClass;
-            }
-        }
-
-        public ShiftList()
-        {
-            GridId = "Grid" + Guid.NewGuid().ToString().Replace("-", string.Empty);
-        }
-
-        public event EventHandler<EventArgs>? OnDataBound;
-
-        private async Task RecordClickHandler(RecordClickEventArgs<T> args)
-        {
-            args.PreventRender = true;
-            if (OnRowClick.HasDelegate)
-            {
-                await OnRowClick.InvokeAsync(args);
+                _DataGrid = value;
+                OnLoadHandler();
             }
         }
 
         protected override void OnInitialized()
         {
-            OnRequestFailed += HandleRequestFailed;
-            OnRequestStarted += HandleRequestStarted;
-
-            PageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
-
-            if (AutoGenerateColumns)
-            {
-                GenerateColumns();
-            }
-
-            GridQuery = Query;
-
         }
 
-        internal async Task FilterDeleted(DeleteFilter _filter)
+        protected override async Task OnInitializedAsync()
         {
-            Grid?.PreventRender();
-            GridQuery = CreateDeleteQuery(_filter);
-
-            if (Query != null && Grid != null)
-            {
-                await Task.Delay(1);
-                await Grid.Refresh();
-            }
+            QueryBuilder = OData
+                .CreateQuery<T>(EntitySet)
+                .IncludeCount();
         }
 
-        internal Query CreateDeleteQuery(DeleteFilter _filter)
+        protected override void OnAfterRender(bool firstRender)
         {
-            var query = Query?.Clone() ?? new Query();
-            var filter = GetDeleteFilter();
-
-            switch (_filter)
+            if (firstRender && !DisableColumnChooser)
             {
-                case DeleteFilter.Deleted: filter.value = true; break;
-                case DeleteFilter.All:
-                    filter = new WhereFilter
-                    {
-                        Field = "1",
-                        Operator = "equal",
-                        value = 1,
-                    }.And(filter.Or(GetDeleteFilter(true)));
-                    break;
-            }
-
-            query.Where(filter);
-
-            return query;
-        }
-
-        private static WhereFilter GetDeleteFilter(bool value = false)
-        {
-            return new WhereFilter
-            {
-                Field = nameof(ShiftEntityDTOBase.IsDeleted),
-                Operator = "equal",
-                value = value,
-            };
-        } 
-
-        public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
-        {
-            var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
-            if (Grid != null && result != null && result.Canceled != true)
-            {
-                await Grid.Refresh();
-            }
-            Grid?.PreventRender();
-            return result;
-        }
-
-        internal void RestoreColumnsDefaultVisiblity(ColumnChooserFooterTemplateContext ctx)
-        {
-            SettingManager.SetHiddenColumns(GetListIdentifier(), new List<string>());
-            NavManager.NavigateTo(NavManager.Uri, true);
-        }
-
-        internal async Task ChooseVisibleColumns(ColumnChooserFooterTemplateContext ctx)
-        {
-            //Grid?.PreventRender();
-            var visibles = ctx.Columns.Where(x => x.Visible).Select(x => x.HeaderText).ToArray();
-            var hiddens = ctx.Columns.Where(x => !x.Visible).Select(x => x.HeaderText).ToArray();
-
-            await ctx.CancelAsync();
-
-            await Grid!.ShowColumnsAsync(visibles);
-            await Grid!.HideColumnsAsync(hiddens);
-
-            //Grid?.PreventRender();
-            SettingManager.SetHiddenColumns(GetListIdentifier(), hiddens.ToList());
-
-        }
-
-        internal async Task OnLoadHandler()
-        {
-            if (Grid != null && !DisableColumnChooser)
-            {
-                var hiddenColumns = SettingManager.GetHiddenColumns(GetListIdentifier()).ToArray();
-                var visibleColumns = Grid
-                    .Columns
-                    .Where(x => !hiddenColumns.Contains(x.HeaderText) && x.Visible)
-                    .Select(x => x.HeaderText)
-                    .ToArray();
-                try
+                var columns = DataGrid?.RenderedColumns.Where(x => x.Hideable == true);
+                if (columns == null || columns.Count() == 0)
                 {
-                    await Grid.HideColumnsAsync(hiddenColumns);
-                    await Grid.ShowColumnsAsync(visibleColumns);
+                    return;
                 }
-                catch (Exception)
+
+                var columnStates = SettingManager.GetHiddenColumns(GetListIdentifier()).ToList();
+
+                foreach (var item in columnStates)
                 {
-                    SettingManager.SetHiddenColumns(GetListIdentifier(), new());
+                    var column = columns.FirstOrDefault(x => x.Title == item.Title);
+                    _ = item.Visible == true
+                        ? column?.ShowAsync()
+                        : column?.HideAsync();
+                }
+
+                foreach (var item in columns)
+                {
+                    item.HiddenChanged = new EventCallback<bool>(this, ColumnStateChanged);
                 }
             }
         }
 
-        private void ErrorHandler(FailureEventArgs args)
+        private void OnLoadHandler()
         {
-            var shouldRefresh = false;
-
-            this.Grid?.Columns
-                .Where(column => column.IsForeignColumn() && column.Template == null)
-                .ToList()
-                .ForEach(column =>
-                {
-                    if (LastFailedRequestUri.AbsoluteUriWithoutQuery() == column.DataManager.Url)
-                    {
-                        var type = column.GetType().GetGenericArguments().First();
-
-                        Type genericClass = typeof(List<>);
-                        Type constructedClass = genericClass.MakeGenericType(type);
-                        var created = Activator.CreateInstance(constructedClass);
-
-                        var colType = column.GetType();
-                        var prop = colType.GetProperty("ForeignDataSource");
-
-                        if (prop != null)
-                        {
-                            column.Template = (item) => UnableToLoadDataTemplate;
-
-                            prop.SetValue(column, created);
-                            shouldRefresh = true;
-                        }
-                    }
-                });
-
-            if (shouldRefresh)
-            {
-                this.Grid?.Refresh();
-            }
-            else
-            {
-                ActionUrlBroken = true;
-                MsgService.Error(Loc["GetItemListError"], Loc["GetItemListError"], args.Error.ToString());
-            }
-        }
-
-        public void DataBoundHandler()
-        {
-            if (!IsReady)
-            {
-                IsReady = true;
-            }
-
-            if (OnDataBound != null)
-            {
-                OnDataBound(this, new EventArgs());
-            }
-        }
-
-        internal void RowBound(RowDataBoundEventArgs<T> args)
-        {
-            args.PreventRender = true;
-            if (args.Data.IsDeleted)
-            {
-                args.Row.AddClass(new string[] { "is-deleted" });
-            }
-        }
-
-        public async Task<SelectedItems<string>> GetSelectedItems()
-        {
-            var result = new SelectedItems<string>
-            {
-                All = await JsRuntime.InvokeAsync<bool>("GridAllSelected", this.Grid!.ID),
-                Query = LastRequestUri?.Query,
-            };
-
-            if (!result.All)
-            {
-                result.Items = this.Grid.SelectedRecords.Select(x => x.ID!).ToList();
-            }
-
-            return result;
-        }
-
-        internal async Task RowSelectHandler(RowSelectEventArgs<T> args)
-        {
-            args.PreventRender = true;
-            await Task.Delay(1);
-            SelectedItems = await GetSelectedItems();
-        }
-
-        internal async Task RowDeselectHandler(RowDeselectEventArgs<T> args)
-        {
-            args.PreventRender = true;
-            await Task.Delay(1);
-            SelectedItems = await GetSelectedItems();
+            OnLoad.InvokeAsync();
         }
 
         public async Task ViewAddItem(object? key = null)
         {
-            Grid?.PreventRender();
             if (ComponentType != null)
             {
                 var result = await OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters);
-                await OnFormClosed.InvokeAsync(result?.Data);
+                //await OnFormClosed.InvokeAsync(result?.Data);
             }
+        }
+
+        public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
+        {
+            var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
+            if (result != null && result.Canceled != true)
+            {
+                //await Grid.Refresh();
+            }
+            return result;
         }
 
         public async Task PrintList()
         {
-            Grid?.PreventRender();
-            if (this.Grid != null)
-            {
-                MsgService.Info(Loc["PrintMessage"]);
-                await this.Grid.PrintAsync();
-                Grid?.PreventRender();
-                return;
-            }
-
-            MsgService.Error(Loc["PrintFailed"]);
+            throw new NotImplementedException();
         }
 
-        public async Task DownloadList(DownloadType type)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="delete">
+        /// true: only get active items.
+        /// false: only deleted items.
+        /// null: get all.
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        internal async Task FilterDeleted(bool? delete = null)
         {
-            Grid?.PreventRender();
-            if (this.Grid == null)
-            {
-                MsgService.Error(Loc["DownloadFailed"]);
-                return;
-            }
-            switch (type)
-            {
-                case DownloadType.CSV:
-                    await this.Grid.ExportToCsvAsync();
-                    break;
-                case DownloadType.PDF:
-                    await this.Grid.ExportToPdfAsync();
-                    break;
-                case DownloadType.Excel:
-                    await this.Grid.ExportToExcelAsync();
-                    break;
-            }
-        }
-
-        private void ReloadGrid()
-        {
-            if (Grid != null)
-            {
-                ActionUrlBroken = false;
-                Grid.Refresh();
-            }
+            throw new NotImplementedException();
         }
 
         private void CloseDialog()
@@ -570,121 +271,162 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        internal async Task GoToPage(int page)
+        private async Task RowClickHandler(DataGridRowClickEventArgs<T> args)
         {
-            if (Grid!.PageSettings.CurrentPage != page)
+            if (OnRowClick.HasDelegate)
             {
-                await Grid!.GoToPageAsync(page);
+                await OnRowClick.InvokeAsync(args);
             }
         }
 
-        internal void PageSizeChangeHandler(int size)
+        private void OpenColumnChooser()
         {
-            if (PageSize != size)
+            DataGrid?.ShowColumnsPanel();
+        }
+        private string GetListIdentifier()
+        {
+            return $"{EntitySet}_{typeof(T).Name}";
+        }
+
+        private void SaveColumnState()
+        {
+            var columns = DataGrid?.RenderedColumns.Where(x => x.Hideable == true);
+            if (columns == null || columns.Count() == 0)
             {
-                PageSize = size;
-                SettingManager.SetListPageSize(size);
-                StateHasChanged();
+                return;
             }
-        }
 
-        public string GetListIdentifier()
-        {
-            return $"{Action}_{typeof(T).Name}";
-        }
-
-        internal void ChooseColumn()
-        {
-            Grid?.PreventRender();
-            _ = Grid!.OpenColumnChooserAsync(null, 0);
-        }
-
-        public enum DownloadType
-        {
-            CSV,
-            PDF,
-            Excel,
-        }
-
-        public enum DeleteFilter
-        {
-            All,
-            Deleted,
-            Active,
-        }
-
-        internal void GenerateColumns()
-        {
-            var properties = typeof(T)
-                .GetProperties()
-                .Where(x => !DefaultExcludedColumns.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase))
-                .Where(x => !ExcludedColumns.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase));
-
-            var complexColumns = new List<string>();
-
-            foreach (var prop in properties)
+            var columnStates = columns.Select(x => new ColumnState
             {
-                var column = new ListColumn();
+                Title = x.Title,
+                Visible = !x.Hidden
+            }).ToList();
 
-                column.Label = prop.Name;
-                column.Field = GetFieldName(prop);
+            SettingManager.SetHiddenColumns(GetListIdentifier(), columnStates);
+        }
 
-                if (!IsSystemType(prop.PropertyType) && prop.PropertyType.IsClass)
+        private void ColumnStateChanged(bool hidden)
+        {
+            SaveColumnState();
+        }
+
+        private async Task<GridData<T>> ServerReload(GridState<T> state)
+        {
+            if (DataGrid == null)
+            {
+                return null;
+            }
+
+            var skip = DataGrid.CurrentPage * DataGrid.RowsPerPage;
+
+            var sortList = DataGrid.SortDefinitions.OrderBy(x => x.Value.Index).Select(x =>
+            {
+                var sort = x.Key;
+                if (x.Value.Descending)
                 {
-                    complexColumns.Add(prop.Name);
-                    column.IsComplex = true;
+                    sort += " desc";
                 }
 
-                GeneratedColumns.Add(column);
-            }
+                return sort;
+            });
 
-            GridQuery?.Expand(complexColumns);
-        }
-
-        internal string GetFieldName(PropertyInfo property)
-        {
-            var field = property.Name;
-            // try getting the complex field name when field is complex type
-            if (!IsSystemType(property.PropertyType) && property.PropertyType.IsClass)
+            var filterList = DataGrid.FilterDefinitions.Select(x =>
             {
-                var childProp = property
-                    .PropertyType
-                    .GetProperties()
-                    .FirstOrDefault(x => x.PropertyType.Name == "String" && x.Name != nameof(ShiftEntityDTOBase.ID));
-
-                if (!string.IsNullOrWhiteSpace(childProp?.Name))
+                if (x.Value == null && (x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty))
                 {
-                    field = $"{property.Name}.{childProp.Name}";
+                    return null;
                 }
-            }
-            return field;
-        }
 
-        internal static bool IsSystemType(Type type)
-        {
-            return type.Namespace == "System";
-        }
+                var filterTemplate = string.Empty;
+                var field = x.Column!.PropertyName;
+                var value = x.Value;
 
-        private void HandleRequestFailed(object? sender, UriEventArgs args)
-        {
-            if (args.Uri != null)
+                if (x.FieldType.IsString && x.Value != null)
+                {
+                    value = $"'{((string)x.Value).Replace("'", "''")}'";
+                }
+
+                switch (x.Operator)
+                {
+                    case FilterOperator.Number.Equal:
+                    case FilterOperator.String.Equal:
+                    case FilterOperator.DateTime.Is:
+                        filterTemplate = "{0} eq {1}";
+                        break;
+                    case FilterOperator.Number.NotEqual:
+                    case FilterOperator.String.NotEqual:
+                    case FilterOperator.DateTime.IsNot:
+                        filterTemplate = "{0} ne {1}";
+                        break;
+                    case FilterOperator.Number.GreaterThan:
+                    case FilterOperator.DateTime.After:
+                        filterTemplate = "{0} qt {1}";
+                        break;
+                    case FilterOperator.Number.GreaterThanOrEqual:
+                    case FilterOperator.DateTime.OnOrAfter:
+                        filterTemplate = "{0} ge {1}";
+                        break;
+                    case FilterOperator.Number.LessThan:
+                    case FilterOperator.DateTime.Before:
+                        filterTemplate = "{0} lt {1}";
+                        break;
+                    case FilterOperator.Number.LessThanOrEqual:
+                    case FilterOperator.DateTime.OnOrBefore:
+                        filterTemplate = "{0} le {1}";
+                        break;
+                    case FilterOperator.String.Contains:
+                        filterTemplate = "contains({0},{1})";
+                        break;
+                    case FilterOperator.String.NotContains:
+                        filterTemplate = "not contains({0},{1})";
+                        break;
+                    case FilterOperator.String.StartsWith:
+                        filterTemplate = "startswith({0},{1})";
+                        break;
+                    case FilterOperator.String.EndsWith:
+                        filterTemplate = "endswith({0},{1})";
+                        break;
+                    case FilterOperator.String.Empty:
+                        filterTemplate = "{0} eq null";
+                        break;
+                    case FilterOperator.String.NotEmpty:
+                        filterTemplate = "{0} ne null";
+                        break;
+                    default:
+                        filterTemplate = "{0} eq {1}";
+                        break;
+                }
+
+                var filter = string.Format(filterTemplate, field, value);
+
+                return filter;
+            });
+
+            var url = QueryBuilder;
+
+            if (sortList.Count() > 0)
             {
-                LastFailedRequestUri = args.Uri;
+                url = url.AddQueryOption("$orderby", string.Join(',', sortList));
             }
-        }
 
-        private void HandleRequestStarted(object? sender, UriEventArgs args)
-        {
-            if (args.Uri != null && args.Uri.AbsoluteUriWithoutQuery() == Grid.DataManager.Url)
+            var filterString = string.Join(" and " , filterList.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+            if (!string.IsNullOrWhiteSpace(filterString))
             {
-                LastRequestUri = args.Uri;
+                url = url.AddQueryOption("filter", filterString);
             }
-        }
 
-        void IDisposable.Dispose()
-        {
-            OnRequestFailed -= HandleRequestFailed;
-            OnRequestStarted -= HandleRequestStarted;
+            var final = url
+                .Skip(skip)
+                .Take(DataGrid.RowsPerPage);
+
+            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(final.ToString());
+
+            var gridData = new GridData<T>();
+            gridData.Items = res.Value.ToList();
+            gridData.TotalItems = (int)res.Count.Value;
+
+            return gridData;
         }
     }
 }

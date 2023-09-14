@@ -53,3 +53,7 @@
 .multi-select input.mud-input-root::placeholder {
     opacity: 1 !important;
 }
+
+.is-deleted {
+    background-color: #ffc7c7;
+}

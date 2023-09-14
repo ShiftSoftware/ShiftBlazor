@@ -18,15 +18,22 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Components\ShiftListOld\**" />
+	  <Content Remove="Components\ShiftListOld\**" />
+	  <EmbeddedResource Remove="Components\ShiftListOld\**" />
+	  <None Remove="Components\ShiftListOld\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Blazored.FluentValidation" Version="2.1.0" />
 		<PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Extensions.Localization" Version="7.0.7" />
+		<PackageReference Include="Microsoft.Extensions.Localization" Version="7.0.11" />
 		<PackageReference Include="Microsoft.OData.Client" Version="7.16.0" />
 		<PackageReference Include="MimeTypes" Version="2.4.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="MudBlazor" Version="6.4.1" />
+		<PackageReference Include="MudBlazor" Version="6.9.0" />
 		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="1.6.11" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
 		<PackageReference Include="ShiftSoftware.TypeAuth.Blazor" Version="1.4.2" Condition="!Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
 		<PackageReference Include="Syncfusion.Blazor.Grid" Version="21.1.35" />

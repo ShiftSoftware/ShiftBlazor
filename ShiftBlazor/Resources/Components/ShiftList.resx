@@ -153,6 +153,9 @@
   <data name="GoToPage" xml:space="preserve">
     <value>Page {0}</value>
   </data>
+  <data name="IdColumnHeaderText" xml:space="preserve">
+    <value>ID</value>
+  </data>
   <data name="ItemsPerPageLabel" xml:space="preserve">
     <value>Items per page</value>
   </data>

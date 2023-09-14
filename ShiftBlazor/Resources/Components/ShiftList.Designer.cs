@@ -169,6 +169,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ID.
+        /// </summary>
+        internal static string IdColumnHeaderText {
+            get {
+                return ResourceManager.GetString("IdColumnHeaderText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Items per page.
         /// </summary>
         internal static string ItemsPerPageLabel {

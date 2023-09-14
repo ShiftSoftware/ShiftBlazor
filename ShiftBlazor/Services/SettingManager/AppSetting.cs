@@ -15,7 +15,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public virtual DialogPosition? ModalPosition { get; set; }
         public virtual MaxWidth? ModalWidth { get; set; }
         public virtual FormOnSaveAction? FormOnSaveAction { get; set; }
-        public virtual Dictionary<string, List<string>>? HiddenColumns { get; set; }
+        public virtual Dictionary<string, List<ColumnState>>? ColumnStates { get; set; }
         public virtual LanguageInfo? Language { get; set; }
     }
 
