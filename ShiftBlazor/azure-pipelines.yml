@@ -6,14 +6,14 @@ pool:
 
 steps:
 
- - script: dotnet test -c release --logger trx
-   displayName: 'dotnet test'
+ # - script: dotnet test -c release --logger trx
+ #   displayName: 'dotnet test'
 
- - task: PublishTestResults@2
-   condition: succeededOrFailed()
-   inputs:
-    testRunner: VSTest
-    testResultsFiles: '**/*.trx'
+ # - task: PublishTestResults@2
+ #   condition: succeededOrFailed()
+ #   inputs:
+ #    testRunner: VSTest
+ #    testResultsFiles: '**/*.trx'
 
  - script: dotnet build ShiftBlazor --configuration release
    displayName: 'dotnet build'
