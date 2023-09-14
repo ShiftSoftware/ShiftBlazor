@@ -118,6 +118,7 @@
 
             <MudDataGrid
                          @ref="DataGrid"
+                         Items="Values"
                          MultiSelection="EnableSelection"
                          Hideable="!DisableColumnChooser"
                          SortMode="SortMode.Multiple"
@@ -130,7 +131,7 @@
                          Virtualize="@EnableVirtualization"
                          Height="@Height"
                          ShowColumnOptions="true"
-                         ServerData="@(new Func<GridState<T>, Task<GridData<T>>>(ServerReload))"
+                         ServerData="ServerData"
                          RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
                          T="T">
 

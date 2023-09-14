@@ -418,17 +418,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             await RunTask(FormTasks.FetchRevisions, async () =>
             {
-                var path = SettingManager.Configuration.ODataPath.AddUrlPath(Action, Key?.ToString(), "revisions");
-                var res = await Http.GetFromJsonAsync<ODataDTO<RevisionDTO>>(path);
-
-                if (res == null)
-                {
-                    return;
-                }
-
                 var dParams = new DialogParameters
                 {
-                    {"Revisions", res.Value},
+                    {"EntitySet", Action.AddUrlPath(Key?.ToString(), "revisions")},
                 };
 
                 if (!string.IsNullOrWhiteSpace(Title))
@@ -447,17 +439,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (date != null)
             {
-                await FetchItem(date);
-                await SetMode(FormModes.Archive);
+                if (date.Value.Year > 9000)
+                {
+                    await CloseRevision();
+                }
+                else
+                {
+                    await FetchItem(date);
+                    await SetMode(FormModes.Archive);
+                }
             }
 
         }
 
-
         internal async Task CloseRevision()
         {
-            await SetMode(FormModes.View);
-            await RestoreOriginalValue();
+            if (Mode == FormModes.Archive)
+            {
+                await SetMode(FormModes.View);
+                await RestoreOriginalValue();
+            }
         }
 
         internal async Task RestoreOriginalValue()

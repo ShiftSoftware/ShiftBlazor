@@ -1,14 +1,26 @@
-﻿@using Syncfusion.Blazor.Data
-@using Syncfusion.Blazor.Grids
-@using Syncfusion.Blazor
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
 
-@namespace ShiftSoftware.ShiftBlazor.Components
+<ShiftList T="RevisionDTO"
+           EntitySet="@EntitySet"
+           OnRowClick="@RowClickHandler"
+           DisableColumnChooser="true"
+           DisableHeaderToolbar="@true">
 
-@* <ShiftList T="RevisionDTO"
-            Values="@Revisions"
-            OnRowClick="@RowClickHandler"
-            DisableHeaderToolbar="@true"
-            ExcludedColumns="@(new List<string> {nameof(RevisionDTO.SavedByUserID)})">
+    <ChildContent>
+        
+        <PropertyColumn Property="x => x.ValidFrom" />
+        <PropertyColumn Property="x => x.ValidTo" />
+
+        <ShiftForeignColumn TField="UserDetails"
+                            T="RevisionDTO"
+                            Field="@nameof(RevisionDTO.SavedByUserID)"
+                            Text="@nameof(UserDetails.Name)"
+                            Title="Saved By"
+                            ODataBaseUrl="@UserListBaseUrl"
+                            EntitySetName="@UserListEntitySet">
+        </ShiftForeignColumn>
+
+    </ChildContent>
 
     <HeaderTemplate>
         <MudToolBar Dense="@true" DisableGutters="@false" Class="light-toolbar shift-toolbar-header">
@@ -31,19 +43,4 @@
             }
         </MudToolBar>
     </HeaderTemplate>
-
-    <ColumnTemplate>
-        @if (!string.IsNullOrWhiteSpace(EntitySet))
-        {
-            <ShiftForeignColumn TValue="UserDetails"
-                                TValue2="RevisionDTO"
-                                ODataBaseUrl="@BaseUrl"
-                                Field="@nameof(RevisionDTO.SavedByUserID)"
-                                Text="@nameof(UserDetails.Name)"
-                                HeaderText="Saved By User"
-                                EntitySetName="@EntitySet">
-            </ShiftForeignColumn>
-        }
-    </ColumnTemplate>
 </ShiftList>
- *@

@@ -3,12 +3,10 @@ using Microsoft.Extensions.Localization;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using Syncfusion.Blazor.Grids;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     public partial class RevisionViewer
     {
-        [Inject] internal ShiftModal ShiftModal { get; set; } = default!;
         [Inject] internal SettingManager SettingManager { get; set; } = default!;
         [Inject] internal IStringLocalizer<Resources.Components.RevisionViewer> Loc { get; set; } = default!;
 
@@ -16,14 +14,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public MudDialogInstance? MudDialog { get; set; }
 
         [Parameter]
-        [EditorRequired]
-        public List<RevisionDTO> Revisions { get; set; } = new();
-
-        [Parameter]
         public string? Title { get; set; }
 
-        internal string BaseUrl { get; set; }
-        internal string EntitySet { get; set; }
+        [Parameter, EditorRequired]
+        public string? EntitySet { get; set; }
+
+        internal string UserListBaseUrl { get; set; }
+        internal string UserListEntitySet { get; set; }
 
         protected override void OnInitialized()
         {
@@ -36,16 +33,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 if (index >= 0)
                 {
-                    BaseUrl = url.Substring(0, index);
-                    EntitySet = url.Substring(index + 1);
+                    UserListBaseUrl = url.Substring(0, index);
+                    UserListEntitySet = url.Substring(index + 1);
                 }
             }
         }
 
-        private async Task RowClickHandler(RecordClickEventArgs<RevisionDTO> args)
+        private async Task RowClickHandler(DataGridRowClickEventArgs<RevisionDTO> args)
         {
             await Task.Delay(1);
-            MudDialog?.Close(args.RowData.ValidTo);
+            MudDialog?.Close(args.Item.ValidTo);
         }
 
         private void Close()

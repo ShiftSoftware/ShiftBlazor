@@ -163,12 +163,30 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool ShowIDColumn { get; set; }
 
+
+        internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
+
         internal Size IconSize => Dense ? Size.Medium : Size.Large;
         internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));
 
+        internal Func<GridState<T>, Task<GridData<T>>>? ServerData
+        {
+            get
+            {
+                if (Values == null)
+                {
+                    return new Func<GridState<T>, Task<GridData<T>>>(ServerReload);
+                }
+                else
+                {
+                    return default;
+                }
+            }
+        }
+
         private MudDataGrid<T>? _DataGrid;
-        private MudDataGrid<T>? DataGrid
+        internal MudDataGrid<T>? DataGrid
         {
             get
             {
@@ -181,15 +199,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        internal Guid DataGridId = Guid.NewGuid();
+
         protected override void OnInitialized()
         {
-        }
+            if (Values == null && EntitySet == null)
+            {
+                throw new ArgumentNullException(nameof(Values));
+            }
 
-        protected override async Task OnInitializedAsync()
-        {
-            QueryBuilder = OData
-                .CreateQuery<T>(EntitySet)
-                .IncludeCount();
+            if (EntitySet != null)
+            {
+                QueryBuilder = OData
+                    .CreateQuery<T>(EntitySet)
+                    .IncludeCount();
+            }
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -310,6 +334,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             SaveColumnState();
         }
 
+        internal async Task RerenderDataGrid()
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+
         private async Task<GridData<T>> ServerReload(GridState<T> state)
         {
             if (DataGrid == null)
@@ -341,9 +370,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var field = x.Column!.PropertyName;
                 var value = x.Value;
 
-                if (x.FieldType.IsString && x.Value != null)
+                if (x.Value != null)
                 {
-                    value = $"'{((string)x.Value).Replace("'", "''")}'";
+                    if (x.FieldType.IsString)
+                    {
+                        value = $"'{((string)x.Value).Replace("'", "''")}'";
+                    }
+                    else if (x.FieldType.IsDateTime)
+                    {
+                        value = ((DateTime)x.Value).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                    }
                 }
 
                 switch (x.Operator)
@@ -413,7 +449,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (!string.IsNullOrWhiteSpace(filterString))
             {
-                url = url.AddQueryOption("filter", filterString);
+                url = url.AddQueryOption("$filter", filterString);
             }
 
             var final = url
@@ -425,6 +461,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var gridData = new GridData<T>();
             gridData.Items = res.Value.ToList();
             gridData.TotalItems = (int)res.Count.Value;
+
+            if (_OnBeforeDataBound != null)
+            {
+                _OnBeforeDataBound(this, new KeyValuePair<Guid, List<T>>(DataGridId, res.Value.ToList()));
+            }
 
             return gridData;
         }
