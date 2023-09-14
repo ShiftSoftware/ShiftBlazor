@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
 		<BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
-		<Version>1.5.8</Version>
+		<Version>2023.09.14</Version>
 		<Authors>Saman-00,ShiftSoftware</Authors>
 		<AssemblyName>ShiftSoftware.ShiftBlazor</AssemblyName>
 		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>
@@ -27,8 +27,8 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="MudBlazor" Version="6.4.1" />
-		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="1.6.11" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
-		<PackageReference Include="ShiftSoftware.TypeAuth.Blazor" Version="1.4.2" Condition="!Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
+		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="2023.09.14" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
+		<PackageReference Include="ShiftSoftware.TypeAuth.Blazor" Version="2023.09.14" Condition="!Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
 		<PackageReference Include="Syncfusion.Blazor.Grid" Version="21.1.35" />
 		<PackageReference Include="Syncfusion.Blazor.Themes" Version="21.1.35" />
 	</ItemGroup>
