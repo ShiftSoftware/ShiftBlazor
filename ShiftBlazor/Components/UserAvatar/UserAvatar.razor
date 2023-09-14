@@ -48,7 +48,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        userdata = (await tokenStore.GetTokenAsync()).UserData;
+        userdata = (await tokenStore.GetTokenAsync())?.UserData;
     }
 
     internal async Task Logout()
