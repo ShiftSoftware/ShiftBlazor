@@ -170,12 +170,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool ShowIDColumn { get; set; }
 
+        /// <summary>
+        ///     The number of items to be displayed per page.
+        /// </summary>
+        [Parameter]
+        public int? PageSize { get; set; }
+
 
         internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
         internal bool IsEmbed => ParentDisabled != null || ParentReadOnly != null;
         internal Size IconSize => Dense ? Size.Medium : Size.Large;
         internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));
+        internal int SelectedPageSize;
+        internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData
         {
@@ -212,7 +220,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (Values == null && EntitySet == null)
             {
-                throw new ArgumentNullException(nameof(Values));
+                throw new ArgumentNullException($"{nameof(Values)} and {nameof(EntitySet)} are null");
             }
 
             if (EntitySet != null)
@@ -221,6 +229,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     .CreateQuery<T>(EntitySet)
                     .IncludeCount();
             }
+
+            if (PageSize != null && !PageSizes.Any(x => x == PageSize))
+            {
+                PageSizes = PageSizes.Append(PageSize.Value).Order().ToArray();
+            }
+
+            SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -351,6 +366,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (DataGrid == null)
             {
                 return null;
+            }
+
+            if (state.PageSize != SelectedPageSize)
+            {
+                SettingManager.SetListPageSize(state.PageSize);
             }
 
             var skip = DataGrid.CurrentPage * DataGrid.RowsPerPage;

@@ -131,6 +131,7 @@
                          Virtualize="@EnableVirtualization"
                          Height="@Height"
                          ShowColumnOptions="true"
+                         RowsPerPage="@SelectedPageSize"
                          ServerData="ServerData"
                          RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
                          T="T">
@@ -168,7 +169,7 @@
                 </Columns>
 
                 <PagerContent>
-                    <MudDataGridPager/>
+                    <MudDataGridPager PageSizeOptions="@PageSizes" />
                 </PagerContent>
             </MudDataGrid>
         </CascadingValue>
