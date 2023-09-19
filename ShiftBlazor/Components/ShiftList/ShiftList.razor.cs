@@ -4,6 +4,7 @@ using Microsoft.OData.Client;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Net.Http.Json;
 
@@ -16,8 +17,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] HttpClient HttpClient { get; set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
-        [Inject] private TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
-        [Inject] private SettingManager SettingManager { get; set; } = default!;
+        [Inject] TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
+        [Inject] SettingManager SettingManager { get; set; } = default!;
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
@@ -25,8 +26,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <summary>
         ///     To check whether this list is currently embeded inside a form component.
         /// </summary>
-        [CascadingParameter(Name = "FormChild")]
-        public bool? IsEmbedded { get; set; }
+        [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
+        public bool? ParentReadOnly { get; set; }
+
+        [CascadingParameter(Name = FormHelper.ParentDisabledName)]
+        public bool? ParentDisabled { get; set; }
 
         /// <summary>
         ///     The current fetched items, this will be fetched from the OData API endpoint that is provided in the Action paramater.
@@ -40,6 +44,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public EventCallback<T> ValuesChanged { get; set; }
 
+        /// <summary>
+        ///     OData EntitySetName.
+        /// </summary>
         [Parameter]
         public string? EntitySet { get; set; }
 
@@ -165,7 +172,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
 
         internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
-
+        internal bool IsEmbed => ParentDisabled != null || ParentReadOnly != null;
         internal Size IconSize => Dense ? Size.Medium : Size.Large;
         internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));

@@ -73,9 +73,8 @@
 
             <div class="@ContentCssClass">
                 <div class="pa-6">
-                    <CascadingValue Name="FormChild" Value="@true" IsFixed="@true">
-                    <CascadingValue Value="Mode < FormModes.Edit" Name="ParentReadOnly">
-                    <CascadingValue Value="TaskInProgress != FormTasks.None" Name="ParentDisabled">
+                    <CascadingValue Value="Mode < FormModes.Edit" Name="@FormHelper.ParentReadOnlyName">
+                    <CascadingValue Value="TaskInProgress != FormTasks.None" Name="@FormHelper.ParentDisabledName">
                     <CascadingValue Value="@Mode">
                     <CascadingValue Value="@TaskInProgress">
                         @if (TypeAuthAction is null)
@@ -107,7 +106,6 @@
                                 }
                             }
                         }
-                    </CascadingValue>
                     </CascadingValue>
                     </CascadingValue>
                     </CascadingValue>

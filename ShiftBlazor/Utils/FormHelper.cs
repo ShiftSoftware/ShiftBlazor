@@ -7,6 +7,8 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 {
     public class FormHelper
     {
+        public const string ParentDisabledName = "ParentDisabled";
+        public const string ParentReadOnlyName = "ParentReadOnly";
         public static bool IsRequired<T>(Expression<Func<T>> _for)
         {
             try

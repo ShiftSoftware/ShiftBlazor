@@ -3,7 +3,7 @@
 
 @if (TypeAuthAction == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
 {
-    @if (!string.IsNullOrWhiteSpace(Title))
+    @if (!string.IsNullOrWhiteSpace(Title) && !IsEmbed)
     {
         <PageTitle>@Title</PageTitle>
     }
@@ -88,7 +88,7 @@
                             </MudTooltip>
                         }
 
-                        @if (MudDialog != null && IsEmbedded != true)
+                        @if (MudDialog != null && IsEmbed != true)
                         {
                             @* @if (RenderAddButton || EnableCsvExcelExport || EnablePdfExport || EnablePrint) *@
                             @if (RenderAddButton || EnablePrint)
