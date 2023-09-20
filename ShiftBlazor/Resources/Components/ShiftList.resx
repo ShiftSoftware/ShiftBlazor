@@ -132,17 +132,11 @@
   <data name="ColumnChooser" xml:space="preserve">
     <value>Column Chooser</value>
   </data>
-  <data name="CSVExportButton" xml:space="preserve">
-    <value>CSV Export</value>
-  </data>
-  <data name="DownloadButton" xml:space="preserve">
-    <value>Download</value>
-  </data>
   <data name="DownloadFailed" xml:space="preserve">
     <value>Could not initiate download action</value>
   </data>
-  <data name="ExcelExportButton" xml:space="preserve">
-    <value>Excel Export</value>
+  <data name="ExportButton" xml:space="preserve">
+    <value>Export as CSV</value>
   </data>
   <data name="FilterDeletedItems" xml:space="preserve">
     <value>Filter deleted items</value>
@@ -157,7 +151,7 @@
     <value>ID</value>
   </data>
   <data name="ItemsPerPageLabel" xml:space="preserve">
-    <value>Items per page</value>
+    <value>Rows per page:</value>
   </data>
   <data name="ListDefaultTitle" xml:space="preserve">
     <value>List</value>
@@ -165,9 +159,6 @@
   <data name="PageCountAndTotal" xml:space="preserve">
     <value>{0} of {1} pages ({2} items)</value>
     <comment>0=CurrentPage,1=TotalPages,2=TotalItems</comment>
-  </data>
-  <data name="PDFExportButton" xml:space="preserve">
-    <value>PDF Export</value>
   </data>
   <data name="PrintButton" xml:space="preserve">
     <value>Print</value>

@@ -106,24 +106,6 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CSV Export.
-        /// </summary>
-        internal static string CSVExportButton {
-            get {
-                return ResourceManager.GetString("CSVExportButton", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Download.
-        /// </summary>
-        internal static string DownloadButton {
-            get {
-                return ResourceManager.GetString("DownloadButton", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Could not initiate download action.
         /// </summary>
         internal static string DownloadFailed {
@@ -133,11 +115,11 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Excel Export.
+        ///   Looks up a localized string similar to Export as CSV.
         /// </summary>
-        internal static string ExcelExportButton {
+        internal static string ExportButton {
             get {
-                return ResourceManager.GetString("ExcelExportButton", resourceCulture);
+                return ResourceManager.GetString("ExportButton", resourceCulture);
             }
         }
         
@@ -178,7 +160,7 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Items per page.
+        ///   Looks up a localized string similar to Rows per page:.
         /// </summary>
         internal static string ItemsPerPageLabel {
             get {
@@ -201,15 +183,6 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string PageCountAndTotal {
             get {
                 return ResourceManager.GetString("PageCountAndTotal", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to PDF Export.
-        /// </summary>
-        internal static string PDFExportButton {
-            get {
-                return ResourceManager.GetString("PDFExportButton", resourceCulture);
             }
         }
         

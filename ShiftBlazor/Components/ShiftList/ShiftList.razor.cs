@@ -1,12 +1,16 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using CsvHelper;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
+using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using System.Globalization;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -19,6 +23,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
         [Inject] TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
+        [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
@@ -176,6 +181,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public int? PageSize { get; set; }
 
+        [Parameter]
+        public bool EnableExport { get; set; }
 
         internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
         internal bool IsEmbed => ParentDisabled != null || ParentReadOnly != null;
@@ -359,6 +366,38 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal async Task RerenderDataGrid()
         {
             await InvokeAsync(StateHasChanged);
+        }
+
+        private async Task<Stream> GetFileStream()
+        {
+            var url = QueryBuilder.Where(x => x.IsDeleted == true || x.IsDeleted == false);
+            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url.ToString());
+            var stream = new MemoryStream();
+
+            if (res != null && res.Value.Count > 0)
+            {
+                using (var streamWriter = new StreamWriter(stream, leaveOpen: true))
+                {
+                    var csvWriter = new CsvWriter(streamWriter, CultureInfo.InvariantCulture);
+                    await csvWriter.WriteRecordsAsync(res.Value);
+                }
+
+                stream.Seek(0, SeekOrigin.Begin);
+            }
+
+            return stream;
+        }
+
+        internal async Task ExportList()
+        {
+            var name = Title != null && Regex.IsMatch(Title, "[^a-zA-Z]") ? Title : EntitySet;
+            name = Regex.Replace(name!, "[^a-zA-Z]", "");
+            var date = DateTime.Now.ToString("yyyy-MM-dd");
+            var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}_{date}.csv";
+
+            var fileStream = await GetFileStream();
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         }
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)

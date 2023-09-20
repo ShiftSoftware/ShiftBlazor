@@ -58,25 +58,15 @@
                             </MudTooltip>
                         }
 
-                        @* @if (EnableCsvExcelExport || EnablePdfExport)
+                        @if (EnableExport)
                         {
                             <MudTooltip Text="@Loc["DownloadButton"]">
-                                <MudMenu Icon="@Icons.Material.Filled.FileDownload"
-                                            Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                            AnchorOrigin="Origin.BottomLeft"
-                                            Class="download-options">
-                                    @if (EnableCsvExcelExport)
-                                    {
-                                        <MudMenuItem OnClick="() => DownloadList(DownloadType.CSV)">@Loc["CSVExportButton"]</MudMenuItem>
-                                        <MudMenuItem OnClick="() => DownloadList(DownloadType.Excel)">@Loc["ExcelExportButton"]</MudMenuItem>
-                                    }
-                                    @if (EnablePdfExport)
-                                    {
-                                        <MudMenuItem OnClick="() => DownloadList(DownloadType.PDF)">@Loc["PDFExportButton"]</MudMenuItem>
-                                    }
-                                </MudMenu>
+                                <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                                               Size="@IconSize"
+                                               Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                               OnClick="@ExportList" />
                             </MudTooltip>
-                        } *@
+                        }
 
                         @if (RenderAddButton)
                         {
@@ -90,8 +80,7 @@
 
                         @if (MudDialog != null && IsEmbed != true)
                         {
-                            @* @if (RenderAddButton || EnableCsvExcelExport || EnablePdfExport || EnablePrint) *@
-                            @if (RenderAddButton || EnablePrint)
+                            @if (RenderAddButton || !DisableColumnChooser || !DisableDeleteFilter || EnableExport || EnablePrint)
                             {
                                 <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
                             }
@@ -169,7 +158,7 @@
                 </Columns>
 
                 <PagerContent>
-                    <MudDataGridPager PageSizeOptions="@PageSizes" />
+                    <MudDataGridPager PageSizeOptions="@PageSizes" RowsPerPageString="@Loc["ItemsPerPageLabel"]" />
                 </PagerContent>
             </MudDataGrid>
         </CascadingValue>

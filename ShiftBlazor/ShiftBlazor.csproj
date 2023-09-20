@@ -27,6 +27,7 @@
 	<ItemGroup>
 		<PackageReference Include="Blazored.FluentValidation" Version="2.1.0" />
 		<PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
+		<PackageReference Include="CsvHelper" Version="30.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Localization" Version="7.0.11" />
 		<PackageReference Include="Microsoft.OData.Client" Version="7.16.0" />
 		<PackageReference Include="MimeTypes" Version="2.4.1">
