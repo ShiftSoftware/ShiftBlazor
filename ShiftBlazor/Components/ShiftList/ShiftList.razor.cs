@@ -186,6 +186,24 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool DisableStickyHeader { get; set; }
 
+        [Parameter]
+        public bool DisablePagination { get; set; }
+
+        [Parameter]
+        public bool DisableSorting { get; set; }
+
+        [Parameter]
+        public bool DisableMultiSorting { get; set; }
+
+        [Parameter]
+        public bool DisableFilters { get; set; }
+
+        /// <summary>
+        ///     Used to override any element in the Action column.
+        /// </summary>
+        [Parameter]
+        public RenderFragment<CellContext<T>>? ActionsTemplate { get; set; }
+
 
         public bool IsAllSelected = false;
 
@@ -196,6 +214,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));
         internal int SelectedPageSize;
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
+
+        internal SortMode SortMode => DisableSorting
+                                        ? SortMode.None
+                                        : DisableMultiSorting
+                                            ? SortMode.Single
+                                            : SortMode.Multiple;
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData
         {

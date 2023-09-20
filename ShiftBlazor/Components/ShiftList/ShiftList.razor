@@ -107,15 +107,15 @@
 
             <MudDataGrid
                          @ref="DataGrid"
-                         Items="Values"
-                         MultiSelection="EnableSelection"
+                         Items="@Values"
+                         MultiSelection="@EnableSelection"
                          Hideable="!DisableColumnChooser"
-                         SortMode="SortMode.Multiple"
+                         SortMode="@SortMode"
                          FilterMode="DataGridFilterMode.Simple"
                          Dense="@Dense"
                          Elevation="0"
                          RowClick="@RowClickHandler"
-                         Filterable="true"
+                         Filterable="!DisableFilters"
                          Hover="true"
                          Virtualize="@EnableVirtualization"
                          Height="@Height"
@@ -162,20 +162,28 @@
                         <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="Actions">
                             
                             <CellTemplate>
-                                <MudButton OnClick="@(() => ViewAddItem(context.Item.ID))"
-                                            Variant="@Variant.Outlined"
-                                            EndIcon="@Icons.Material.Filled.OpenInNew"
-                                            Color="@Color.Primary"
-                                            Size="@(Dense ? Size.Small : Size.Medium)">
-                                    @Loc["ViewButton"]
-                                </MudButton>
+                                @if (ActionsTemplate == null)
+                                {
+                                    <MudButton OnClick="@(() => ViewAddItem(context.Item.ID))"
+                                               Variant="@Variant.Outlined"
+                                               EndIcon="@Icons.Material.Filled.OpenInNew"
+                                               Color="@Color.Primary"
+                                               Size="@(Dense ? Size.Small : Size.Medium)">
+                                        @Loc["ViewButton"]
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    ActionsTemplate(context);
+                                }
+
                             </CellTemplate>
                         </TemplateColumn>
                     }
                 </Columns>
 
                 <PagerContent>
-                    @if (!EnableVirtualization)
+                    @if (!EnableVirtualization && !DisablePagination)
                     {
                         <MudDataGridPager PageSizeOptions="@PageSizes" RowsPerPageString="@Loc["ItemsPerPageLabel"]" />
                     }
