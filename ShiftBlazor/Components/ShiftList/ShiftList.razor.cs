@@ -183,6 +183,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool EnableExport { get; set; }
 
+        [Parameter]
+        public bool DisableStickyHeader { get; set; }
+
+
+        public bool IsAllSelected = false;
+
         internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
         internal bool IsEmbed => ParentDisabled != null || ParentReadOnly != null;
         internal Size IconSize => Dense ? Size.Medium : Size.Large;

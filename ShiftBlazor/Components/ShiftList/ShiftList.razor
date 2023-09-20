@@ -122,13 +122,30 @@
                          ShowColumnOptions="true"
                          RowsPerPage="@SelectedPageSize"
                          ServerData="ServerData"
+                         FixedHeader="!DisableStickyHeader"
                          RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
                          T="T">
 
                 <Columns>
 
                     @if (EnableSelection) {
-                        <SelectColumn T="T" />
+                        // Using SelectColumn doesn't work as expected with ServerData
+                        <TemplateColumn T="T" Tag="@("select-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%"
+                                        Filterable="false" IsEditable="false">
+                            <HeaderTemplate>
+                                @if (true)
+                                {
+                                    IsAllSelected = context.IsAllSelected;
+                                    <MudCheckBox T="bool" Size="@IconSize" Checked="@context.IsAllSelected" CheckedChanged="@context.Actions.SetSelectAllAsync" />
+                                }
+                            </HeaderTemplate>
+                            <CellTemplate>
+                                @{
+                                    var isSelected = DataGrid?.SelectedItems.FirstOrDefault(x => x.ID == context.Item.ID) != null || IsAllSelected;
+                                }
+                                <MudCheckBox T="bool" Size="@IconSize" Checked="@isSelected" CheckedChanged="@context.Actions.SetSelectedItemAsync" />
+                            </CellTemplate>
+                        </TemplateColumn>
                     }
 
                     @if (ShowIDColumn)
