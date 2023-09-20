@@ -116,7 +116,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string IconSvg { get; set; } = @Icons.Material.Filled.List;
 
-
         /// <summary>
         ///     Used to add custom elements to the start of the header toolbar.
         /// </summary>
@@ -504,25 +503,35 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return filter;
             });
 
-            var url = QueryBuilder;
+            var odataBuilder = QueryBuilder;
 
             if (sortList.Count() > 0)
             {
-                url = url.AddQueryOption("$orderby", string.Join(',', sortList));
+                odataBuilder = odataBuilder.AddQueryOption("$orderby", string.Join(',', sortList));
             }
 
             var filterString = string.Join(" and " , filterList.Where(x => !string.IsNullOrWhiteSpace(x)));
 
             if (!string.IsNullOrWhiteSpace(filterString))
             {
-                url = url.AddQueryOption("$filter", filterString);
+                odataBuilder = odataBuilder.AddQueryOption("$filter", filterString);
             }
 
-            var final = url
-                .Skip(skip)
-                .Take(DataGrid.RowsPerPage);
+            var url = default(string);
 
-            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(final.ToString());
+            if (EnableVirtualization)
+            {
+                url = odataBuilder.ToString();
+            }
+            else
+            {
+                url = odataBuilder
+                    .Skip(skip)
+                    .Take(DataGrid.RowsPerPage)
+                    .ToString();
+            }
+
+            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);
 
             var gridData = new GridData<T>();
             gridData.Items = res.Value.ToList();

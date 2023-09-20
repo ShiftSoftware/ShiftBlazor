@@ -60,7 +60,7 @@
 
                         @if (EnableExport)
                         {
-                            <MudTooltip Text="@Loc["DownloadButton"]">
+                            <MudTooltip Text="@Loc["ExportButton"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
                                                Size="@IconSize"
                                                Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
@@ -158,7 +158,10 @@
                 </Columns>
 
                 <PagerContent>
-                    <MudDataGridPager PageSizeOptions="@PageSizes" RowsPerPageString="@Loc["ItemsPerPageLabel"]" />
+                    @if (!EnableVirtualization)
+                    {
+                        <MudDataGridPager PageSizeOptions="@PageSizes" RowsPerPageString="@Loc["ItemsPerPageLabel"]" />
+                    }
                 </PagerContent>
             </MudDataGrid>
         </CascadingValue>
