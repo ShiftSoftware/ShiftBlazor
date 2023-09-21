@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+	<Import Project="..\..\ShiftFrameworkGlobalSettings.props" Condition="Exists('..\..\ShiftFrameworkGlobalSettings.props')" />
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
@@ -6,7 +7,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>ShiftSoftware.ShiftBlazor</RootNamespace>
 		<BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
-		<Version>1.5.8</Version>
+		<Version>$(ShiftFrameworkVersion)</Version>
 		<Authors>Saman-00,ShiftSoftware</Authors>
 		<AssemblyName>ShiftSoftware.ShiftBlazor</AssemblyName>
 		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>
@@ -16,13 +17,6 @@
 		<PackageIcon>icon.png</PackageIcon>
 
 	</PropertyGroup>
-
-	<ItemGroup>
-	  <Compile Remove="Components\ShiftListOld\**" />
-	  <Content Remove="Components\ShiftListOld\**" />
-	  <EmbeddedResource Remove="Components\ShiftListOld\**" />
-	  <None Remove="Components\ShiftListOld\**" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Blazored.FluentValidation" Version="2.1.0" />
@@ -35,8 +29,9 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="MudBlazor" Version="6.9.0" />
-		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="1.6.11" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
-		<PackageReference Include="ShiftSoftware.TypeAuth.Blazor" Version="1.4.2" Condition="!Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
+		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
+		<PackageReference Include="ShiftSoftware.ShiftIdentity.Blazor" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj')"/>
+		<PackageReference Include="ShiftSoftware.TypeAuth.Blazor" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
 		<PackageReference Include="Syncfusion.Blazor.Grid" Version="21.1.35" />
 		<PackageReference Include="Syncfusion.Blazor.Themes" Version="21.1.35" />
 	</ItemGroup>
@@ -121,8 +116,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj" Condition="Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
-		<ProjectReference Include="..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj" />
-		<ProjectReference Include="..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj" />
+		<ProjectReference Include="..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj" Condition="Exists('..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj')"/>
+		<ProjectReference Include="..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj" Condition="Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')"/>
 	</ItemGroup>
 
 </Project>
