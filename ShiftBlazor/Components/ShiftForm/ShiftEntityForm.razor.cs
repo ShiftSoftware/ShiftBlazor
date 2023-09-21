@@ -258,7 +258,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 ShowAlert(message, Severity.Success, 5);
 
-                await UpdateUrl(value.ID);
+                if (Mode == FormModes.Create)
+                {
+                    await UpdateUrl(value.ID);
+                }
                 await SetMode(FormModes.View);
                 await SetValue(value);
             }
