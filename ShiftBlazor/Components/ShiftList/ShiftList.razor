@@ -26,7 +26,7 @@
 
                         @if (!DisableColumnChooser)
                         {
-                            <MudTooltip Text="@Loc["ColumnChooser"]">
+                            <MudTooltip Text="@Loc["ColumnChooserTitle"]">
                                 <MudIconButton Size="@IconSize"
                                                Icon="@Icons.Material.Filled.ViewColumn"
                                                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
@@ -36,7 +36,7 @@
 
                         @if (EnablePrint)
                         {
-                            <MudTooltip Text="@Loc["PrintButton"]">
+                            <MudTooltip Text="@Loc["PrintButtonTitle"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Print"
                                                Size="@IconSize"
                                                Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
@@ -46,21 +46,21 @@
 
                         @if (!DisableDeleteFilter)
                         {
-                            <MudTooltip Text="@Loc["FilterDeletedItems"]">
+                            <MudTooltip Text="@Loc["FilterDeletedItemsTitle"]">
                                 <MudMenu Size="@IconSize"
                                          Icon="@Icons.Material.Filled.RestoreFromTrash"
                                          Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                                          AnchorOrigin="Origin.BottomLeft">
-                                    <MudMenuItem OnClick="() => FilterDeleted()">@Loc["ShowBothDeletedAndActive"]</MudMenuItem>
-                                    <MudMenuItem OnClick="() => FilterDeleted(true)">@Loc["ShowDeletedOnly"]</MudMenuItem>
-                                    <MudMenuItem OnClick="() => FilterDeleted(false)">@Loc["ShowActiveOnly"]</MudMenuItem>
+                                    <MudMenuItem OnClick="() => FilterDeleted()">@Loc["ShowBothDeletedAndActiveOption"]</MudMenuItem>
+                                    <MudMenuItem OnClick="() => FilterDeleted(true)">@Loc["ShowDeletedOnlyOption"]</MudMenuItem>
+                                    <MudMenuItem OnClick="() => FilterDeleted(false)">@Loc["ShowActiveOnlyOption"]</MudMenuItem>
                                 </MudMenu>
                             </MudTooltip>
                         }
 
                         @if (EnableExport)
                         {
-                            <MudTooltip Text="@Loc["ExportButton"]">
+                            <MudTooltip Text="@Loc["ExportButtonTitle"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
                                                Size="@IconSize"
                                                Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
@@ -70,7 +70,7 @@
 
                         @if (RenderAddButton)
                         {
-                            <MudTooltip Text="@Loc["AddButton"]">
+                            <MudTooltip Text="@Loc["AddNewItemTitle"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
                                                Size="@IconSize"
                                                Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
@@ -87,7 +87,7 @@
 
                             @ToolbarControlsTemplate
 
-                            <MudTooltip Text="@Loc["CloseButton"]">
+                            <MudTooltip Text="@Loc["CloseModalButtonTitle"]">
                                 <MudButton Style="min-width:40px; z-index: 100;"
                                             Variant="Variant.Text"
                                             Size="Size.Medium"
@@ -133,11 +133,9 @@
                         <TemplateColumn T="T" Tag="@("select-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%"
                                         Filterable="false" IsEditable="false">
                             <HeaderTemplate>
-                                @if (true)
-                                {
-                                    IsAllSelected = context.IsAllSelected;
+                                <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
                                     <MudCheckBox T="bool" Size="@IconSize" Checked="@context.IsAllSelected" CheckedChanged="@context.Actions.SetSelectAllAsync" />
-                                }
+                                </MudTooltip>
                             </HeaderTemplate>
                             <CellTemplate>
                                 @{
@@ -159,7 +157,7 @@
 
                     @if (!DisableActionColumn && ComponentType != null)
                     {
-                        <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="Actions">
+                        <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="@Loc["ActionsColumnHeaderText"]">
                             
                             <CellTemplate>
                                 @if (ActionsTemplate == null)
@@ -169,7 +167,7 @@
                                                EndIcon="@Icons.Material.Filled.OpenInNew"
                                                Color="@Color.Primary"
                                                Size="@(Dense ? Size.Small : Size.Medium)">
-                                        @Loc["ViewButton"]
+                                        @Loc["ViewItemButtonText"]
                                     </MudButton>
                                 }
                                 else

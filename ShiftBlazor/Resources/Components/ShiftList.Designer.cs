@@ -72,36 +72,36 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         /// <summary>
         ///   Looks up a localized string similar to Actions.
         /// </summary>
-        internal static string ActionsColumnTitle {
+        internal static string ActionsColumnHeaderText {
             get {
-                return ResourceManager.GetString("ActionsColumnTitle", resourceCulture);
+                return ResourceManager.GetString("ActionsColumnHeaderText", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Add.
         /// </summary>
-        internal static string AddButton {
+        internal static string AddNewItemTitle {
             get {
-                return ResourceManager.GetString("AddButton", resourceCulture);
+                return ResourceManager.GetString("AddNewItemTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
-        internal static string CloseButton {
+        internal static string CloseModalButtonTitle {
             get {
-                return ResourceManager.GetString("CloseButton", resourceCulture);
+                return ResourceManager.GetString("CloseModalButtonTitle", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Column Chooser.
+        ///   Looks up a localized string similar to Hide or Show Columns.
         /// </summary>
-        internal static string ColumnChooser {
+        internal static string ColumnChooserTitle {
             get {
-                return ResourceManager.GetString("ColumnChooser", resourceCulture);
+                return ResourceManager.GetString("ColumnChooserTitle", resourceCulture);
             }
         }
         
@@ -117,18 +117,18 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         /// <summary>
         ///   Looks up a localized string similar to Export as CSV.
         /// </summary>
-        internal static string ExportButton {
+        internal static string ExportButtonTitle {
             get {
-                return ResourceManager.GetString("ExportButton", resourceCulture);
+                return ResourceManager.GetString("ExportButtonTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Filter deleted items.
         /// </summary>
-        internal static string FilterDeletedItems {
+        internal static string FilterDeletedItemsTitle {
             get {
-                return ResourceManager.GetString("FilterDeletedItems", resourceCulture);
+                return ResourceManager.GetString("FilterDeletedItemsTitle", resourceCulture);
             }
         }
         
@@ -187,11 +187,11 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Print.
+        ///   Looks up a localized string similar to Print List.
         /// </summary>
-        internal static string PrintButton {
+        internal static string PrintButtonTitle {
             get {
-                return ResourceManager.GetString("PrintButton", resourceCulture);
+                return ResourceManager.GetString("PrintButtonTitle", resourceCulture);
             }
         }
         
@@ -232,6 +232,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select All.
+        /// </summary>
+        internal static string SelectAllButtonTitle {
+            get {
+                return ResourceManager.GetString("SelectAllButtonTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Selected Items.
         /// </summary>
         internal static string SelectedItemsCounterLabel {
@@ -243,27 +252,27 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         /// <summary>
         ///   Looks up a localized string similar to Show Active Only.
         /// </summary>
-        internal static string ShowActiveOnly {
+        internal static string ShowActiveOnlyOption {
             get {
-                return ResourceManager.GetString("ShowActiveOnly", resourceCulture);
+                return ResourceManager.GetString("ShowActiveOnlyOption", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Show all.
         /// </summary>
-        internal static string ShowBothDeletedAndActive {
+        internal static string ShowBothDeletedAndActiveOption {
             get {
-                return ResourceManager.GetString("ShowBothDeletedAndActive", resourceCulture);
+                return ResourceManager.GetString("ShowBothDeletedAndActiveOption", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Show Deleted Only.
         /// </summary>
-        internal static string ShowDeletedOnly {
+        internal static string ShowDeletedOnlyOption {
             get {
-                return ResourceManager.GetString("ShowDeletedOnly", resourceCulture);
+                return ResourceManager.GetString("ShowDeletedOnlyOption", resourceCulture);
             }
         }
         
@@ -279,9 +288,9 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         /// <summary>
         ///   Looks up a localized string similar to View.
         /// </summary>
-        internal static string ViewButton {
+        internal static string ViewItemButtonText {
             get {
-                return ResourceManager.GetString("ViewButton", resourceCulture);
+                return ResourceManager.GetString("ViewItemButtonText", resourceCulture);
             }
         }
     }

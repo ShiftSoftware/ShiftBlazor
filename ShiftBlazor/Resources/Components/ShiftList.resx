@@ -120,25 +120,25 @@
   <data name="ActionButtonError" xml:space="preserve">
     <value>Could not create action button</value>
   </data>
-  <data name="ActionsColumnTitle" xml:space="preserve">
+  <data name="ActionsColumnHeaderText" xml:space="preserve">
     <value>Actions</value>
   </data>
-  <data name="AddButton" xml:space="preserve">
+  <data name="AddNewItemTitle" xml:space="preserve">
     <value>Add</value>
   </data>
-  <data name="CloseButton" xml:space="preserve">
+  <data name="CloseModalButtonTitle" xml:space="preserve">
     <value>Close</value>
   </data>
-  <data name="ColumnChooser" xml:space="preserve">
-    <value>Column Chooser</value>
+  <data name="ColumnChooserTitle" xml:space="preserve">
+    <value>Hide or Show Columns</value>
   </data>
   <data name="DownloadFailed" xml:space="preserve">
     <value>Could not initiate download action</value>
   </data>
-  <data name="ExportButton" xml:space="preserve">
+  <data name="ExportButtonTitle" xml:space="preserve">
     <value>Export as CSV</value>
   </data>
-  <data name="FilterDeletedItems" xml:space="preserve">
+  <data name="FilterDeletedItemsTitle" xml:space="preserve">
     <value>Filter deleted items</value>
   </data>
   <data name="GetItemListError" xml:space="preserve">
@@ -160,8 +160,8 @@
     <value>{0} of {1} pages ({2} items)</value>
     <comment>0=CurrentPage,1=TotalPages,2=TotalItems</comment>
   </data>
-  <data name="PrintButton" xml:space="preserve">
-    <value>Print</value>
+  <data name="PrintButtonTitle" xml:space="preserve">
+    <value>Print List</value>
   </data>
   <data name="PrintFailed" xml:space="preserve">
     <value>Could not initiate print action</value>
@@ -175,22 +175,25 @@
   <data name="RefreshList" xml:space="preserve">
     <value>Reload</value>
   </data>
+  <data name="SelectAllButtonTitle" xml:space="preserve">
+    <value>Select All</value>
+  </data>
   <data name="SelectedItemsCounterLabel" xml:space="preserve">
     <value>Selected Items</value>
   </data>
-  <data name="ShowActiveOnly" xml:space="preserve">
+  <data name="ShowActiveOnlyOption" xml:space="preserve">
     <value>Show Active Only</value>
   </data>
-  <data name="ShowBothDeletedAndActive" xml:space="preserve">
+  <data name="ShowBothDeletedAndActiveOption" xml:space="preserve">
     <value>Show all</value>
   </data>
-  <data name="ShowDeletedOnly" xml:space="preserve">
+  <data name="ShowDeletedOnlyOption" xml:space="preserve">
     <value>Show Deleted Only</value>
   </data>
   <data name="TotalItemsLabel" xml:space="preserve">
     <value>Total Items</value>
   </data>
-  <data name="ViewButton" xml:space="preserve">
+  <data name="ViewItemButtonText" xml:space="preserve">
     <value>View</value>
   </data>
 </root>
