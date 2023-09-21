@@ -20,7 +20,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftFormBasic> Loc { get; set; } = default!;
 
-        [Inject] internal TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
+        [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
 
         [CascadingParameter]
         internal MudDialogInstance? MudDialog { get; set; }
