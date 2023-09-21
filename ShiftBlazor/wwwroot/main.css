@@ -7,37 +7,8 @@
     margin-inline-end: -12px;
 }
 
-.e-pager div .mud-select .mud-input {
-    display: inline-flex;
-}
-
-.e-pager div .mud-input-adornment-end {
-    display: flex;
-}
-
-.shiftlist-pagination button.mud-button {
-    min-width: 50px;
-}
-
-.e-grid.multiline td.e-rowcell {
-    white-space: break-spaces;
-}
-
-.e-grid .is-deleted .e-rowcell {
-    background-color: #ffc7c7;
-}
-
-.e-grid .is-deleted:hover .e-rowcell,
-.e-grid .is-deleted .e-rowcell.e-active {
-    background-color: #ffaeae !important;
-}
-
 .user-avatar-dropdown .mud-list-item-icon {
     min-width: 40px;
-}
-
-.e-grid .e-emptyrow td {
-    padding-inline-start: 21px !important;
 }
 
 .uploader-thumbnail svg {
@@ -56,4 +27,8 @@
 
 .is-deleted {
     background-color: #ffc7c7;
+}
+
+.is-deleted:hover {
+    background-color: #ffaeae !important;
 }
