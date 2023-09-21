@@ -305,7 +305,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             await RunTask(FormTasks.Fetch, async () =>
             {
-                var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + asOf;
+                var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" +  (DateTimeOffset) asOf.Value;
                 using (var res = await Http.GetAsync(url))
                 {
                     await SetValue(await ParseEntityResponse(res), asOf == null);
