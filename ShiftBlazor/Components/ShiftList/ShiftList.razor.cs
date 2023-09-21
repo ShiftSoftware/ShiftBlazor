@@ -452,6 +452,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 SettingManager.SetListPageSize(state.PageSize);
             }
 
+            #region add filter query
             // Convert MudBlazor's FilterDefinitions to OData query
             var filterList = DataGrid
                 .FilterDefinitions
@@ -540,6 +541,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 builder = builder.AddQueryOption("$filter", string.Join(" and ", filterList));
             }
+            #endregion
 
             // Convert MudBlazor's SortDefinitions to OData query
             if (DataGrid.SortDefinitions.Count > 0)
