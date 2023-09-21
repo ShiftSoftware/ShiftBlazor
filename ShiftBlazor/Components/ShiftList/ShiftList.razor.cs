@@ -9,6 +9,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 
@@ -166,6 +167,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback<DataGridRowClickEventArgs<T>> OnRowClick { get; set; }
 
         [Parameter]
+        public EventCallback<object?> OnFormClosed { get; set; }
+
+        [Parameter]
         public EventCallback OnLoad { get; set; }
 
         [Parameter]
@@ -204,6 +208,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public RenderFragment<CellContext<T>>? ActionsTemplate { get; set; }
 
+        [Parameter]
+        public Expression<Func<T, bool>>? Where { get; set; }
+
 
         public bool IsAllSelected = false;
 
@@ -214,6 +221,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));
         internal int SelectedPageSize;
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
+        internal Guid DataGridId = Guid.NewGuid();
+        internal bool? deleteFilter = false;
 
         internal SortMode SortMode => DisableSorting
                                         ? SortMode.None
@@ -249,8 +258,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 OnLoadHandler();
             }
         }
-
-        internal Guid DataGridId = Guid.NewGuid();
 
         protected override void OnInitialized()
         {
@@ -311,7 +318,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (ComponentType != null)
             {
                 var result = await OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters);
-                //await OnFormClosed.InvokeAsync(result?.Data);
+                await OnFormClosed.InvokeAsync(result?.Data);
             }
         }
 
@@ -334,15 +341,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// 
         /// </summary>
         /// <param name="delete">
-        /// true: only get active items.
-        /// false: only deleted items.
+        /// true: only get deleted items.
+        /// false: only get active items.
         /// null: get all.
         /// </param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        internal async Task FilterDeleted(bool? delete = null)
+        internal void FilterDeleted(bool? delete = null)
         {
-            throw new NotImplementedException();
+            deleteFilter = delete;
+            _ = DataGrid?.ReloadServerData();
         }
 
         private void CloseDialog()
@@ -433,28 +441,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (DataGrid == null)
             {
-                return null;
+                throw new Exception();
             }
 
+            var builder = QueryBuilder;
+
+            // Save current PageSize as user preference 
             if (state.PageSize != SelectedPageSize)
             {
                 SettingManager.SetListPageSize(state.PageSize);
             }
 
-            var skip = DataGrid.CurrentPage * DataGrid.RowsPerPage;
-
-            var sortList = DataGrid.SortDefinitions.OrderBy(x => x.Value.Index).Select(x =>
-            {
-                var sort = x.Key;
-                if (x.Value.Descending)
-                {
-                    sort += " desc";
-                }
-
-                return sort;
-            });
-
-            var filterList = DataGrid.FilterDefinitions.Select(x =>
+            // Convert MudBlazor's FilterDefinitions to OData query
+            var filterList = DataGrid
+                .FilterDefinitions
+                .Select(x =>
             {
                 if (x.Value == null && (x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty))
                 {
@@ -531,45 +532,76 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var filter = string.Format(filterTemplate, field, value);
 
                 return filter;
-            });
+            })
+                .Distinct()
+                .Where(x => !string.IsNullOrWhiteSpace(x));
 
-            var odataBuilder = QueryBuilder;
-
-            if (sortList.Count() > 0)
+            if (filterList.Count() > 0)
             {
-                odataBuilder = odataBuilder.AddQueryOption("$orderby", string.Join(',', sortList));
+                builder = builder.AddQueryOption("$filter", string.Join(" and ", filterList));
             }
 
-            var filterString = string.Join(" and " , filterList.Where(x => !string.IsNullOrWhiteSpace(x)));
-
-            if (!string.IsNullOrWhiteSpace(filterString))
+            // Convert MudBlazor's SortDefinitions to OData query
+            if (DataGrid.SortDefinitions.Count > 0)
             {
-                odataBuilder = odataBuilder.AddQueryOption("$filter", filterString);
+                var sortList = DataGrid
+                    .SortDefinitions
+                    .OrderBy(x => x.Value.Index)
+                    .Select(x => x.Value.Descending ? x.Key + " desc" : x.Key);
+                builder = builder.AddQueryOption("$orderby", string.Join(',', sortList));
             }
 
-            var url = default(string);
+            var builderQueryable = builder.AsQueryable();
 
-            if (EnableVirtualization)
+            // apply custom filters
+            if (Where != null)
             {
-                url = odataBuilder.ToString();
-            }
-            else
-            {
-                url = odataBuilder
-                    .Skip(skip)
-                    .Take(DataGrid.RowsPerPage)
-                    .ToString();
+                builderQueryable = builderQueryable.Where(Where);
             }
 
-            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);
-
-            var gridData = new GridData<T>();
-            gridData.Items = res.Value.ToList();
-            gridData.TotalItems = (int)res.Count.Value;
-
-            if (_OnBeforeDataBound != null)
+            // apply delete filters
+            if (deleteFilter == true)
             {
-                _OnBeforeDataBound(this, new KeyValuePair<Guid, List<T>>(DataGridId, res.Value.ToList()));
+                builderQueryable = builderQueryable.Where(x => x.IsDeleted == true);
+            }
+            else if (deleteFilter == null)
+            {
+                builderQueryable = builderQueryable.Where(x => x.IsDeleted == true || x.IsDeleted == false);
+            }
+
+            // apply pagination values
+            if (!EnableVirtualization)
+            {
+                builderQueryable = builderQueryable
+                    .Skip(DataGrid.CurrentPage * DataGrid.RowsPerPage)
+                    .Take(DataGrid.RowsPerPage);
+            }
+
+            var url = builderQueryable.ToString();
+            GridData<T> gridData;
+
+            try
+            {
+                var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);
+                if (res == null || res.Count == null)
+                {
+                    throw new Exception();
+                }
+
+                gridData = new GridData<T>
+                {
+                    Items = res.Value.ToList(),
+                    TotalItems = (int)res.Count.Value,
+                };
+
+                if (_OnBeforeDataBound != null)
+                {
+                    _OnBeforeDataBound(this, new KeyValuePair<Guid, List<T>>(DataGridId, res.Value.ToList()));
+                }
+            }
+            catch (Exception)
+            {
+                throw;
             }
 
             return gridData;
