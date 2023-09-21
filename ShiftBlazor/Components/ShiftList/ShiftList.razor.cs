@@ -327,7 +327,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
             if (result != null && result.Canceled != true)
             {
-                //await Grid.Refresh();
+                await DataGrid!.ReloadServerData();
             }
             return result;
         }
