@@ -1,0 +1,92 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<MudItem lg="DateLg" md="DateMd" sm="DateSm" xs="DateXs">
+    <MudDatePickerExtended Date="DateTime" DateChanged="DateChanged" Label="@DateLabel" />
+</MudItem>
+
+<MudItem lg="TimeLg" md="TimeMd" sm="TimeSm" xs="TimeXs">
+    <MudTimePickerExtended Time="DateTime?.TimeOfDay" TimeChanged="TimeChanged" Label="@TimeLabel" Disabled="DateTime == null" />
+</MudItem>
+
+@code {
+    [Parameter]
+    public string? DateLabel { get; set; }
+
+    [Parameter]
+    public string? TimeLabel { get; set; }
+
+    [Parameter]
+    public int DateLg { get; set; }
+
+    [Parameter]
+    public int DateMd { get; set; }
+
+    [Parameter]
+    public int DateSm { get; set; }
+
+    [Parameter]
+    public int DateXs { get; set; }
+
+    [Parameter]
+    public int TimeLg { get; set; }
+
+    [Parameter]
+    public int TimeMd { get; set; }
+
+    [Parameter]
+    public int TimeSm { get; set; }
+
+    [Parameter]
+    public int TimeXs { get; set; }
+
+    [Parameter]
+    public DateTime? DateTime { get; set; }
+
+    public async Task DateChanged(DateTime? dateTime)
+    {
+        if (dateTime == null)
+        {
+            this.DateTime = null;
+        }
+        else
+        {
+            if (this.DateTime == null)
+            {
+                this.DateTime = new DateTime(dateTime.Value.Year, dateTime.Value.Month, dateTime.Value.Day, 0, 0, 0);
+            }
+            else
+            {
+                this.DateTime = new DateTime(dateTime.Value.Year, dateTime.Value.Month, dateTime.Value.Day, this.DateTime.Value.Hour, this.DateTime.Value.Minute, 0);
+            }
+        }
+
+        await this.DateTimeChanged.InvokeAsync(this.DateTime);
+    }
+
+    public async Task TimeChanged(TimeSpan? timeSpan)
+    {
+        if (timeSpan == null)
+        {
+            if (this.DateTime != null)
+            {
+                this.DateTime = new DateTime(this.DateTime.Value.Year, this.DateTime.Value.Month, this.DateTime.Value.Day, 0, 0, 0);
+            }
+        }
+        else
+        {
+            if (this.DateTime == null)
+            {
+
+            }
+            else
+            {
+                this.DateTime = new DateTime(this.DateTime.Value.Year, this.DateTime.Value.Month, this.DateTime.Value.Day, timeSpan.Value.Hours, timeSpan.Value.Minutes, 0);
+            }
+        }
+
+        await this.DateTimeChanged.InvokeAsync(this.DateTime);
+    }
+
+    [Parameter]
+    public EventCallback<DateTime?> DateTimeChanged { get; set; }
+}
