@@ -453,6 +453,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             #region add filter query
+            // Remove multiple empty filters but keep the last added empty filter
+            var emptyFields = state.FilterDefinitions.Where(x => x.Value == null && x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty);
+            for (var i = 0; i < emptyFields.Count() - 1; i++)
+            {
+                DataGrid!.FilterDefinitions.Remove(emptyFields.ElementAt(i));
+            }
+
             // Convert MudBlazor's FilterDefinitions to OData query
             var filterList = DataGrid
                 .FilterDefinitions
