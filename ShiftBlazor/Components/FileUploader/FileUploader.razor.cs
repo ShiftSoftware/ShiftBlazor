@@ -81,7 +81,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string ImageTypes = "image/*";
         internal int ThumbnailSize = 150;
 
-        [Inject] internal TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
+        [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
         [Parameter]
         public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
         internal string InputAccept

@@ -22,7 +22,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] HttpClient HttpClient { get; set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
-        [Inject] TypeAuth.Blazor.Services.TypeAuthService TypeAuthService { get; set; } = default!;
+        [Inject] TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
