@@ -439,11 +439,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
         {
-            if (DataGrid == null)
-            {
-                throw new Exception();
-            }
-
             var builder = QueryBuilder;
 
             // Save current PageSize as user preference 
@@ -461,86 +456,86 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             // Convert MudBlazor's FilterDefinitions to OData query
-            var filterList = DataGrid
+            var filterList = state
                 .FilterDefinitions
                 .Select(x =>
-            {
-                if (x.Value == null && (x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty))
                 {
-                    return null;
-                }
-
-                var filterTemplate = string.Empty;
-                var field = x.Column!.PropertyName;
-                var value = x.Value;
-
-                if (x.Value != null)
-                {
-                    if (x.FieldType.IsString)
+                    if (x.Value == null && x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty)
                     {
-                        value = $"'{((string)x.Value).Replace("'", "''")}'";
+                        return null;
                     }
-                    else if (x.FieldType.IsDateTime)
+
+                    var filterTemplate = string.Empty;
+                    var field = x.Column!.PropertyName;
+                    var value = x.Value;
+
+                    if (x.Value != null)
                     {
-                        value = ((DateTime)x.Value).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                        if (x.FieldType.IsString)
+                        {
+                            value = $"'{((string)x.Value).Replace("'", "''")}'";
+                        }
+                        else if (x.FieldType.IsDateTime)
+                        {
+                            value = ((DateTime)x.Value).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                        }
                     }
-                }
 
-                switch (x.Operator)
-                {
-                    case FilterOperator.Number.Equal:
-                    case FilterOperator.String.Equal:
-                    case FilterOperator.DateTime.Is:
-                        filterTemplate = "{0} eq {1}";
-                        break;
-                    case FilterOperator.Number.NotEqual:
-                    case FilterOperator.String.NotEqual:
-                    case FilterOperator.DateTime.IsNot:
-                        filterTemplate = "{0} ne {1}";
-                        break;
-                    case FilterOperator.Number.GreaterThan:
-                    case FilterOperator.DateTime.After:
-                        filterTemplate = "{0} qt {1}";
-                        break;
-                    case FilterOperator.Number.GreaterThanOrEqual:
-                    case FilterOperator.DateTime.OnOrAfter:
-                        filterTemplate = "{0} ge {1}";
-                        break;
-                    case FilterOperator.Number.LessThan:
-                    case FilterOperator.DateTime.Before:
-                        filterTemplate = "{0} lt {1}";
-                        break;
-                    case FilterOperator.Number.LessThanOrEqual:
-                    case FilterOperator.DateTime.OnOrBefore:
-                        filterTemplate = "{0} le {1}";
-                        break;
-                    case FilterOperator.String.Contains:
-                        filterTemplate = "contains({0},{1})";
-                        break;
-                    case FilterOperator.String.NotContains:
-                        filterTemplate = "not contains({0},{1})";
-                        break;
-                    case FilterOperator.String.StartsWith:
-                        filterTemplate = "startswith({0},{1})";
-                        break;
-                    case FilterOperator.String.EndsWith:
-                        filterTemplate = "endswith({0},{1})";
-                        break;
-                    case FilterOperator.String.Empty:
-                        filterTemplate = "{0} eq null";
-                        break;
-                    case FilterOperator.String.NotEmpty:
-                        filterTemplate = "{0} ne null";
-                        break;
-                    default:
-                        filterTemplate = "{0} eq {1}";
-                        break;
-                }
+                    switch (x.Operator)
+                    {
+                        case FilterOperator.Number.Equal:
+                        case FilterOperator.String.Equal:
+                        case FilterOperator.DateTime.Is:
+                            filterTemplate = "{0} eq {1}";
+                            break;
+                        case FilterOperator.Number.NotEqual:
+                        case FilterOperator.String.NotEqual:
+                        case FilterOperator.DateTime.IsNot:
+                            filterTemplate = "{0} ne {1}";
+                            break;
+                        case FilterOperator.Number.GreaterThan:
+                        case FilterOperator.DateTime.After:
+                            filterTemplate = "{0} qt {1}";
+                            break;
+                        case FilterOperator.Number.GreaterThanOrEqual:
+                        case FilterOperator.DateTime.OnOrAfter:
+                            filterTemplate = "{0} ge {1}";
+                            break;
+                        case FilterOperator.Number.LessThan:
+                        case FilterOperator.DateTime.Before:
+                            filterTemplate = "{0} lt {1}";
+                            break;
+                        case FilterOperator.Number.LessThanOrEqual:
+                        case FilterOperator.DateTime.OnOrBefore:
+                            filterTemplate = "{0} le {1}";
+                            break;
+                        case FilterOperator.String.Contains:
+                            filterTemplate = "contains({0},{1})";
+                            break;
+                        case FilterOperator.String.NotContains:
+                            filterTemplate = "not contains({0},{1})";
+                            break;
+                        case FilterOperator.String.StartsWith:
+                            filterTemplate = "startswith({0},{1})";
+                            break;
+                        case FilterOperator.String.EndsWith:
+                            filterTemplate = "endswith({0},{1})";
+                            break;
+                        case FilterOperator.String.Empty:
+                            filterTemplate = "{0} eq null";
+                            break;
+                        case FilterOperator.String.NotEmpty:
+                            filterTemplate = "{0} ne null";
+                            break;
+                        default:
+                            filterTemplate = "{0} eq {1}";
+                            break;
+                    }
 
-                var filter = string.Format(filterTemplate, field, value);
+                    var filter = string.Format(filterTemplate, field, value);
 
-                return filter;
-            })
+                    return filter;
+                })
                 .Distinct()
                 .Where(x => !string.IsNullOrWhiteSpace(x));
 
@@ -551,12 +546,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             #endregion
 
             // Convert MudBlazor's SortDefinitions to OData query
-            if (DataGrid.SortDefinitions.Count > 0)
+
+            if (state.SortDefinitions.Count > 0)
             {
-                var sortList = DataGrid
+                var sortList = state
                     .SortDefinitions
-                    .OrderBy(x => x.Value.Index)
-                    .Select(x => x.Value.Descending ? x.Key + " desc" : x.Key);
+                    .OrderBy(x => x.Index)
+                    .Select(x => x.Descending ? x.SortBy + " desc" : x.SortBy);
                 builder = builder.AddQueryOption("$orderby", string.Join(',', sortList));
             }
 
@@ -582,8 +578,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (!EnableVirtualization)
             {
                 builderQueryable = builderQueryable
-                    .Skip(DataGrid.CurrentPage * DataGrid.RowsPerPage)
-                    .Take(DataGrid.RowsPerPage);
+                    .Skip(state.Page * state.PageSize)
+                    .Take(state.PageSize);
             }
 
             var url = builderQueryable.ToString();
