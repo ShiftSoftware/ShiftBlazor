@@ -13,6 +13,7 @@ using ShiftSoftware.TypeAuth.Core;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
@@ -27,6 +28,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
+        [Inject] MessageService MessageService { get; set; } = default!;
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
@@ -577,30 +579,38 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             var url = builderQueryable.ToString();
-            GridData<T> gridData;
+            GridData<T> gridData = new();
+            HttpResponseMessage? res = default;
 
             try
             {
-                var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);
-                if (res == null || res.Count == null)
+                res = await HttpClient.GetAsync(url);
+                var content = await res.Content.ReadFromJsonAsync<ODataDTO<T>>();
+                if (res?.IsSuccessStatusCode != true || content == null || content.Count == null)
                 {
-                    throw new Exception();
+                    MessageService.Error("Could not read server data");
+                    return gridData;
                 }
 
                 gridData = new GridData<T>
                 {
-                    Items = res.Value.ToList(),
-                    TotalItems = (int)res.Count.Value,
+                    Items = content.Value.ToList(),
+                    TotalItems = (int)content.Count.Value,
                 };
 
                 if (_OnBeforeDataBound != null)
                 {
-                    _OnBeforeDataBound(this, new KeyValuePair<Guid, List<T>>(DataGridId, res.Value.ToList()));
+                    _OnBeforeDataBound(this, new KeyValuePair<Guid, List<T>>(DataGridId, content.Value.ToList()));
                 }
             }
-            catch (Exception)
+            catch (JsonException e)
             {
-                throw;
+                var body = await res!.Content.ReadAsStringAsync();
+                MessageService.Error("Could not read server data", e.Message, body);
+            }
+            catch (Exception e)
+            {
+                MessageService.Error("Could not read server data", e.Message, e!.ToString());
             }
 
             return gridData;

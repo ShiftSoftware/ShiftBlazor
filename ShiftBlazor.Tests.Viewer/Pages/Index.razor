@@ -12,9 +12,16 @@
             <MudText Typo="Typo.h6">Components</MudText>
         </MudDrawerHeader>
         <MudList>
-            @foreach (var type in Components)
+            @foreach (var groups in Components)
             {
-                <MudListItem Style="cursor: pointer;" OnClick="@(() => SelectedType = type)" @key="type.Name">@type.Name</MudListItem>
+                <MudListItem Style="cursor: pointer;" Text="@groups.Key!.Split('.').Last()">
+                    <NestedList>
+                        @foreach (var type in groups)
+                        {
+                            <MudListItem Style="cursor: pointer;" OnClick="@(() => SelectedType = type)" @key="type.Name" Text="@type.Name"/>
+                        }
+                    </NestedList>
+                </MudListItem>
             }
         </MudList>
     </MudDrawer>
@@ -36,11 +43,12 @@
 </MudLayout>
 
 @code {
-    List<Type> Components = typeof(Program)
+    IEnumerable<IGrouping<string?, Type>> Components = typeof(Program)
             .Assembly
             .GetTypes()
-            .Where(x => !x.Name.Contains("<") && x.FullName?.StartsWith("ShiftBlazor.Tests.Viewer.Components") == true)
-            .ToList();
+            .Where(types => !types.Name.Contains("<"))
+            .Where(types => types.FullName?.StartsWith("ShiftBlazor.Tests.Viewer.Components") == true)
+            .GroupBy(components => components.Namespace);
 
     Type? SelectedType;
 
