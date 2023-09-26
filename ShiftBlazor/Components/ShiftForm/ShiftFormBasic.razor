@@ -85,7 +85,7 @@
                         {
                             if (Mode == FormModes.Create || Mode == FormModes.Edit)
                             {
-                                if (TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write))
+                                if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write))
                                 {
                                     @ChildContent
                                 }
@@ -96,7 +96,7 @@
                             }
                             else if (Mode == FormModes.View || Mode == FormModes.Archive)
                             {
-                                if (TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
+                                if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
                                 {
                                     @ChildContent
                                 }
@@ -132,7 +132,7 @@
 
                         @FooterToolbarEndTemplate
 
-                        @if (!HideSubmit && (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)))
+                        @if (!HideSubmit && (TypeAuthAction is null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)))
                         {
                             <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
                                 @if (TaskInProgress == FormTasks.Save)

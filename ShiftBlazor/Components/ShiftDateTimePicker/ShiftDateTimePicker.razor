@@ -42,6 +42,9 @@
     [Parameter]
     public DateTime? DateTime { get; set; }
 
+    [Parameter]
+    public EventCallback<DateTime?> DateTimeChanged { get; set; }
+
     public async Task DateChanged(DateTime? dateTime)
     {
         if (dateTime == null)
@@ -86,7 +89,4 @@
 
         await this.DateTimeChanged.InvokeAsync(this.DateTime);
     }
-
-    [Parameter]
-    public EventCallback<DateTime?> DateTimeChanged { get; set; }
 }

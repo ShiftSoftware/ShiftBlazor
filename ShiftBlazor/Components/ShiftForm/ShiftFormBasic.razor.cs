@@ -9,6 +9,8 @@ using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
+using ShiftSoftware.TypeAuth.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -19,8 +21,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] IDialogService DialogService { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftFormBasic> Loc { get; set; } = default!;
-
-        [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
+        [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
 
         [CascadingParameter]
         internal MudDialogInstance? MudDialog { get; set; }
@@ -182,6 +183,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal EditContext editContext = default!;
         internal bool MadeChanges = false;
+
+        protected ITypeAuthService? TypeAuthService;
         internal string ContentCssClass
         {
             get
@@ -196,6 +199,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
+            TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
+
             OnSaveAction = SettingManager.Settings.FormOnSaveAction ?? OnSaveAction ?? DefaultAppSetting.FormOnSaveAction;
 
             editContext = new EditContext(Value);

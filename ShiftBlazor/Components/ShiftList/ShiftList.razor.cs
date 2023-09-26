@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
@@ -8,6 +9,7 @@ using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using ShiftSoftware.TypeAuth.Core;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Net.Http.Json;
@@ -22,7 +24,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] HttpClient HttpClient { get; set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
-        [Inject] TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
+        [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
@@ -223,6 +225,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
         internal Guid DataGridId = Guid.NewGuid();
         internal bool? deleteFilter = false;
+        private ITypeAuthService? TypeAuthService;
 
         internal SortMode SortMode => DisableSorting
                                         ? SortMode.None
@@ -230,20 +233,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                                             ? SortMode.Single
                                             : SortMode.Multiple;
 
-        internal Func<GridState<T>, Task<GridData<T>>>? ServerData
-        {
-            get
-            {
-                if (Values == null)
-                {
-                    return new Func<GridState<T>, Task<GridData<T>>>(ServerReload);
-                }
-                else
-                {
-                    return default;
-                }
-            }
-        }
+        internal Func<GridState<T>, Task<GridData<T>>>? ServerData => Values == null
+            ? new Func<GridState<T>, Task<GridData<T>>>(ServerReload)
+            : default;
 
         private MudDataGrid<T>? _DataGrid;
         internal MudDataGrid<T>? DataGrid
@@ -265,6 +257,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 throw new ArgumentNullException($"{nameof(Values)} and {nameof(EntitySet)} are null");
             }
+
+            TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
 
             if (EntitySet != null)
             {

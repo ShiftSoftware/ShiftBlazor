@@ -1,7 +1,7 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @typeparam T where T : ShiftEntityDTOBase, new()
 
-@if (TypeAuthAction == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
+@if (TypeAuthAction == null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
 {
     @if (!string.IsNullOrWhiteSpace(Title) && !IsEmbed)
     {
