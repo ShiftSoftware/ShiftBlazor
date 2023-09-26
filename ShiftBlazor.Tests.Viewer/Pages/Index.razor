@@ -1,3 +1,48 @@
 ﻿@page "/"
+@using ShiftBlazor.Tests.Viewer.Components.ShiftList
+@using ShiftBlazor.Tests.Viewer.Components.ShiftFormBasic
 
-<h1>Hello, world!</h1>
+<MudLayout>
+    <MudAppBar Elevation="0">
+        <MudText Typo="Typo.h6">@SelectedType?.Name</MudText>
+        <MudSpacer />
+    </MudAppBar>
+    <MudDrawer Open="@DrawerOpen" DisableOverlay="true" Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Always" Breakpoint="Breakpoint.Sm">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Components</MudText>
+        </MudDrawerHeader>
+        <MudList>
+            @foreach (var type in Components)
+            {
+                <MudListItem Style="cursor: pointer;" OnClick="@(() => SelectedType = type)" @key="type.Name">@type.Name</MudListItem>
+            }
+        </MudList>
+    </MudDrawer>
+
+    <MudMainContent Class="mt-4">
+
+        <MudPaper Elevation="0" Style="padding: 24px; margin: 24px;">
+            @if (SelectedType == null)
+            {
+                <span>Select a component</span>
+            }
+            else
+            {
+                <DynamicComponent Type="SelectedType"></DynamicComponent>
+            }
+        </MudPaper>
+
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    List<Type> Components = typeof(Program)
+            .Assembly
+            .GetTypes()
+            .Where(x => !x.Name.Contains("<") && x.FullName?.StartsWith("ShiftBlazor.Tests.Viewer.Components") == true)
+            .ToList();
+
+    Type? SelectedType;
+
+    bool DrawerOpen = true;
+}

@@ -1,0 +1,24 @@
+﻿<ShiftList T="User"
+           Values="Users">
+
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="x => x.Email" />
+</ShiftList>
+
+@code {
+    public List<User> Users = new List<User>()
+    {
+        new User
+        {
+            ID = "1",
+            Name = "Sam",
+            Email = "sam@example.com",
+        },
+        new User
+        {
+            ID = "2",
+            Name = "Alex",
+            Email = "alex@example.com",
+        }
+    };
+}

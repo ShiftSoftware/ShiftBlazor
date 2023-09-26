@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\" />
+    <ProjectReference Include="..\ShiftBlazor\ShiftBlazor.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,22 @@
+﻿<ShiftEntityForm T="User"
+                 Action="Project"
+                 Title="Edit User"
+                 IconSvg="@Icons.Material.Filled.Person4">
+
+    <MudTextFieldExtended Label="Name"
+                          @bind-Value="User.Name"
+                          For="() => User.Name"/>
+
+    <MudTextFieldExtended Label="Email"
+                          @bind-Value="User.Email"
+                          For="() => User.Email"/>
+</ShiftEntityForm>
+
+@code {
+
+    User User = new()
+    {
+        Name = "Person Name",
+        Email = "person@example.com",
+    };
+}

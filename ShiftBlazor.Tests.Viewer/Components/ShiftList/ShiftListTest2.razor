@@ -1,0 +1,30 @@
+﻿<ShiftList T="User"
+           ShowIDColumn
+           Dense
+           EnableExport
+           EnableSelection
+           Title="Users List 2"
+           IconSvg="@Icons.Material.Filled.ViewList"
+           Values="Users">
+
+     <PropertyColumn Title="Username" Property="x => x.Name" />
+     <PropertyColumn Title="Email Address" Property="x => x.Email" />
+ </ShiftList>
+
+@code {
+    public List<User> Users = new List<User>()
+    {
+        new User
+        {
+            ID = "1",
+            Name = "Sam",
+            Email = "sam@example.com",
+        },
+        new User
+        {
+            ID = "2",
+            Name = "Alex",
+            Email = "alex@example.com",
+        }
+    };
+}

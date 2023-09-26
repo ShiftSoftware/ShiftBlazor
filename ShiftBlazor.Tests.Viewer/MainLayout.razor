@@ -1,5 +1,12 @@
 ﻿@inherits LayoutComponentBase
+@inject SettingManager SettingManager
 
-<main>
-    @Body
-</main>
+<MudRTLProvider RightToLeft="SettingManager.GetLanguage().RTL">
+
+    <AddMudProviders />
+
+    <main>
+        @Body
+    </main>
+
+</MudRTLProvider>

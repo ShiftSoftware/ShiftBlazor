@@ -1,0 +1,9 @@
+﻿<ShiftEntityForm T="User" Action="Project">
+
+    <MudTextFieldExtended Label="Name" @bind-Value="User.Name" />
+    <MudTextFieldExtended Label="Email" @bind-Value="User.Email" />
+</ShiftEntityForm>
+
+@code {
+    User User = new();
+}

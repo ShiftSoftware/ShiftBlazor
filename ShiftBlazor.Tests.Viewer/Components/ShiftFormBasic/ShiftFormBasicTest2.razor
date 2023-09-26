@@ -1,0 +1,23 @@
+﻿@using Microsoft.AspNetCore.Components.Forms;
+@inject MessageService MessageService;
+
+<ShiftFormBasic T="User"
+                Title="User Form 2"
+                IconSvg="@Icons.Material.Filled.People"
+                SubmitText="Show"
+                OnValidSubmit="HandleSubmit">
+
+    <MudTextFieldExtended @bind-Value="User.Name" For="() => User.Name" Label="Name" T="string"></MudTextFieldExtended>
+    <MudTextFieldExtended @bind-Value="User.Email" For="() => User.Email" Label="Email" InputType="@InputType.Email" T="string"></MudTextFieldExtended>
+</ShiftFormBasic>
+
+@code {
+    public User User = new();
+
+    private void HandleSubmit(ShiftEvent<EditContext> e)
+    {
+        // e.ShouldPreventDefault = true;
+        MessageService.Info(User.Name);
+        MessageService.Info(User.Email);
+    }
+}
