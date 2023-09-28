@@ -2,8 +2,6 @@
 using MudBlazor;
 using MudBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Services;
-using Syncfusion.Licensing;
-using Syncfusion.Blazor;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -50,14 +48,6 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
                                    });
 
                 return settingManager;
-            });
-
-            SyncfusionLicenseProvider.RegisterLicense(options.SyncfusionLicense);
-
-            services.AddSyncfusionBlazor(syncConfig =>
-            {
-                syncConfig.EnableRtl = settingManager?.GetLanguage().RTL ?? false;
-                options.SyncfusionConfiguration?.Invoke(syncConfig);
             });
 
             services.AddLocalization();
