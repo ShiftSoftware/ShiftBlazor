@@ -52,6 +52,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public long MaxThumbnailSizeInMegaBytes { get; set; } = 10;
 
+        [Parameter]
+        public string? AccountName { get; set; }
+
+        [Parameter]
+        public string? ContainerName { get; set; }
+
         private FormModes? _mode;
 
         [CascadingParameter]
@@ -193,6 +199,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 content.Headers.ContentType = new MediaTypeHeaderValue(item.LocalFile.ContentType);
 
                 multipartContent.Add(content, "File", item.LocalFile.Name);
+
+                if (!string.IsNullOrWhiteSpace(AccountName))
+                    multipartContent.Headers.Add("Account-Name", AccountName);
+
+                if (!string.IsNullOrWhiteSpace(ContainerName))
+                    multipartContent.Headers.Add("Container-Name", ContainerName);
 
                 var postResponse = await HttpClient.PostAsync(url, multipartContent);
 
