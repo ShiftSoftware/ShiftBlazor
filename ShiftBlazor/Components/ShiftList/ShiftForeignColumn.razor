@@ -92,7 +92,7 @@
 
         var items = data.Value;
 
-        DataServiceQuery<TField> builder = null;
+        DataServiceQuery<TField> builder = default!;
 
         if (string.IsNullOrWhiteSpace(ODataBaseUrl))
         {

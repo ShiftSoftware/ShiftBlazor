@@ -12,7 +12,6 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
     {
         public static IServiceCollection AddShiftBlazor(this IServiceCollection services, Action<AppStartupOptions> configure)
         {
-            SettingManager settingManager = null;
             var options = new AppStartupOptions();
             configure.Invoke(options);
 
@@ -38,7 +37,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
             services.AddScoped<MessageService>();
             services.AddScoped(x =>
             {
-                settingManager = new SettingManager(x.GetRequiredService<ISyncLocalStorageService>(),
+                return new SettingManager(x.GetRequiredService<ISyncLocalStorageService>(),
                                    x.GetRequiredService<NavigationManager>(),
                                    x.GetRequiredService<HttpClient>(),
                                    x.GetRequiredService<IJSRuntime>(),
@@ -46,8 +45,6 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
                                    {
                                        options.ShiftConfiguration.Invoke(config);
                                    });
-
-                return settingManager;
             });
 
             services.AddLocalization();

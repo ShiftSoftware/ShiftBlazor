@@ -327,7 +327,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             foreach (var item in columns)
             {
+                #pragma warning disable BL0005 // Component parameter should not be set outside of its component.
                 item.HiddenChanged = new EventCallback<bool>(this, ColumnStateChanged);
+                #pragma warning restore BL0005
             }
         }
 

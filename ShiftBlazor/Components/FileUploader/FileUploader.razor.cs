@@ -35,7 +35,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public int MaxFileSizeInMegaBytes { get; set; } = 32;
 
         [Parameter, EditorRequired]
-        public string Url { get; set; }
+        public string Url { get; set; } = string.Empty;
 
         [Parameter]
         public string? Label { get; set; }
@@ -177,6 +177,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task UploadFile(UploaderItem item)
         {
+            if (item.LocalFile == null)
+            {
+                item.Message = new Message { Title = "Could not find file" };
+                return;
+            }
+
             item.File = null;
             item.Message = null;
 
