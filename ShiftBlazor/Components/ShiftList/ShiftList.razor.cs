@@ -52,7 +52,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         ///     An event triggered when the state of Values has changed.
         /// </summary>
         [Parameter]
-        public EventCallback<T> ValuesChanged { get; set; }
+        public EventCallback<List<T>> ValuesChanged { get; set; }
 
         /// <summary>
         ///     OData EntitySetName.
