@@ -34,17 +34,7 @@
                             </MudTooltip>
                         }
 
-                        @if (EnablePrint)
-                        {
-                            <MudTooltip Text="@Loc["PrintButtonTitle"]">
-                                <MudIconButton Icon="@Icons.Material.Filled.Print"
-                                               Size="@IconSize"
-                                               Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                               OnClick="PrintList" />
-                            </MudTooltip>
-                        }
-
-                        @if (!DisableDeleteFilter)
+                        @if (!DisableDeleteFilter && Values == null)
                         {
                             <MudTooltip Text="@Loc["FilterDeletedItemsTitle"]">
                                 <MudMenu Size="@IconSize"
@@ -80,7 +70,7 @@
 
                         @if (MudDialog != null && IsEmbed != true)
                         {
-                            @if (RenderAddButton || !DisableColumnChooser || !DisableDeleteFilter || EnableExport || EnablePrint)
+                            @if (RenderAddButton || !DisableColumnChooser || !DisableDeleteFilter || EnableExport)
                             {
                                 <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
                             }

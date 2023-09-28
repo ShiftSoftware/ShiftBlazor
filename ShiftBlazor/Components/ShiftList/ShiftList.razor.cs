@@ -158,12 +158,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool DisableAdd { get; set; }
 
-        /// <summary>
-        ///     Enable Print button.
-        /// </summary>
-        [Parameter]
-        public bool EnablePrint { get; set; }
-
         [Parameter]
         public bool Dense { get; set; }
 
@@ -326,11 +320,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 await DataGrid!.ReloadServerData();
             }
             return result;
-        }
-
-        public async Task PrintList()
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
