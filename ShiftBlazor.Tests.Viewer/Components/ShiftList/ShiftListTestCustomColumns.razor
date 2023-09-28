@@ -1,0 +1,43 @@
+﻿@using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm;
+
+<ShiftList T="User"
+           @ref="ShiftList"
+           ComponentType="typeof(ShiftEntityFormTest1)"
+           Values="User.GenerateData(50, 50, false)">
+
+    <ChildContent>
+        <PropertyColumn Property="x => x.Name" />
+        <PropertyColumn Property="x => x.Email" />
+
+        <TemplateColumn Title="Email Providor">
+            <CellTemplate>
+                @{
+                    var atIndex = context.Item.Email.IndexOf('@');
+                    var dotIndex = context.Item.Email.LastIndexOf('.');
+                }
+                <MudText>@context.Item.Email.Substring(atIndex + 1, dotIndex - atIndex - 1).ToUpper()</MudText>
+            </CellTemplate>
+        </TemplateColumn>
+    </ChildContent>
+
+    <ActionsTemplate>
+        @if (ActionsTemplate == null)
+        {
+            <MudStack Row>
+                <MudIconButton Icon="@Icons.Material.Filled.ViewDay" OnClick="() => ShiftList.ViewAddItem(context.Item.ID)" />
+                <MudIconButton Icon="@(context.IsSelected ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" OnClick="() => context.Actions.SetSelectedItemAsync(!context.IsSelected)" />
+             </MudStack>
+        }
+        else
+        {
+            @ActionsTemplate
+        }
+    </ActionsTemplate>
+</ShiftList>
+
+@code {
+    private ShiftList<User> ShiftList { get; set; }
+
+    [Parameter]
+    public RenderFragment ActionsTemplate { get; set; }
+}

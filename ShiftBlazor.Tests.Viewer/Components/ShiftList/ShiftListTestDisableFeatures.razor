@@ -1,0 +1,64 @@
+﻿@using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm;
+
+<ShiftList T="User"
+           DisablePagination="DisablePagination"
+           DisableActionColumn="DisableActionColumn"
+           DisableAdd="DisableAdd"
+           DisableColumnChooser="DisableColumnChooser"
+           DisableDeleteFilter="DisableDeleteFilter"
+           DisableFilters="DisableFilters"
+           DisableHeaderToolbar="DisableHeaderToolbar"
+           DisableMultiSorting="DisableMultiSorting"
+           DisableSorting="DisableSorting"
+           DisableStickyHeader="DisableStickyHeader"
+           ComponentType="typeof(ShiftEntityFormTest1)"
+           EntitySet="Users">
+
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="x => x.Email" />
+</ShiftList>
+
+<MudStack Row>
+    <MudSwitch @bind-Checked="DisablePagination">Pagination</MudSwitch>
+    <MudSwitch @bind-Checked="DisableActionColumn">ActionColumn</MudSwitch>
+    <MudSwitch @bind-Checked="DisableAdd">Add</MudSwitch>
+    <MudSwitch @bind-Checked="DisableColumnChooser">ColumnChooser</MudSwitch>
+    <MudSwitch @bind-Checked="DisableDeleteFilter">DeleteFilters</MudSwitch>
+    <MudSwitch @bind-Checked="DisableFilters">Filters</MudSwitch>
+    <MudSwitch @bind-Checked="DisableHeaderToolbar">HeaderToolbar</MudSwitch>
+    <MudSwitch @bind-Checked="DisableMultiSorting">MultiSorting</MudSwitch>
+    <MudSwitch @bind-Checked="DisableSorting">Sorting</MudSwitch>
+    <MudSwitch @bind-Checked="DisableStickyHeader">StickyHeader</MudSwitch>
+</MudStack>
+
+@code {
+    [Parameter]
+    public bool DisablePagination { get; set; }
+
+    [Parameter]
+    public bool DisableActionColumn { get; set; }
+
+    [Parameter]
+    public bool DisableAdd { get; set; }
+
+    [Parameter]
+    public bool DisableColumnChooser { get; set; }
+
+    [Parameter]
+    public bool DisableDeleteFilter { get; set; }
+
+    [Parameter]
+    public bool DisableFilters { get; set; }
+
+    [Parameter]
+    public bool DisableHeaderToolbar { get; set; }
+
+    [Parameter]
+    public bool DisableMultiSorting { get; set; }
+
+    [Parameter]
+    public bool DisableSorting { get; set; }
+
+    [Parameter]
+    public bool DisableStickyHeader { get; set; }
+}

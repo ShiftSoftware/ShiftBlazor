@@ -14,11 +14,12 @@
         <MudList>
             @foreach (var groups in Components)
             {
-                <MudListItem Style="cursor: pointer;" Text="@groups.Key!.Split('.').Last()">
+                var groupName = groups.Key!.Split('.').Last();
+                <MudListItem Style="cursor: pointer;" Text="@groupName">
                     <NestedList>
                         @foreach (var type in groups)
                         {
-                            <MudListItem Style="cursor: pointer;" OnClick="@(() => SelectedType = type)" @key="type.Name" Text="@type.Name"/>
+                            <MudListItem Style="cursor: pointer;" OnClick="@(() => SelectedType = type)" @key="type.Name" Text="@type.Name.Replace(groupName, "")" />
                         }
                     </NestedList>
                 </MudListItem>
@@ -35,7 +36,7 @@
             }
             else
             {
-                <DynamicComponent Type="SelectedType"></DynamicComponent>
+                <DynamicComponent Type="SelectedType" />
             }
         </MudPaper>
 

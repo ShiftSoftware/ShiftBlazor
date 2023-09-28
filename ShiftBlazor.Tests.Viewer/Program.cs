@@ -17,7 +17,7 @@ builder.Services.AddShiftBlazor(config =>
     {
         options.BaseAddress = baseUrl!;
         options.ApiPath = "/api";
-        options.ODataPath = "/odata";
+        options.ODataPath = "/api";
         options.UserListEndpoint = baseUrl.AddUrlPath("odata/IdentityPublicUser"); //ToDo: this parameter should be optional.
         options.AddLanguage("en-US", "English")
                .AddLanguage("en-US", "English RTL", true);

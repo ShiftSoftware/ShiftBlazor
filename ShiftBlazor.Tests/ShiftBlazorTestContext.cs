@@ -1,5 +1,6 @@
 ﻿using Bunit.TestDoubles;
 using RichardSzalay.MockHttp;
+using ShiftBlazor.Tests.Viewer.Models;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.TypeAuth.Blazor.Extensions;
 
@@ -23,6 +24,10 @@ public class ShiftBlazorTestContext : TestContext
         Values[3].IsDeleted = true;
 
         var mock = Services.AddMockHttpClient();
+        mock.When(ODataBaseUrl + "/Users").RespondJson(new ODataResult<User>
+        {
+            value = User.GenerateData(50, 50),
+        });
         mock.When(ODataBaseUrl + "/Product").RespondJson(new ODataResult<SampleDTO>
         {
             value = Values

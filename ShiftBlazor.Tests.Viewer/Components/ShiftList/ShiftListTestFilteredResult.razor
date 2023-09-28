@@ -1,0 +1,14 @@
+﻿@using System.Linq.Expressions;
+<ShiftList T="User"
+           Title="Yahoo users only"
+           Where="@Where"
+           EntitySet="Users">
+
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="x => x.Email" />
+</ShiftList>
+
+@code {
+    [Parameter]
+    public Expression<Func<User, bool>> Where { get; set; } = (x) => x.Email.EndsWith("yahoo.com");
+}

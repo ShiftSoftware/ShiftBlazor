@@ -1,0 +1,18 @@
+﻿<ShiftList T="User"
+           EnableVirtualization="EnableVirtualization"
+           Height="@(EnableVirtualization ? Height : string.Empty)"
+           EntitySet="Users">
+
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="x => x.Email" />
+</ShiftList>
+
+<MudSwitch @bind-Checked="EnableVirtualization">EnableVirtualization</MudSwitch>
+
+@code {
+    [Parameter]
+    public bool EnableVirtualization { get; set; }
+
+    [Parameter]
+    public string Height { get; set; } = "600px";
+}

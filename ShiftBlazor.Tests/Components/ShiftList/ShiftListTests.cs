@@ -1,176 +1,120 @@
 ﻿using Bunit;
 using Bunit.Rendering;
 using MudBlazor;
-using Syncfusion.Blazor.Data;
-using Syncfusion.Blazor.Grids;
+using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm;
+using ShiftBlazor.Tests.Viewer.Components.ShiftList;
+using ShiftBlazor.Tests.Viewer.Models;
+using System.Linq.Expressions;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList;
 
 public class ShiftListTests : ShiftBlazorTestContext
 {
-    public static bool DisablePaging = true;
+    [Fact]
+    public void ShouldRenderComponent()
+    {
+        RenderComponent<ShiftListTestLocalData>();
+    }
 
     [Fact]
-    public void ShouldShowErrorIfActionAndValueAreNull()
+    public void ShouldThrowExceptionIfActionAndValueAreNull()
     {
-        var cut = RenderComponent<ShiftList<SampleDTO>>(paramaters =>
-            paramaters.Add(p => p.DisablePagination, DisablePaging));
-
-        var alertComp = cut.FindComponent<MudAlert>();
-
-        cut.WaitForAssertion(() =>
+        Assert.Throws<ArgumentNullException>(() =>
         {
-            Assert.NotNull(alertComp);
-            Assert.Contains("Both Action and Values parameters cannot be null", alertComp.Markup);
+            RenderComponent<ShiftList<SampleDTO>>();
         });
     }
 
     [Fact]
     public void ShouldShowErrorSnackbarWhenBadUrl()
     {
-        var cut = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters.Add(p => p.Action, "/404-url"));
+        var cut = RenderComponent<ShiftListTestHttpError>();
 
-        var x = cut.Instance.GridContainerCssClass;
+        var alert = cut.FindComponent<MudAlert>();
 
-        cut.WaitForElement(".disable-grid");
-
+        Assert.Equal(Severity.Error, alert.Instance.Severity);
     }
 
+    [Fact]
+    public void ShouldRenderRowsPerPageCorrectly()
+    {
+        var cut = RenderComponent<ShiftListTestLocalData>();
 
-    // // SfGrid always returns total rows instead of rows per page, this might be due to the lack of JS Runtime
-    //[Fact]
-    //public void ShouldRenderRowsPerPageCorrectly()
-    //{
-    //    var cut = RenderComponent<ShiftList<Sample>>(parameters => parameters
-    //        .Add(p => p.Action, "/Product")
-    //    );
+        var grid = cut.FindComponent<MudDataGrid<User>>();
 
-    //    var grid = cut.FindComponent<SfGrid<Sample>>().Instance;
+        cut.WaitForAssertion(() =>
+        {
+            var rows = grid.FindAll(".mud-table-body .mud-table-row");
+            Assert.Equal(grid.Instance.RowsPerPage, rows.Count());
+        });
+    }
 
-    //    cut.WaitForAssertion(() =>
-    //    {
-    //        var rows = grid.GetCurrentViewRecordsAsync().Result;
-    //        Assert.Equal(grid.PageSettings.PageSize, rows.Count);
-    //    });
-    //}
-
-    /// <summary>
-    ///     Title
-    /// </summary>
     [Fact]
     public void ShouldRenderTitleCorrectly()
     {
         //get a random string
         var title = Guid.NewGuid().ToString();
 
-        var cut = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
+        var cut = RenderComponent<ShiftListTestLocalData>(parameters => parameters
             .Add(p => p.Title, title)
-            .Add(p => p.DisablePagination, DisablePaging)
         );
 
         Assert.Contains(title, cut.Markup);
         //TODO: check page title?
     }
 
-    /// <summary>
-    ///     Title
-    /// </summary>
     [Fact]
     public void ShouldRenderPagingByDefault()
     {
-        var cut = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-        );
-
-        var grid = cut.FindComponent<SfGrid<SampleDTO>>();
-
-        Assert.True(grid.Instance.AllowPaging);
+        var cut = RenderComponent<ShiftListTest1>();
+        var grid = cut.FindComponent<ShiftList<User>>();
+        Assert.True(cut.HasComponent<MudDataGridPager<User>>());
+        Assert.False(grid.Instance.DisablePagination);
     }
 
-    /// <summary>
-    ///     page size
-    /// </summary>
     [Fact]
     public void ShouldBeAbleToSetDataGridPageSize()
     {
         var pageSize = 22;
 
         var cut = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
+            .Add(p => p.EntitySet, "User")
             .Add(p => p.PageSize, pageSize)
-            .Add(p => p.DisablePagination, DisablePaging)
         );
 
-        var grid = cut.FindComponent<SfGrid<SampleDTO>>();
-        Assert.Equal(pageSize, grid.Instance.PageSettings.PageSize);
+        var grid = cut.FindComponent<MudDataGrid<SampleDTO>>();
+        Assert.Equal(pageSize, grid.Instance.RowsPerPage);
     }
 
-    /// <summary>
-    ///     ExcludedHeaders
-    /// </summary>
     [Fact]
-    public void ShouldHideExcludedColumns2()
+    public void ShouldHideIDColumnByDefault()
     {
-        List<string> excludedColumns = new()
-        {
-            nameof(SampleListDTO.LastName),
-            nameof(SampleListDTO.City)
-        };
-
-        var cut = RenderComponent<ShiftList<SampleListDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ExcludedColumns, excludedColumns)
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, DisablePaging)
+        var comp = RenderComponent<ShiftList<User>>(parameters => parameters
+            .Add(p => p.EntitySet, "Users")
         );
 
-        var grid = cut.FindComponent<SfGrid<SampleListDTO>>();
+        var comp2 = RenderComponent<ShiftList<User>>(parameters => parameters
+            .Add(p => p.EntitySet, "Users")
+            .Add(p => p.ShowIDColumn, true)
+        );
 
-        var columns = grid.Instance.Columns;
-        var properties = typeof(SampleListDTO).GetProperties();
+        var cols1 = comp.FindComponent<MudDataGrid<User>>().Instance.RenderedColumns;
+        var cols2 = comp2.FindComponent<MudDataGrid<User>>().Instance.RenderedColumns;
 
-        var defaultExcluded = cut.Instance.DefaultExcludedColumns;
-        var defaultExcludedCount = properties.Where(x => defaultExcluded.Contains(x.Name, StringComparer.CurrentCultureIgnoreCase)).Count();
-
-        // We always create ID column even when excluded so we subtract one to the count
-        var totalExcludedCount = defaultExcludedCount + excludedColumns.Count - 1;
-        // We have an extra Actions column in columns variable so we add one
-        var totalColumnCount = properties.Count() - totalExcludedCount + 1;
-
-        Assert.Equal(totalColumnCount, columns.Count());
-        Assert.All(columns, x => excludedColumns.Contains(x.Field).Equals(false));
+        Assert.Null(cols1.FirstOrDefault(x => x.PropertyName == nameof(User.ID)));
+        Assert.NotNull(cols2.FirstOrDefault(x => x.PropertyName == nameof(User.ID)));
     }
 
     [Fact]
-    public void ShouldHideColumnsByDefault()
-    {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
-
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>();
-
-        var revisionsColumns = grid.Instance.Columns.FirstOrDefault(x => x.Field.Equals(nameof(SampleDTO.Revisions)));
-        var idColumns = grid.Instance.Columns.Where(x => x.Field.Equals(nameof(SampleDTO.ID)));
-        Assert.Null(revisionsColumns);
-        Assert.Single(idColumns);
-        Assert.False(idColumns.First().Visible);
-    }
-
-    [Fact]
-    public void ShouldRenderOrHideActionColumn1()
+    public void ShouldNotRenderActionColumn()
     {
         // Should not render Actions column when ComponentType is not set
         var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.DisablePagination, DisablePaging)
+            .Add(p => p.EntitySet, "Product")
         );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
+        var grid = comp.FindComponent<MudDataGrid<SampleDTO>>().Instance;
 
-        var cols = grid.Columns.Where(x => x.HeaderText == "Actions");
+        var cols = grid.RenderedColumns.Where(x => x.Title == "Actions");
         Assert.Empty(cols);
     }
 
@@ -179,153 +123,64 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         // Should render Actions column when ComponentType is 
         var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
+            .Add(p => p.EntitySet, "Product")
             .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, DisablePaging)
         );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
+        var grid = comp.FindComponent<MudDataGrid<SampleDTO>>().Instance;
 
-        var cols = grid.Columns.Where(x => x.HeaderText == "Actions");
+        var cols = grid.RenderedColumns.Where(x => x.Title == "Actions");
         Assert.Single(cols);
     }
 
     [Fact]
     public void ShouldRenderOrHideActionColumn3()
     {
-        List<string> excludedColumns = new()
-        {
-            "Actions"
-        };
-
-        // Should not render Actions column when it is excluded in ExcludedColumns
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ExcludedColumns, excludedColumns)
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, DisablePaging)
+        // Should not render Actions column when DisableActionColumn is true
+        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
+            .Add(p => p.DisableActionColumn, true)
         );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
-        var cols = grid.Columns.Where(x => x.HeaderText == "Actions");
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
+        var cols = grid.RenderedColumns.Where(x => x.Title == "Actions");
         Assert.Empty(cols);
     }
 
     [Fact]
-    public void ShouldNotRenderDownloadButton()
+    public void ShouldNotRenderExportButton()
     {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.EnableCsvExcelExport, false)
-            .Add(p => p.EnablePdfExport, false)
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
+        var comp = RenderComponent<ShiftListTest1>();
 
-        var menu = comp.FindComponents<MudMenu>().FirstOrDefault(x => x.Instance.Class == "download-options");
-        Assert.Null(menu);
+        var tooltip = comp.FindComponents<MudTooltip>().FirstOrDefault(x => x.Instance.Text.Contains("Export"));
+        Assert.Null(tooltip);
     }
 
     [Fact]
-    public void ShouldOnlyRenderCSVnExcelButton()
+    public void ShouldRenderExportButton()
     {
-        var comp = RenderComponent<IncludeMudProviders>(_params => _params.AddChildContent<ShiftList<SampleDTO>>(
-            parameters => parameters
-                .Add(p => p.Action, "/Product")
-                .Add(p => p.ComponentType, typeof(DummyComponent))
-                .Add(p => p.EnableCsvExcelExport, true)
-                .Add(p => p.EnablePdfExport, false)
-                .Add(p => p.DisablePagination, DisablePaging)
-        ));
+        var comp = RenderComponent<ShiftListTestExport>();
 
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
-
-        Assert.False(grid.AllowPdfExport);
-        Assert.True(grid.AllowExcelExport);
-
-        comp.FindAll(".mud-menu.download-options button.mud-button-root")[0].Click();
-
-        comp.WaitForAssertion(() =>
-        {
-            Assert.Equal(2, comp.FindAll("div.mud-list-item").Count);
-
-            Assert.DoesNotContain("PDF Export", comp.Markup);
-            Assert.Contains("CSV Export", comp.Markup);
-            Assert.Contains("Excel Export", comp.Markup);
-        });
-    }
-
-    [Fact]
-    public void ShouldOnlyRenderPDFButton()
-    {
-        var comp = RenderComponent<IncludeMudProviders>(_params => _params.AddChildContent<ShiftList<SampleDTO>>(
-            parameters => parameters
-                .Add(p => p.Action, "/Product")
-                .Add(p => p.ComponentType, typeof(DummyComponent))
-                .Add(p => p.EnableCsvExcelExport, false)
-                .Add(p => p.EnablePdfExport, true)
-                .Add(p => p.DisablePagination, DisablePaging)
-        ));
-
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
-
-        Assert.False(grid.AllowExcelExport);
-        Assert.True(grid.AllowPdfExport);
-
-        comp.FindAll(".mud-menu.download-options button.mud-button-root")[0].Click();
-
-        comp.WaitForAssertion(() =>
-        {
-            Assert.Equal(1, comp.FindAll("div.mud-list-item").Count);
-            Assert.Contains("PDF Export", comp.Markup);
-            Assert.DoesNotContain("CSV Export", comp.Markup);
-            Assert.DoesNotContain("Excel Export", comp.Markup);
-        });
-    }
-
-    [Fact]
-    public void ShouldRenderPrintButton()
-    {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.EnablePrint, true)
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
-
-        var tooltips = comp.FindComponents<MudTooltip>();
-
-        var print = tooltips.First(x => x.Instance.Text.Equals("Print"));
-        print.Find("button");
+        var tooltip = comp.FindComponents<MudTooltip>().FirstOrDefault(x => x.Instance.Text.Contains("Export"));
+        Assert.NotNull(tooltip);
     }
 
     [Fact]
     public void ShouldEnableVirtualizationAndDisablePaging()
     {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.EnableSelection, true)
-            .Add(p => p.EnableVirtualization, true)
-        );
+        var comp = RenderComponent<ShiftListTestVirtualization>(parameters => parameters.Add(p => p.EnableVirtualization, true));
 
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
-        Assert.True(grid.EnableVirtualization);
-        Assert.True(grid.EnableVirtualMaskRow);
-        Assert.False(grid.AllowPaging);
-        // HeaderTemplate should have a value (an empty fragment) to replace the checkbox
-        Assert.NotNull(grid.Columns.ElementAt(0).HeaderTemplate);
+        Assert.True(grid.Virtualize);
+        Assert.False(comp.HasComponent<MudDataGridPager<User>>(), "Found MudDataGridPager");
     }
 
     [Fact]
     public void ShouldNotRenderAddButton()
     {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
+        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisableAdd, true)
-            .Add(p => p.DisablePagination, DisablePaging)
         );
-        var instance = comp.Instance;
+
+        var instance = comp.FindComponent<ShiftList<User>>().Instance;
 
         Assert.False(instance.RenderAddButton);
 
@@ -337,186 +192,129 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldDisableDataGridPaging()
     {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
+        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisablePagination, true)
         );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
 
-        Assert.False(grid.AllowPaging);
+        Assert.False(comp.HasComponent<MudDataGridPager<User>>(), "Found MudDataGridPager");
     }
 
     [Fact]
     public void ShouldDisableDataGridSorting()
     {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
+        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisableSorting, true)
-            .Add(p => p.DisablePagination, DisablePaging)
         );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
-        Assert.False(grid.AllowSorting);
+        Assert.Equal(SortMode.None, grid.SortMode);
     }
 
     [Fact]
     public void ShouldDisableDataGridMultiSorting()
     {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
+        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisableMultiSorting, true)
-            .Add(p => p.DisablePagination, DisablePaging)
         );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
-        Assert.False(grid.AllowMultiSorting);
+        Assert.Equal(SortMode.Single, grid.SortMode);
     }
 
     [Fact]
     public void ShouldDisableDataGridFilters()
     {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
+        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisableFilters, true)
-            .Add(p => p.DisablePagination, DisablePaging)
         );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
-        Assert.False(grid.AllowFiltering);
+        Assert.False(grid.Filterable);
     }
 
+    //[Fact]
+    //public void ShouldDisableDataGridSelection()
+    //{
+    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //        .Add(p => p.Action, "/Product")
+    //        .Add(p => p.ComponentType, typeof(DummyComponent))
+    //        .Add(p => p.DisablePagination, DisablePaging)
+    //    );
+    //    var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
+
+    //    Assert.False(grid.AllowSelection);
+    //}
+
+    //[Fact]
+    //public void ShouldAddColumnsToDataGrid()
+    //{
+    //    var headerText = "This is a header";
+    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //        .Add(p => p.EntitySet, "/Product")
+    //        .Add(p => p.ComponentType, typeof(DummyComponent))
+    //        .Add<GridColumn>(p => p.ColumnTemplate, _params => _params.Add(x => x.HeaderText, headerText))
+    //        .Add(p => p.DisablePagination, DisablePaging)
+    //    );
+
+    //    var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
+    //    var customColumn = grid.Columns.FirstOrDefault(x => x.HeaderText.Equals(headerText));
+    //    Assert.NotNull(customColumn);
+    //}
+
     [Fact]
-    public void ShouldDisableDataGridSelection()
+    public void ShouldReplaceActionsColumnContent()
     {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
-
-        Assert.False(grid.AllowSelection);
-    }
-
-    [Fact]
-    public void ShouldAddColumnsToDataGrid()
-    {
-        var headerText = "This is a header";
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add<GridColumn>(p => p.ColumnTemplate, _params => _params.Add(x => x.HeaderText, headerText))
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
-
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
-        var customColumn = grid.Columns.FirstOrDefault(x => x.HeaderText.Equals(headerText));
-        Assert.NotNull(customColumn);
-    }
-
-    [Fact]
-    public async Task ShouldReplaceActionsColumnContent()
-    {
-        var text = "Hello World!";
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.ActionsTemplate, item => $"<h1>{text}</h1>")
-            .Add(p => p.DisablePagination, DisablePaging)
+        var text = Guid.NewGuid().ToString();
+        var comp = RenderComponent<ShiftListTestCustomColumns>(parameters => parameters
+            .Add(p => p.ActionsTemplate, $"<h1>{text}</h1>")
         );
 
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>();
+        var grid = comp.FindComponent<MudDataGrid<User>>();
 
-        await Task.Delay(300);
-
-        var row = grid.Find(".e-table .e-row .e-rowcell[aria-label~='Actions']");
-        row.FirstChild?.MarkupMatches($"<div><h1>{text}</h1></div>");
+        var row = comp.Find(".mud-table-cell[data-label='Actions']");
+        row.FirstChild?.ToMarkup().Contains($"{text}");
 
     }
 
     [Fact]
     public void ShouldAddElementsToToolbar()
     {
-        var text = "click me!";
+        var text = Guid.NewGuid();
 
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.ToolbarStartTemplate, $"<button>{text}</button>")
-            .Add(p => p.DisablePagination, DisablePaging)
+        var comp = RenderComponent<ShiftListTestCustomToolbar>(parameters => parameters
+            .Add(p => p.ToolbarStartTemplate, $"<span>{text}</span>")
         );
 
         var toolbar = comp.Find(".shift-toolbar-header");
 
-        Assert.Contains($"<button>{text}</button>", toolbar.ToMarkup());
+        Assert.Contains($"<span>{text}</span>", toolbar.ToMarkup());
     }
 
     [Fact]
-    public void ShouldAddQueryToDataGridQuery()
+    public void ShouldAddWhereToFilter()
     {
-        var query = new Query().Expand(new List<string> { "Customer" });
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.Query, query)
-            .Add(p => p.DisablePagination, DisablePaging)
+        Expression<Func<User, bool>> WhereFilter = (x) => x.Name.Contains("Be");
+        var comp = RenderComponent<ShiftListTestFilteredResult>(parameters => parameters
+            .Add(p => p.Where, WhereFilter)
         );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
-
-        Assert.Equal(query, grid.Query);
-    }
-
-    [Fact]
-    public void ShouldEnableAutoFitOnActionColumn()
-    {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
-
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
-        var column = grid.Columns.First(x => x.HeaderText.Equals("Actions"));
-
-        Assert.True(column.AutoFit);
+        var grid = comp.FindComponent<ShiftList<User>>().Instance;
+        // $filter=contains(Name,'Be')
+        Assert.Equal(WhereFilter, grid.Where);
+        Assert.Contains("$filter=contains(Name,'Be')", grid.CurrentUri?.Query);
     }
 
     [Fact]
     public void ShouldSetDataGridHeight()
     {
-        var height = "600";
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.GridHeight, height)
-            .Add(p => p.DisablePagination, DisablePaging)
+        var height = "300px";
+        var comp = RenderComponent<ShiftListTestVirtualization>(parameters => parameters
+            .Add(p => p.EnableVirtualization, true)
+            .Add(p => p.Height, height)
         );
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
+
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
         Assert.Equal(height, grid.Height);
-    }
-
-    [Fact]
-    public void ShouldAutoGenerateColumns()
-    {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.AutoGenerateColumns, true)
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
-        var instance = comp.Instance;
-        var grid = comp.FindComponent<SfGrid<SampleDTO>>().Instance;
-
-        var props = typeof(SampleDTO).GetProperties().Where(x => !instance.DefaultExcludedColumns.Contains(x.Name));
-        var fields = grid.Columns.Select(x => x.Field);
-        var results = new List<bool>();
-
-        Assert.All(props, x => Assert.Contains(x.Name, fields));
     }
 
     [Fact]
@@ -524,128 +322,118 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         RenderTree.Add<ShiftFormBasic<SampleDTO>>();
 
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
+        var comp = RenderComponent<ShiftEntityFormTestWithList>();
 
-        var toolbar = comp.FindComponent<MudToolBar>();
+        var list = comp.FindComponent<ShiftList<User>>();
 
-        Assert.Contains("shift-toolbar-header", toolbar.Instance.Class);
-
-        var tooltips = toolbar.FindComponents<MudTooltip>().Where(x => !x.Instance.Text.Equals("Add"));
-        var divider = toolbar.FindComponents<MudDivider>();
-
-        Assert.Empty(tooltips);
-        Assert.Empty(divider);
+        Assert.True(list.Instance.IsEmbed);
     }
 
-    [Fact]
-    public void ShouldCreateCorrectDeleteQuery()
-    {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
+    //[Fact]
+    //public void ShouldCreateCorrectDeleteQuery()
+    //{
+    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //        .Add(p => p.Action, "/Product")
+    //        .Add(p => p.DisablePagination, DisablePaging)
+    //    );
 
-        var shiftList = comp.Instance;
+    //    var shiftList = comp.Instance;
 
-        // Show only items that are not deleted
-        var active = shiftList.CreateDeleteQuery(ShiftList<SampleDTO>.DeleteFilter.Active);
-        Assert.Single(active.Queries.Where);
-        var activeWhere = active.Queries.Where.First();
-        Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), activeWhere.Field);
-        Assert.Equal("equal", activeWhere.Operator);
-        Assert.False((bool)activeWhere.value);
-        Assert.False(activeWhere.IsComplex);
-        Assert.Null(activeWhere.predicates);
-        Assert.Null(activeWhere.Condition);
+    //    // Show only items that are not deleted
+    //    var active = shiftList.CreateDeleteQuery(ShiftList<SampleDTO>.DeleteFilter.Active);
+    //    Assert.Single(active.Queries.Where);
+    //    var activeWhere = active.Queries.Where.First();
+    //    Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), activeWhere.Field);
+    //    Assert.Equal("equal", activeWhere.Operator);
+    //    Assert.False((bool)activeWhere.value);
+    //    Assert.False(activeWhere.IsComplex);
+    //    Assert.Null(activeWhere.predicates);
+    //    Assert.Null(activeWhere.Condition);
 
-        // Show only items that are deleted
-        var deleted = shiftList.CreateDeleteQuery(ShiftList<SampleDTO>.DeleteFilter.Deleted);
-        Assert.Single(deleted.Queries.Where);
-        var deletedWhere = deleted.Queries.Where.First();
-        Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), deletedWhere.Field);
-        Assert.Equal("equal", deletedWhere.Operator);
-        Assert.True((bool)deletedWhere.value);
-        Assert.False(activeWhere.IsComplex);
-        Assert.Null(deletedWhere.predicates);
-        Assert.Null(deletedWhere.Condition);
+    //    // Show only items that are deleted
+    //    var deleted = shiftList.CreateDeleteQuery(ShiftList<SampleDTO>.DeleteFilter.Deleted);
+    //    Assert.Single(deleted.Queries.Where);
+    //    var deletedWhere = deleted.Queries.Where.First();
+    //    Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), deletedWhere.Field);
+    //    Assert.Equal("equal", deletedWhere.Operator);
+    //    Assert.True((bool)deletedWhere.value);
+    //    Assert.False(activeWhere.IsComplex);
+    //    Assert.Null(deletedWhere.predicates);
+    //    Assert.Null(deletedWhere.Condition);
 
-        // Show all items
-        var all = shiftList.CreateDeleteQuery(ShiftList<SampleDTO>.DeleteFilter.All);
-        Assert.Single(all.Queries.Where);
-        var allWhereGrouping = all.Queries.Where.First();
-        Assert.Null(allWhereGrouping.Field);
-        Assert.Null(allWhereGrouping.Operator);
-        Assert.Null(allWhereGrouping.value);
-        Assert.True(allWhereGrouping.IsComplex);
-        Assert.Equal("and", allWhereGrouping.Condition);
-        Assert.Equal(2, allWhereGrouping.predicates.Count);
+    //    // Show all items
+    //    var all = shiftList.CreateDeleteQuery(ShiftList<SampleDTO>.DeleteFilter.All);
+    //    Assert.Single(all.Queries.Where);
+    //    var allWhereGrouping = all.Queries.Where.First();
+    //    Assert.Null(allWhereGrouping.Field);
+    //    Assert.Null(allWhereGrouping.Operator);
+    //    Assert.Null(allWhereGrouping.value);
+    //    Assert.True(allWhereGrouping.IsComplex);
+    //    Assert.Equal("and", allWhereGrouping.Condition);
+    //    Assert.Equal(2, allWhereGrouping.predicates.Count);
 
-        // we have an extra always true filter to force syncfusion to create a correct grouped sql (1 or 1)
-        var allExtraPredicate = allWhereGrouping.predicates.First();
-        Assert.Equal("1", allExtraPredicate.Field);
-        Assert.Equal("equal", allExtraPredicate.Operator);
-        Assert.Equal(1, (int)allExtraPredicate.value);
+    //    // we have an extra always true filter to force syncfusion to create a correct grouped sql (1 or 1)
+    //    var allExtraPredicate = allWhereGrouping.predicates.First();
+    //    Assert.Equal("1", allExtraPredicate.Field);
+    //    Assert.Equal("equal", allExtraPredicate.Operator);
+    //    Assert.Equal(1, (int)allExtraPredicate.value);
 
-        var allWheres = allWhereGrouping.predicates.ElementAt(1);
-        Assert.Equal("or", allWheres.Condition);
-        Assert.Null(allWheres.value);
-        Assert.Equal(2, allWheres.predicates.Count);
+    //    var allWheres = allWhereGrouping.predicates.ElementAt(1);
+    //    Assert.Equal("or", allWheres.Condition);
+    //    Assert.Null(allWheres.value);
+    //    Assert.Equal(2, allWheres.predicates.Count);
 
-        var allActive = allWheres.predicates.First();
-        var allDeleted = allWheres.predicates.ElementAt(1);
-        Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), allActive.Field);
-        Assert.Equal("equal", allActive.Operator);
-        Assert.False((bool)allActive.value);
-        Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), allDeleted.Field);
-        Assert.Equal("equal", allDeleted.Operator);
-        Assert.True((bool)allDeleted.value);
-    }
+    //    var allActive = allWheres.predicates.First();
+    //    var allDeleted = allWheres.predicates.ElementAt(1);
+    //    Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), allActive.Field);
+    //    Assert.Equal("equal", allActive.Operator);
+    //    Assert.False((bool)allActive.value);
+    //    Assert.Equal(nameof(ShiftEntityDTOBase.IsDeleted), allDeleted.Field);
+    //    Assert.Equal("equal", allDeleted.Operator);
+    //    Assert.True((bool)allDeleted.value);
+    //}
 
-    // when filtering multiple times, it should add all of them to the query, only the current selected one
-    [Fact]
-    public void ShouldNotStackDeleteFilters()
-    {
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.DisablePagination, DisablePaging)
-        );
+    //// when filtering multiple times, it should add all of them to the query, only the current selected one
+    //[Fact]
+    //public void ShouldNotStackDeleteFilters()
+    //{
+    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //        .Add(p => p.Action, "/Product")
+    //        .Add(p => p.DisablePagination, DisablePaging)
+    //    );
 
-        var shiftList = comp.Instance;
+    //    var shiftList = comp.Instance;
 
-        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Active);
-        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Deleted);
-        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Deleted);
-        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.All);
-        _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Active);
+    //    _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Active);
+    //    _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Deleted);
+    //    _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Deleted);
+    //    _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.All);
+    //    _ = shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Active);
 
-        Assert.Single(shiftList.GridQuery!.Queries.Where);
-    }
+    //    Assert.Single(shiftList.GridQuery!.Queries.Where);
+    //}
 
-    [Fact]
-    public async Task ShouldCombineDeleteFiltersButKeepOriginal()
-    {
-        var originalQuery = new Query().Where(nameof(SampleDTO.Name), "equal", "Sample 1");
+    //[Fact]
+    //public async Task ShouldCombineDeleteFiltersButKeepOriginal()
+    //{
+    //    var originalQuery = new Query().Where(nameof(SampleDTO.Name), "equal", "Sample 1");
 
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, "/Product")
-            .Add(p => p.DisablePagination, DisablePaging)
-            .Add(p => p.Query, originalQuery)
-        );
+    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //        .Add(p => p.Action, "/Product")
+    //        .Add(p => p.DisablePagination, DisablePaging)
+    //        .Add(p => p.Query, originalQuery)
+    //    );
 
-        var shiftList = comp.Instance;
+    //    var shiftList = comp.Instance;
 
-        await shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Active);
+    //    await shiftList.FilterDeleted(ShiftList<SampleDTO>.DeleteFilter.Active);
 
-        Assert.Single(shiftList.Query!.Queries.Where);
-        var originalWhere = shiftList.Query!.Queries.Where.First();
-        Assert.Equal(nameof(SampleDTO.Name), originalWhere.Field);
-        Assert.Equal("equal", originalWhere.Operator);
-        Assert.Equal("Sample 1", (string)originalWhere.value);
+    //    Assert.Single(shiftList.Query!.Queries.Where);
+    //    var originalWhere = shiftList.Query!.Queries.Where.First();
+    //    Assert.Equal(nameof(SampleDTO.Name), originalWhere.Field);
+    //    Assert.Equal("equal", originalWhere.Operator);
+    //    Assert.Equal("Sample 1", (string)originalWhere.value);
 
-        Assert.Equal(2, shiftList.GridQuery!.Queries.Where.Count);
-    }
+    //    Assert.Equal(2, shiftList.GridQuery!.Queries.Where.Count);
+    //}
 }

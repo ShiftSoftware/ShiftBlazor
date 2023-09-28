@@ -7,6 +7,8 @@
 	<RootNamespace>ShiftSoftware.ShiftBlazor.Tests</RootNamespace>
 
     <IsPackable>false</IsPackable>
+
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ShiftBlazor.Tests.Viewer\ShiftBlazor.Tests.Viewer.csproj" />
     <ProjectReference Include="..\ShiftBlazor\ShiftBlazor.csproj" />
   </ItemGroup>
 

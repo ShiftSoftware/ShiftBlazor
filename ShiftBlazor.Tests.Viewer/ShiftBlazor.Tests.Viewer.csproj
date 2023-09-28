@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ShiftBlazor.Tests.Shared\ShiftBlazor.Tests.Shared.csproj" />
     <ProjectReference Include="..\ShiftBlazor\ShiftBlazor.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,68 @@
+﻿@inject IDialogService Dialog
+
+<ShiftList T="User"
+           DisableHeaderToolbar="DisableHeaderToolbar"
+           EnableSelection
+           Dense
+           @ref="ShiftList"
+           EntitySet="Users">
+
+    <ToolbarStartTemplate>
+        @if (ToolbarStartTemplate == null)
+        {
+            <MudButton Variant="Variant.Outlined" Disabled="ShiftList.SelectedItems.Count == 0" OnClick="ViewSelected">View Selected</MudButton>
+        }
+        else
+        {
+            @ToolbarStartTemplate
+        }
+    </ToolbarStartTemplate>
+
+    <ToolbarEndTemplate>
+        @if (ToolbarEndTemplate == null)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.ViewArray" Disabled="ShiftList.SelectedItems.Count == 0" OnClick="ViewSelected">View Selected</MudIconButton>
+        }
+        else
+        {
+            @ToolbarEndTemplate
+        }
+    </ToolbarEndTemplate>
+    <ToolbarControlsTemplate>
+        @if (ToolbarControlsTemplate == null)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.ViewArray" Disabled="ShiftList.SelectedItems.Count == 0" OnClick="ViewSelected">View Selected</MudIconButton>
+        }
+        else
+        {
+            @ToolbarControlsTemplate
+        }
+    </ToolbarControlsTemplate>
+
+    <ChildContent>
+        <PropertyColumn Property="x => x.Name" />
+        <PropertyColumn Property="x => x.Email" />
+    </ChildContent>
+</ShiftList>
+
+
+ @code {
+    private ShiftList<User> ShiftList { get; set; }
+
+    [Parameter]
+    public bool DisableHeaderToolbar { get; set; }
+
+    [Parameter]
+    public RenderFragment? ToolbarStartTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment? ToolbarEndTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment? ToolbarControlsTemplate { get; set; }
+
+    private void ViewSelected()
+    {
+        Dialog.ShowMessageBox("Selected Items", string.Join('\n', ShiftList.SelectedItems.Select(x => x.Name)));
+    }
+}
