@@ -574,10 +574,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
             try
             {
                 res = await HttpClient.GetAsync(url);
-                var content = await res.Content.ReadFromJsonAsync<ODataDTO<T>>();
-                if (res?.IsSuccessStatusCode != true || content == null || content.Count == null)
+
+                if (!res!.IsSuccessStatusCode)
                 {
-                    MessageService.Error("Could not read server data");
+                    ErrorMessage = $"Could not read server data ({(int)res!.StatusCode})";
+                    return gridData;
+                }
+
+                var content = await res.Content.ReadFromJsonAsync<ODataDTO<T>>();
+                if (content == null || content.Count == null)
+                {
+                    ErrorMessage = $"Could not read server data (empty content)";
                     return gridData;
                 }
 
@@ -595,10 +602,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
             catch (JsonException e)
             {
                 var body = await res!.Content.ReadAsStringAsync();
+                ErrorMessage = $"Could not read server data (parse error)";
                 MessageService.Error("Could not read server data", e.Message, body);
             }
             catch (Exception e)
             {
+                ErrorMessage = $"Could not read server data";
                 MessageService.Error("Could not read server data", e.Message, e!.ToString());
             }
 

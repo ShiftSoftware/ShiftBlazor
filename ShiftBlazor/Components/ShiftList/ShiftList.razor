@@ -116,6 +116,13 @@
                          RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
                          T="T">
 
+                <NoRecordsContent>
+                    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+                    }
+                </NoRecordsContent>
+
                 <Columns>
 
                     @if (EnableSelection) {
