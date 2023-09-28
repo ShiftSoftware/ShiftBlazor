@@ -211,6 +211,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
 
         public bool IsAllSelected = false;
+        public HashSet<T> SelectedItems { get; set; } = new();
+        public Uri? CurrentUri { get; set; }
+
 
         internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
         internal bool IsEmbed => ParentDisabled != null || ParentReadOnly != null;
@@ -422,6 +425,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         }
 
+        internal void SelectedItemsChangedHandler(HashSet<T> items)
+        {
+            SelectedItems = items;
+        }
+
         private async Task<GridData<T>> ServerReload(GridState<T> state)
         {
             var builder = QueryBuilder;
@@ -573,6 +581,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             try
             {
+                CurrentUri = new Uri(url!);
                 res = await HttpClient.GetAsync(url);
 
                 if (!res!.IsSuccessStatusCode)

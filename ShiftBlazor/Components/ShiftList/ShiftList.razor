@@ -114,6 +114,7 @@
                          ServerData="ServerData"
                          FixedHeader="!DisableStickyHeader"
                          RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
+                         SelectedItemsChanged="SelectedItemsChangedHandler"
                          T="T">
 
                 <NoRecordsContent>
