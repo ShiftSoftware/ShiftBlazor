@@ -224,6 +224,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
         internal Guid DataGridId = Guid.NewGuid();
         internal bool? deleteFilter = false;
+        internal string? ErrorMessage;
         private ITypeAuthService? TypeAuthService;
 
         internal SortMode SortMode => DisableSorting
@@ -395,7 +396,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task<Stream> GetFileStream()
         {
-            var url = QueryBuilder.Where(x => x.IsDeleted == true || x.IsDeleted == false);
+            var url = QueryBuilder.Where(x => x.IsDeleted == false);
             var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url.ToString());
             var stream = new MemoryStream();
 
