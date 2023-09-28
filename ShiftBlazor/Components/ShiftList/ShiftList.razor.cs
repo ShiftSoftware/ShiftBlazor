@@ -279,32 +279,56 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (firstRender && !DisableColumnChooser)
             {
-                var columns = DataGrid?.RenderedColumns.Where(x => x.Hideable == true);
-                if (columns == null || columns.Count() == 0)
-                {
-                    return;
-                }
+                HideDisabledColumns();
+            }
+        }
 
-                var columnStates = SettingManager.GetHiddenColumns(GetListIdentifier()).ToList();
+        protected override void OnParametersSet()
+        {
+            if (DataGrid == null)
+            {
+                return;
+            }
 
-                foreach (var item in columnStates)
-                {
-                    var column = columns.FirstOrDefault(x => x.Title == item.Title);
-                    _ = item.Visible == true
-                        ? column?.ShowAsync()
-                        : column?.HideAsync();
-                }
+            if (DisableActionColumn)
+            {
+                var actionColumn = DataGrid.RenderedColumns.LastOrDefault(x => x.Title == Loc["ActionsColumnHeaderText"]);
+                DataGrid.RenderedColumns.Remove(actionColumn);
+            }
 
-                foreach (var item in columns)
-                {
-                    item.HiddenChanged = new EventCallback<bool>(this, ColumnStateChanged);
-                }
+            if (DataGrid.Virtualize != EnableVirtualization && Values == null)
+            {
+                DataGrid.ReloadServerData();
             }
         }
 
         private void OnLoadHandler()
         {
             OnLoad.InvokeAsync();
+        }
+
+        private void HideDisabledColumns()
+        {
+            var columns = DataGrid?.RenderedColumns.Where(x => x.Hideable == true);
+            if (columns == null || columns.Count() == 0)
+            {
+                return;
+            }
+
+            var columnStates = SettingManager.GetHiddenColumns(GetListIdentifier()).ToList();
+
+            foreach (var item in columnStates)
+            {
+                var column = columns.FirstOrDefault(x => x.Title == item.Title);
+                _ = item.Visible == true
+                    ? column?.ShowAsync()
+                    : column?.HideAsync();
+            }
+
+            foreach (var item in columns)
+            {
+                item.HiddenChanged = new EventCallback<bool>(this, ColumnStateChanged);
+            }
         }
 
         public async Task ViewAddItem(object? key = null)
