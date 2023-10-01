@@ -1,5 +1,9 @@
-﻿<h3>ShiftAutocompleteTest1</h3>
+﻿<ShiftAutocomplete T="ShiftEntitySelectDTO"
+                   TEntitySet="User"
+                   EntitySet="Users"
+                   DataValueField="@nameof(User.ID)"
+                   DataTextField="@nameof(User.Name)"
+                   Label="Autocomplete"
+>
 
-@code {
-
-}
+</ShiftAutocomplete>

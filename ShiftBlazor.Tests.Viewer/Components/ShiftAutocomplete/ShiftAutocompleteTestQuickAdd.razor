@@ -1,0 +1,12 @@
+﻿@using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm;
+
+<ShiftAutocompleteWithQuickAdd T="ShiftEntitySelectDTO"
+                               TEntitySet="User"
+                               EntitySet="Users"
+                               DataValueField="@nameof(User.ID)"
+                               DataTextField="@nameof(User.Name)"
+                               Label="Autocomplete"
+                               QuickAddComponentType="typeof(ShiftEntityFormTest1)"
+                               TQuickAdd="User">
+
+</ShiftAutocompleteWithQuickAdd>

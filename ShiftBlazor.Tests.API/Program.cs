@@ -49,10 +49,14 @@ app.MapGet("/api/Users", ([FromQuery(Name = "$top")] int? top,
     };
 });
 
-app.MapGet("/api/User/{id}", (string id) =>
+app.MapGet("/api/User/{id}", (string? id) =>
 {
-    var user = usersList.Find(x => x.ID == id);
-    return new ShiftEntityResponse<User> { Entity = user ?? usersList.First()};
+    User? user = null;
+    if (!string.IsNullOrWhiteSpace(id))
+    {
+        user = usersList.Find(x => x.ID == id) ?? usersList.First();
+    }
+    return new ShiftEntityResponse<User> { Entity = user};
 });
 
 app.UseCors(x => x.WithOrigins("*").AllowAnyMethod().AllowAnyHeader());
