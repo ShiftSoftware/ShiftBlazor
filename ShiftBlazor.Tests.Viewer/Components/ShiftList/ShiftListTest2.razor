@@ -1,12 +1,21 @@
-﻿<ShiftList T="User"
+﻿@using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm;
+
+<ShiftList T="User"
            ShowIDColumn
            Dense
            EnableExport
            EnableSelection
            Title="Users List 2"
            IconSvg="@Icons.Material.Filled.ViewList"
+           ComponentType="typeof(ShiftEntityFormTest1)"
+           PageSize="@PageSize"
            EntitySet="Users">
 
-     <PropertyColumn Title="Username" Property="x => x.Name" />
-     <PropertyColumn Title="Email Address" Property="x => x.Email" />
- </ShiftList>
+    <PropertyColumn Title="Username" Property="x => x.Name" />
+    <PropertyColumn Title="Email Address" Property="x => x.Email" />
+</ShiftList>
+
+ @code {
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+}

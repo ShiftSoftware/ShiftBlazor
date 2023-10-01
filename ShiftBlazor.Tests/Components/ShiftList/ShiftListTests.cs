@@ -77,26 +77,20 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         var pageSize = 22;
 
-        var cut = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.EntitySet, "User")
+        var cut = RenderComponent<ShiftListTest2>(parameters => parameters
             .Add(p => p.PageSize, pageSize)
         );
 
-        var grid = cut.FindComponent<MudDataGrid<SampleDTO>>();
+        var grid = cut.FindComponent<MudDataGrid<User>>();
         Assert.Equal(pageSize, grid.Instance.RowsPerPage);
     }
 
     [Fact]
     public void ShouldHideIDColumnByDefault()
     {
-        var comp = RenderComponent<ShiftList<User>>(parameters => parameters
-            .Add(p => p.EntitySet, "Users")
-        );
+        var comp = RenderComponent<ShiftListTest1>();
 
-        var comp2 = RenderComponent<ShiftList<User>>(parameters => parameters
-            .Add(p => p.EntitySet, "Users")
-            .Add(p => p.ShowIDColumn, true)
-        );
+        var comp2 = RenderComponent<ShiftListTest2>();
 
         var cols1 = comp.FindComponent<MudDataGrid<User>>().Instance.RenderedColumns;
         var cols2 = comp2.FindComponent<MudDataGrid<User>>().Instance.RenderedColumns;
@@ -109,10 +103,8 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldNotRenderActionColumn()
     {
         // Should not render Actions column when ComponentType is not set
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.EntitySet, "Product")
-        );
-        var grid = comp.FindComponent<MudDataGrid<SampleDTO>>().Instance;
+        var comp = RenderComponent<ShiftListTest1>();
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
         var cols = grid.RenderedColumns.Where(x => x.Title == "Actions");
         Assert.Empty(cols);
@@ -122,11 +114,8 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldRenderOrHideActionColumn2()
     {
         // Should render Actions column when ComponentType is 
-        var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
-            .Add(p => p.EntitySet, "Product")
-            .Add(p => p.ComponentType, typeof(DummyComponent))
-        );
-        var grid = comp.FindComponent<MudDataGrid<SampleDTO>>().Instance;
+        var comp = RenderComponent<ShiftListTest2>();
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
         var cols = grid.RenderedColumns.Where(x => x.Title == "Actions");
         Assert.Single(cols);
