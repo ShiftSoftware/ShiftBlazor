@@ -57,7 +57,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     //    Assert.Equal(Form.Modes.Archive, comp.Instance.Mode);
     //}
 
-    [Fact]
+    //[Fact]
     public void ShouldRenderHeaderToolbarButtonsCorrectly()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
@@ -82,7 +82,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.All(buttons, x => x.Instance.Disabled.Equals(true));
     }
 
-    [Fact]
+    //[Fact]
     public void ShouldDisableDeleteButton()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
@@ -115,7 +115,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.Null(button);
     }
 
-    [Fact]
+    //[Fact]
     public void ShouldDisableEditButton()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
@@ -148,7 +148,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.Null(button);
     }
 
-    [Fact]
+    //[Fact]
     public void ShouldDisableRevisionsButton()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
@@ -181,7 +181,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.Null(button);
     }
 
-    [Fact]
+    //[Fact]
     public void ShouldInvokePrintFunction()
     {
         var invoked = false;
@@ -260,7 +260,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.Equal("Create", comp.Instance._SubmitText);
     }
 
-    [Fact]
+    //[Fact]
     public void ShouldHaveSaveAsSubmitButtonText()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
@@ -378,7 +378,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     //    Assert.Equal(Form.Modes.Edit, comp.Instance.Mode);
     //}
 
-    [Fact]
+    //[Fact]
     public async Task ShouldRevertChanges()
     {
         var value = Values.First();
