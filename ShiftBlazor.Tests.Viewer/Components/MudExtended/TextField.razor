@@ -1,0 +1,7 @@
+﻿@* Will mark input as required using the For parameter even if the Required parameter is not set manually *@
+
+<MudTextFieldExtended For="() => Item.Property" Label="Text Field"/>
+
+@code {
+    public RequiredPropertyDTO<string> Item = new();
+}

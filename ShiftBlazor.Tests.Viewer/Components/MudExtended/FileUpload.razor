@@ -1,0 +1,7 @@
+﻿@using Microsoft.AspNetCore.Components.Forms;
+
+<MudFileUploadExtended For="() => Item.Property" />
+
+@code {
+    public RequiredPropertyDTO<IBrowserFile> Item = new();
+}

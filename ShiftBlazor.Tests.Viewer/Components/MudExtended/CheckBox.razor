@@ -1,0 +1,7 @@
+﻿@* Will mark input as required using the For parameter even if the Required parameter is not set manually *@
+
+<MudCheckBoxExtended For="() => Item.Property" Label="Checkbox"/>
+
+@code {
+    public RequiredPropertyDTO<bool> Item = new();
+}

@@ -3,7 +3,7 @@ using Bunit.Rendering;
 using MudBlazor;
 using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm;
 using ShiftBlazor.Tests.Viewer.Components.ShiftList;
-using ShiftBlazor.Tests.Viewer.Models;
+using ShiftBlazor.Tests.Shared.DTOs;
 using System.Linq.Expressions;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList;

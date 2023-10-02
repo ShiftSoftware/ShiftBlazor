@@ -2,7 +2,7 @@
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.ComponentModel.DataAnnotations;
 
-namespace ShiftBlazor.Tests.Viewer.Models
+namespace ShiftBlazor.Tests.Shared.DTOs
 {
     public class User : ShiftEntityDTO
     {
@@ -10,6 +10,9 @@ namespace ShiftBlazor.Tests.Viewer.Models
         [Required]
         public string Name { get; set; }
         public string Email { get; set; }
+
+        [Required]
+        public ShiftEntitySelectDTO? Select { get; set; }
 
         public static List<User> GenerateData(int min = 50, int max = 500, bool includeDeleted = true)
         {

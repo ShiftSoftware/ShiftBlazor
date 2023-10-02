@@ -4,15 +4,17 @@
                    DataValueField="@nameof(User.ID)"
                    DataTextField="@nameof(User.Name)"
                    Label="Autocomplete"
-                   For="() => TheItem.Select"
-                   @bind-Value="TheItem.Select">
+                   MultiSelect="true"
+                   @bind-SelectedValues="TheItem.Property">
 
 </ShiftAutocomplete>
 
 <br />
-SelectedItem Text: @TheItem.Select?.Text
+SelectedItems count: @TheItem.Property?.Count
 
 @code {
-    User TheItem = new();
-
+    RequiredPropertyDTO<List<ShiftEntitySelectDTO>> TheItem = new()
+    {
+        Property = new(),
+    };
 }

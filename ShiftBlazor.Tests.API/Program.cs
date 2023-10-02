@@ -1,6 +1,6 @@
 using Bogus;
 using Microsoft.AspNetCore.Mvc;
-using ShiftBlazor.Tests.Viewer.Models;
+using ShiftBlazor.Tests.Shared.DTOs;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 
