@@ -9,6 +9,7 @@ using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Net.Http.Json;
 using Microsoft.OData.Client;
 using Microsoft.AspNetCore.Components.Web;
+using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -27,12 +28,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [EditorRequired]
         public string? EntitySet { get; set; }
 
-        [CascadingParameter]
-        public FormModes? Mode { get; set; }
-
-        [CascadingParameter]
-        public FormTasks? TaskInProgress { get; set; }
-
         [Parameter]
         public Func<string, Expression<Func<TEntitySet, bool>>>? Where { get; set; }
 
@@ -41,6 +36,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter, EditorRequired]
         public string DataValueField { get; set; }
+
         [Parameter, EditorRequired]
         public string DataTextField { get; set; }
 
@@ -65,16 +61,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private EventCallback<T>? _ValueChanged = null;
         private string MultiSelectClassName = "multi-select";
 
-        public ShiftAutocomplete ()
-        {
-            OnlyValidateIfDirty = true;
-            ResetValueOnEmptyText = true;
-            Strict = false;
-            Clearable = true;
-            Variant = Variant.Text;
-            ShowProgressIndicator = true;
-        }
-
         protected override void OnInitialized()
         {
             if (EntitySet == null)
@@ -95,12 +81,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (MultiSelect)
             {
-                OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
-
                 if (_ValueChanged != null)
                 {
                     throw new Exception($"{nameof(ValueChanged)} parameter cannot have a value when {nameof(MultiSelect)} is true");
                 }
+
+                OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
 
                 ValueChanged = new EventCallback<T>(this, async () =>
                 {
@@ -132,6 +118,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
             parameters.TryGetValue(nameof(Placeholder), out _Placeholder);
             parameters.TryGetValue(nameof(Class), out _Class);
             parameters.TryGetValue(nameof(ValueChanged), out _ValueChanged);
+
+            ResetValueOnEmptyText = true;
+            ShowProgressIndicator = true;
+            OnlyValidateIfDirty = true;
+            Clearable = true;
+            Strict = false;
+            Variant = Variant.Text;
+
+            if (parameters.TryGetValue(nameof(For), out Expression<Func<T>>? _For))
+            {
+                Required = FormHelper.IsRequired<T>(_For!);
+            }
 
             return base.SetParametersAsync(parameters);
         }

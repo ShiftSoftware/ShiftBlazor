@@ -4,9 +4,17 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 @{
-    if (this.For != null)
-    {
-        base.Required = FormHelper.IsRequired<T?>(this.For);
-    }
     base.BuildRenderTree(__builder);
+}
+
+@code {
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        if (parameters.TryGetValue(nameof(For), out System.Linq.Expressions.Expression<Func<T>>? _For))
+        {
+            Required = FormHelper.IsRequired<T>(_For!);
+        }
+
+        return base.SetParametersAsync(parameters);
+    }
 }

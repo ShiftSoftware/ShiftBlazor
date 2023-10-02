@@ -5,16 +5,12 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 @{
-    base.ReadOnly = Mode < FormModes.Edit;
-    base.Disabled = TaskInProgress != null && TaskInProgress != FormTasks.None;
-
     base.NoItemsTemplate = @<MudText Align="Align.Center" Class="px-4 py-1">No items found</MudText>;
 
     if (ShiftItemTemplate != null && !MultiSelect)
     {
         base.ItemTemplate = (e) => @RenderItem(e.Value);
     }
-
 
     if (MultiSelect)
     {
@@ -46,11 +42,6 @@
             Class = _Class + " " + MultiSelectClassName;
             Placeholder = MultiSelectText;
         }
-    }
-
-    if (this.For != null)
-    {
-        base.Required = FormHelper.IsRequired<T>(this.For);
     }
 
     base.BuildRenderTree(__builder);
