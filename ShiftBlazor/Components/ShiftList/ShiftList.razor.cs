@@ -420,10 +420,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await InvokeAsync(StateHasChanged);
         }
 
-        private async Task<Stream> GetFileStream()
+        private async Task<Stream> GetStream(string url)
         {
-            var url = QueryBuilder.Where(x => x.IsDeleted == false);
-            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url.ToString());
+            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);
             var stream = new MemoryStream();
 
             if (res != null && res.Value.Count > 0)
@@ -442,12 +441,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task ExportList()
         {
+            if (CurrentUri == null) return;
+
             var name = Title != null && Regex.IsMatch(Title, "[^a-zA-Z]") ? Title : EntitySet;
             name = Regex.Replace(name!, "[^a-zA-Z]", "");
             var date = DateTime.Now.ToString("yyyy-MM-dd");
             var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}_{date}.csv";
 
-            var fileStream = await GetFileStream();
+            var url = Regex.Replace(CurrentUri.AbsoluteUri, "\\$skip=[0-9]+&?|\\$top=[0-9]+&?", "");
+            var fileStream = await GetStream(url);
             using var streamRef = new DotNetStreamReference(stream: fileStream);
             await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         }
