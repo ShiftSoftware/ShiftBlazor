@@ -122,11 +122,16 @@
                     {
                         <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
                     }
+                    else
+                    {
+                        <MudText>No Items Found.</MudText>
+                    }
                 </NoRecordsContent>
 
                 <Columns>
 
-                    @if (EnableSelection) {
+                    @if (EnableSelection)
+                    {
                         // Using SelectColumn doesn't work as expected with ServerData
                         <TemplateColumn T="T" Tag="@("select-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%"
                                         Filterable="false" IsEditable="false">
