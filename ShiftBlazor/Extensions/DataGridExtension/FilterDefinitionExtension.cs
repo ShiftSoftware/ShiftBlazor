@@ -70,7 +70,7 @@ namespace System.Collections.Generic
                     break;
                 case FilterOperator.Number.GreaterThan:
                 case FilterOperator.DateTime.After:
-                    filterTemplate = "{0} qt {1}";
+                    filterTemplate = "{0} gt {1}";
                     break;
                 case FilterOperator.Number.GreaterThanOrEqual:
                 case FilterOperator.DateTime.OnOrAfter:
