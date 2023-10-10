@@ -171,6 +171,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback OnLoad { get; set; }
 
         [Parameter]
+        public EventCallback<HashSet<T>> OnSelectedItemsChanged { get; set; }
+
+        [Parameter]
         public RenderFragment? ChildContent { get; set; }
 
         [Parameter]
@@ -453,10 +456,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             using var streamRef = new DotNetStreamReference(stream: fileStream);
             await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         }
-
+            
         internal void SelectedItemsChangedHandler(HashSet<T> items)
         {
             SelectedItems = items;
+            OnSelectedItemsChanged.InvokeAsync(items);
         }
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
