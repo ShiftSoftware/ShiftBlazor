@@ -462,6 +462,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private async Task<GridData<T>> ServerReload(GridState<T> state)
         {
             var builder = QueryBuilder;
+            ErrorMessage = null;
 
             // Save current PageSize as user preference 
             if (state.PageSize != SelectedPageSize)
