@@ -212,6 +212,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public Expression<Func<T, bool>>? Where { get; set; }
 
+        [Parameter]
+        public bool Outlined { get; set; }
+
 
         public bool IsAllSelected = false;
         public HashSet<T> SelectedItems { get; set; } = new();
@@ -229,6 +232,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool? deleteFilter = false;
         internal string? ErrorMessage;
         private ITypeAuthService? TypeAuthService;
+        private string ToolbarStyle => $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
 
         internal SortMode SortMode => DisableSorting
                                         ? SortMode.None
@@ -241,7 +245,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             : default;
 
         private MudDataGrid<T>? _DataGrid;
-        internal MudDataGrid<T>? DataGrid
+        public MudDataGrid<T>? DataGrid
         {
             get
             {
@@ -498,10 +502,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             var builderQueryable = builder.AsQueryable();
 
-            // apply custom filters
-            if (Where != null)
+            try
             {
-                builderQueryable = builderQueryable.Where(Where);
+                // apply custom filters
+                if (Where != null)
+                {
+                    builderQueryable = builderQueryable.Where(Where);
+                }
+            }
+            catch (Exception e)
+            {
+                ErrorMessage = $"An error has occured";
+                MessageService.Error("Could not custom parse filter", e.Message, e!.ToString());
             }
 
             // apply delete filters

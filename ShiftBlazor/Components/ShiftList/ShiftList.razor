@@ -8,13 +8,13 @@
         <PageTitle>@Title</PageTitle>
     }
 
-    <MudPaper Elevation="25">
+    <MudPaper Elevation="25" Outlined="Outlined">
         <CascadingValue Value="this" IsFixed="true">
 
             <header>
                 @if (!DisableHeaderToolbar)
                 {
-                    <MudToolBar Style=@ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor) Dense="@Dense" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
+                    <MudToolBar Style="@ToolbarStyle" Dense="@Dense" DisableGutters="false" Class="light-toolbar shift-toolbar-header">
                         <MudIcon Size="@IconSize" Icon="@IconSvg"></MudIcon>
                         <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["ListDefaultTitle"])</MudText>
 

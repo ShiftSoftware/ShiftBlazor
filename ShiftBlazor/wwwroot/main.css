@@ -32,3 +32,11 @@
 .is-deleted:hover {
     background-color: #ffaeae !important;
 }
+
+.button-column-button {
+    color: var(--mud-palette-primary);
+}
+
+.button-column-button:hover {
+    text-decoration: underline;
+}
