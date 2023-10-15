@@ -117,10 +117,28 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AddChipButton" xml:space="preserve">
+  <data name="AddButtonChip" xml:space="preserve">
     <value>Add</value>
+  </data>
+  <data name="AddButtonTitleThumbnail" xml:space="preserve">
+    <value>Add Button</value>
+  </data>
+  <data name="DownloadFile" xml:space="preserve">
+    <value>Download File</value>
+  </data>
+  <data name="FileUploadSuccess" xml:space="preserve">
+    <value>File Uploaded Successfully</value>
   </data>
   <data name="NoFilesSelected" xml:space="preserve">
     <value>No files attached</value>
+  </data>
+  <data name="RemoveFile" xml:space="preserve">
+    <value>Remove File</value>
+  </data>
+  <data name="UploadFailedDefaultMessage" xml:space="preserve">
+    <value>File Upload Failed</value>
+  </data>
+  <data name="UploadInProgress" xml:space="preserve">
+    <value>Uploading in progress...</value>
   </data>
 </root>

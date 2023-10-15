@@ -33,10 +33,11 @@
             {
                 <MudTooltip Text="@Loc["CloseButton"]">
                     <MudButton Style="min-width:40px;"
-                                Variant="@Variant.Text"
-                                Size="@Size.Medium"
-                                Color="@Color.Default"
-                                OnClick="@Close">
+                               Variant="@Variant.Text"
+                               Size="@Size.Medium"
+                               Color="@Color.Default"
+                               aria-label="@Loc["CloseButton"]"
+                               OnClick="@Close">
                         <MudIcon Size="@Size.Medium" Icon="@Icons.Material.Filled.Close" />
                     </MudButton>
                 </MudTooltip>

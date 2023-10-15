@@ -7,12 +7,14 @@
     @if (!Uploader.ReadOnly && CanDelete)
     {
         <MudToolBar Dense Style="position: absolute;top: 0;left: 0;width: 100%;padding: 0;z-index: 100;">
-            <MudSpacer/>
+             <MudSpacer />
 
-            <MudIconButton Title="Remove"
-                           OnClick="@(() => Uploader.Remove(Item))"
-                           Icon="@Filled.RemoveCircle"
-                           Color="Color.Inherit"/>
+             <MudTooltip Text="@Uploader.Loc["RemoveFile"]">
+                 <MudIconButton OnClick="@(() => Uploader.Remove(Item))"
+                                Icon="@Filled.RemoveCircle"
+                                aria-label="@Uploader.Loc["RemoveFile"]"
+                                Color="Color.Inherit" />
+             </MudTooltip>
         </MudToolBar>
     }
 
@@ -20,24 +22,26 @@
     @if (Item.File != null)
     {
         <MudToolBar Dense Style="position: absolute; bottom: 0; left: 0;width: 100%;padding: 0;z-index: 10;">
-            <MudSpacer/>
-            
-            <MudIconButton Title="Download"
-                           OnClick="@(() => Uploader.DownloadFile(Item.File))"
-                           Icon="@Filled.Download"
-                           Color="Color.Inherit"/>
+            <MudSpacer />
+
+            <MudTooltip Text="@Uploader.Loc["DownloadFile"]">
+                <MudIconButton OnClick="@(() => Uploader.DownloadFile(Item.File))"
+                            Icon="@Filled.Download"
+                            aria-label="Download File"
+                            Color="Color.Inherit" />
+            </MudTooltip>
         </MudToolBar>
     }
 
     @if (Item.Message != null)
     {
         <div style="position:absolute;top: 0;left: 0;height: 100%;width: 100%;display: flex;align-items: center;justify-content: center;z-index: 10;background-color: #011c2d2e;">
-            <MudTooltip Text="@(Item.Message?.Title ?? "Error")">
+            <MudTooltip Text="@(Item.Message?.Title ?? @Uploader.Loc["UploadFailedDefaultMessage"])">
                 <MudIconButton OnClick="@(() => Uploader.UploadFile(Item))"
                                Icon="@Filled.Error"
                                Color="Color.Error"
-                               Size="Size.Large"
-                               />
+                               aria-label="@Uploader.Loc["UploadFailedDefaultMessage"]"
+                               Size="Size.Large" />
             </MudTooltip>
 
         </div>

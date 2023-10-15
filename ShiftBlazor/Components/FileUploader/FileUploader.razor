@@ -1,7 +1,5 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.AspNetCore.Components.Forms
-@inject IStringLocalizer<Resources.Components.FileUploader> Loc
-
 @inherits Events.EventComponentBase
 @implements IDisposable
 
@@ -38,11 +36,18 @@
                     <MudItem @key="@("add-file")" Class="add-file">
                         @if (ShowThumbnail)
                         {
-                            <MudIconButton OnClick="OpenInput" Icon="@Icons.Material.Filled.Add" Size="Size.Large" Variant="Variant.Filled" Style=@($"width: {ThumbnailSize}px;height: {ThumbnailSize}px;")></MudIconButton>
+                            <MudTooltip Text="@Loc["AddButtonTitleThumbnail"]">
+                                <MudIconButton OnClick="OpenInput"
+                                               Icon="@Icons.Material.Filled.Add"
+                                               Size="Size.Large"
+                                               Variant="Variant.Filled"
+                                               aria-label="@Loc["AddButtonTitleThumbnail"]"
+                                               Style=@($"width: {ThumbnailSize}px;height: {ThumbnailSize}px;") />
+                            </MudTooltip>
                         }
                         else
                         {
-                            <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput">@Loc["AddChipButton"]</MudChip>
+                            <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput">@Loc["AddButtonChip"]</MudChip>
                         }
                     </MudItem>
                 }

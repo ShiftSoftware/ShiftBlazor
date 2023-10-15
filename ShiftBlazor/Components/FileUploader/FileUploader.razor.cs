@@ -10,6 +10,7 @@ using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Linq.Expressions;
 using ShiftSoftware.ShiftBlazor.Utils;
+using Microsoft.Extensions.Localization;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -19,6 +20,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] HttpClient HttpClient { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
+        [Inject] internal IStringLocalizer<Resources.Components.FileUploader> Loc { get; set; } = default!;
 
         [Parameter]
         public List<ShiftFileDTO>? Values { get; set; }

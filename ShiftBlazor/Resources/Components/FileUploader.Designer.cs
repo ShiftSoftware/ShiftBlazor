@@ -63,9 +63,36 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         /// <summary>
         ///   Looks up a localized string similar to Add.
         /// </summary>
-        internal static string AddChipButton {
+        internal static string AddButtonChip {
             get {
-                return ResourceManager.GetString("AddChipButton", resourceCulture);
+                return ResourceManager.GetString("AddButtonChip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add Button.
+        /// </summary>
+        internal static string AddButtonTitleThumbnail {
+            get {
+                return ResourceManager.GetString("AddButtonTitleThumbnail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download File.
+        /// </summary>
+        internal static string DownloadFile {
+            get {
+                return ResourceManager.GetString("DownloadFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File Uploaded Successfully.
+        /// </summary>
+        internal static string FileUploadSuccess {
+            get {
+                return ResourceManager.GetString("FileUploadSuccess", resourceCulture);
             }
         }
         
@@ -75,6 +102,33 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string NoFilesSelected {
             get {
                 return ResourceManager.GetString("NoFilesSelected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove File.
+        /// </summary>
+        internal static string RemoveFile {
+            get {
+                return ResourceManager.GetString("RemoveFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File Upload Failed.
+        /// </summary>
+        internal static string UploadFailedDefaultMessage {
+            get {
+                return ResourceManager.GetString("UploadFailedDefaultMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uploading in progress....
+        /// </summary>
+        internal static string UploadInProgress {
+            get {
+                return ResourceManager.GetString("UploadInProgress", resourceCulture);
             }
         }
     }

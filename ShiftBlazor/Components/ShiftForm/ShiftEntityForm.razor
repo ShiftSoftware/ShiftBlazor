@@ -18,6 +18,7 @@
                            Variant="Variant.Text"
                            Size="Size.Medium"
                            Disabled="DisablePrint || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
+                           aria-label="@Loc["Print"]"
                            OnClick="PrintItem">
                     @if (TaskInProgress == FormTasks.Print)
                     {
@@ -28,8 +29,7 @@
                         <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Print" />
                     }
                 </MudButton>
-            </MudTooltip>
-    ;
+            </MudTooltip>;
     }
 
     private RenderFragment DeleteButton
@@ -45,6 +45,7 @@
                    Variant="Variant.Text"
                    Size="Size.Medium"
                    Color="NavIconFlatColor ? Color.Inherit : Color.Error"
+                   aria-label="@Loc["Delete"]"
                    OnClick="DeleteItem">
             @if (TaskInProgress == FormTasks.Delete)
             {
@@ -77,6 +78,7 @@
                    Variant="Variant.Text"
                    Size="Size.Medium"
                    Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
+                   aria-label="@Loc["Edit"]"
                    OnClick="EditItem">
             <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
         </MudButton>
@@ -100,6 +102,7 @@
                    Variant="Variant.Text"
                    Size="Size.Medium"
                    Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                   aria-label="@Loc["Revisions"]"
                    OnClick="ViewRevisions">
             @if (TaskInProgress == FormTasks.FetchRevisions)
             {
@@ -159,6 +162,7 @@
                 <MudButton Variant="Variant.Text"
                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                            Style="min-width:40px;"
+                           aria-label="@Loc["NewTab"]"
                            OnClick="OpenInNewTab">
                     <MudIcon Icon="@Icons.Material.Filled.OpenInNew"></MudIcon>
                 </MudButton>
@@ -173,6 +177,7 @@
                            Variant="Variant.Text"
                            Size="Size.Medium"
                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                           aria-label="@(Maximized != true ? Loc["Maximize"] : Loc["Minimize"])"
                            OnClick="ResizeForm">
                     <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
                 </MudButton>

@@ -29,11 +29,11 @@
                         <MudIcon Icon="@IconSvg"></MudIcon>
                         <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FormDefaultTitle"])</MudText>
 
-                            @ToolbarStartTemplate
+                        @ToolbarStartTemplate
 
-                            <MudSpacer></MudSpacer>
+                        <MudSpacer></MudSpacer>
 
-                            @if (ToolbarCenterTemplate != null)
+                        @if (ToolbarCenterTemplate != null)
                         {
                             @ToolbarCenterTemplate
                             <MudSpacer></MudSpacer>
@@ -55,6 +55,7 @@
                                            Variant="Variant.Text"
                                            Size="Size.Medium"
                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                           aria-label="@Loc["ModalClose"]"
                                            OnClick="() => Cancel()">
                                     <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
                                 </MudButton>
