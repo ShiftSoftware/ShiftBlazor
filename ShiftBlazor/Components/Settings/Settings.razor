@@ -40,12 +40,25 @@
                     </MudItem>
 
                     <MudItem xs="3">
-                        <MudText>@Loc["DateTimeFormat"]</MudText>
+                        <MudText>@Loc["DateFormat"]</MudText>
                     </MudItem>
 
                     <MudItem xs="9">
-                        <MudSelect Margin="Margin.Dense" T="string" Value="DateTimeFormat" ValueChanged="DateTimeFormatChangedHandler">
-                            @foreach (var format in DateTimeFormats)
+                        <MudSelect Margin="Margin.Dense" T="string" Value="DateFormat" ValueChanged="DateFormatChangedHandler">
+                            @foreach (var format in DateFormats)
+                            {
+                                <MudSelectItem Value="@format">@format</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="3">
+                        <MudText>@Loc["TimeFormat"]</MudText>
+                    </MudItem>
+
+                    <MudItem xs="9">
+                        <MudSelect Margin="Margin.Dense" T="string" Value="TimeFormat" ValueChanged="TimeFormatChangedHandler">
+                            @foreach (var format in TimeFormats)
                             {
                                 <MudSelectItem Value="@format">@format</MudSelectItem>
                             }
@@ -131,17 +144,20 @@
     private DialogPosition ModalPosition { get; set; } = default!;
     private MaxWidth ModalWidth { get; set; } = default!;
     private FormOnSaveAction FormCloseAction { get; set; } = default!;
-    private string DateTimeFormat = default!;
+    private string DateFormat = default!;
+    private string TimeFormat = default!;
     private LanguageInfo Language { get; set; } = default!;
 
     private int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
     private string FormBehavior { get; set; } = "";
-    private string[] DateTimeFormats = new string[] { "yyyy-MM-dd", "yyyy/MM/dd", "yy-M-d", "yy/M/d", "dd-MM-yyyy", "dd/MM/yyyy", "d-M-yy", "d/M/yy" };
+    private string[] DateFormats = new string[] { "yyyy-MM-dd", "yyyy/MM/dd", "yy-M-d", "yy/M/d", "dd-MM-yyyy", "dd/MM/yyyy", "d-M-yy", "d/M/yy" };
+    private string[] TimeFormats = new string[] { "hh:mm tt", "HH:mm" };
 
     protected override void OnInitialized()
     {
         PageSize = SettingManager.GetListPageSize();
-        DateTimeFormat = SettingManager.GetDateTimeFormat();
+        DateFormat = SettingManager.GetDateFormat();
+        TimeFormat = SettingManager.GetTimeFormat();
         ModalPosition = SettingManager.GetModalPosition();
         ModalWidth = SettingManager.GetModalWidth();
         FormCloseAction = SettingManager.GetFormOnSaveAction();
@@ -160,10 +176,16 @@
         SettingManager.SetModalPosition(position);
     }
 
-    internal void DateTimeFormatChangedHandler(string format)
+    internal void DateFormatChangedHandler(string format)
     {
-        DateTimeFormat = format;
-        SettingManager.SetDateTimeFormat(format);
+        DateFormat = format;
+        SettingManager.SetDateFormat(format);
+    }
+
+    internal void TimeFormatChangedHandler(string format)
+    {
+        TimeFormat = format;
+        SettingManager.SetTimeFormat(format);
     }
 
     internal void ModalWidthChangedHandler(MaxWidth width)

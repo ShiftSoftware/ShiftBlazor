@@ -549,7 +549,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     return gridData;
                 }
 
-                var content = await res.Content.ReadFromJsonAsync<ODataDTO<T>>();
+                var content = await res.Content.ReadFromJsonAsync<ODataDTO<T>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    Converters = { new LocalDateTimeOffsetJsonConverter() }
+                });
                 if (content == null || content.Count == null)
                 {
                     ErrorMessage = $"Could not read server data (empty content)";

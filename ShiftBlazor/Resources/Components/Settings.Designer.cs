@@ -97,11 +97,11 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to DateTime format.
+        ///   Looks up a localized string similar to Date format.
         /// </summary>
-        internal static string DateTimeFormat {
+        internal static string DateFormat {
             get {
-                return ResourceManager.GetString("DateTimeFormat", resourceCulture);
+                return ResourceManager.GetString("DateFormat", resourceCulture);
             }
         }
         
@@ -165,6 +165,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string SettingsHeader {
             get {
                 return ResourceManager.GetString("SettingsHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time Format.
+        /// </summary>
+        internal static string TimeFormat {
+            get {
+                return ResourceManager.GetString("TimeFormat", resourceCulture);
             }
         }
     }

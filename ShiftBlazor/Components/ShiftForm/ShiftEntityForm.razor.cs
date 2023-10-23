@@ -11,6 +11,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -304,11 +305,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             MudDialog.SetOptions(MudDialog.Options);
         }
 
-        internal async Task FetchItem(DateTime? asOf = null)
+        internal async Task FetchItem(DateTimeOffset? asOf = null)
         {
             await RunTask(FormTasks.Fetch, async () =>
             {
-                var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + Uri.EscapeDataString(((DateTimeOffset)asOf.Value).ToString());
+                var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + Uri.EscapeDataString((asOf.Value).ToString());
 
                 using (var res = await Http.GetAsync(url))
                 {
@@ -330,7 +331,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             try
             {
-                result = await res.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>();
+                result = await res.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    Converters = { new LocalDateTimeOffsetJsonConverter() }
+                });
             }
             catch (Exception)
             {
@@ -418,7 +422,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task ViewRevisions()
         {
-            DateTime? date = null;
+            DateTimeOffset? date = null;
 
             await RunTask(FormTasks.FetchRevisions, async () =>
             {
@@ -438,7 +442,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 };
 
                 var result = await DialogService.Show<RevisionViewer>("", dParams, options).Result;
-                date = (DateTime?)result.Data;
+                date = (DateTimeOffset?)result.Data;
             });
 
             if (date != null)
