@@ -30,10 +30,12 @@ namespace System.Collections.Generic
 
         private static string GetFilterString(string field, string op, object? value, FieldType? fieldType = null)
         {
+            var _field = field.Split(".").ElementAt(0);
             var _fieldType = fieldType ?? FieldType.Identify(value?.GetType());
             var _value = GetValue(value, _fieldType);
             var filterTemplate = CreateFilterTemplate(op);
-            return string.Format(filterTemplate, field, _value);
+
+            return string.Format(filterTemplate, _field, _value);
         }
 
         private static object? GetValue(object? value, FieldType fieldType)
