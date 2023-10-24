@@ -44,6 +44,10 @@ namespace System.Collections.Generic
                 {
                     value = $"'{((string)value!).Replace("'", "''")}'";
                 }
+                else if (fieldType.IsEnum)
+                {
+                    value = $"'{value}'";
+                }
                 else if (fieldType.IsDateTime)
                 {
                     value = ((DateTime)value!).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
