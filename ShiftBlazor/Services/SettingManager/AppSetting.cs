@@ -10,7 +10,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
 {
     public class AppSetting
     {
-        public virtual string? DateTimeFormat { get; set; }
+        public virtual string? DateFormat { get; set; }
+        public virtual string? TimeFormat { get; set; }
         public virtual int? ListPageSize { get; set; }
         public virtual DialogPosition? ModalPosition { get; set; }
         public virtual MaxWidth? ModalWidth { get; set; }
@@ -21,7 +22,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
     public static class DefaultAppSetting
     {
-        public static string DateTimeFormat = "yyyy-MM-dd";
+        public static string DateFormat = "yyyy-MM-dd";
+        public static string TimeFormat = "HH:mm";
         public static int ListPageSize = 10;
         public static DialogPosition ModalPosition = DialogPosition.Center;
         public static MaxWidth ModalWidth = MaxWidth.Large;

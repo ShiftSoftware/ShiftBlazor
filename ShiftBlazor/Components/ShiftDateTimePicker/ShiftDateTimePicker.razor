@@ -1,11 +1,13 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 
+@inject SettingManager SettingManager
+
 <MudItem lg="DateLg" md="DateMd" sm="DateSm" xs="DateXs">
-    <MudDatePickerExtended Date="DateTime" DateChanged="DateChanged" Label="@DateLabel" />
+    <MudDatePickerExtended DateFormat="@(SettingManager.GetDateFormat())" Date="DateTimeOffset?.Date" DateChanged="DateChanged" Label="@DateLabel" />
 </MudItem>
 
 <MudItem lg="TimeLg" md="TimeMd" sm="TimeSm" xs="TimeXs">
-    <MudTimePickerExtended Time="DateTime?.TimeOfDay" TimeChanged="TimeChanged" Label="@TimeLabel" Disabled="DateTime == null" />
+    <MudTimePickerExtended AmPm="@(SettingManager.GetTimeFormat().Contains("tt"))" TimeFormat="@(SettingManager.GetTimeFormat())" Time="DateTimeOffset?.TimeOfDay" TimeChanged="TimeChanged" Label="@TimeLabel" Disabled="DateTimeOffset == null" />
 </MudItem>
 
 @code {
@@ -40,53 +42,53 @@
     public int TimeXs { get; set; }
 
     [Parameter]
-    public DateTime? DateTime { get; set; }
+    public DateTimeOffset? DateTimeOffset { get; set; }
 
     [Parameter]
-    public EventCallback<DateTime?> DateTimeChanged { get; set; }
+    public EventCallback<DateTimeOffset?> DateTimeOffsetChanged { get; set; }
 
     public async Task DateChanged(DateTime? dateTime)
     {
         if (dateTime == null)
         {
-            this.DateTime = null;
+            this.DateTimeOffset = null;
         }
         else
         {
-            if (this.DateTime == null)
+            if (this.DateTimeOffset == null)
             {
-                this.DateTime = new DateTime(dateTime.Value.Year, dateTime.Value.Month, dateTime.Value.Day, 0, 0, 0);
+                this.DateTimeOffset = new DateTime(dateTime.Value.Year, dateTime.Value.Month, dateTime.Value.Day, 0, 0, 0);
             }
             else
             {
-                this.DateTime = new DateTime(dateTime.Value.Year, dateTime.Value.Month, dateTime.Value.Day, this.DateTime.Value.Hour, this.DateTime.Value.Minute, 0);
+                this.DateTimeOffset = new DateTime(dateTime.Value.Year, dateTime.Value.Month, dateTime.Value.Day, this.DateTimeOffset.Value.Hour, this.DateTimeOffset.Value.Minute, 0);
             }
         }
 
-        await this.DateTimeChanged.InvokeAsync(this.DateTime);
+        await this.DateTimeOffsetChanged.InvokeAsync(this.DateTimeOffset);
     }
 
     public async Task TimeChanged(TimeSpan? timeSpan)
     {
         if (timeSpan == null)
         {
-            if (this.DateTime != null)
+            if (this.DateTimeOffset != null)
             {
-                this.DateTime = new DateTime(this.DateTime.Value.Year, this.DateTime.Value.Month, this.DateTime.Value.Day, 0, 0, 0);
+                this.DateTimeOffset = new DateTime(this.DateTimeOffset.Value.Year, this.DateTimeOffset.Value.Month, this.DateTimeOffset.Value.Day, 0, 0, 0);
             }
         }
         else
         {
-            if (this.DateTime == null)
+            if (this.DateTimeOffset == null)
             {
 
             }
             else
             {
-                this.DateTime = new DateTime(this.DateTime.Value.Year, this.DateTime.Value.Month, this.DateTime.Value.Day, timeSpan.Value.Hours, timeSpan.Value.Minutes, 0);
+                this.DateTimeOffset = new DateTime(this.DateTimeOffset.Value.Year, this.DateTimeOffset.Value.Month, this.DateTimeOffset.Value.Day, timeSpan.Value.Hours, timeSpan.Value.Minutes, 0);
             }
         }
 
-        await this.DateTimeChanged.InvokeAsync(this.DateTime);
+        await this.DateTimeOffsetChanged.InvokeAsync(this.DateTimeOffset);
     }
 }

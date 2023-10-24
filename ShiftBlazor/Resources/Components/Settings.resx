@@ -129,8 +129,8 @@
   <data name="DataGridSettings" xml:space="preserve">
     <value>DataGrid Settings</value>
   </data>
-  <data name="DateTimeFormat" xml:space="preserve">
-    <value>DateTime format</value>
+  <data name="DateFormat" xml:space="preserve">
+    <value>Date format</value>
   </data>
   <data name="FormCloseBehavior" xml:space="preserve">
     <value>Form Close Behavior</value>
@@ -152,5 +152,8 @@
   </data>
   <data name="SettingsHeader" xml:space="preserve">
     <value>Settings</value>
+  </data>
+  <data name="TimeFormat" xml:space="preserve">
+    <value>Time Format</value>
   </data>
 </root>

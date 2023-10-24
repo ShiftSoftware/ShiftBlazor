@@ -44,19 +44,34 @@ namespace ShiftSoftware.ShiftBlazor.Services
             UpdateCulture();
         }
 
-        public void SetDateTimeFormat(string format)
+        public void SetDateFormat(string format)
         {
-            if (Settings.DateTimeFormat != format)
+            if (Settings.DateFormat != format)
             {
-                Settings.DateTimeFormat = format;
+                Settings.DateFormat = format;
                 SyncLocalStorage.SetItem(Key, Settings);
             }
         }
-        public string GetDateTimeFormat()
+
+        public void SetTimeFormat(string format)
         {
-            return Settings.DateTimeFormat ?? DefaultAppSetting.DateTimeFormat;
+            if (Settings.TimeFormat != format)
+            {
+                Settings.TimeFormat = format;
+                SyncLocalStorage.SetItem(Key, Settings);
+            }
         }
-        
+
+        public string GetDateFormat()
+        {
+            return Settings.DateFormat ?? DefaultAppSetting.DateFormat;
+        }
+
+        public string GetTimeFormat()
+        {
+            return Settings.TimeFormat ?? DefaultAppSetting.TimeFormat;
+        }
+
         public void SetListPageSize(int size)
         {
             if (Settings.ListPageSize != size)
@@ -148,7 +163,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
             {
                 DateTimeFormat = new DateTimeFormatInfo
                 {
-                    ShortDatePattern = GetDateTimeFormat(),
+                    LongDatePattern = GetDateFormat(),
+                    ShortDatePattern = GetDateFormat(),
+
+                    LongTimePattern = GetTimeFormat(),
+                    ShortTimePattern = GetTimeFormat(),
                 },
                 NumberFormat = new NumberFormatInfo
                 {
