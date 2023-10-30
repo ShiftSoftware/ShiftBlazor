@@ -44,3 +44,7 @@
 .mud-table-container {
     padding-bottom: 6px;
 }
+
+.foreign-column .filter-button.filtered {
+    display: none;
+}

@@ -21,24 +21,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private HttpClient Http { get; set; } = default!;
         [Inject] private MessageService Message { get; set; } = default!;
 
-        /// <summary>
-        ///     The OData EntitySet name.
-        /// </summary>
         [Parameter]
         [EditorRequired]
-        public string? EntitySet { get; set; }
+        public ODataParameters<TEntitySet>? ODataParameters { get; set; }
 
         [Parameter]
         public Func<string, Expression<Func<TEntitySet, bool>>>? Where { get; set; }
 
         [Parameter]
         public bool Tags { get; set; }
-
-        [Parameter, EditorRequired]
-        public string DataValueField { get; set; }
-
-        [Parameter, EditorRequired]
-        public string DataTextField { get; set; }
 
         [Parameter]
         public RenderFragment<TEntitySet> ShiftItemTemplate { get; set; }
@@ -52,7 +43,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public EventCallback<List<T>> SelectedValuesChanged { get; set; }
 
-        internal DataServiceQuery<TEntitySet> QueryBuilder { get; set; } = default!;
         internal string LastTypedValue = "";
         internal List<TEntitySet> Items = new();
 
@@ -63,17 +53,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            if (EntitySet == null)
+            if (ODataParameters == null)
             {
-                throw new ArgumentNullException(nameof(EntitySet));
+                throw new ArgumentNullException(nameof(ODataParameters));
             }
 
             if (ToStringFunc == null)
             {
                 ToStringFunc = (e) => e?.Text ?? "";
             }
-
-            QueryBuilder = OData.CreateQuery<TEntitySet>(EntitySet);
 
             SearchFuncWithCancel = Search;
 
@@ -87,27 +75,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
 
                 OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
-
-                ValueChanged = new EventCallback<T>(this, async () =>
-                {
-                    if (Value == null)
-                    {
-                        return;
-                    }
-
-                    var findMatch = SelectedValues.FirstOrDefault(x => x.Value == Value.Value);
-                    if (findMatch == null)
-                    {
-                        SelectedValues.Add(Value);
-                    }
-                    else
-                    {
-                        SelectedValues.Remove(findMatch);
-                    }
-                    Value = new();
-                    await Clear();
-                    await SelectedValuesChanged.InvokeAsync(SelectedValues);
-                });
+                ValueChanged = new EventCallback<T>(this, HandleValueChanged);
             }
 
             base.OnInitialized();
@@ -143,6 +111,27 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        private async Task HandleValueChanged()
+        {
+            if (Value == null)
+            {
+                return;
+            }
+
+            var findMatch = SelectedValues.FirstOrDefault(x => x.Value == Value.Value);
+            if (findMatch == null)
+            {
+                SelectedValues.Add(Value);
+            }
+            else
+            {
+                SelectedValues.Remove(findMatch);
+            }
+            Value = new();
+            await Clear();
+            await SelectedValuesChanged.InvokeAsync(SelectedValues);
+        }
+
         internal async Task UpdateInitialValue()
         {
             if (Value != null && !string.IsNullOrWhiteSpace(Value.Value) && string.IsNullOrWhiteSpace(Value.Text))
@@ -152,7 +141,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 try
                 {
-                    url = QueryBuilder.Where(x => 1 == 1 && x.ID == Value.Value).Take(1).ToString();
+                    url = ODataParameters!.QueryBuilder.Where(x => 1 == 1 && x.ID == Value.Value).Take(1).ToString();
                 }
                 catch (Exception e)
                 {
@@ -187,19 +176,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal string GetODataUrl(string q = "")
         {
-            var url = QueryBuilder.AsQueryable();
+            var builder = ODataParameters.QueryBuilder;
+            var url = builder.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(q))
             {
                 if (Where != null)
                 {
-                    url = QueryBuilder
+                    url = builder
                         .Where(Where(q));
                 }
                 else
                 {
-                    url = QueryBuilder
-                        .AddQueryOption("$filter", $"contains({DataTextField},'{q}')");
+                    url = builder
+                        .AddQueryOption("$filter", $"contains({ODataParameters.DataTextField},'{q}')");
                 }
             }
 
@@ -224,8 +214,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 return odataResult.Select(x => new T
                 {
-                    Value = odataResultType.GetProperty(DataValueField)?.GetValue(x)?.ToString()!,
-                    Text = odataResultType.GetProperty(DataTextField)?.GetValue(x)?.ToString(),
+                    Value = odataResultType.GetProperty(ODataParameters.DataValueField)?.GetValue(x)?.ToString()!,
+                    Text = odataResultType.GetProperty(ODataParameters.DataTextField)?.GetValue(x)?.ToString(),
                 }).Where(x => !string.IsNullOrWhiteSpace(x.Value)).ToList();
             }
             catch (Exception)

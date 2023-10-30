@@ -427,6 +427,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await InvokeAsync(StateHasChanged);
         }
 
+        public void GridStateHasChanged()
+        {
+            StateHasChanged();
+        }
+
         private async Task<Stream> GetStream(string url)
         {
             var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);

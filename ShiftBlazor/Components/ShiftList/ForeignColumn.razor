@@ -1,0 +1,262 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.OData.Client;
+@using System.Net.Http.Json;
+@using System.Text.Json;
+@using System.Linq.Expressions;
+@typeparam T where T : ShiftEntityDTOBase, new()
+@typeparam TProperty
+@inject HttpClient Http
+@implements IDisposable
+
+<PropertyColumn T="T"
+                TProperty="TProperty"
+                @ref="PropColumn"
+                Title="@Title"
+                Property="_Property"
+                Filterable="@Filterable"
+                Sortable="false"
+                ShowFilterIcon="false"
+                Class="foreign-column">
+
+    <CellTemplate>
+        @if (IsReady)
+        {
+            var id = GetValueFromPropertyPath(context.Item, ODataParameters!.DataValueField!)?.ToString();
+            var data = RemoteData.FirstOrDefault(x => x.ID == id);
+            if (data != null)
+            {
+                <text>@GetValueFromPropertyPath(data, PropertyFieldName)</text>
+            }
+        }
+        else
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="20px" />
+        }
+    </CellTemplate>
+
+    <HeaderTemplate>
+        <span class="column-header">@(Title ?? PropertyFieldName)</span>
+        @if (Filterable)
+        {
+            <MudSpacer />
+            <MudIconButton OnClick="@OpenFilter" Icon="@FilterIcon" Size="@Size.Small" />
+            <MudOverlay Visible="filterOpen" OnClick="@CloseFilter" />
+            <MudPopover Open="filterOpen" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Paper Elevation="8" Style="width:400px" Class="pa-4">
+                <MudStack>
+                    <ShiftAutocomplete T="ShiftEntitySelectDTO" TEntitySet="T" ODataParameters="ODataParameters" MultiSelect @bind-SelectedValues="FilterItems" />
+                    <MudStack Row>
+                        <MudSpacer />
+                        <MudButton OnClick="ClearFilterAsync">Clear</MudButton>
+                        <MudButton Color="@Color.Primary" OnClick="ApplyFilterAsync">Filter</MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudPopover>
+        }
+    </HeaderTemplate>
+
+</PropertyColumn>
+
+@code {
+    [CascadingParameter]
+    public ShiftList<T> ShiftList { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public ODataParameters<T>? ODataParameters { get; set; }
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public bool Filterable { get; set; } = true;
+
+    [Parameter]
+    public Expression<Func<T, TProperty>>? Property { get; set; }
+
+    internal bool IsReady = false;
+    internal bool ShowSkeleton = true;
+    internal List<T> RemoteData { get; set; } = new();
+
+    internal string FilterIcon => FilterItems.Count > 0 ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt;
+    internal bool filterOpen = false;
+    internal List<ShiftEntitySelectDTO> FilterItems { get; set; } = new();
+    internal string PropertyFieldName = string.Empty;
+    internal Expression<Func<T, TProperty>>? _Property;
+
+    private PropertyColumn<T, TProperty>? _PropColumn;
+    private PropertyColumn<T, TProperty>? PropColumn
+    {
+        get => _PropColumn;
+        set
+        {
+            PropertyFieldName = GetPropertyFieldName(value!);
+            _PropColumn = value;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (ODataParameters == null)
+            throw new ArgumentNullException(nameof(ODataParameters));
+
+        if (string.IsNullOrWhiteSpace(ODataParameters.EntitySetName))
+            throw new ArgumentNullException(nameof(ODataParameters.EntitySetName));
+
+        if (string.IsNullOrWhiteSpace(ODataParameters.DataValueField))
+            throw new ArgumentNullException(nameof(ODataParameters.DataValueField));
+
+        if (Property == null && string.IsNullOrWhiteSpace(ODataParameters.DataTextField))
+        {
+            throw new ArgumentNullException(message: $"Both '{nameof(Property)}' and '{nameof(ODataParameters.DataTextField)}' parameters cannot be null", null);
+        }
+
+        _Property = Property ?? CreateExpression(ODataParameters.DataTextField!);
+
+        ShiftList._OnBeforeDataBound += OnBeforeDataBound;
+    }
+
+    internal void OnBeforeDataBound(object? sender, KeyValuePair<Guid, List<T>> data)
+    {
+        FilterItems = ShiftList.DataGrid!.FilterDefinitions
+            .Where(x => x.Column!.Identifier == PropColumn!.Identifier)
+            .Where(x => x.Value != null)
+            .Select(x => new ShiftEntitySelectDTO
+                {
+                    Value = x.Title,
+                    Text = (string)x.Value!,
+                }).ToList();
+
+        RequestForeignData(data);
+    }
+
+    internal async void RequestForeignData(KeyValuePair<Guid, List<T>> data)
+    {
+        if (ShiftList?.DataGridId != data.Key || ShiftList?.DataGrid == null)
+        {
+            return;
+        }
+
+        var items = data.Value;
+
+        if (items != null && items.Count() > 0)
+        {
+            var itemIds = items
+                .Select(x => GetValueFromPropertyPath(x, ODataParameters!.DataValueField!)?.ToString())
+                .Distinct();
+
+            if (itemIds.Count() > 0)
+            {
+                var queryBuilder = ODataParameters!.QueryBuilder;
+                var url = queryBuilder.Where(x => itemIds.Contains(x.ID)).ToString();
+                var result = await Http.GetFromJsonAsync<ODataDTO<T>>(url);
+
+                if (result != null)
+                {
+                    RemoteData = result.Value;
+                }
+            }
+        }
+        IsReady = true;
+        ShiftList.RerenderDataGrid().AndForget();
+    }
+
+    private string GetPropertyFieldName(PropertyColumn<T, TProperty> column)
+    {
+        string? propertyName;
+        if (Property != null && column.PropertyName != null && !Guid.TryParse(column.PropertyName, out _))
+        {
+            propertyName = ODataParameters!.DataTextField = column.PropertyName;
+        }
+        else
+        {
+            propertyName = ODataParameters!.DataTextField;
+        }
+
+        if (string.IsNullOrWhiteSpace(propertyName))
+            throw new Exception(message: $"'{nameof(ODataParameters.DataTextField)}' cannot be null when '{nameof(Property)}' is null or a dynamic expression");
+
+        return propertyName;
+    }
+
+    internal object? GetValueFromPropertyPath(object item, string propertyPath)
+    {
+        var propertyNames = propertyPath.Split('.');
+        var currentValue = item;
+        var currentType = currentValue.GetType();
+
+        foreach (var propertyName in propertyNames)
+        {
+            var currentProperty = currentType.GetProperty(propertyName);
+            if (currentProperty == null)
+            {
+                throw new ArgumentException($"Property '{propertyName}' does not exist in {propertyPath}.");
+            }
+            currentValue = currentProperty.GetValue(currentValue);
+            currentType = currentProperty.PropertyType;
+        }
+        return currentValue;
+    }
+
+    private static Expression<Func<T, TProperty>> CreateExpression(string propertyName)
+    {
+        // Fetch the property from the type
+        var propertyInfo = typeof(T).GetProperty(propertyName);
+        if (propertyInfo == null)
+        {
+            throw new ArgumentException($"No property '{propertyName}' on type '{typeof(T).FullName}'");
+        }
+
+        // Construct the expression: x => x.Property
+        var parameter = Expression.Parameter(typeof(T), "x");
+        var propertyAccess = Expression.MakeMemberAccess(parameter, propertyInfo);
+
+        // Handle value type properties by converting to object
+        var convertExpression = Expression.Convert(propertyAccess, typeof(TProperty));
+
+        return Expression.Lambda<Func<T, TProperty>>(convertExpression, parameter);
+    }
+
+    #region Filter methods
+
+    private async Task ClearFilterAsync()
+    {
+        ShiftList.DataGrid!.FilterDefinitions.RemoveAll(x => x.Column!.Identifier == PropColumn!.Identifier);
+        FilterItems = new();
+        await ShiftList.DataGrid!.ReloadServerData();
+        CloseFilter();
+    }
+
+    private async Task ApplyFilterAsync()
+    {
+        var filterDefinitions = FilterItems.Select(x => new FilterDefinition<T>
+        {
+            Column = PropColumn,
+            Title = x.Value,
+            Operator = FilterOperator.String.Equal,
+            Value = x.Text,
+        });
+
+        ShiftList.DataGrid!.FilterDefinitions.RemoveAll(x => x.Column!.Identifier == PropColumn!.Identifier);
+        ShiftList.DataGrid!.FilterDefinitions.AddRange(filterDefinitions);
+        await ShiftList.DataGrid!.ReloadServerData();
+        CloseFilter();
+    }
+
+    private void OpenFilter()
+    {
+        filterOpen = true;
+        ShiftList.GridStateHasChanged();
+    }
+
+    private void CloseFilter()
+    {
+        filterOpen = false;
+        ShiftList.GridStateHasChanged();
+    }
+
+    #endregion
+
+    void IDisposable.Dispose()
+    {
+        ShiftList._OnBeforeDataBound -= OnBeforeDataBound;
+    }
+}

@@ -1,4 +1,5 @@
 ﻿using MudBlazor;
+using System.Text.Json;
 
 namespace System.Collections.Generic
 {
@@ -24,15 +25,21 @@ namespace System.Collections.Generic
 
         private static string GetFilterString<T>(IFilterDefinition<T> definition)
         {
-            var field = definition.Column!.PropertyName;
-            return GetFilterString(field, definition.Operator!, definition.Value, definition.FieldType);
+            var field = definition.Title;
+            if (definition.Column != null && !Guid.TryParse(definition.Column.PropertyName, out _))
+            {
+                field = definition.Column.PropertyName;
+            }
+
+            var fieldType = definition.FieldType.InnerType == null && definition.Value != null ? FieldType.Identify(definition.Value.GetType()) : definition.FieldType;
+
+            return GetFilterString(field, definition.Operator!, definition.Value, fieldType);
         }
 
         private static string GetFilterString(string field, string op, object? value, FieldType? fieldType = null)
         {
             var _field = field.Split(".").ElementAt(0);
-            var _fieldType = fieldType ?? FieldType.Identify(value?.GetType());
-            var _value = GetValue(value, _fieldType);
+            var _value = GetValue(value, fieldType!);
             var filterTemplate = CreateFilterTemplate(op);
 
             return string.Format(filterTemplate, _field, _value);

@@ -127,7 +127,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal override string _SubmitText
         {
-            get => string.IsNullOrWhiteSpace(SubmitText)
+            get => SubmitText == null
                 ? Mode == FormModes.Create ? Loc["CreateForm"] : Loc["SaveForm"]
                 : base._SubmitText;
             set => base._SubmitText = value;
