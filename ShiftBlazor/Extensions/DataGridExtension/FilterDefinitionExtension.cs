@@ -28,9 +28,14 @@ namespace System.Collections.Generic
             return GetFilterString(field, definition.Operator!, definition.Value, definition.FieldType);
         }
 
+        internal static string oDataProperyHack(string propertyName)
+        {
+            return propertyName.Split(".").ElementAt(0);
+        }
+
         private static string GetFilterString(string field, string op, object? value, FieldType? fieldType = null)
         {
-            var _field = field.Split(".").ElementAt(0);
+            var _field = oDataProperyHack(field);
             var _fieldType = fieldType ?? FieldType.Identify(value?.GetType());
             var _value = GetValue(value, _fieldType);
             var filterTemplate = CreateFilterTemplate(op);

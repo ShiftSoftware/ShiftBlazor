@@ -23,6 +23,11 @@ namespace System.Collections.Generic
         {
             return sortDefinitions
                     .OrderBy(x => x.Index)
+                    .Select(x => new
+                    {
+                        x.Descending,
+                        SortBy = FilterDefinitionExtension.oDataProperyHack(x.SortBy)
+                    })
                     .Select(x => x.Descending ? x.SortBy + " desc" : x.SortBy);
         }
     }
