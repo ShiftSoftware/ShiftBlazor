@@ -160,6 +160,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Is Deleted.
+        /// </summary>
+        internal static string IsDeletedColumnHeaderText {
+            get {
+                return ResourceManager.GetString("IsDeletedColumnHeaderText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Rows per page:.
         /// </summary>
         internal static string ItemsPerPageLabel {

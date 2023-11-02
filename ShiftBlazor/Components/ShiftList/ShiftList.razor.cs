@@ -6,6 +6,7 @@ using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
@@ -19,7 +20,7 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> where T : ShiftEntityDTOBase, new()
+    public partial class ShiftList<T> : EventComponentBase where T : ShiftEntityDTOBase, new()
     {
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
@@ -279,6 +280,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 PageSizes = PageSizes.Append(PageSize.Value).Order().ToArray();
             }
 
+            OnGridStateChanged += (sender, guid) => { if (DataGridId == guid) StateHasChanged(); };
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
         }
 
@@ -371,8 +373,33 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <exception cref="NotImplementedException"></exception>
         internal void FilterDeleted(bool? delete = null)
         {
-            deleteFilter = delete;
+            DataGrid!.FilterDefinitions.RemoveAll(x => x.Column!.PropertyName == nameof(ShiftEntityDTOBase.IsDeleted));
+
+            switch (delete)
+            {
+                case true:
+                    DataGrid!.FilterDefinitions.Add(CreateDeleteFilter());
+                    break;
+                case false:
+                    DataGrid!.FilterDefinitions.Add(CreateDeleteFilter(false));
+                    break;
+                case null:
+                    DataGrid!.FilterDefinitions.Add(CreateDeleteFilter());
+                    DataGrid!.FilterDefinitions.Add(CreateDeleteFilter(false));
+                    break;
+            }
+
             _ = DataGrid?.ReloadServerData();
+        }
+
+        private FilterDefinition<T> CreateDeleteFilter(bool value = true)
+        {
+            return new FilterDefinition<T>
+            {
+                Column = DataGrid!.GetColumnByPropertyName<T>(nameof(ShiftEntityDTOBase.IsDeleted)),
+                Operator = FilterOperator.String.Equal,
+                Value = value,
+            };
         }
 
         private void CloseDialog()
@@ -521,15 +548,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 MessageService.Error("Could not custom parse filter", e.Message, e!.ToString());
             }
 
-            // apply delete filters
-            if (deleteFilter == true)
-            {
-                builderQueryable = builderQueryable.Where(x => x.IsDeleted == true);
-            }
-            else if (deleteFilter == null)
-            {
-                builderQueryable = builderQueryable.Where(x => x.IsDeleted == true || x.IsDeleted == false);
-            }
 
             // apply pagination values
             if (!EnableVirtualization)
@@ -569,6 +587,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     Items = content.Value.ToList(),
                     TotalItems = (int)content.Count.Value,
                 };
+
+                ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(DataGridId, content.Value.ToList<object>()));
 
                 if (_OnBeforeDataBound != null)
                 {

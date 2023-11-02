@@ -150,6 +150,9 @@
   <data name="IdColumnHeaderText" xml:space="preserve">
     <value>ID</value>
   </data>
+  <data name="IsDeletedColumnHeaderText" xml:space="preserve">
+    <value>Is Deleted</value>
+  </data>
   <data name="ItemsPerPageLabel" xml:space="preserve">
     <value>Rows per page:</value>
   </data>

@@ -1,5 +1,7 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftBlazor.Events;
 @typeparam T where T : ShiftEntityDTOBase, new()
+@inherits EventComponentBase
 
 @if (TypeAuthAction == null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
 {
@@ -120,6 +122,7 @@
                          FixedHeader="!DisableStickyHeader"
                          RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
                          SelectedItemsChanged="SelectedItemsChangedHandler"
+                         Tag="DataGridId"
                          T="T">
 
                 <NoRecordsContent>
@@ -162,6 +165,8 @@
                     }
 
                     @ChildContent
+
+                    <PropertyColumn Property="x => x.IsDeleted" Title="@Loc["IsDeletedColumnHeaderText"]" Hidden HeaderStyle="width: 0;"/>
 
                     @if (!DisableActionColumn && ComponentType != null)
                     {
