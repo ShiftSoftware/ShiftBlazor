@@ -6,7 +6,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftForm<TComponent, T> : ComponentBase where TComponent : ComponentBase where T : ShiftEntityDTO, new()
+    public partial class ShiftForm<TComponent, T> : ComponentBase where TComponent : ComponentBase where T : ShiftEntityViewAndUpsertDTO, new()
     {
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [CascadingParameter] public MudDialogInstance? MudDialog { get; set; }

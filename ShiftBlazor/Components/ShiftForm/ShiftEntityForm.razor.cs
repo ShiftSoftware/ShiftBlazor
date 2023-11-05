@@ -15,7 +15,7 @@ using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftEntityForm<T> : ShiftFormBasic<T> where T : ShiftEntityDTO, new()
+    public partial class ShiftEntityForm<T> : ShiftFormBasic<T> where T : ShiftEntityViewAndUpsertDTO, new()
     {
         [Inject] private HttpClient Http { get; set; } = default!;
         [Inject] private IDialogService DialogService { get; set; } = default!;
