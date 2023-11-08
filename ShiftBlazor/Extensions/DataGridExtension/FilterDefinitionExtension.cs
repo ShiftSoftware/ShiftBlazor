@@ -1,4 +1,5 @@
 ﻿using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Utils;
 using System.Text.Json;
 
 namespace System.Collections.Generic
@@ -38,7 +39,7 @@ namespace System.Collections.Generic
 
         private static string GetFilterString(string field, string op, object? value, FieldType? fieldType = null)
         {
-            var _field = field.Split(".").ElementAt(0);
+            var _field = Misc.GetFieldFromPropertyPath(field);
             var _value = GetValue(value, fieldType!);
             var filterTemplate = CreateFilterTemplate(op);
 

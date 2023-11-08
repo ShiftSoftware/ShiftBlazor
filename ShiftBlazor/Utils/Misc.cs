@@ -33,5 +33,24 @@ namespace ShiftSoftware.ShiftBlazor.Utils
         {
             return propertyPath.Split(".").ElementAt(0);
         }
+
+        public static Expression<Func<T, object>> CreateExpression<T>(string propertyName)
+        {
+            // Fetch the property from the type
+            var propertyInfo = typeof(T).GetProperty(propertyName);
+            if (propertyInfo == null)
+            {
+                throw new ArgumentException($"No property '{propertyName}' on type '{typeof(T).FullName}'");
+            }
+
+            // Construct the expression: x => x.Property
+            var parameter = Expression.Parameter(typeof(T), "x");
+            var propertyAccess = Expression.MakeMemberAccess(parameter, propertyInfo);
+
+            // Handle value type properties by converting to object
+            var convertExpression = Expression.Convert(propertyAccess, typeof(object));
+
+            return Expression.Lambda<Func<T, object>>(convertExpression, parameter);
+        }
     }
 }

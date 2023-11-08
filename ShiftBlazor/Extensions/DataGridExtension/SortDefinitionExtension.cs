@@ -1,4 +1,5 @@
 ﻿using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace System.Collections.Generic
         {
             return sortDefinitions
                     .OrderBy(x => x.Index)
-                    .Select(x => x.Descending ? x.SortBy + " desc" : x.SortBy);
+                    .Select(x => Misc.GetFieldFromPropertyPath(x.SortBy) +  (x.Descending ? " desc" : ""));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using CsvHelper;
+using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -11,7 +12,6 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
-using System.Globalization;
 using System.Linq.Expressions;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -234,6 +234,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string? ErrorMessage;
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle => $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
+        private IEnumerable<string?> VisibleColumnNames => DataGrid!
+                .RenderedColumns
+                .Where(x => !x.Hidden)
+                .Where(x => !Guid.TryParse(x.PropertyName, out _))
+                .Select(x => Misc.GetFieldFromPropertyPath(x.PropertyName));
 
         internal SortMode SortMode => DisableSorting
                                         ? SortMode.None
@@ -463,11 +468,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);
             var stream = new MemoryStream();
 
+            var config = new CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture);
+
             if (res != null && res.Value.Count > 0)
             {
                 using (var streamWriter = new StreamWriter(stream, leaveOpen: true))
                 {
-                    var csvWriter = new CsvWriter(streamWriter, CultureInfo.InvariantCulture);
+                    var csvWriter = new CsvWriter(streamWriter, config);
+
+                    var map = new DefaultClassMap<T>();
+
+                    foreach ( var prop in typeof(T).GetProperties().Where(x => VisibleColumnNames.Contains(x.Name) ) )
+                    {
+                        map.Map(Misc.CreateExpression<T>(prop.Name));
+                    }
+
+                    csvWriter.Context.RegisterClassMap(map);
                     await csvWriter.WriteRecordsAsync(res.Value);
                 }
 
@@ -542,6 +558,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 ErrorMessage = $"An error has occured";
                 MessageService.Error("Could not parse filter", e.Message, e!.ToString());
             }
+
+            builder = builder.AddQueryOption("$select", string.Join(",", VisibleColumnNames));
 
             var builderQueryable = builder.AsQueryable();
 
