@@ -10,23 +10,20 @@
 @typeparam TProperty
 @inject HttpClient Http
 @inject MessageService MessageService
-@inherits PropertyColumn<T, TProperty>
+@inherits PropertyColumnExtended<T, TProperty>
 @implements IDisposable
 
 @{
     base.Sortable = false;
     base.ShowFilterIcon = false;
     base.Class = "foreign-column";
-    base.CellTemplate = _CellTemplate;
     base.HeaderTemplate = _HeaderTemplate;
     base.BuildRenderTree(__builder);
+    base.CellTemplate = _CellTemplate;
 }
 
 
 @code {
-    [CascadingParameter]
-    public ShiftList<T> ShiftList { get; set; }
-    
     [Browsable(false)]
     [Bindable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -48,7 +45,25 @@
             var data = RemoteData.FirstOrDefault(x => x.ID == id);
             if (data != null)
             {
-                <text>@Misc.GetValueFromPropertyPath(data, PropertyFieldName)</text>
+                var value = Misc.GetValueFromPropertyPath(data, PropertyFieldName);
+                if (IsButtonColumn)
+                {
+                    <a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
+                        @if (ButtonTemplate == null)
+                        {
+                            <span class="button-column-button">
+                                @value
+                            </span>
+                        }
+                        else
+                        {
+                            @ButtonTemplate((TProperty?)value)
+                        }
+                    </a>
+                }
+                else {
+                    @value
+                }
             }
         }
         else

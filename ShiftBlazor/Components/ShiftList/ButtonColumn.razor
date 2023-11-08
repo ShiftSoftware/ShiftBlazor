@@ -2,78 +2,10 @@
 @using System.Text.RegularExpressions
 @typeparam T where T : ShiftEntityDTOBase, new()
 @typeparam TProperty
-@inherits PropertyColumn<T, TProperty>
+@inherits PropertyColumnExtended<T, TProperty>
 @inject ShiftModal ShiftModal
 
 @{
-    base.CellTemplate = Template;
+    base.IsButtonColumn = true;
     base.BuildRenderTree(__builder);
-}
-
-@code {
-    [CascadingParameter]
-    public ShiftList<T> ShiftList { get; set; } = default!;
-
-    [Parameter]
-    public Type? ComponentType { get; set; }
-
-    [Parameter]
-    public Enums.ModalOpenMode OpenMode { get; set; } = Enums.ModalOpenMode.Popup;
-
-    [Parameter]
-    public Dictionary<string, string>? FormParameters {get; set;}
-
-    [Parameter]
-    public RenderFragment<TProperty?>? ButtonTemplate { get; set; }
-
-    [Parameter]
-    public string? KeyPropertyName { get; set; }
-
-    private Type? FormComponent => ComponentType ?? ShiftList.ComponentType;
-
-    private string? GetKey(T item)
-    {
-        if (KeyPropertyName != null)
-        {
-            return item.GetType().GetProperty(KeyPropertyName)?.GetValue(item) as string;
-        }
-
-        return item.ID;
-    }
-
-    private string GetUrl(string? id)
-    {
-        var attr = FormComponent?
-            .GetCustomAttributes(typeof(RouteAttribute), false)
-            .FirstOrDefault() as RouteAttribute;
-
-        if (attr != null)
-        {
-            var path = Regex.Replace(attr.Template, "\\{.+\\}", id ?? "");
-            return path + ShiftModal.GenerateQueryString(FormParameters);
-        }
-        return "";
-    }
-
-    private async Task OpenDialogForm(string? id)
-    {
-        if (FormComponent == null) return;
-
-        await ShiftList.OpenDialog(FormComponent, id, OpenMode, FormParameters);
-    }
-
-    private RenderFragment<CellContext<T>> Template => (context) =>
-    @<a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
-        @if (ButtonTemplate == null)
-        {
-            <span class="button-column-button">
-                @base.CellContent(context.Item)
-            </span>
-        }
-        else
-        {
-            @ButtonTemplate((TProperty?)base.CellContent(context.Item));
-        }
-    </a>;
-
 }
