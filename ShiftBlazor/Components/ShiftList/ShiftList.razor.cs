@@ -20,7 +20,7 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> : EventComponentBase where T : ShiftEntityDTOBase, new()
+    public partial class ShiftList<T> where T : ShiftEntityDTOBase, new()
     {
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
@@ -211,7 +211,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public RenderFragment<CellContext<T>>? ActionsTemplate { get; set; }
 
         [Parameter]
-        public Expression<Func<T, bool>>? Where { get; set; }
+        public List<string> DefaultFilters { get; set; } = new();
 
         [Parameter]
         public bool Outlined { get; set; }
@@ -280,7 +280,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 PageSizes = PageSizes.Append(PageSize.Value).Order().ToArray();
             }
 
-            OnGridStateChanged += (sender, guid) => { if (DataGridId == guid) StateHasChanged(); };
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
         }
 
@@ -524,30 +523,27 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 DataGrid!.FilterDefinitions.Remove(emptyFields.ElementAt(i));
             }
 
-            // Convert MudBlazor's FilterDefinitions to OData query
-            var filterList = state.FilterDefinitions.ToODataFilter();
-
-            if (filterList.Count() > 0)
-            {
-                builder = builder.AddQueryOption("$filter", string.Join(" and ", filterList));
-            }
-
-            var builderQueryable = builder.AsQueryable();
-
             try
             {
-                // apply custom filters
-                if (Where != null)
+                // Convert MudBlazor's FilterDefinitions to OData query
+                var userFilters = state.FilterDefinitions.ToODataFilter();
+
+                var filterList = new List<string>();
+                filterList.AddRange(DefaultFilters);
+                filterList.AddRange(userFilters);
+
+                if (filterList.Count() > 0)
                 {
-                    builderQueryable = builderQueryable.Where(Where);
+                    builder = builder.AddQueryOption("$filter", string.Join(" and ", filterList));
                 }
             }
             catch (Exception e)
             {
                 ErrorMessage = $"An error has occured";
-                MessageService.Error("Could not custom parse filter", e.Message, e!.ToString());
+                MessageService.Error("Could not parse filter", e.Message, e!.ToString());
             }
 
+            var builderQueryable = builder.AsQueryable();
 
             // apply pagination values
             if (!EnableVirtualization)

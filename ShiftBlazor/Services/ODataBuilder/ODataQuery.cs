@@ -26,7 +26,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             ODataPath = serviceRoot.AbsoluteUri;
         }
 
-        public ODataParameters<T> CreateODataParameterObject<T>(string entitySetName, string? baseUrl = null, string? DataValueField = null, string? DataTextField = null) where T : ShiftEntityDTOBase
+        public ODataParameters<T> CreateODataParameterObject<T>(string entitySetName, string? DataValueField = null, string? DataTextField = null, string? baseUrl = null) where T : ShiftEntityDTOBase
         {
             var url = baseUrl ?? ODataPath;
 

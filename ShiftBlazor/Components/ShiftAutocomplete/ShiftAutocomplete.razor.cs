@@ -26,7 +26,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public ODataParameters<TEntitySet>? ODataParameters { get; set; }
 
         [Parameter]
+        [Obsolete("Use Filters parameter instead")]
         public Func<string, Expression<Func<TEntitySet, bool>>>? Where { get; set; }
+
+        [Parameter]
+        public Func<string, List<string>>? Filters { get; set; }
 
         [Parameter]
         public bool Tags { get; set; }
@@ -141,7 +145,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 try
                 {
-                    url = ODataParameters!.QueryBuilder.Where(x => 1 == 1 && x.ID == Value.Value).Take(1).ToString();
+                    url = ODataParameters!
+                            .QueryBuilder
+                            .AddQueryOption("$select", $"{ODataParameters.DataValueField},{ODataParameters.DataTextField}")
+                            .Where(x => 1 == 1 && x.ID == Value.Value)
+                            .Take(1)
+                            .ToString();
                 }
                 catch (Exception e)
                 {
@@ -176,15 +185,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal string GetODataUrl(string q = "")
         {
-            var builder = ODataParameters.QueryBuilder;
+            var builder = ODataParameters.QueryBuilder.AddQueryOption("$select", $"{ODataParameters.DataValueField},{ODataParameters.DataTextField}");
+
             var url = builder.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(q))
             {
-                if (Where != null)
+                if (Filters != null)
                 {
-                    url = builder
-                        .Where(Where(q));
+                    url = builder.AddQueryOption("$filter", string.Join(" and ", Filters.Invoke(q)));
                 }
                 else
                 {
@@ -214,8 +223,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 return odataResult.Select(x => new T
                 {
-                    Value = odataResultType.GetProperty(ODataParameters.DataValueField)?.GetValue(x)?.ToString()!,
-                    Text = odataResultType.GetProperty(ODataParameters.DataTextField)?.GetValue(x)?.ToString(),
+                    Value = odataResultType.GetProperty(ODataParameters!.DataValueField!)?.GetValue(x)?.ToString()!,
+                    Text = odataResultType.GetProperty(ODataParameters.DataTextField!)?.GetValue(x)?.ToString(),
                 }).Where(x => !string.IsNullOrWhiteSpace(x.Value)).ToList();
             }
             catch (Exception)
