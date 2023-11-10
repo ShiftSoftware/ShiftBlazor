@@ -559,7 +559,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 MessageService.Error("Could not parse filter", e.Message, e!.ToString());
             }
 
-            builder = builder.AddQueryOption("$select", string.Join(",", VisibleColumnNames));
+            var fieldsToSelect = VisibleColumnNames.ToList();
+
+            fieldsToSelect.AddRange(DataGrid!.RenderedColumns
+                .Select(x => x.GetType().GetProperty(nameof(PropertyColumnExtended<T, object>.KeyPropertyName))?.GetValue(x)?.ToString())
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+            builder = builder.AddQueryOption("$select", string.Join(",", fieldsToSelect));
 
             var builderQueryable = builder.AsQueryable();
 
