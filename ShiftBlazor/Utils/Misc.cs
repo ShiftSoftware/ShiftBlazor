@@ -1,10 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace ShiftSoftware.ShiftBlazor.Utils
 {
@@ -51,6 +45,19 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             var convertExpression = Expression.Convert(propertyAccess, typeof(object));
 
             return Expression.Lambda<Func<T, object>>(convertExpression, parameter);
+        }
+
+        public static TAttribute? GetAttribute<TElement,TAttribute>()
+            where TAttribute : Attribute
+        {
+            return GetAttribute<TAttribute>(typeof(TElement));
+        }
+
+        public static TAttribute? GetAttribute<TAttribute>(Type? ElementType)
+            where TAttribute : Attribute
+        {
+            if (ElementType == null) return null;
+            return (TAttribute?)Attribute.GetCustomAttribute(ElementType, typeof(TAttribute));
         }
     }
 }

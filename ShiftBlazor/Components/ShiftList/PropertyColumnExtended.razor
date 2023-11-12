@@ -6,13 +6,8 @@
 @inject ShiftModal ShiftModal
 
 @{
-    if (IsButtonColumn)
-    {
-        base.CellTemplate = Template;
-    }
     base.BuildRenderTree(__builder);
 }
-
 
 @code {
     [CascadingParameter]
@@ -38,6 +33,16 @@
 
     protected Type? FormComponent => ComponentType ?? ShiftList.ComponentType;
 
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        if (IsButtonColumn)
+        {
+            base.CellTemplate = Template;
+        }
+    }
+
     protected string? GetKey(T item)
     {
         if (KeyPropertyName != null)
@@ -50,9 +55,7 @@
 
     protected string GetUrl(string? id)
     {
-        var attr = FormComponent?
-        .GetCustomAttributes(typeof(RouteAttribute), false)
-        .FirstOrDefault() as RouteAttribute;
+        var attr = Misc.GetAttribute<RouteAttribute>(FormComponent);
 
         if (attr != null)
         {
