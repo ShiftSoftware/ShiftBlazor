@@ -10,6 +10,7 @@ using System.Net.Http.Json;
 using Microsoft.OData.Client;
 using Microsoft.AspNetCore.Components.Web;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -25,11 +26,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [EditorRequired]
         public string EntitySet { get; set; }
 
-        [Parameter]
-        public string? DataValueField { get; set; }
-
-        [Parameter]
-        public string DataTextField { get; set; }
+        internal string? DataValueField { get; set; }
+        internal string? DataTextField { get; set; }
 
         [Parameter]
         [Obsolete("Use Filters parameter instead")]
@@ -72,6 +70,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 ToStringFunc = (e) => e?.Text ?? "";
             }
+
+            var shiftEntityKeyAndNameAttribute = Misc.GetAttribute<TEntitySet, ShiftEntityKeyAndNameAttribute>();
+
+            this.DataValueField = shiftEntityKeyAndNameAttribute?.Value;
+            this.DataTextField = shiftEntityKeyAndNameAttribute?.Text;
 
             SearchFuncWithCancel = Search;
 
