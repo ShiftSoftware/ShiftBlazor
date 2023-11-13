@@ -234,11 +234,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string? ErrorMessage;
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle => $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
-        private IEnumerable<string?> VisibleColumnNames => DataGrid!
-                .RenderedColumns
-                .Where(x => !x.Hidden)
-                .Where(x => !Guid.TryParse(x.PropertyName, out _))
-                .Select(x => Misc.GetFieldFromPropertyPath(x.PropertyName));
 
         internal SortMode SortMode => DisableSorting
                                         ? SortMode.None
@@ -478,7 +473,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                     var map = new DefaultClassMap<T>();
 
-                    foreach ( var prop in typeof(T).GetProperties().Where(x => VisibleColumnNames.Contains(x.Name) ) )
+                    var columns = DataGrid!
+                        .RenderedColumns
+                        .Where(x => !x.Hidden && !Guid.TryParse(x.PropertyName, out _))
+                        .Select(x => Misc.GetFieldFromPropertyPath(x.PropertyName));
+                    foreach ( var prop in typeof(T).GetProperties().Where(x => columns.Contains(x.Name) ) )
                     {
                         map.Map(Misc.CreateExpression<T>(prop.Name));
                     }
@@ -507,7 +506,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             using var streamRef = new DotNetStreamReference(stream: fileStream);
             await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         }
-            
+
         internal void SelectedItemsChangedHandler(HashSet<T> items)
         {
             SelectedItems = items;
@@ -558,8 +557,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 ErrorMessage = $"An error has occured";
                 MessageService.Error("Could not parse filter", e.Message, e!.ToString());
             }
-
-            builder = builder.AddQueryOption("$select", string.Join(",", VisibleColumnNames));
 
             var builderQueryable = builder.AsQueryable();
 
