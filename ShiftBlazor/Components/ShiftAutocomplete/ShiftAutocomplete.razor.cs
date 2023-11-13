@@ -23,7 +23,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         [EditorRequired]
-        public ODataParameters<TEntitySet>? ODataParameters { get; set; }
+        public string EntitySet { get; set; }
+
+        [Parameter]
+        public string? DataValueField { get; set; }
+
+        [Parameter]
+        public string DataTextField { get; set; }
 
         [Parameter]
         [Obsolete("Use Filters parameter instead")]
@@ -57,9 +63,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            if (ODataParameters == null)
+            if (string.IsNullOrWhiteSpace(EntitySet))
             {
-                throw new ArgumentNullException(nameof(ODataParameters));
+                throw new ArgumentNullException(nameof(EntitySet));
             }
 
             if (ToStringFunc == null)
@@ -145,10 +151,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 try
                 {
-                    url = ODataParameters!
-                            .QueryBuilder
-                            .AddQueryOption("$select", $"{ODataParameters.DataValueField},{ODataParameters.DataTextField}")
-                            .Where(x => 1 == 1 && x.ID == Value.Value)
+                    url = OData.CreateNewQuery<TEntitySet>(EntitySet)
+                            .AddQueryOption("$select", $"{DataValueField},{DataTextField}")
+                            .WhereQuery(x => 1 == 1 && x.ID == Value.Value)
                             .Take(1)
                             .ToString();
                 }
@@ -185,24 +190,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal string GetODataUrl(string q = "")
         {
-            var builder = ODataParameters.QueryBuilder.AddQueryOption("$select", $"{ODataParameters.DataValueField},{ODataParameters.DataTextField}");
-
-            var url = builder.AsQueryable();
+            var builder = OData
+                .CreateNewQuery<TEntitySet>(EntitySet)
+                .AddQueryOption("$select", $"{DataValueField},{DataTextField}");
 
             if (!string.IsNullOrWhiteSpace(q))
             {
-                if (Filters != null)
-                {
-                    url = builder.AddQueryOption("$filter", string.Join(" and ", Filters.Invoke(q)));
-                }
-                else
-                {
-                    url = builder
-                        .AddQueryOption("$filter", $"contains({ODataParameters.DataTextField},'{q}')");
-                }
+                builder = Filters == null
+                    ? builder.AddQueryOption("$filter", $"contains({DataTextField},'{q}')")
+                    : builder.AddQueryOption("$filter", string.Join(" and ", Filters.Invoke(q)));
             }
 
-            return url.Take(100).ToString()!;
+            return builder.Take(100).ToString()!;
         }
 
         internal async Task<List<T>> GetODataResult(string url, CancellationToken token = default)
@@ -223,8 +222,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 return odataResult.Select(x => new T
                 {
-                    Value = odataResultType.GetProperty(ODataParameters!.DataValueField!)?.GetValue(x)?.ToString()!,
-                    Text = odataResultType.GetProperty(ODataParameters.DataTextField!)?.GetValue(x)?.ToString(),
+                    Value = odataResultType.GetProperty(DataValueField!)?.GetValue(x)?.ToString()!,
+                    Text = odataResultType.GetProperty(DataTextField)?.GetValue(x)?.ToString(),
                 }).Where(x => !string.IsNullOrWhiteSpace(x.Value)).ToList();
             }
             catch (Exception)

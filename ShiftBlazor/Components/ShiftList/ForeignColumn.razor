@@ -1,7 +1,7 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @typeparam T where T : ShiftEntityDTOBase, new()
-@typeparam TEntity where TEntity : ShiftEntityDTOBase, new()
 @typeparam TProperty
+@typeparam TEntity where TEntity : ShiftEntityDTOBase, new()
 @inherits PropertyColumnExtended<T, TProperty>
 @implements IDisposable
 
@@ -14,11 +14,11 @@
     @<text>
         @if (IsReady)
         {
-            var id = Misc.GetValueFromPropertyPath(context.Item, ODataParameters!.DataValueField!)?.ToString();
+            var id = Misc.GetValueFromPropertyPath(context.Item, TValueField)?.ToString();
             var data = RemoteData.FirstOrDefault(x => x.ID == id);
             if (data != null)
             {
-                var value = Misc.GetValueFromPropertyPath(data, PropertyFieldName);
+                var value = Misc.GetValueFromPropertyPath(data, TEntityTextField);
                 if (IsButtonColumn)
                 {
                     <a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
@@ -54,15 +54,15 @@
             <MudIconButton OnClick="@OpenFilter" Icon="@FilterIcon" Size="@Size.Small" />
             <MudOverlay Visible="IsFilterOpen" OnClick="@CloseFilter" />
             <MudPopover Open="IsFilterOpen" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Paper Elevation="8" Style="width:400px" Class="pa-4">
-                     <MudStack>
-                         <ShiftAutocomplete T="ShiftEntitySelectDTO" TEntitySet="TEntity" ODataParameters="ODataParameters" MultiSelect @bind-SelectedValues="FilterItems" />
-                         <MudStack Row>
-                         <MudSpacer />
-                         <MudButton OnClick="ClearFilterAsync">Clear</MudButton>
-                         <MudButton Color="@Color.Primary" OnClick="ApplyFilterAsync">Filter</MudButton>
-                     </MudStack>
-                 </MudStack>
-             </MudPopover>
+                <MudStack>
+                    <ShiftAutocomplete T="ShiftEntitySelectDTO" TEntitySet="TEntity" EntitySet="@EntitySetName" DataValueField="@TEntityValueField" DataTextField="@TEntityTextField" MultiSelect @bind-SelectedValues="FilterItems" />
+                    <MudStack Row>
+                        <MudSpacer />
+                        <MudButton OnClick="ClearFilterAsync">Clear</MudButton>
+                        <MudButton Color="@Color.Primary" OnClick="ApplyFilterAsync">Filter</MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudPopover>
         }
     </text>;
 }

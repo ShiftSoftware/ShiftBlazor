@@ -1,5 +1,4 @@
 ﻿using Microsoft.OData.Client;
-using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 
 namespace ShiftSoftware.ShiftBlazor.Services
@@ -24,6 +23,12 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 base(serviceRoot, protocolVersion)
         {
             ODataPath = serviceRoot.AbsoluteUri;
+        }
+
+        public DataServiceQuery<T> CreateNewQuery<T>(string entitySetName, string? baseUrl = null)
+        {
+            var builder = baseUrl == null ? this : new ODataQuery(baseUrl);
+            return builder.CreateQuery<T>(entitySetName);
         }
 
         public ODataParameters<T> CreateODataParameterObject<T>(string entitySetName, string? DataValueField = null, string? DataTextField = null, string? baseUrl = null) where T : ShiftEntityDTOBase

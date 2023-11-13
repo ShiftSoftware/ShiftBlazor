@@ -68,8 +68,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             var odataResultType = typeof(TQuickAdd);
 
-            var value = odataResultType.GetProperty(ODataParameters.DataValueField)?.GetValue(result.Data)?.ToString();
-            var text = odataResultType.GetProperty(ODataParameters.DataTextField)?.GetValue(result.Data)?.ToString();
+            var value = odataResultType.GetProperty(DataValueField)?.GetValue(result.Data)?.ToString();
+            var text = odataResultType.GetProperty(DataTextField)?.GetValue(result.Data)?.ToString();
 
             if (string.IsNullOrWhiteSpace(value) || string.IsNullOrWhiteSpace(text))
             {

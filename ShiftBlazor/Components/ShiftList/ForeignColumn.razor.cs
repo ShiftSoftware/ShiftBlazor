@@ -1,43 +1,36 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.OData.Client;
 using MudBlazor;
-using Newtonsoft.Json.Linq;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
 
-    public partial class ForeignColumn<T, TEntity, TProperty> : PropertyColumnExtended<T, TProperty>, IDisposable
+    public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtended<T, TProperty>, IDisposable
         where T : ShiftEntityDTOBase, new()
         where TEntity : ShiftEntityDTOBase, new()
     {
         [Inject] HttpClient Http { get; set; } = default!;
         [Inject] MessageService MessageService { get; set; } = default!;
-
-        #region hide properties
-
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [Obsolete("Don't use this", true)]
-        public new Expression<Func<T, TProperty>> Property { get; set; }
-
-        #endregion
+        [Inject] ODataQuery OData { get; set; } = default!;
 
         [Parameter]
-        public Expression<Func<TEntity, TProperty>> EntityProperty { get; set; }
+        [EditorRequired]
+        public string EntitySetName { get; set; }
 
-        [Parameter, EditorRequired]
-        public ODataParameters<TEntity>? ODataParameters { get; set; }
+        [Parameter]
+        public string? BaseUrl { get; set; }
+
+        [Parameter]
+        public string? DataValueField { get; set; }
+
+        [Parameter]
+        public string? ForeignTextField { get; set; }
 
         internal bool IsReady = false;
         internal List<TEntity> RemoteData { get; set; } = new();
@@ -45,33 +38,37 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string FilterIcon => FilterItems.Count > 0 ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt;
         internal List<ShiftEntitySelectDTO> FilterItems { get; set; } = new();
 
-        internal string PropertyFieldName = string.Empty;
+        private DataServiceQuery<TEntity> QueryBuilder;
+        private string TValueField = string.Empty;
+        private string TEntityTextField = string.Empty;
+        private string TEntityValueField = nameof(ShiftEntityDTOBase.ID);
 
+        [Parameter]
+        public TEntity Test { get; set; }
         protected override void OnInitialized()
         {
-            if (ODataParameters == null)
-                throw new ArgumentNullException(nameof(ODataParameters));
+            if (string.IsNullOrWhiteSpace(EntitySetName))
+                throw new ArgumentNullException(nameof(EntitySetName));
 
-            if (string.IsNullOrWhiteSpace(ODataParameters.EntitySetName))
-                throw new ArgumentNullException(nameof(ODataParameters.EntitySetName));
+            var attr = Misc.GetAttribute<TEntity, ShiftEntityKeyAndNameAttribute>();
+            TEntityTextField = ForeignTextField ?? attr?.Text ?? "";
 
-            if (string.IsNullOrWhiteSpace(ODataParameters.DataValueField))
-                throw new ArgumentNullException(nameof(ODataParameters.DataValueField));
+            if (string.IsNullOrWhiteSpace(TEntityTextField))
+                throw new ArgumentNullException(nameof(ForeignTextField));
 
-            if (EntityProperty == null && string.IsNullOrWhiteSpace(ODataParameters.DataTextField))
-                throw new ArgumentNullException(message: $"Both '{nameof(EntityProperty)}' and '{nameof(ODataParameters.DataTextField)}' parameters cannot be null", null);
+            Title ??= EntitySetName;
 
             ShiftBlazorEvents.OnBeforeGridDataBound += OnBeforeDataBound;
+            QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySetName, BaseUrl);
+
             base.OnInitialized();
         }
 
         protected override void OnParametersSet()
         {
-            KeyPropertyName ??= ODataParameters?.DataValueField;
-            Title ??= ODataParameters?.EntitySetName;
-
             base.OnParametersSet();
-            PropertyFieldName = GetPropertyFieldName();
+            TValueField = GetDataValueFieldName();
+            KeyPropertyName ??= TValueField;
 
             Sortable = false;
             ShowFilterIcon = false;
@@ -105,16 +102,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (items != null && items.Count() > 0)
             {
                 var itemIds = items
-                    .Select(x => Misc.GetValueFromPropertyPath(x, ODataParameters!.DataValueField!)?.ToString())
+                    .Select(x => Misc.GetValueFromPropertyPath(x, TValueField)?.ToString())
                     .Distinct();
 
                 if (itemIds.Count() > 0)
                 {
                     try
                     {
-                        var queryBuilder = ODataParameters!.QueryBuilder;
-                        queryBuilder = queryBuilder.AddQueryOption("$select", $"{nameof(ShiftEntityDTOBase.ID)},{PropertyFieldName}");
-                        var url = queryBuilder.Where(x => itemIds.Contains(x.ID)).ToString();
+                        var url = QueryBuilder
+                            .AddQueryOption("$select", $"{TEntityValueField},{TEntityTextField}")
+                            .WhereQuery(x => itemIds.Contains(x.ID))
+                            .ToString();
+
                         var result = await Http.GetFromJsonAsync<ODataDTO<TEntity>>(url);
 
                         if (result != null)
@@ -132,22 +131,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
             ShiftList.GridStateHasChanged();
         }
 
-        private string GetPropertyFieldName()
+        private string GetDataValueFieldName()
         {
-            string? propertyName;
-            if (PropertyName != null && !Guid.TryParse(PropertyName, out _))
+            string? field = DataValueField;
+
+            if (string.IsNullOrWhiteSpace(DataValueField) && !string.IsNullOrWhiteSpace(PropertyName) && !Guid.TryParse(PropertyName, out _))
             {
-                propertyName = ODataParameters!.DataTextField = Misc.GetFieldFromPropertyPath(PropertyName);
-            }
-            else
-            {
-                propertyName = ODataParameters!.DataTextField;
+                field = Misc.GetFieldFromPropertyPath(PropertyName);
             }
 
-            if (string.IsNullOrWhiteSpace(propertyName))
-                throw new Exception(message: $"'{nameof(ODataParameters.DataTextField)}' cannot be null when '{nameof(EntityProperty)}' is null or a dynamic expression");
+            if (string.IsNullOrWhiteSpace(field))
+            {
+                throw new Exception(message: $"'{nameof(DataValueField)}' cannot be null when '{nameof(Property)}' is null or is a dynamic expression");
+            }
 
-            return propertyName;
+            return field;
         }
 
         private async Task ClearFilterAsync()
@@ -164,7 +162,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 Column = this,
                 Operator = FilterOperator.String.Equal,
-                Title = PropertyFieldName,
+                Title = TValueField,
                 Value = x.Text,
             });
 
