@@ -1,4 +1,6 @@
 using Bogus;
+using Bogus.Bson;
+using Bogus.DataSets;
 using Microsoft.AspNetCore.Mvc;
 using ShiftBlazor.Tests.Shared.DTOs;
 using ShiftSoftware.ShiftEntity.Model;
@@ -10,8 +12,18 @@ builder.Services.AddCors();
 var app = builder.Build();
 
 var usersList = User.GenerateData();
+var testItemList = TestItem.GenerateData(5, 10);
 
 app.MapGet("/", () => "Hello World!");
+
+app.MapGet("/api/TestItem", () =>
+{
+    return new ODataDTO<TestItem>
+    {
+        Count = testItemList.Count,
+        Value = testItemList,
+    };
+});
 
 app.MapGet("/api/Users", ([FromQuery(Name = "$top")] int? top,
                           [FromQuery(Name = "$skip")] int? skip,

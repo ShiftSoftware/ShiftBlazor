@@ -9,11 +9,27 @@
 
 </ShiftAutocomplete>
 
+<ShiftAutocompleteMultiSelect T="ShiftEntitySelectDTO"
+                              TEntitySet="User"
+                              EntitySet="Users"
+                              DataValueField="@nameof(User.ID)"
+                              DataTextField="@nameof(User.Name)"
+                              Label="Autocomplete"
+                              @bind-SelectedValues="TheItem2.Property">
+
+</ShiftAutocompleteMultiSelect>
+
 <br />
 SelectedItems count: @TheItem.Property?.Count
+SelectedItems2 count: @TheItem2.Property?.Count
 
 @code {
     RequiredPropertyDTO<List<ShiftEntitySelectDTO>> TheItem = new()
+    {
+        Property = new(),
+    };
+
+    RequiredPropertyDTO<List<ShiftEntitySelectDTO>> TheItem2 = new()
     {
         Property = new(),
     };

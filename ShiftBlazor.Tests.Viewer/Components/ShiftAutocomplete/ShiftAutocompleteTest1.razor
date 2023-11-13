@@ -5,7 +5,8 @@
                    DataTextField="@nameof(User.Name)"
                    Label="Autocomplete"
                    For="() => TheItem.Select"
-                   @bind-Value="TheItem.Select">
+                   Where="x => (user) => x != null"
+                   >
 
 </ShiftAutocomplete>
 

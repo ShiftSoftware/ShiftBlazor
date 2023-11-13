@@ -1,9 +1,10 @@
 ﻿<ShiftEntityForm T="User"
                  Action="Project"
                  Title="Edit User"
+                 @bind-Value="User"
                  IconSvg="@Icons.Material.Filled.Person4">
 
-    <MudTextFieldExtended Label="Name"
+    <MudTextFieldExtended ErrorText="" RequiredError="" Label="Name"
                           @bind-Value="User.Name"
                           For="() => User.Name"/>
 

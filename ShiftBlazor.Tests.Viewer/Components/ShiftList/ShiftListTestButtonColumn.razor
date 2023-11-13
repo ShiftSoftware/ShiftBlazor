@@ -1,0 +1,11 @@
+﻿@using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm
+
+<ShiftList T="User"
+           EntitySet="Users"
+           DisableActionColumn
+           Dense>
+
+    <ButtonColumn ComponentType="typeof(ShiftEntityFormTest1)" Property="x => x.ID" HeaderStyle="width: 0;"/>
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="x => x.Email" />
+</ShiftList>

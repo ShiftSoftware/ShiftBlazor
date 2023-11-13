@@ -1,15 +1,22 @@
 ﻿<ShiftList T="User"
            Title="@Title"
+           Dense="IsDense"
+           EnableSelection="EnableSelection"
            @bind-Values="Users">
 
     <PropertyColumn Property="x => x.Name" />
     <PropertyColumn Property="x => x.Email" />
 </ShiftList>
 
+<MudCheckBox @bind-Checked="IsDense">IsDense</MudCheckBox>
+<MudCheckBox @bind-Checked="EnableSelection">EnableSelection</MudCheckBox>
 @code {
     [Parameter]
     public List<User> Users { get; set; } = User.GenerateData(50, 50, false);
 
     [Parameter]
     public string Title { get; set; } = "Local Data List";
+
+    private bool IsDense = false;
+    private bool EnableSelection = false;
 }

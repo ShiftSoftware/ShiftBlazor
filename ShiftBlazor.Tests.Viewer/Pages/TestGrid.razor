@@ -1,0 +1,38 @@
+﻿@page "/TestGrid"
+
+<MudLayout>
+    <MudAppBar Elevation="0">
+        <MudText Typo="Typo.h6">Test Grid</MudText>
+        <MudSpacer />
+    </MudAppBar>
+    <MudMainContent Class="mt-4">
+
+        <MudPaper Elevation="0" Style="padding: 24px; margin: 24px;">
+            <MudDataGrid T="User" Items="Users" Virtualize Dense Height="500px">
+                <Columns>
+
+                    @* <SelectColumn></SelectColumn> *@
+
+                    <PropertyColumn Property="x => x.Name" />
+
+                    <TemplateColumn>
+
+                        <CellTemplate>
+                            <MudCheckBox T="bool" Size="Size.Small" />
+                        </CellTemplate>
+                    </TemplateColumn>
+
+
+                </Columns>
+
+            </MudDataGrid>
+        </MudPaper>
+
+    </MudMainContent>
+</MudLayout>
+
+
+
+@code {
+    public List<User> Users { get; set; } = User.GenerateData(50, 50, false);
+}

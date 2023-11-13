@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using FluentValidation;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.ComponentModel.DataAnnotations;
 
@@ -7,7 +8,6 @@ namespace ShiftBlazor.Tests.Shared.DTOs
     public class User : ShiftEntityDTO
     {
         public override string? ID { get; set; }
-        [Required]
         public string Name { get; set; }
         public string Email { get; set; }
 
@@ -23,6 +23,16 @@ namespace ShiftBlazor.Tests.Shared.DTOs
                 .RuleFor(u => u.IsDeleted, (f, u) => f.Random.Bool(includeDeleted ? 0.1f : 0f));
 
             return userGenerator.GenerateBetween(min, max);
+        }
+    }
+
+    public class OrderDetailsModelFluentValidator : AbstractValidator<User>
+    {
+        public OrderDetailsModelFluentValidator()
+        {
+            RuleFor(x => x.Name)
+                .NotEmpty()
+                .Length(1, 100);
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿@page "/"
 @using ShiftBlazor.Tests.Viewer.Components.ShiftList
 @using ShiftBlazor.Tests.Viewer.Components.ShiftFormBasic
+@using System.ComponentModel;
+@using ShiftSoftware.ShiftEntity.Model.HashId;
 
 <MudLayout>
     <MudAppBar Elevation="0">
@@ -15,7 +17,7 @@
             @foreach (var groups in Components)
             {
                 var groupName = groups.Key!.Split('.').Last();
-                <MudListItem Style="cursor: pointer;" Text="@groupName">
+                <MudListItem Style="cursor: pointer;" Text="@groupName" Expanded>
                     <NestedList>
                         @foreach (var type in groups)
                         {
@@ -33,6 +35,7 @@
             @if (SelectedType == null)
             {
                 <span>Select a component</span>
+
             }
             else
             {
@@ -54,4 +57,47 @@
     Type? SelectedType;
 
     bool DrawerOpen = true;
+
+    public string json = """{"@odata.context":"http://localhost:5226/odata/$metadata#Ticket","@odata.count":1,"value":[{"ID":"JOPmY","Name":"nm,.","IsDeleted":false}]}""";
+
+    protected override void OnInitialized()
+    {
+        var data = System.Text.Json.JsonSerializer.Deserialize<ShiftSoftware.ShiftEntity.Model.Dtos.ODataDTO<TicketListDTO>>(json);
+        var z = 1;
+    }
+
+    public class TicketListDTO : ShiftEntityListDTO
+    {
+        [_TicketHashId]
+        public override string? ID { get; set; }
+        public string? Name { get; set; }
+
+    }
+
+    public enum Languages
+    {
+        [Description("English")]
+        English = 1,
+        [Description("Arabic")]
+        Arabic,
+        [Description("Kurdish")]
+        Kurdish
+    }
+
+    public enum TicketStatuses
+    {
+        [Description("New")]
+        New = 1,
+
+        [Description("Pending Customer Reply ")]
+        PendingCustomerReply = 4,
+
+        [Description("Answered On Another Phone")]
+        AnsweredOnAnotherPhone = 22,
+    }
+
+    public class _TicketHashId : JsonHashIdConverterAttribute<_TicketHashId>
+    {
+        public _TicketHashId() : base(5) { }
+    }
 }

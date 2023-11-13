@@ -1,0 +1,45 @@
+﻿@using System.Reflection;
+<ShiftList T="TestItem"
+EntitySet="TestItem">
+
+    <PropertyColumn Property="x => x.StringType" />
+    <PropertyColumn Property="x => x.IntType" />
+    <PropertyColumn Property="x => x.DateTimeType" />
+    <PropertyColumn Property="x => x.BoolType" />
+    <PropertyColumn Property="x => x.EnumType" />
+    <PropertyColumn Property="x => x.GuidType" />
+    <PropertyColumn Property="x => x.DateTimeOffsetType.DateTime">
+        @* <FilterTemplate>
+            <MudSelect T="string" Dense FullWidth>
+                @foreach (var prop in props)
+                {
+                    <MudSelectItem Value="prop.Name">@prop.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudGrid Spacing="0" Justify="Justify.FlexStart">
+                <MudItem xs="7"><MudDatePickerExtended /></MudItem>
+                <MudItem xs="5"><MudTimePickerExtended/></MudItem>
+            </MudGrid>
+            <MudToolBar Dense DisableGutters>
+                <MudSpacer></MudSpacer>
+                <MudButton>Clear</MudButton>
+                <MudButton Color="Color.Primary" OnClick="Filter">Filter</MudButton>
+            </MudToolBar>
+        </FilterTemplate> *@
+    </PropertyColumn>
+</ShiftList>
+
+@* @System.Text.Json.JsonSerializer.Serialize(props); *@
+
+@code {
+    private FieldInfo[] props => typeof(FilterOperator.DateTime).GetFields().ToArray();
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    private void Filter()
+    {
+        
+    }
+}
