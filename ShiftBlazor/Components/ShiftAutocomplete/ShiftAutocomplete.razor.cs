@@ -14,8 +14,7 @@ using ShiftSoftware.ShiftEntity.Core;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftAutocomplete<T, TEntitySet> : MudAutocomplete<T>
-        where T : ShiftEntitySelectDTO, new()
+    public partial class ShiftAutocomplete<TEntitySet> : MudAutocomplete<ShiftEntitySelectDTO>
         where TEntitySet : ShiftEntityDTOBase
     {
         [Inject] private ODataQuery OData { get; set; } = default!;
@@ -46,17 +45,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool MultiSelect { get; set; }
 
         [Parameter]
-        public List<T> SelectedValues { get; set; } = new List<T>();
+        public List<ShiftEntitySelectDTO> SelectedValues { get; set; } = new List<ShiftEntitySelectDTO>();
 
         [Parameter]
-        public EventCallback<List<T>> SelectedValuesChanged { get; set; }
+        public EventCallback<List<ShiftEntitySelectDTO>> SelectedValuesChanged { get; set; }
 
         internal string LastTypedValue = "";
         internal List<TEntitySet> Items = new();
 
         private string? _Placeholder = null;
         private string? _Class = null;
-        private EventCallback<T>? _ValueChanged = null;
+        private EventCallback<ShiftEntitySelectDTO>? _ValueChanged = null;
         private string MultiSelectClassName = "multi-select";
 
         protected override void OnInitialized()
@@ -88,7 +87,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
 
                 OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
-                ValueChanged = new EventCallback<T>(this, HandleValueChanged);
+                ValueChanged = new EventCallback<ShiftEntitySelectDTO>(this, HandleValueChanged);
             }
 
             base.OnInitialized();
@@ -107,9 +106,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
             Strict = false;
             Variant = Variant.Text;
 
-            if (parameters.TryGetValue(nameof(For), out Expression<Func<T>>? _For))
+            if (parameters.TryGetValue(nameof(For), out Expression<Func<ShiftEntitySelectDTO>>? _For))
             {
-                Required = FormHelper.IsRequired<T>(_For!);
+                Required = FormHelper.IsRequired<ShiftEntitySelectDTO>(_For!);
             }
 
             return base.SetParametersAsync(parameters);
@@ -173,7 +172,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     return;
                 }
 
-                Value = new T
+                Value = new ShiftEntitySelectDTO
                 {
                     Value = Value.Value,
                     Text = text,
@@ -184,7 +183,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        internal async Task<IEnumerable<T>> Search(string val, CancellationToken token)
+        internal async Task<IEnumerable<ShiftEntitySelectDTO>> Search(string val, CancellationToken token)
         {
             LastTypedValue = val;
             var url = GetODataUrl(val);
@@ -207,7 +206,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return builder.Take(100).ToString()!;
         }
 
-        internal async Task<List<T>> GetODataResult(string url, CancellationToken token = default)
+        internal async Task<List<ShiftEntitySelectDTO>> GetODataResult(string url, CancellationToken token = default)
         {
             try
             {
@@ -223,7 +222,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 var odataResultType = typeof(TEntitySet);
 
-                return odataResult.Select(x => new T
+                return odataResult.Select(x => new ShiftEntitySelectDTO
                 {
                     Value = odataResultType.GetProperty(DataValueField!)?.GetValue(x)?.ToString()!,
                     Text = odataResultType.GetProperty(DataTextField)?.GetValue(x)?.ToString(),

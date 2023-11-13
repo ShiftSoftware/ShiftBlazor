@@ -6,8 +6,7 @@ using ShiftSoftware.ShiftEntity.Model.Dtos;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftAutocompleteWithQuickAdd<T, TEntitySet, TQuickAdd> : ShiftAutocomplete<T, TEntitySet>
-        where T : ShiftEntitySelectDTO, new()
+    public partial class ShiftAutocompleteWithQuickAdd<TEntitySet, TQuickAdd> : ShiftAutocomplete<TEntitySet>
         where TEntitySet : ShiftEntityDTOBase
     {
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
@@ -22,7 +21,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool OnAdornmentClickIsNotSet;
 
         [Parameter]
-        public Func<TQuickAdd, T>? Convert { get; set; }
+        public Func<TQuickAdd, ShiftEntitySelectDTO>? Convert { get; set; }
 
         public override Task SetParametersAsync(ParameterView parameters)
         {
@@ -76,7 +75,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return;
             }
                 
-            Value = new T
+            Value = new ShiftEntitySelectDTO
             {
                 Value = value,
                 Text = text,
