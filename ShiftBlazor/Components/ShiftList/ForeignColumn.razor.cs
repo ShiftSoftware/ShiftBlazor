@@ -43,8 +43,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string TEntityTextField = string.Empty;
         private string TEntityValueField = nameof(ShiftEntityDTOBase.ID);
 
-        [Parameter]
-        public TEntity Test { get; set; }
         protected override void OnInitialized()
         {
             if (string.IsNullOrWhiteSpace(EntitySetName))
@@ -163,7 +161,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 Column = this,
                 Operator = FilterOperator.String.Equal,
                 Title = TValueField,
-                Value = x.Text,
+                Value = x.Value,
             });
 
 
