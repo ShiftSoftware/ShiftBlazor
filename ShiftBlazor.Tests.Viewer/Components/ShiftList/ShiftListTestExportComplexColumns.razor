@@ -1,0 +1,9 @@
+﻿<ShiftList T="User"
+           EnableExport="true"
+           Dense
+           EntitySet="Users">
+
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="@(x => DateTime.Now.Day % 2 == 0 ? x.Email : x.Email.ToUpper())" />
+    <PropertyColumn Property="@(x => Guid.NewGuid())" />
+</ShiftList>

@@ -1,36 +1,14 @@
 ﻿@inject ODataQuery OData
 
-<ShiftList @ref="grid" T="User"
+<ShiftList T="User"
            EntitySet="Users">
 
     <PropertyColumn Property="x => x.Name" />
-    @* <PropertyColumn Property="x => x.Email" /> *@
-    <ForeignColumn T="User" TProperty="string" TEntity="Test" Property="x => x.Email" Title="dawd" ODataParameters="ODataParameters"></ForeignColumn>
+    <ForeignColumn Property="x => x.Email"
+                   EntitySetName="Users"
+                   ForeignTextField="Email"
+                   T="User"
+                   TProperty="string"
+                   TEntity="User"/>
 </ShiftList>
 
-<MudButton OnClick="ShowFilters">Test</MudButton>
-
-@code {
-    ODataParameters<User> ODataParameters;
-
-
-    public ShiftList<User> grid { get; set; }
-
-    public void ShowFilters()
-    {
-        Console.Write('\n');
-        foreach (var filter in grid.DataGrid.FilterDefinitions)
-        {
-            Console.Write(filter.Column.Title);
-            Console.Write(" - ");
-            Console.Write(filter.Title);
-            Console.Write('\n');
-        }
-    }
-
-
-    protected override void OnInitialized()
-    {
-        ODataParameters = OData.CreateODataParameterObject<User>("Users", DataValueField: nameof(User.ID));
-    }
-}

@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ShiftBlazor.Tests.Shared.DTOs
 {
-    public class TestItem : ShiftEntityDTO
+    public class TestItem : ShiftEntityViewAndUpsertDTO
     {
         public override string? ID { get; set; }
         public string StringType { get; set; }

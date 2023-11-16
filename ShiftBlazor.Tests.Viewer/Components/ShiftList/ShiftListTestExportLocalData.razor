@@ -1,0 +1,12 @@
+﻿<ShiftList EnableExport="true"
+           Dense
+           Values="Users"
+           ShowIDColumn>
+
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="x => x.Email" />
+</ShiftList>
+
+@code {
+    List<User> Users = User.GenerateData(1000, 5000);
+}
