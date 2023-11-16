@@ -471,19 +471,43 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     var csvWriter = new CsvWriter(streamWriter, config);
 
-                    var map = new DefaultClassMap<T>();
-
                     var columns = DataGrid!
                         .RenderedColumns
-                        .Where(x => !x.Hidden && !Guid.TryParse(x.PropertyName, out _))
-                        .Select(x => Misc.GetFieldFromPropertyPath(x.PropertyName));
-                    foreach ( var prop in typeof(T).GetProperties().Where(x => columns.Contains(x.Name) ) )
+                        .Where(x => !x.Hidden)
+                        .Where(x => x.GetType().GetProperty("Property") != null);
+
+                    // Write headers
+                    foreach (var column in columns)
                     {
-                        map.Map(Misc.CreateExpression<T>(prop.Name));
+                        csvWriter.WriteField(column.Title);
+                    }
+                    csvWriter.NextRecord();
+
+                    // Write rows
+                    foreach (var item in res.Value)
+                    {
+                        foreach (var column in columns)
+                        {
+                            //  Get the column's Property parameter
+                            var ColumnExpression = column.GetType().GetProperty("Property")?.GetValue(column);
+                            if (ColumnExpression is LambdaExpression lambdaExpression)
+                            {
+                                // Compile and invoke the method so we can replicate the result shown on the DataGrid
+                                var compiled = lambdaExpression.Compile();
+                                try
+                                {
+                                    object? result = compiled.DynamicInvoke(item);
+                                    csvWriter.WriteField(result);
+                                }
+                                catch (Exception)
+                    {
+                                    csvWriter.WriteField(null);
+                                }
+                            }
                     }
 
-                    csvWriter.Context.RegisterClassMap(map);
-                    await csvWriter.WriteRecordsAsync(res.Value);
+                        csvWriter.NextRecord();
+                    }
                 }
 
                 stream.Seek(0, SeekOrigin.Begin);
