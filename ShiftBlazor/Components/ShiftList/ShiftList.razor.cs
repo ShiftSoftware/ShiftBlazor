@@ -461,18 +461,23 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private async Task<Stream> GetStream(string url)
         {
             var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);
+            return GetStream(res?.Value);
+        }
+
+        private Stream GetStream(List<T>? items)
+        {
             var stream = new MemoryStream();
 
             var config = new CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture);
 
-            if (res != null && res.Value.Count > 0)
+            if (items != null && items.Count > 0)
             {
                 using (var streamWriter = new StreamWriter(stream, leaveOpen: true))
                 {
                     var csvWriter = new CsvWriter(streamWriter, config);
 
                     var columns = DataGrid!
-                        .RenderedColumns
+                    .RenderedColumns
                         .Where(x => !x.Hidden)
                         .Where(x => x.GetType().GetProperty("Property") != null);
 
@@ -484,7 +489,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     csvWriter.NextRecord();
 
                     // Write rows
-                    foreach (var item in res.Value)
+                    foreach (var item in items)
                     {
                         foreach (var column in columns)
                         {
@@ -500,11 +505,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                                     csvWriter.WriteField(result);
                                 }
                                 catch (Exception)
-                    {
+                                {
                                     csvWriter.WriteField(null);
                                 }
                             }
-                    }
+                        }
 
                         csvWriter.NextRecord();
                     }
@@ -518,16 +523,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task ExportList()
         {
-            if (CurrentUri == null) return;
+            var name = Title != null && Regex.IsMatch(Title, "[^a-zA-Z]")
+                ? Title
+                : EntitySet ?? typeof(T).Name;
 
-            var name = Title != null && Regex.IsMatch(Title, "[^a-zA-Z]") ? Title : EntitySet;
-            name = Regex.Replace(name!, "[^a-zA-Z]", "");
+            name = Regex.Replace(name, "[^a-zA-Z]", "");
             var date = DateTime.Now.ToString("yyyy-MM-dd");
             var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}_{date}.csv";
 
-            var url = Regex.Replace(CurrentUri.AbsoluteUri, "\\$skip=[0-9]+&?|\\$top=[0-9]+&?", "");
-            var fileStream = await GetStream(url);
-            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            Stream stream;
+
+            if (CurrentUri == null)
+            {
+                stream = GetStream(Values);
+            }
+            else
+            {
+                var url = Regex.Replace(CurrentUri.AbsoluteUri, "\\$skip=[0-9]+&?|\\$top=[0-9]+&?", "");
+                stream = await GetStream(url);
+            }
+            using var streamRef = new DotNetStreamReference(stream: stream);
             await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         }
 
