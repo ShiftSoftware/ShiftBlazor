@@ -204,6 +204,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
         {
             var culture = GetCulture();
 
+            ShiftSoftware.ShiftEntity.Model.LocalizedTextJsonConverter.UserLanguage = culture.TwoLetterISOLanguageName;
+
             if (Http != null)
             {
                 Http.DefaultRequestHeaders.AcceptLanguage.Clear();
