@@ -1,0 +1,65 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using System.Text.Json
+
+@inject SettingManager SettingManager
+
+@{
+    foreach (var langKey in LocalizedText.Keys.ToList())
+    {
+        <MudItem>
+            <MudTextField Value="@LocalizedText[langKey]" TextChanged="@(async (string value) => { await this.TextChanged(langKey, value); })" Label="@($"{Label} ({LanguageInfo[langKey].FirstOrDefault()?.Label})")" />
+        </MudItem>
+    }
+}
+
+@code {
+    [Parameter]
+    public string Value { get; set; } = default!;
+
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    private Dictionary<string, string?> LocalizedText = new();
+
+    private ILookup<string, LanguageInfo> LanguageInfo = default!;
+
+    protected override void OnInitialized()
+    {
+        this.LanguageInfo = SettingManager.Configuration.Languages
+        .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
+
+        var langCodes = this.LanguageInfo.Select(x => x.Key).Distinct().ToList();
+
+        foreach (var lang in langCodes)
+            LocalizedText[lang] = null;
+
+        try
+        {
+            var json = JsonDocument.Parse(Value);
+
+            var localizedText = json.Deserialize<Dictionary<string, string>>()!;
+
+            foreach (var lang in langCodes)
+            {
+                if (localizedText.TryGetValue(lang, out var localizedValue))
+                {
+                    LocalizedText[lang] = localizedValue;
+                }
+            }
+        }
+        catch
+        {
+            LocalizedText[new System.Globalization.CultureInfo(DefaultAppSetting.Language.CultureName).TwoLetterISOLanguageName] = Value;
+        }
+    }
+
+    public async Task TextChanged(string lang, string value)
+    {
+        this.LocalizedText[lang] = value;
+
+        await this.ValueChanged.InvokeAsync(System.Text.Json.JsonSerializer.Serialize(LocalizedText));
+    }
+}
