@@ -62,6 +62,10 @@ namespace System.Collections.Generic
                 {
                     value = ((DateTime)value!).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                 }
+                else if (fieldType.IsBoolean)
+                {
+                    value = value.ToString()?.ToLower();
+                }
             }
 
             return value;
