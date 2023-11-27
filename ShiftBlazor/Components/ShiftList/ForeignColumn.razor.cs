@@ -83,7 +83,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             FilterItems = DataGrid.FilterDefinitions
-                .Where(x => x.Column!.Identifier == Identifier)
+                .Where(x => !string.IsNullOrWhiteSpace(x.Column?.Identifier) && x.Column.Identifier == Identifier)
                 .Select(x => new ShiftEntitySelectDTO
                 {
                     Text = (string)x.Value!,
