@@ -201,32 +201,28 @@
                 {
                     <MudAlert Severity="Severity.Error">@Loc["DeletedIndicator"]</MudAlert>
                 }
-             </text>;
+            </text> ;
     }
 
-    public RenderFragment FooterToolbarEnd
-    {
-        get =>
-            @<text>
-                @if (Mode == FormModes.Edit)
-                {
-                    <MudButton Disabled="@(TaskInProgress != FormTasks.None)"
-                               StartIcon="@Icons.Material.Filled.Cancel"
-                               OnClick="CancelChanges">
-                        @Loc["CancelChanges"]
-                    </MudButton>
-                }
-                else if (Mode == FormModes.Archive)
-                {
-                    <MudButton Disabled="@(TaskInProgress != FormTasks.None)"
-                               StartIcon="@Icons.Material.Filled.Cancel"
-                               OnClick="CloseRevision">
-                        @Loc["CloseRevisions"]
-                    </MudButton>
-                }
-            </text>
-    ;
-    }
+    public RenderFragment? FooterToolbarEnd => Mode == FormModes.Edit
+            ? CancelButton
+            : Mode == FormModes.Archive
+                ? CloseRevisions
+                : null;
+
+    public RenderFragment CancelButton =>
+        @<MudButton Disabled="@(TaskInProgress != FormTasks.None)"
+                    StartIcon="@Icons.Material.Filled.Cancel"
+                    OnClick="CancelChanges">
+            @Loc["CancelChanges"]
+        </MudButton>;
+
+    public RenderFragment CloseRevisions =>
+        @<MudButton Disabled="@(TaskInProgress != FormTasks.None)"
+                    StartIcon="@Icons.Material.Filled.Cancel"
+                    OnClick="CloseRevision">
+            @Loc["CloseRevisions"]
+        </MudButton>;
 
     public RenderFragment Loading
     {

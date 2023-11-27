@@ -224,7 +224,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 }
             }
 
-            var options = new DialogOptions { NoHeader = true };
+            var options = new DialogOptions { NoHeader = true, ClassBackground = "shift-modal-background" };
             var result = await DialogService.Show(TComponent, "", dParams, options).Result;
             return result;
         }

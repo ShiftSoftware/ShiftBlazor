@@ -185,6 +185,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool MadeChanges = false;
 
         protected ITypeAuthService? TypeAuthService;
+        internal bool HasWriteAccess => TypeAuthAction is null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write);
+        internal bool FooterToolbarIsEmpty => FooterToolbarStartTemplate == null
+            && FooterToolbarCenterTemplate == null
+            && FooterToolbarEndTemplate == null
+            && (HideSubmit || !HasWriteAccess);
         internal string ContentCssClass
         {
             get
