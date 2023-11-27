@@ -1,0 +1,84 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using System.Text.Json
+
+@inject SettingManager SettingManager
+
+<MudGrid>
+    @foreach (var langKey in LocalizedText.Keys.ToList())
+    {
+        <MudItem xs="XsColSize" sm="SmColSize" md="MdColSize" lg="LgColSize">
+            <MudTextField Value="@LocalizedText[langKey]" TextChanged="@(async (string value) => { await this.TextChanged(langKey, value); })" Label="@($"{Label} ({LanguageInfo[langKey].FirstOrDefault()?.Label})")" />
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    [Parameter]
+    public string Value { get; set; } = default!;
+
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    private Dictionary<string, string?> LocalizedText = new();
+
+    private ILookup<string, LanguageInfo> LanguageInfo = default!;
+
+    private int XsColSize;
+    private int SmColSize;
+    private int MdColSize;
+    private int LgColSize;
+
+    protected override void OnInitialized()
+    {
+        this.LanguageInfo = SettingManager.Configuration.Languages
+        .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
+
+        var langCodes = this.LanguageInfo.Select(x => x.Key).Distinct().ToList();
+
+        var langCount = langCodes.Count;
+
+        XsColSize = 12;
+
+        SmColSize = 12 / langCount;
+        SmColSize = SmColSize < 6 ? 6 : SmColSize;
+
+        MdColSize = 12 / langCount;
+        MdColSize = MdColSize < 4 ? 4 : MdColSize;
+
+        LgColSize = 12 / langCount;
+        LgColSize = LgColSize < 3 ? 3 : LgColSize;
+
+
+        foreach (var lang in langCodes)
+            LocalizedText[lang] = null;
+
+        try
+        {
+            var json = JsonDocument.Parse(Value);
+
+            var localizedText = json.Deserialize<Dictionary<string, string>>()!;
+
+            foreach (var lang in langCodes)
+            {
+                if (localizedText.TryGetValue(lang, out var localizedValue))
+                {
+                    LocalizedText[lang] = localizedValue;
+                }
+            }
+        }
+        catch
+        {
+            LocalizedText[new System.Globalization.CultureInfo(DefaultAppSetting.Language.CultureName).TwoLetterISOLanguageName] = Value;
+        }
+    }
+
+    public async Task TextChanged(string lang, string value)
+    {
+        this.LocalizedText[lang] = value;
+
+        await this.ValueChanged.InvokeAsync(System.Text.Json.JsonSerializer.Serialize(LocalizedText));
+    }
+}

@@ -11,6 +11,7 @@ using Microsoft.OData.Client;
 using Microsoft.AspNetCore.Components.Web;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core;
+using ShiftSoftware.ShiftEntity.Model;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
