@@ -6,11 +6,15 @@ namespace System.Collections.Generic
 {
     public static class FilterDefinitionExtension
     {
-        public static IEnumerable<string> ToODataFilter<T>(this ICollection<IFilterDefinition<T>> filterDefinitions)
+        public static IEnumerable<IEnumerable<string>> ToODataFilter<T>(this ICollection<IFilterDefinition<T>> filterDefinitions)
         {
+            Console.WriteLine(JsonSerializer.Serialize(filterDefinitions.Select(x => new { x.Column?.PropertyName, x.Operator })));
+
             return filterDefinitions
                 .Where(IsValidFilter)
-                .Select(GetFilterString)
+                .GroupBy(x =>
+                    new { x.Column?.PropertyName, x.Operator },
+                    (key, filters) => filters.Select(GetFilterString).Distinct())
                 .Distinct();
         }
 

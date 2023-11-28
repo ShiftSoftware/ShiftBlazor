@@ -477,7 +477,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     var csvWriter = new CsvWriter(streamWriter, config);
 
                     var columns = DataGrid!
-                    .RenderedColumns
+                        .RenderedColumns
                         .Where(x => !x.Hidden)
                         .Where(x => x.GetType().GetProperty("Property") != null);
 
@@ -580,7 +580,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             try
             {
                 // Convert MudBlazor's FilterDefinitions to OData query
-                var userFilters = state.FilterDefinitions.ToODataFilter();
+                var userFilters = state.FilterDefinitions.ToODataFilter().Select(x => string.Join(" or ", x));
 
                 var filterList = new List<string>();
                 filterList.AddRange(DefaultFilters);
@@ -588,7 +588,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 if (filterList.Count() > 0)
                 {
-                    builder = builder.AddQueryOption("$filter", string.Join(" and ", filterList));
+                    builder = builder.AddQueryOption("$filter", $"({string.Join(") and (", filterList)})");
                 }
             }
             catch (Exception e)
