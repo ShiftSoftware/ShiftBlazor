@@ -8,8 +8,6 @@ namespace System.Collections.Generic
     {
         public static IEnumerable<IEnumerable<string>> ToODataFilter<T>(this ICollection<IFilterDefinition<T>> filterDefinitions)
         {
-            Console.WriteLine(JsonSerializer.Serialize(filterDefinitions.Select(x => new { x.Column?.PropertyName, x.Operator })));
-
             return filterDefinitions
                 .Where(IsValidFilter)
                 .GroupBy(x =>
