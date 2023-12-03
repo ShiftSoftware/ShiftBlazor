@@ -55,7 +55,7 @@
             <MudOverlay Visible="IsFilterOpen" OnClick="@CloseFilter" />
             <MudPopover Open="IsFilterOpen" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Paper Elevation="8" Style="width:400px" Class="pa-4">
                 <MudStack>
-                    <ShiftAutocomplete TEntitySet="TEntity" EntitySet="@EntitySetName" MultiSelect @bind-SelectedValues="FilterItems" />
+                    <ShiftAutocomplete BaseUrl="@this.BaseUrl" TEntitySet="TEntity" EntitySet="@EntitySetName" MultiSelect @bind-SelectedValues="FilterItems" />
                     <MudStack Row>
                         <MudSpacer />
                         <MudButton OnClick="ClearFilterAsync">Clear</MudButton>

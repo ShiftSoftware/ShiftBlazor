@@ -26,6 +26,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [EditorRequired]
         public string EntitySet { get; set; }
 
+        [Parameter]
+        public string? BaseUrl { get; set; }
+
+
         internal string? DataValueField { get; set; }
         internal string? DataTextField { get; set; }
 
@@ -154,7 +158,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 try
                 {
-                    url = OData.CreateNewQuery<TEntitySet>(EntitySet)
+                    url = OData.CreateNewQuery<TEntitySet>(EntitySet, BaseUrl)
                             .AddQueryOption("$select", $"{DataValueField},{DataTextField}")
                             .WhereQuery(x => 1 == 1 && x.ID == Value.Value)
                             .Take(1)
@@ -194,7 +198,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string GetODataUrl(string q = "")
         {
             var builder = OData
-                .CreateNewQuery<TEntitySet>(EntitySet)
+                .CreateNewQuery<TEntitySet>(EntitySet, BaseUrl)
                 .AddQueryOption("$select", $"{DataValueField},{DataTextField}");
 
             if (!string.IsNullOrWhiteSpace(q))
