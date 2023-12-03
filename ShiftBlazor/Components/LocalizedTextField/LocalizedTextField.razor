@@ -1,28 +1,47 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @using System.Text.Json
+@using System.Linq.Expressions
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Reflection
 
+@inject IServiceProvider ServiceProvidor
 @inject SettingManager SettingManager
+@inject MessageService MessageService
+@implements IDisposable
 
-<MudGrid>
-    @foreach (var langKey in LocalizedText.Keys.ToList())
-    {
-        <MudItem xs="XsColSize" sm="SmColSize" md="MdColSize" lg="LgColSize">
-            <MudTextField Value="@LocalizedText[langKey]" TextChanged="@(async (string value) => { await this.TextChanged(langKey, value); })" Label="@($"{Label} ({LanguageInfo[langKey].FirstOrDefault()?.Label})")" />
-        </MudItem>
-    }
-</MudGrid>
+@if (EditContext != null && MultiLangValue != null)
+{
+    <MudGrid>
+        @foreach (var prop in MultiLangValue.GetType().GetProperties())
+        {
+            var langLabel = LanguageInfo[prop.Name].FirstOrDefault()?.Label;
+            var label = Label == null ? langLabel : $"{Label} ({langLabel})";
+            var value = prop.GetValue(MultiLangValue) as string;
+            var field = EditContext.Field(prop.Name);
+            var errorMessage = EditContext.GetValidationMessages(field).FirstOrDefault();
+            var showErrors = !string.IsNullOrWhiteSpace(errorMessage);
+            var onBlur = () => OnBlurHandler(field);
+            var textChanged = async (string value) => await this.TextChanged(prop, value);
+
+            <MudItem xs="XsColSize" sm="SmColSize" md="MdColSize" lg="LgColSize">
+                <MudTextFieldExtended T="string" Value="@value" Error="@showErrors" ErrorText="@errorMessage" OnBlur="@onBlur" TextChanged="@textChanged" Label="@label" />
+            </MudItem>
+        }
+    </MudGrid>
+}
 
 @code {
     [Parameter]
     public string Value { get; set; } = default!;
 
     [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
     public string? Label { get; set; }
 
     [Parameter]
-    public EventCallback<string> ValueChanged { get; set; }
-
-    private Dictionary<string, string?> LocalizedText = new();
+    public Expression<Func<string?>>? For { get; set; }
 
     private ILookup<string, LanguageInfo> LanguageInfo = default!;
 
@@ -31,54 +50,80 @@
     private int MdColSize;
     private int LgColSize;
 
+    private EditContext? EditContext = null;
+    private object? MultiLangValue = null;
+    private IDisposable? DataAnnotation = null;
+
     protected override void OnInitialized()
     {
         this.LanguageInfo = SettingManager.Configuration.Languages
-        .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
+            .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
 
         var langCodes = this.LanguageInfo.Select(x => x.Key).Distinct().ToList();
-
         var langCount = langCodes.Count;
 
         XsColSize = 12;
+        SmColSize = Math.Max(12 / langCount, 6);
+        MdColSize = Math.Max(12 / langCount, 4);
+        LgColSize = Math.Max(12 / langCount, 3);
 
-        SmColSize = 12 / langCount;
-        SmColSize = SmColSize < 6 ? 6 : SmColSize;
-
-        MdColSize = 12 / langCount;
-        MdColSize = MdColSize < 4 ? 4 : MdColSize;
-
-        LgColSize = 12 / langCount;
-        LgColSize = LgColSize < 3 ? 3 : LgColSize;
-
-
-        foreach (var lang in langCodes)
-            LocalizedText[lang] = null;
+        try
+        {
+            var expression = (MemberExpression?)For?.Body;
+            var propertyInfo = expression?.Expression?.Type.GetProperty(expression.Member.Name);
+            var fields = langCodes.ToArray();
+            MultiLangValue = Misc.CreateClassObject("MyRuntimeClass", fields, propertyInfo?.CustomAttributes);
+        }
+        catch (Exception)
+        {
+            MessageService.Error("Could not create language fields");
+            return;
+        }
 
         try
         {
             var json = JsonDocument.Parse(Value);
-
             var localizedText = json.Deserialize<Dictionary<string, string>>()!;
 
             foreach (var lang in langCodes)
             {
                 if (localizedText.TryGetValue(lang, out var localizedValue))
                 {
-                    LocalizedText[lang] = localizedValue;
+                    SetValue(lang, localizedValue);
                 }
             }
         }
         catch
         {
-            LocalizedText[new System.Globalization.CultureInfo(DefaultAppSetting.Language.CultureName).TwoLetterISOLanguageName] = Value;
+            var lang = new System.Globalization.CultureInfo(DefaultAppSetting.Language.CultureName).TwoLetterISOLanguageName;
+            SetValue(lang, Value);
+        }
+        finally
+        {
+            DataAnnotation?.Dispose();
+            EditContext = new EditContext(MultiLangValue!);
+            DataAnnotation = EditContext.EnableDataAnnotationsValidation(ServiceProvidor);
         }
     }
 
-    public async Task TextChanged(string lang, string value)
+    public async Task TextChanged(PropertyInfo prop, string value)
     {
-        this.LocalizedText[lang] = value;
+        prop.SetValue(MultiLangValue, value);
+        await this.ValueChanged.InvokeAsync(System.Text.Json.JsonSerializer.Serialize(MultiLangValue));
+    }
 
-        await this.ValueChanged.InvokeAsync(System.Text.Json.JsonSerializer.Serialize(LocalizedText));
+    private void SetValue(string field, string value)
+    {
+        MultiLangValue?.GetType().GetProperty(field)?.SetValue(MultiLangValue, value);
+    }
+
+    private void OnBlurHandler(FieldIdentifier field)
+    {
+        EditContext?.NotifyFieldChanged(field);
+    }
+
+    void IDisposable.Dispose()
+    {
+        DataAnnotation?.Dispose();
     }
 }
