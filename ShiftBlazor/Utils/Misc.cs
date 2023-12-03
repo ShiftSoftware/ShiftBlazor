@@ -62,7 +62,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             return (TAttribute?)Attribute.GetCustomAttribute(ElementType, typeof(TAttribute));
         }
 
-        internal static object? CreateClassObject(string className, string[] propertyNames, IEnumerable<CustomAttributeData>? attributeDatas = null)
+        internal static object? CreateClassObject(string className, Dictionary<string, Type> Properties, IEnumerable<CustomAttributeData>? attributeDatas = null)
         {
             AssemblyName assemblyName = new AssemblyName("DynamicClassAssembly");
             AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
@@ -76,10 +76,13 @@ namespace ShiftSoftware.ShiftBlazor.Utils
                 TypeAttributes.BeforeFieldInit |
                 TypeAttributes.AutoLayout);
 
-            foreach (var propName in propertyNames)
+            foreach (var property in Properties)
             {
+                var propName = property.Key;
+                var type = property.Value;
+
                 FieldBuilder fieldBuilder = typeBuilder.DefineField("_" + propName.ToLower(), typeof(string), FieldAttributes.Private);
-                PropertyBuilder propertyBuilder = typeBuilder.DefineProperty(propName, PropertyAttributes.HasDefault, typeof(string), null);
+                PropertyBuilder propertyBuilder = typeBuilder.DefineProperty(propName, PropertyAttributes.HasDefault, type, null);
 
                 if (attributeDatas != null)
                 {
@@ -92,14 +95,14 @@ namespace ShiftSoftware.ShiftBlazor.Utils
                     }
                 }
 
-                MethodBuilder getPropMthdBldr = typeBuilder.DefineMethod("get_" + propName, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeof(string), Type.EmptyTypes);
+                MethodBuilder getPropMthdBldr = typeBuilder.DefineMethod("get_" + propName, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, type, Type.EmptyTypes);
                 ILGenerator getIl = getPropMthdBldr.GetILGenerator();
 
                 getIl.Emit(OpCodes.Ldarg_0);
                 getIl.Emit(OpCodes.Ldfld, fieldBuilder);
                 getIl.Emit(OpCodes.Ret);
 
-                MethodBuilder setPropMthdBldr = typeBuilder.DefineMethod("set_" + propName, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, null, new Type[] { typeof(string) });
+                MethodBuilder setPropMthdBldr = typeBuilder.DefineMethod("set_" + propName, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, null, new Type[] { type });
                 ILGenerator setIl = setPropMthdBldr.GetILGenerator();
 
                 setIl.Emit(OpCodes.Ldarg_0);

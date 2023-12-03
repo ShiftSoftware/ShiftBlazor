@@ -71,7 +71,7 @@
         {
             var expression = (MemberExpression?)For?.Body;
             var propertyInfo = expression?.Expression?.Type.GetProperty(expression.Member.Name);
-            var fields = langCodes.ToArray();
+            var fields = langCodes.ToDictionary(lang => lang, x => typeof(string));
             MultiLangValue = Misc.CreateClassObject("MyRuntimeClass", fields, propertyInfo?.CustomAttributes);
         }
         catch (Exception)
