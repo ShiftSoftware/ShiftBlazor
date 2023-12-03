@@ -1,4 +1,6 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection.Emit;
+using System.Reflection;
 
 namespace ShiftSoftware.ShiftBlazor.Utils
 {
@@ -58,6 +60,59 @@ namespace ShiftSoftware.ShiftBlazor.Utils
         {
             if (ElementType == null) return null;
             return (TAttribute?)Attribute.GetCustomAttribute(ElementType, typeof(TAttribute));
+        }
+
+        internal static object? CreateClassObject(string className, string[] propertyNames, IEnumerable<CustomAttributeData>? attributeDatas = null)
+        {
+            AssemblyName assemblyName = new AssemblyName("DynamicClassAssembly");
+            AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+            ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
+
+            TypeBuilder typeBuilder = moduleBuilder.DefineType(className,
+                TypeAttributes.Public |
+                TypeAttributes.Class |
+                TypeAttributes.AutoClass |
+                TypeAttributes.AnsiClass |
+                TypeAttributes.BeforeFieldInit |
+                TypeAttributes.AutoLayout);
+
+            foreach (var propName in propertyNames)
+            {
+                FieldBuilder fieldBuilder = typeBuilder.DefineField("_" + propName.ToLower(), typeof(string), FieldAttributes.Private);
+                PropertyBuilder propertyBuilder = typeBuilder.DefineProperty(propName, PropertyAttributes.HasDefault, typeof(string), null);
+
+                if (attributeDatas != null)
+                {
+                    foreach (var attrData in attributeDatas)
+                    {
+                        ConstructorInfo attributeCtor = attrData.Constructor;
+                        object?[] constructorArgs = attrData.ConstructorArguments.Select(arg => arg.Value).ToArray();
+                        CustomAttributeBuilder attributeBuilder = new(attributeCtor, constructorArgs);
+                        propertyBuilder.SetCustomAttribute(attributeBuilder);
+                    }
+                }
+
+                MethodBuilder getPropMthdBldr = typeBuilder.DefineMethod("get_" + propName, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeof(string), Type.EmptyTypes);
+                ILGenerator getIl = getPropMthdBldr.GetILGenerator();
+
+                getIl.Emit(OpCodes.Ldarg_0);
+                getIl.Emit(OpCodes.Ldfld, fieldBuilder);
+                getIl.Emit(OpCodes.Ret);
+
+                MethodBuilder setPropMthdBldr = typeBuilder.DefineMethod("set_" + propName, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, null, new Type[] { typeof(string) });
+                ILGenerator setIl = setPropMthdBldr.GetILGenerator();
+
+                setIl.Emit(OpCodes.Ldarg_0);
+                setIl.Emit(OpCodes.Ldarg_1);
+                setIl.Emit(OpCodes.Stfld, fieldBuilder);
+                setIl.Emit(OpCodes.Ret);
+
+                propertyBuilder.SetGetMethod(getPropMthdBldr);
+                propertyBuilder.SetSetMethod(setPropMthdBldr);
+            }
+
+            Type classType = typeBuilder.CreateType();
+            return Activator.CreateInstance(classType);
         }
     }
 }
