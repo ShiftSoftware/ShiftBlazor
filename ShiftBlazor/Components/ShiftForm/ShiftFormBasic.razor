@@ -117,7 +117,7 @@
             <footer>
                 @FooterTemplate
 
-                @if (!(DisableFooterToolbar || FooterToolbarIsEmpty))
+                @if (!(DisableFooterToolbar || IsFooterToolbarEmpty))
                 {
                     <MudToolBar>
 
@@ -133,7 +133,7 @@
 
                         @FooterToolbarEndTemplate
 
-                        @if (!HideSubmit && HasWriteAccess)
+                        @if (_RenderSubmitButton)
                         {
                             <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
                                 @if (TaskInProgress == FormTasks.Save)

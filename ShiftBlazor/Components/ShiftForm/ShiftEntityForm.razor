@@ -47,7 +47,7 @@
 
                         @ToolbarEndTemplate
 
-                        @if (OnPrint.HasDelegate && !HidePrint)
+                        @if (_RenderPrintButton)
                         {
                             <MudTooltip Text="@Loc["Print"]">
                                 <MudButton Style="min-width:40px;"
@@ -69,7 +69,7 @@
                             </MudTooltip>
                         }
 
-                        @if (!HideRevisions && (TypeAuthAction is null || TypeAuthService?.Can(TypeAuthAction, TypeAuth.Core.Access.Read) == true))
+                        @if (_RenderRevisionButton)
                         {
                             <MudTooltip Text="@Loc["Revisions"]">
                                 <MudButton Style="min-width:40px;"
@@ -91,33 +91,30 @@
                             </MudTooltip>;
                         }
 
-                        @if (!HideDelete)
+                        @if (_RenderDeleteButton)
                         {
-                            if (!HideDelete && (TypeAuthAction is null || TypeAuthService?.Can(TypeAuthAction, TypeAuth.Core.Access.Delete) == true))
-                            {
-                                <MudTooltip Text="@Loc["Delete"]">
-                                    <MudButton Style="min-width:40px;"
-                                               Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
-                                               Variant="Variant.Text"
-                                               Size="Size.Medium"
-                                               Color="NavIconFlatColor ? Color.Inherit : Color.Error"
-                                               aria-label="@Loc["Delete"]"
-                                               OnClick="DeleteItem">
-                                        @if (TaskInProgress == FormTasks.Delete)
-                                        {
-                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                        }
+                            <MudTooltip Text="@Loc["Delete"]">
+                                <MudButton Style="min-width:40px;"
+                                            Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
+                                            Variant="Variant.Text"
+                                            Size="Size.Medium"
+                                            Color="NavIconFlatColor ? Color.Inherit : Color.Error"
+                                            aria-label="@Loc["Delete"]"
+                                            OnClick="DeleteItem">
+                                    @if (TaskInProgress == FormTasks.Delete)
+                                    {
+                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    }
 
-                                        else
-                                        {
-                                            <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
-                                        }
-                                    </MudButton>
-                                </MudTooltip>
-                            }
+                                    else
+                                    {
+                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
+                                    }
+                                </MudButton>
+                            </MudTooltip>
                         }
 
-                        @if (!HideEdit && (TypeAuthAction is null || TypeAuthService?.Can(TypeAuthAction, TypeAuth.Core.Access.Write) == true))
+                        @if (_RenderEditButton)
                         {
                             <MudTooltip Text="@Loc["Edit"]">
                                 <MudButton Style="min-width:40px;"
@@ -132,7 +129,7 @@
                             </MudTooltip>
                         }
 
-                        @if (ToolbarEndTemplate != null && MudDialog != null)
+                        @if (_RenderHeaderControlsDivider && MudDialog != null)
                         {
                             <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
                         }
@@ -239,7 +236,7 @@
             <footer>
                 @FooterTemplate
 
-                @if (!(DisableFooterToolbar || FooterToolbarIsEmpty))
+                @if (!(DisableFooterToolbar || IsFooterToolbarEmpty))
                 {
                     <MudToolBar>
 
@@ -272,7 +269,7 @@
                             </MudButton>
                         }
 
-                        @if (!HideSubmit && HasWriteAccess)
+                        @if (_RenderSubmitButton)
                         {
                             <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
                                 @if (TaskInProgress == FormTasks.Save)

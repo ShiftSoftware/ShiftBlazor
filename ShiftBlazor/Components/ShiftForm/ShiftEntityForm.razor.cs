@@ -110,6 +110,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string? OriginalValue { get; set; }
         internal bool Maximized { get; set; }
 
+        internal bool _RenderPrintButton;
+        internal bool _RenderRevisionButton;
+        internal bool _RenderDeleteButton;
+        internal bool _RenderEditButton;
+        internal bool _RenderHeaderControlsDivider;
+
         internal string ItemUrl
         {
             get
@@ -117,12 +123,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var path = SettingManager.Configuration.ApiPath.AddUrlPath(Action);
                 return Mode == FormModes.Create ? path : path.AddUrlPath(Key?.ToString());
             }
-        }
-
-        internal override bool HideSubmit
-        {
-            get => Mode < FormModes.Edit ? true : base.HideSubmit;
-            set => base.HideSubmit = value;
         }
 
         internal override string _SubmitText
@@ -154,6 +154,25 @@ namespace ShiftSoftware.ShiftBlazor.Components
             SetTitle();
 
             OriginalValue = JsonSerializer.Serialize(Value);
+        }
+
+        protected override void OnParametersSet()
+        {
+            base.OnParametersSet();
+
+            _RenderPrintButton = OnPrint.HasDelegate && !HidePrint && HasReadAccess;
+            _RenderRevisionButton = !HideRevisions && HasReadAccess;
+            _RenderEditButton = !HideEdit && HasWriteAccess;
+            _RenderDeleteButton = !HideDelete && HasDeleteAccess;
+
+            _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton;
+
+            IsFooterToolbarEmpty = FooterToolbarStartTemplate == null
+                && FooterToolbarCenterTemplate == null
+                && FooterToolbarEndTemplate == null
+                && !_RenderSubmitButton
+                && Mode != FormModes.Edit
+                && Mode != FormModes.Archive;
         }
 
         public async Task DeleteItem()

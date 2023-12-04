@@ -11,6 +11,7 @@ using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.TypeAuth.Core;
 using Microsoft.Extensions.DependencyInjection;
+using ShiftSoftware.TypeAuth.Core.Actions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -174,7 +175,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool NavIconFlatColor { get; set; }
 
-        internal virtual bool HideSubmit { get; set; }
+        [Parameter]
+        public bool HideSubmit { get; set; }
+
         internal virtual string _SubmitText { get; set; }
         internal FormTasks TaskInProgress { get; set; }
         internal bool AlertEnabled { get; set; } = false;
@@ -185,11 +188,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool MadeChanges = false;
 
         protected ITypeAuthService? TypeAuthService;
-        internal bool HasWriteAccess => TypeAuthAction is null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write);
-        internal bool FooterToolbarIsEmpty => FooterToolbarStartTemplate == null
-            && FooterToolbarCenterTemplate == null
-            && FooterToolbarEndTemplate == null
-            && (HideSubmit || !HasWriteAccess);
+        internal bool HasWriteAccess = true;
+        internal bool HasDeleteAccess = true;
+        internal bool HasReadAccess = true;
+        internal bool IsFooterToolbarEmpty;
+        internal bool _RenderSubmitButton;
         internal string ContentCssClass
         {
             get
@@ -206,6 +209,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
 
+            if (TypeAuthAction is ReadWriteDeleteAction action)
+            {
+                HasReadAccess = TypeAuthService?.CanRead(action) == true;
+                HasWriteAccess = TypeAuthService?.CanWrite(action) == true;
+                HasDeleteAccess = TypeAuthService?.CanDelete(action) == true;
+            }
+
             OnSaveAction = SettingManager.Settings.FormOnSaveAction ?? OnSaveAction ?? DefaultAppSetting.FormOnSaveAction;
 
             editContext = new EditContext(Value);
@@ -221,6 +231,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             await SetMode(FormModes.Create);
             DocumentTitle = Title;
+        }
+
+        protected override void OnParametersSet()
+        {
+            _RenderSubmitButton = Mode >= FormModes.Edit && !HideSubmit && HasWriteAccess;
+
+            IsFooterToolbarEmpty = FooterToolbarStartTemplate == null
+                && FooterToolbarCenterTemplate == null
+                && FooterToolbarEndTemplate == null
+                && (HideSubmit || !HasWriteAccess);
         }
 
         //internal ValueTask LocationChangingHandler(LocationChangingContext ctx)
