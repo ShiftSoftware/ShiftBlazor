@@ -52,3 +52,14 @@
 .foreign-column .filter-button.filtered {
     display: none;
 }
+
+.shift-modal-background + .mud-dialog footer {
+    box-shadow: 0 -5px 5px 0px #ffffff;
+    position: relative;
+}
+
+.shift-modal-background + .mud-dialog header {
+    box-shadow: 0 5px 5px 0px #ffffff;
+    position: relative;
+    z-index: 1;
+}
