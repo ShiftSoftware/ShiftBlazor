@@ -26,5 +26,14 @@ namespace Microsoft.OData.Client
                 ? query.WhereQuery(predicate)
                 : query;
         }
+
+        public static DataServiceQuery<T> AddQueryOptionIf<T>(this DataServiceQuery<T> query, string name, object value, bool condition)
+        {
+            Console.WriteLine(condition);
+            return condition
+                ? query.AddQueryOption(name, value)
+                : query;
+            
+        }
     }
 }
