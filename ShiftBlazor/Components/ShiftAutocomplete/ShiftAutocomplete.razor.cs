@@ -55,6 +55,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public EventCallback<List<ShiftEntitySelectDTO>> SelectedValuesChanged { get; set; }
 
+        [Parameter]
+        public bool MinResponseContent { get; set; }
+
         internal string LastTypedValue = "";
         internal List<TEntitySet> Items = new();
 
@@ -199,7 +202,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             var builder = OData
                 .CreateNewQuery<TEntitySet>(EntitySet, BaseUrl)
-                .AddQueryOption("$select", $"{DataValueField},{DataTextField}");
+                .AddQueryOptionIf("$select", $"{DataValueField},{DataTextField}", MinResponseContent);
 
             if (!string.IsNullOrWhiteSpace(q))
             {
