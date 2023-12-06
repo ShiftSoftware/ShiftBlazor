@@ -4,6 +4,8 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Reflection
 
+@typeparam T where T : ShiftEntityViewAndUpsertDTO, new()
+
 @inject IServiceProvider ServiceProvidor
 @inject SettingManager SettingManager
 @inject MessageService MessageService
@@ -24,24 +26,50 @@
             var textChanged = async (string value) => await this.TextChanged(prop, value);
 
             <MudItem xs="XsColSize" sm="SmColSize" md="MdColSize" lg="LgColSize">
-                <MudTextFieldExtended T="string" Value="@value" Error="@showErrors" ErrorText="@errorMessage" OnBlur="@onBlur" TextChanged="@textChanged" Label="@label" />
+                <MudTextFieldExtended T="string"
+                                      OnlyValidateIfDirty="@OnlyValidateIfDirty"
+                                      Value="@value"
+                                      Error="@showErrors"
+                                      ErrorText="@errorMessage"
+                                      OnBlur="@onBlur"
+                                      TextChanged="@textChanged"
+                                      Label="@label" />
             </MudItem>
         }
     </MudGrid>
 }
 
 @code {
+    [CascadingParameter]
+    public ShiftEntityForm<T>? ShiftEntityForm { get; set; }
+
+    /// <summary>
+    /// The value of this input element.
+    /// </summary>
     [Parameter]
     public string Value { get; set; } = default!;
 
     [Parameter]
     public EventCallback<string> ValueChanged { get; set; }
 
+    /// <summary>
+    /// If string has value the label text will be displayed in the input, and scaled down at the top if the input has value.
+    /// </summary>
     [Parameter]
     public string? Label { get; set; }
 
+    /// <summary>
+    /// Specify an expression which returns the model's field for which validation messages should be displayed.
+    /// If value is null, validation will be skipped for this field.
+    /// </summary>
     [Parameter]
     public Expression<Func<string?>>? For { get; set; }
+
+    /// <summary>
+    /// The validation is only triggered if the user has changed the input value at least once. By default, it is true
+    /// </summary>
+    [Parameter]
+    public bool OnlyValidateIfDirty { get; set; } = true;
 
     private ILookup<string, LanguageInfo> LanguageInfo = default!;
 
@@ -103,6 +131,13 @@
             DataAnnotation?.Dispose();
             EditContext = new EditContext(MultiLangValue!);
             DataAnnotation = EditContext.EnableDataAnnotationsValidation(ServiceProvidor);
+
+            if (For != null)
+            {
+                var field = FieldIdentifier.Create(For);
+                ShiftEntityForm?.ChildContexts.Remove(field.FieldName);
+                ShiftEntityForm?.ChildContexts.TryAdd(field.FieldName, EditContext);
+            }
         }
     }
 
@@ -119,7 +154,10 @@
 
     private void OnBlurHandler(FieldIdentifier field)
     {
-        EditContext?.NotifyFieldChanged(field);
+        if (!OnlyValidateIfDirty)
+        {
+            EditContext?.NotifyFieldChanged(field);
+        }
     }
 
     void IDisposable.Dispose()

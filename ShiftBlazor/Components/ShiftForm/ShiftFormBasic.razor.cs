@@ -193,6 +193,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool HasReadAccess = true;
         internal bool IsFooterToolbarEmpty;
         internal bool _RenderSubmitButton;
+        internal Dictionary<string, EditContext> ChildContexts { get; set; } = new();
         internal string ContentCssClass
         {
             get
@@ -326,7 +327,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 if (await OnSubmit.PreventableInvokeAsync(context)) return;
 
-                if (context.Validate())
+                var childContextsValid = ChildContexts.Values.All(x => x.Validate());
+                //var mainContextValid = context.Validate();
+
+                var propertyNames = typeof(T)
+                    .GetProperties()
+                    .Where(x => !ChildContexts.Keys.Contains(x.Name))
+                    .Select(x => x.Name);
+
+                foreach (var names in propertyNames)
+                {
+                    context.NotifyFieldChanged(context.Field(names));
+                }
+
+                var mainContextValid = !context.GetValidationMessages().Any();
+
+                if (mainContextValid && childContextsValid)
                 {
                     await ValidSubmitHandler(context);
                 }
