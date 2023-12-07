@@ -61,6 +61,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string? EntitySet { get; set; }
 
+        [Parameter]
+        public string? BaseUrl { get; set; }
+
+        [Parameter]
+        public string? BaseUrlKey { get; set; }
+
         /// <summary>
         ///     The type of the component to open when clicking on Add or the Action button.
         ///     If empty, Add and Action button column will be hidden.
@@ -270,8 +276,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (EntitySet != null)
             {
+                string? url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
+                
                 QueryBuilder = OData
-                    .CreateQuery<T>(EntitySet)
+                    .CreateNewQuery<T>(EntitySet, url)
                     .IncludeCount();
             }
 

@@ -6,6 +6,8 @@ namespace ShiftSoftware.ShiftBlazor.Services;
 public class AppConfiguration
 {
     public string BaseAddress { get; set; } = string.Empty;
+
+    public Dictionary<string, string?> ExternalAddresses = new();
     public string? UserListEndpoint { get; set; }
 
     private string _ApiPath = "/api";
