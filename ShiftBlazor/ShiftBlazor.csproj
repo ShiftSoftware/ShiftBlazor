@@ -2,7 +2,7 @@
 	<Import Project="..\..\ShiftFrameworkGlobalSettings.props" Condition="Exists('..\..\ShiftFrameworkGlobalSettings.props')" />
 
 	<PropertyGroup>
-		<ShiftFrameworkVersion Condition="!Exists('..\..\ShiftFrameworkGlobalSettings.props')">2023.10.1.2</ShiftFrameworkVersion>
+		<ShiftFrameworkVersion Condition="!Exists('..\..\ShiftFrameworkGlobalSettings.props')">2023.11.30.1</ShiftFrameworkVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>

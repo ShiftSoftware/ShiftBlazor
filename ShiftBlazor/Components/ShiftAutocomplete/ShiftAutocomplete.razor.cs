@@ -21,6 +21,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private ODataQuery OData { get; set; } = default!;
         [Inject] private HttpClient Http { get; set; } = default!;
         [Inject] private MessageService Message { get; set; } = default!;
+        [Inject] private SettingManager SettingManager { get; set; } = default!;
 
         [Parameter]
         [EditorRequired]
@@ -29,6 +30,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string? BaseUrl { get; set; }
 
+        [Parameter]
+        public string? BaseUrlKey { get; set; }
 
         internal string? DataValueField { get; set; }
         internal string? DataTextField { get; set; }
@@ -161,7 +164,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 try
                 {
-                    url = OData.CreateNewQuery<TEntitySet>(EntitySet, BaseUrl)
+                    string? baseUrl = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
+                    url = OData.CreateNewQuery<TEntitySet>(EntitySet, baseUrl)
                             .AddQueryOption("$select", $"{DataValueField},{DataTextField}")
                             .WhereQuery(x => 1 == 1 && x.ID == Value.Value)
                             .Take(1)
@@ -200,8 +204,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal string GetODataUrl(string q = "")
         {
+            string? url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
             var builder = OData
-                .CreateNewQuery<TEntitySet>(EntitySet, BaseUrl)
+                .CreateNewQuery<TEntitySet>(EntitySet, url)
                 .AddQueryOptionIf("$select", $"{DataValueField},{DataTextField}", MinResponseContent);
 
             if (!string.IsNullOrWhiteSpace(q))

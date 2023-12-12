@@ -19,6 +19,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] HttpClient Http { get; set; } = default!;
         [Inject] MessageService MessageService { get; set; } = default!;
         [Inject] ODataQuery OData { get; set; } = default!;
+        [Inject] SettingManager SettingManager { get; set; } = default!;
 
         [Parameter]
         [EditorRequired]
@@ -26,6 +27,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public string? BaseUrl { get; set; }
+
+        [Parameter]
+        public string? BaseUrlKey { get; set; }
 
         [Parameter]
         public string? DataValueField { get; set; }
@@ -58,7 +62,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
             Title ??= EntitySetName;
 
             ShiftBlazorEvents.OnBeforeGridDataBound += OnBeforeDataBound;
-            QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySetName, BaseUrl);
+
+            string? url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
+            QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySetName, url);
 
             base.OnInitialized();
         }
