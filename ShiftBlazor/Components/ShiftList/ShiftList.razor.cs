@@ -222,42 +222,31 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool Outlined { get; set; }
 
-
         public bool IsAllSelected = false;
         public HashSet<T> SelectedItems { get; set; } = new();
         public Uri? CurrentUri { get; set; }
 
 
         internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
-        internal bool IsEmbed => ParentDisabled != null || ParentReadOnly != null;
-        internal Size IconSize => Dense ? Size.Medium : Size.Large;
+        internal bool IsEmbed = false;
+        internal Size IconSize = Size.Medium;
         internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
-        internal bool RenderAddButton => !(DisableAdd || ComponentType == null || (TypeAuthAction != null && !TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)));
+        internal bool RenderAddButton = false;
         internal int SelectedPageSize;
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
         internal Guid DataGridId = Guid.NewGuid();
         internal bool? deleteFilter = false;
         internal string? ErrorMessage;
         private ITypeAuthService? TypeAuthService;
-        private string ToolbarStyle => $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
+        private string ToolbarStyle = string.Empty;
+        internal SortMode SortMode = SortMode.Multiple;
 
-        internal SortMode SortMode => DisableSorting
-                                        ? SortMode.None
-                                        : DisableMultiSorting
-                                            ? SortMode.Single
-                                            : SortMode.Multiple;
-
-        internal Func<GridState<T>, Task<GridData<T>>>? ServerData => Values == null
-            ? new Func<GridState<T>, Task<GridData<T>>>(ServerReload)
-            : default;
+        internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
 
         private MudDataGrid<T>? _DataGrid;
         public MudDataGrid<T>? DataGrid
         {
-            get
-            {
-                return _DataGrid;
-            }
+            get => _DataGrid;
             set
             {
                 _DataGrid = value;
@@ -282,6 +271,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     .CreateNewQuery<T>(EntitySet, url)
                     .IncludeCount();
             }
+
+            IsEmbed = ParentDisabled != null || ParentReadOnly != null;
+            RenderAddButton = !(DisableAdd || ComponentType == null || (TypeAuthAction != null && TypeAuthService?.Can(TypeAuthAction, Access.Write) != true));
+            IconSize = Dense ? Size.Medium : Size.Large;
+            ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
+            ServerData = Values == null
+                ? new Func<GridState<T>, Task<GridData<T>>>(ServerReload)
+                : default;
+            SortMode = DisableSorting
+                        ? SortMode.None
+                        : DisableMultiSorting
+                            ? SortMode.Single
+                            : SortMode.Multiple;
 
             if (PageSize != null && !PageSizes.Any(x => x == PageSize))
             {
