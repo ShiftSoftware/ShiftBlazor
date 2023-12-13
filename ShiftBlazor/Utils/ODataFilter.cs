@@ -11,32 +11,36 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             IsAnd = UseAndLogic;
         }
 
-        public string? Field { get; set; }
-        public ODataOperator? Operator { get; set; } = ODataOperator.Equal;
-
-        private object? _value;
-        public object? Value
+        public ODataFilter(string field, ODataOperator? oDataOperator = null, object? value = null, bool UseAndLogic = true)
+            : this(UseAndLogic)
         {
-            get
-            {
-                return _value;
-            }
-            set
-            {
-                var type = FieldType.Identify(value?.GetType());
-                _value = GetValue(value, type);
-            }
+            Field = field;
+            Operator = oDataOperator ?? Operator;
+            Value = value;
         }
 
-        private bool IsAnd;
-        private List<object> FilterList = new List<object>();
+        private const string OrLogic = "or";
+        private const string AndLogic = "and";
+
+        public string? Field { get; set; }
+        public ODataOperator Operator { get; set; } = ODataOperator.Equal;
+
+        public object? Value { get; set; }
+
+        private readonly bool IsAnd;
+        private List<object> Filters = new List<object>();
+
+        public ODataFilter Add(ODataFilter filter)
+        {
+            Filters.Add(filter);
+            return this;
+        }
 
         public ODataFilter Add(Action<ODataFilter> filterConfig)
         {
             var _filter = new ODataFilter();
             filterConfig.Invoke(_filter);
-            FilterList.Add(_filter);
-            return this;
+            return Add(_filter);
         }
 
         public ODataFilter Add(string field, ODataOperator Operator, object? Value)
@@ -54,7 +58,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             var andFilters = new AndList<ODataFilter>();
             andFilters.AddRange(GetFilters(filterConfigs));
 
-            FilterList.Add(andFilters);
+            Filters.Add(andFilters);
             return this;
         }
 
@@ -63,7 +67,39 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             var orFilters = new OrList<ODataFilter>();
             orFilters.AddRange(GetFilters(filterConfigs));
 
-            FilterList.Add(orFilters);
+            Filters.Add(orFilters);
+            return this;
+        }
+
+        public ODataFilter AddIf(bool condition, ODataFilter filter)
+        {
+            if (condition)
+                return Add(filter);
+
+            return this;
+        }
+
+        public ODataFilter AddIf(bool condition, Action<ODataFilter> filterConfig)
+        {
+            if (condition)
+                return Add(filterConfig);
+
+            return this;
+        }
+
+        public ODataFilter AndIf(bool condition, params Action<ODataFilter>[] filterConfigs)
+        {
+            if (condition)
+                return And(filterConfigs);
+
+            return this;
+        }
+
+        public ODataFilter OrIf(bool condition, params Action<ODataFilter>[] filterConfigs)
+        {
+            if (condition)
+                return Or(filterConfigs);
+
             return this;
         }
 
@@ -79,74 +115,90 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
         public override string ToString()
         {
-            return BuildQueryString(FilterList, IsAnd);
+            return BuildQueryString(new[] { this }, IsAnd);
         }
 
-        private static string BuildQueryString(dynamic filterList, bool isAnd = true)
+        private static string BuildQueryString(IEnumerable<object> filterList, bool isAnd = true)
         {
             var filters = new List<string>();
-            var CombineLogic = isAnd ? "and" : "or";
+            var combineLogic = isAnd ? AndLogic : OrLogic;
 
             foreach (var item in filterList)
             {
                 if (item is ODataFilter filter)
                 {
-                    var template = CreateFilterTemplate(filter.Operator);
-                    filters.Add(string.Format(template, filter.Field, filter.Value));
-                    if (filter.FilterList.Count > 0)
+                    if (!string.IsNullOrWhiteSpace(filter.Field))
                     {
-                        filters.Add($"({BuildQueryString(filter.FilterList, isAnd)})");
+                        var template = CreateFilterTemplate(filter.Operator);
+                        var type = FieldType.Identify(filter.Value?.GetType());
+                        var value = GetValueString(filter.Value, type);
+                        filters.Add(string.Format(template, filter.Field, value));
+                    }
+
+                    if (filter.Filters.Any())
+                    {
+                        var childFilters = BuildQueryString(filter.Filters, isAnd);
+                        if (!string.IsNullOrWhiteSpace(childFilters))
+                            filters.Add($"({childFilters})");
                     }
                 }
-                else if (item is AndList<ODataFilter>)
+                else if (item is AndList<ODataFilter> andList)
                 {
-                    filters.Add($"({BuildQueryString(item, true)})");
+                    filters.Add($"({BuildQueryString(andList, true)})");
                 }
-                else if (item is OrList<ODataFilter>)
+                else if (item is OrList<ODataFilter> orList)
                 {
-                    filters.Add($"({BuildQueryString(item, false)})");
+                    filters.Add($"({BuildQueryString(orList, false)})");
                 }
             }
 
-            return string.Join($" {CombineLogic} ", filters);
+            return string.Join($" {combineLogic} ", filters);
         }
 
-        internal static object? GetValue(object? value, FieldType fieldType)
+        internal static string GetValueString(object? value, FieldType? fieldType = null)
         {
+            var valString = "null";
+
             if (value != null)
             {
-
                 if (value is not string && value is IEnumerable list)
                 {
                     var fixedList = new List<object>();
                     foreach (var item in list)
                     {
                         var type = FieldType.Identify(item.GetType());
-                        var val = GetValue(item, type);
+                        var val = GetValueString(item, type);
                         if (val != null)
                             fixedList.Add(val);
                     }
-                    value = string.Join(',', fixedList);
+                    return string.Join(',', fixedList);
                 }
-                else if (fieldType.IsString)
+
+                fieldType ??= FieldType.Identify(value.GetType());
+
+                if (fieldType.IsString)
                 {
-                    value = $"'{((string)value!).Replace("'", "''")}'";
+                    valString = $"'{((string)value!).Replace("'", "''")}'";
                 }
                 else if (fieldType.IsEnum)
                 {
-                    value = $"'{value}'";
+                    valString = $"'{value}'";
                 }
                 else if (fieldType.IsDateTime)
                 {
-                    value = ((DateTime)value!).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                    valString = ((DateTime)value!).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                 }
                 else if (fieldType.IsBoolean)
                 {
-                    value = value.ToString()?.ToLower();
+                    valString = value.ToString()?.ToLower()!;
+                }
+                else
+                {
+                    valString = value.ToString()!;
                 }
             }
             
-            return value;
+            return valString;
         }
 
         internal static string CreateFilterTemplate(object? filterOperator)
