@@ -28,7 +28,7 @@ namespace System.Collections.Generic
 
         private static string GetFilterString<T>(IFilterDefinition<T> definition)
         {
-            var field = definition.Title;
+            var field = definition.Column?.Title ?? definition.Title;
             if (definition.Column != null && !Guid.TryParse(definition.Column.PropertyName, out _))
             {
                 field = definition.Column.PropertyName;
@@ -42,7 +42,7 @@ namespace System.Collections.Generic
         private static string GetFilterString(string field, string op, object? value, FieldType? fieldType = null)
         {
             var _field = Misc.GetFieldFromPropertyPath(field);
-            var _value = ODataFilter.GetValue(value, fieldType!);
+            var _value = ODataFilter.GetValueString(value, fieldType!);
             var filterTemplate = ODataFilter.CreateFilterTemplate(op);
 
             return string.Format(filterTemplate, _field, _value);

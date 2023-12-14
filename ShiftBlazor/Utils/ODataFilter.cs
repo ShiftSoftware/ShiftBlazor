@@ -9,26 +9,25 @@ namespace ShiftSoftware.ShiftBlazor.Utils
         public ODataFilter(bool UseAndLogic = true)
         {
             IsAnd = UseAndLogic;
+            Filters = new List<object>();
+            Operator = ODataOperator.Equal;
         }
 
-        public ODataFilter(string field, ODataOperator? oDataOperator = null, object? value = null, bool UseAndLogic = true)
+        public ODataFilter(bool UseAndLogic = true, params Action<ODataFilter>[] filterConfigs)
             : this(UseAndLogic)
         {
-            Field = field;
-            Operator = oDataOperator ?? Operator;
-            Value = value;
+            Filters.AddRange(GetFilters(filterConfigs));
         }
 
         private const string OrLogic = "or";
         private const string AndLogic = "and";
 
         public string? Field { get; set; }
-        public ODataOperator Operator { get; set; } = ODataOperator.Equal;
-
+        public ODataOperator Operator { get; set; }
         public object? Value { get; set; }
 
         private readonly bool IsAnd;
-        private List<object> Filters = new List<object>();
+        private readonly List<object> Filters;
 
         public ODataFilter Add(ODataFilter filter)
         {
@@ -115,7 +114,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
         public override string ToString()
         {
-            return BuildQueryString(new[] { this }, IsAnd);
+            return BuildQueryString(Filters, IsAnd);
         }
 
         private static string BuildQueryString(IEnumerable<object> filterList, bool isAnd = true)
@@ -166,7 +165,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
                     var fixedList = new List<object>();
                     foreach (var item in list)
                     {
-                        var type = FieldType.Identify(item.GetType());
+                        var type = FieldType.Identify(item?.GetType());
                         var val = GetValueString(item, type);
                         if (val != null)
                             fixedList.Add(val);
