@@ -196,6 +196,7 @@
                     <CascadingValue Value="Mode < FormModes.Edit" Name="@FormHelper.ParentReadOnlyName">
                     <CascadingValue Value="TaskInProgress != FormTasks.None" Name="@FormHelper.ParentDisabledName">
                     <CascadingValue Value="this" IsFixed="true">
+                    <CascadingValue Value="EditContext" IsFixed="true">
                         @if (TypeAuthAction is null)
                         {
                             @ChildContent
@@ -225,6 +226,7 @@
                                 }
                             }
                         }
+                    </CascadingValue>
                     </CascadingValue>
                     </CascadingValue>
                     </CascadingValue>

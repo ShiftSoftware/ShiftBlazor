@@ -1,4 +1,7 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Linq.Expressions
+@typeparam T
 
 @inject SettingManager SettingManager
 
@@ -47,6 +50,12 @@
     [Parameter]
     public EventCallback<DateTimeOffset?> DateTimeOffsetChanged { get; set; }
 
+    [Parameter]
+    public Expression<Func<T>>? For { get; set; }
+
+    [CascadingParameter]
+    public EditContext? EditContext { get; set; }
+
     public async Task DateChanged(DateTime? dateTime)
     {
         if (dateTime == null)
@@ -63,6 +72,12 @@
             {
                 this.DateTimeOffset = new DateTime(dateTime.Value.Year, dateTime.Value.Month, dateTime.Value.Day, this.DateTimeOffset.Value.Hour, this.DateTimeOffset.Value.Minute, 0);
             }
+        }
+
+        if (EditContext != null && For != null)
+        {
+            var field = FieldIdentifier.Create(For);
+            EditContext.NotifyFieldChanged(field);
         }
 
         await this.DateTimeOffsetChanged.InvokeAsync(this.DateTimeOffset);
@@ -87,6 +102,12 @@
             {
                 this.DateTimeOffset = new DateTime(this.DateTimeOffset.Value.Year, this.DateTimeOffset.Value.Month, this.DateTimeOffset.Value.Day, timeSpan.Value.Hours, timeSpan.Value.Minutes, 0);
             }
+        }
+
+        if (EditContext != null && For != null)
+        {
+            var field = FieldIdentifier.Create(For);
+            EditContext.NotifyFieldChanged(field);
         }
 
         await this.DateTimeOffsetChanged.InvokeAsync(this.DateTimeOffset);
