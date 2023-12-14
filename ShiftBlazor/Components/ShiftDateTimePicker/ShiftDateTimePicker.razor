@@ -1,16 +1,27 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Linq.Expressions
-@typeparam T
+@using System.ComponentModel.DataAnnotations
 
 @inject SettingManager SettingManager
 
 <MudItem lg="DateLg" md="DateMd" sm="DateSm" xs="DateXs">
-    <MudDatePickerExtended DateFormat="@(SettingManager.GetDateFormat())" Date="DateTimeOffset?.Date" DateChanged="DateChanged" Label="@DateLabel" />
+    <MudDatePickerExtended DateFormat="@(SettingManager.GetDateFormat())"
+                           Date="DateTimeOffset?.Date"
+                           DateChanged="DateChanged"
+                           Label="@DateLabel"
+                           Required="_IsRequired" />
 </MudItem>
 
 <MudItem lg="TimeLg" md="TimeMd" sm="TimeSm" xs="TimeXs">
-    <MudTimePickerExtended AmPm="@(SettingManager.GetTimeFormat().Contains("tt"))" TimeFormat="@(SettingManager.GetTimeFormat())" Time="DateTimeOffset?.TimeOfDay" TimeChanged="TimeChanged" Label="@TimeLabel" Disabled="DateTimeOffset == null" />
+    <MudTimePickerExtended AmPm="@(SettingManager.GetTimeFormat().Contains("tt"))"
+                           TimeFormat="@(SettingManager.GetTimeFormat())"
+                           Time="DateTimeOffset?.TimeOfDay"
+                           TimeChanged="TimeChanged"
+                           Label="@TimeLabel"
+                           Disabled="DateTimeOffset == null"
+                           Required="_IsRequired"
+                           />
 </MudItem>
 
 @code {
@@ -51,10 +62,20 @@
     public EventCallback<DateTimeOffset?> DateTimeOffsetChanged { get; set; }
 
     [Parameter]
-    public Expression<Func<T>>? For { get; set; }
+    public Expression<Func<DateTimeOffset?>>? For { get; set; }
 
     [CascadingParameter]
     public EditContext? EditContext { get; set; }
+
+    internal bool _IsRequired = false;
+
+    protected override void OnInitialized()
+    {
+        if (For != null)
+        {
+            _IsRequired = FormHelper.IsRequired(For);
+        }
+    }
 
     public async Task DateChanged(DateTime? dateTime)
     {
