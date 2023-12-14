@@ -184,7 +184,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal MudBlazor.Severity AlertSeverity { get; set; }
         internal string AlertMessage { get; set; } = default!;
 
-        internal EditContext editContext = default!;
+        public EditContext EditContext = default!;
         internal bool MadeChanges = false;
 
         protected ITypeAuthService? TypeAuthService;
@@ -219,7 +219,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             OnSaveAction = SettingManager.Settings.FormOnSaveAction ?? OnSaveAction ?? DefaultAppSetting.FormOnSaveAction;
 
-            editContext = new EditContext(Value);
+            EditContext = new EditContext(Value);
 
             _SubmitText = string.IsNullOrWhiteSpace(SubmitText)
                 ? Loc["SubmitTextDefault"]
@@ -265,9 +265,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task<bool> ConfirmClose(string? messageBody = null)
         {
-            if (editContext.IsModified())
-            {
+            var childContextsModified = ChildContexts.Any(x => x.Value.IsModified());
+            var mainContextModified = EditContext.IsModified();
 
+            if (mainContextModified || childContextsModified)
+            {
                 var message = new Message
                 {
                     Title = Loc["CancelWarningTitle"],
@@ -306,8 +308,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 Value = value;
                 await ValueChanged.InvokeAsync(Value);
-                editContext = new EditContext(Value);
-                editContext.MarkAsUnmodified();
+                EditContext = new EditContext(Value);
+                EditContext.MarkAsUnmodified();
             }
         }
 

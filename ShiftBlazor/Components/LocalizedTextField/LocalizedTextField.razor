@@ -32,8 +32,8 @@
                                       Error="@showErrors"
                                       ErrorText="@errorMessage"
                                       OnBlur="@onBlur"
-                                      TextChanged="@textChanged"
-                                      Label="@label" />
+                                      ValueChanged="@textChanged"
+                                      Label="@label"/>
             </MudItem>
         }
     </MudGrid>
@@ -130,6 +130,7 @@
         {
             DataAnnotation?.Dispose();
             EditContext = new EditContext(MultiLangValue!);
+            EditContext.MarkAsUnmodified();
             DataAnnotation = EditContext.EnableDataAnnotationsValidation(ServiceProvidor);
 
             if (For != null)
@@ -144,6 +145,8 @@
     public async Task TextChanged(PropertyInfo prop, string value)
     {
         prop.SetValue(MultiLangValue, value);
+        var field = EditContext!.Field(prop.Name);
+        EditContext.NotifyFieldChanged(field);
         await this.ValueChanged.InvokeAsync(System.Text.Json.JsonSerializer.Serialize(MultiLangValue));
     }
 
