@@ -217,7 +217,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public RenderFragment<CellContext<T>>? ActionsTemplate { get; set; }
 
         [Parameter]
-        public List<string> DefaultFilters { get; set; } = new();
+        public Action<ODataFilter>? Filter { get; set; }
+
+        [Parameter]
+        public string? FilterString { get; set; }
 
         [Parameter]
         public bool Outlined { get; set; }
@@ -240,6 +243,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle = string.Empty;
         internal SortMode SortMode = SortMode.Multiple;
+        internal string? DefaultFilter;
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
 
@@ -270,6 +274,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 QueryBuilder = OData
                     .CreateNewQuery<T>(EntitySet, url)
                     .IncludeCount();
+            }
+
+            if (Filter != null)
+            {
+                var filter = new ODataFilter();
+                Filter.Invoke(filter);
+                DefaultFilter = filter.ToString();
             }
 
             IsEmbed = ParentDisabled != null || ParentReadOnly != null;
@@ -593,8 +604,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var userFilters = state.FilterDefinitions.ToODataFilter().Select(x => string.Join(" or ", x));
 
                 var filterList = new List<string>();
-                filterList.AddRange(DefaultFilters);
                 filterList.AddRange(userFilters);
+
+                if (!string.IsNullOrWhiteSpace(FilterString))
+                    filterList.Add(FilterString);
+
+                if (!string.IsNullOrWhiteSpace(DefaultFilter)) 
+                    filterList.Add(DefaultFilter);
 
                 if (filterList.Count() > 0)
                 {
