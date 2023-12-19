@@ -4,7 +4,6 @@ using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Net.Http.Json;
@@ -17,7 +16,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         where TEntity : ShiftEntityDTOBase, new()
     {
         [Inject] HttpClient Http { get; set; } = default!;
-        [Inject] MessageService MessageService { get; set; } = default!;
+        [Inject] IDialogService DialogService { get; set; } = default!;
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
 
@@ -47,6 +46,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string TValueField = string.Empty;
         private string TEntityTextField = string.Empty;
         private string TEntityValueField = nameof(ShiftEntityDTOBase.ID);
+        private bool IsForbiddenStatusCode = false;
+        private bool FailedToLoadData = false;
+        private string? ErrorMessage = null;
 
         protected override void OnInitialized()
         {
@@ -115,21 +117,31 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     try
                     {
+                        FailedToLoadData = false;
+
                         var url = QueryBuilder
                             .AddQueryOption("$select", $"{TEntityValueField},{TEntityTextField}")
                             .WhereQuery(x => itemIds.Contains(x.ID))
                             .ToString();
 
-                        var result = await Http.GetFromJsonAsync<ODataDTO<TEntity>>(url);
+                        var res = await Http.GetAsync(url);
 
-                        if (result != null)
+                        if (res.IsSuccessStatusCode)
                         {
-                            RemoteData = result.Value;
+                            var result = await res.Content.ReadFromJsonAsync<ODataDTO<TEntity>>();
+
+                            if (result != null)
+                            {
+                                RemoteData = result.Value;
+                            }
                         }
+
+                        IsForbiddenStatusCode = res.StatusCode == System.Net.HttpStatusCode.Forbidden;
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
-                        MessageService.Error("Could not load column");
+                        ErrorMessage = e.ToString();
+                        FailedToLoadData = true;
                     }
                 }
             }
@@ -190,6 +202,27 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             IsFilterOpen = false;
             ShiftList.GridStateHasChanged();
+        }
+
+        private void ShowErrorMessage()
+        {
+            var message = new Message
+            {
+                Title = $"{Title} Column Failed to Load",
+                Body = ErrorMessage,
+            };
+
+            var parameters = new DialogParameters {
+                    { "Message", message },
+                    { "Color", Color.Error },
+                    { "Icon", Icons.Material.Filled.Error },
+                };
+
+            DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+            {
+                MaxWidth = MaxWidth.Medium,
+                NoHeader = true,
+            });
         }
 
         void IDisposable.Dispose()

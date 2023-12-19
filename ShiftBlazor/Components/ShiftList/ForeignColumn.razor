@@ -12,13 +12,24 @@
 @code {
     internal RenderFragment<CellContext<T>> _CellTemplate => context =>
     @<text>
-        @if (IsReady)
+        @if (IsReady && !FailedToLoadData)
         {
-            var id = Misc.GetValueFromPropertyPath(context.Item, TValueField)?.ToString();
-            var data = RemoteData.FirstOrDefault(x => x.ID == id);
-            if (data != null)
+            try
             {
-                var value = Misc.GetValueFromPropertyPath(data, TEntityTextField);
+                var id = Misc.GetValueFromPropertyPath(context.Item, TValueField)?.ToString();
+                var data = RemoteData.FirstOrDefault(x => x.ID == id);
+
+                object? value = null;
+
+                if (IsForbiddenStatusCode)
+                {
+                value = id;
+                }
+                else if (data != null)
+                {
+                value = Misc.GetValueFromPropertyPath(data, TEntityTextField);
+                }
+
                 if (IsButtonColumn)
                 {
                     <a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
@@ -38,8 +49,12 @@
                     @value
                 }
             }
+            catch
+            {
+                <MudAlert Dense Severity="Severity.Warning">Failed to Parse</MudAlert>
+            }
         }
-        else
+        else if (!FailedToLoadData)
         {
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="20px" />
         }
@@ -47,7 +62,16 @@
 
     internal RenderFragment<HeaderContext<T>> _HeaderTemplate => context =>
     @<text>
-        <span class="column-header">@Title</span>
+        <MudBadge OnClick="ShowErrorMessage"
+                  BadgeClass="cursor-pointer"
+                  Dot="true"
+                  Color="Color.Error"
+                  Origin="Origin.TopRight"
+                  Visible="@FailedToLoadData">
+            <MudText Class="column-header">@Title</MudText>
+        </MudBadge>
+        
+
         @if (Filterable ?? DataGrid?.Filterable ?? false)
         {
             <MudSpacer />
