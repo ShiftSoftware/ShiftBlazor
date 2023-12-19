@@ -226,7 +226,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool Outlined { get; set; }
 
         public bool IsAllSelected = false;
-        public HashSet<T> SelectedItems { get; set; } = new();
+        public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
         public Uri? CurrentUri { get; set; }
 
 
@@ -569,9 +569,28 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal void SelectedItemsChangedHandler(HashSet<T> items)
         {
-            SelectedItems = items;
             OnSelectedItemsChanged.InvokeAsync(items);
         }
+
+        internal async Task SelectRow(T item)
+        {
+            var removedItems = DataGrid?.SelectedItems.RemoveWhere(x => x.ID == item.ID);
+
+            if (removedItems == 0 && !IsAllSelected)
+            {
+                DataGrid?.SelectedItems.Add(item);
+            }
+
+            IsAllSelected = false;
+            await OnSelectedItemsChanged.InvokeAsync(SelectedItems);
+        }
+
+        internal async Task SelectAll(HeaderContext<T> context, bool selectAll)
+        {
+            IsAllSelected = selectAll;
+            await context.Actions.SetSelectAllAsync(selectAll);
+        }
+
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
         {

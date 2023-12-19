@@ -144,14 +144,15 @@
                                         Filterable="false" IsEditable="false">
                             <HeaderTemplate>
                                 <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
-                                    <MudCheckBox T="bool" Size="@IconSize" Checked="@context.IsAllSelected" CheckedChanged="@context.Actions.SetSelectAllAsync" />
+                                    <MudCheckBox T="bool" Size="@IconSize" Checked="@IsAllSelected" CheckedChanged="x => SelectAll(context, x)" />
                                 </MudTooltip>
                             </HeaderTemplate>
                             <CellTemplate>
                                 @{
-                                    var isSelected = DataGrid?.SelectedItems.FirstOrDefault(x => x.ID == context.Item.ID) != null || IsAllSelected;
+                                    var isSelected = SelectedItems.Any(x => x.ID == context.Item.ID) || IsAllSelected;
+                                    Func<bool, Task> changeHandler = (x) => SelectRow(context.Item);
                                 }
-                                <MudCheckBox T="bool" Size="@IconSize" Checked="@isSelected" CheckedChanged="@context.Actions.SetSelectedItemAsync" />
+                                <MudCheckBox T="bool" Size="@IconSize" Checked="@isSelected" CheckedChanged="@changeHandler" />
                             </CellTemplate>
                         </TemplateColumn>
                     }
