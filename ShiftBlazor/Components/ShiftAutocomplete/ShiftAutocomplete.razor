@@ -1,7 +1,7 @@
-﻿@using ShiftSoftware.ShiftBlazor.Enums
-@typeparam TEntitySet where TEntitySet : ShiftEntityDTOBase
+﻿@typeparam TEntitySet where TEntitySet : ShiftEntityDTOBase
 @inherits MudAutocomplete<ShiftEntitySelectDTO>
 @namespace ShiftSoftware.ShiftBlazor.Components
+@implements ODataComponent
 
 @{
     base.NoItemsTemplate = @<MudText Align="Align.Center" Class="px-4 py-1">No items found</MudText>;

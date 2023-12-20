@@ -2,6 +2,7 @@
 using Microsoft.OData.Client;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Events;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
@@ -11,7 +12,7 @@ using System.Net.Http.Json;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
 
-    public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtended<T, TProperty>, IDisposable
+    public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtended<T, TProperty>, IDisposable, ODataComponent
         where T : ShiftEntityDTOBase, new()
         where TEntity : ShiftEntityDTOBase, new()
     {
@@ -22,7 +23,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         [EditorRequired]
-        public string EntitySetName { get; set; }
+        public string EntitySet { get; set; }
 
         [Parameter]
         public string? BaseUrl { get; set; }
@@ -34,6 +35,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? DataValueField { get; set; }
 
         [Parameter]
+        [EditorRequired]
         public string? ForeignTextField { get; set; }
 
         internal bool IsReady = false;
@@ -42,7 +44,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string FilterIcon => FilterItems.Count > 0 ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt;
         internal List<ShiftEntitySelectDTO> FilterItems { get; set; } = new();
 
-        private DataServiceQuery<TEntity> QueryBuilder;
+        private DataServiceQuery<TEntity> QueryBuilder { get; set; }
         private string TValueField = string.Empty;
         private string TEntityTextField = string.Empty;
         private string TEntityValueField = nameof(ShiftEntityDTOBase.ID);
@@ -52,8 +54,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
-            if (string.IsNullOrWhiteSpace(EntitySetName))
-                throw new ArgumentNullException(nameof(EntitySetName));
+            if (string.IsNullOrWhiteSpace(EntitySet))
+                throw new ArgumentNullException(nameof(EntitySet));
 
             var attr = Misc.GetAttribute<TEntity, ShiftEntityKeyAndNameAttribute>();
             TEntityTextField = ForeignTextField ?? attr?.Text ?? "";
@@ -61,12 +63,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (string.IsNullOrWhiteSpace(TEntityTextField))
                 throw new ArgumentNullException(nameof(ForeignTextField));
 
-            Title ??= EntitySetName;
+            Title ??= EntitySet;
 
             ShiftBlazorEvents.OnBeforeGridDataBound += OnBeforeDataBound;
 
             string? url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
-            QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySetName, url);
+            QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySet, url);
 
             base.OnInitialized();
         }

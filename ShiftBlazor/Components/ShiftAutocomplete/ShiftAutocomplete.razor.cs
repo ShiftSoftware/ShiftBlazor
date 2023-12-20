@@ -12,10 +12,11 @@ using Microsoft.AspNetCore.Components.Web;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Model;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftAutocomplete<TEntitySet> : MudAutocomplete<ShiftEntitySelectDTO>
+    public partial class ShiftAutocomplete<TEntitySet> : MudAutocomplete<ShiftEntitySelectDTO>, ODataComponent
         where TEntitySet : ShiftEntityDTOBase
     {
         [Inject] private ODataQuery OData { get; set; } = default!;

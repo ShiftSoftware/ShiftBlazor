@@ -2,6 +2,7 @@
 @using ShiftSoftware.ShiftBlazor.Events;
 @typeparam T where T : ShiftEntityDTOBase, new()
 @inherits EventComponentBase
+@implements ODataComponent
 
 @if (TypeAuthAction == null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
 {

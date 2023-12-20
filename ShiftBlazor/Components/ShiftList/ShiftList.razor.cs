@@ -8,6 +8,7 @@ using Microsoft.OData.Client;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
@@ -20,7 +21,7 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> where T : ShiftEntityDTOBase, new()
+    public partial class ShiftList<T> : ODataComponent where T : ShiftEntityDTOBase, new()
     {
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;

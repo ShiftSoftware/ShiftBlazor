@@ -29,7 +29,6 @@ namespace Microsoft.OData.Client
 
         public static DataServiceQuery<T> AddQueryOptionIf<T>(this DataServiceQuery<T> query, string name, object value, bool condition)
         {
-            Console.WriteLine(condition);
             return condition
                 ? query.AddQueryOption(name, value)
                 : query;
