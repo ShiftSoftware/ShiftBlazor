@@ -11,15 +11,15 @@
         <PropertyColumn Property="x => x.ValidFrom" />
         <PropertyColumn Property="x => x.ValidTo" />
 
-        <ShiftForeignColumn TField="UserDetails"
-                            T="RevisionDTO"
-                            Field="@nameof(RevisionDTO.SavedByUserID)"
-                            Text="@nameof(UserDetails.Name)"
-                            Title="Saved By"
-                            ODataBaseUrl="@UserListBaseUrl"
-                            EntitySetName="@UserListEntitySet">
-        </ShiftForeignColumn>
-
+        <ForeignColumn TEntity="UserDetails"
+                       T="RevisionDTO"
+                       Property="x => x.SavedByUserID"
+                       ForeignTextField="@nameof(UserDetails.Name)"
+                       Title="Saved By"
+                       BaseUrl="@UserListBaseUrl"
+                       EntitySet="@UserListEntitySet"
+                       TProperty="string">
+        </ForeignColumn>
     </ChildContent>
 
     <HeaderTemplate>
