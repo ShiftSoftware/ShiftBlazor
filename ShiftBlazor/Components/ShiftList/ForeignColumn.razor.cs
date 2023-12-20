@@ -77,9 +77,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
             TValueField = GetDataValueFieldName();
             KeyPropertyName ??= TValueField;
 
-            Sortable = false;
             ShowFilterIcon = false;
-            Class = "foreign-column";
+
+            if (Class?.Contains("foreign-column") != true)
+            {
+                Class ??= "";
+                Class += " foreign-column";
+            }
+
             HeaderTemplate = _HeaderTemplate;
             CellTemplate = _CellTemplate;
         }

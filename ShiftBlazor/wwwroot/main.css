@@ -53,6 +53,12 @@
     display: none;
 }
 
+.foreign-column .sortable-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .shift-modal-background + .mud-dialog footer {
     box-shadow: 0 -5px 5px 0px #ffffff;
     position: relative;

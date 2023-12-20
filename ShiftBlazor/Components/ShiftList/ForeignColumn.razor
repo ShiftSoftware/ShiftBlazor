@@ -23,11 +23,11 @@
 
                 if (IsForbiddenStatusCode)
                 {
-                value = id;
+                    value = id;
                 }
                 else if (data != null)
                 {
-                value = Misc.GetValueFromPropertyPath(data, TEntityTextField);
+                    value = Misc.GetValueFromPropertyPath(data, TEntityTextField);
                 }
 
                 if (IsButtonColumn)
@@ -70,7 +70,6 @@
                   Visible="@FailedToLoadData">
             <MudText Class="column-header">@Title</MudText>
         </MudBadge>
-        
 
         @if (Filterable ?? DataGrid?.Filterable ?? false)
         {
