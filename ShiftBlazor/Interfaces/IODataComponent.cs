@@ -3,7 +3,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 
 namespace ShiftSoftware.ShiftBlazor.Interfaces
 {
-    public interface ODataComponent : IComponent
+    public interface IODataComponent : IComponent
     {
         public string EntitySet { get; set; }
         public string? BaseUrl { get; set; }

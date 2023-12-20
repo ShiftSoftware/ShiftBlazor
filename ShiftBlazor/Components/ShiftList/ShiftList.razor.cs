@@ -21,7 +21,7 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> : ODataComponent where T : ShiftEntityDTOBase, new()
+    public partial class ShiftList<T> : IODataComponent where T : ShiftEntityDTOBase, new()
     {
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
@@ -340,7 +340,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private void HideDisabledColumns()
         {
             var columns = DataGrid?.RenderedColumns.Where(x => x.Hideable == true);
-            if (columns == null || columns.Count() == 0)
+            if (columns == null || !columns.Any())
             {
                 return;
             }
@@ -451,7 +451,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private void SaveColumnState()
         {
             var columns = DataGrid?.RenderedColumns.Where(x => x.Hideable == true);
-            if (columns == null || columns.Count() == 0)
+            if (columns == null || !columns.Any())
             {
                 return;
             }
@@ -545,11 +545,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task ExportList()
         {
-            var name = Title != null && Regex.IsMatch(Title, "[^a-zA-Z]")
+            var name = Title != null && ExportTitleRegex().IsMatch(Title)
                 ? Title
                 : EntitySet ?? typeof(T).Name;
 
-            name = Regex.Replace(name, "[^a-zA-Z]", "");
+            name = ExportTitleRegex().Replace(name, "");
             var date = DateTime.Now.ToString("yyyy-MM-dd");
             var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}_{date}.csv";
 
@@ -561,7 +561,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             else
             {
-                var url = Regex.Replace(CurrentUri.AbsoluteUri, "\\$skip=[0-9]+&?|\\$top=[0-9]+&?", "");
+                var url = ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
                 stream = await GetStream(url);
             }
             using var streamRef = new DotNetStreamReference(stream: stream);
@@ -632,7 +632,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (!string.IsNullOrWhiteSpace(DefaultFilter)) 
                     filterList.Add(DefaultFilter);
 
-                if (filterList.Count() > 0)
+                if (filterList.Any())
                 {
                     builder = builder.AddQueryOption("$filter", $"({string.Join(") and (", filterList)})");
                 }
@@ -686,10 +686,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(DataGridId, content.Value.ToList<object>()));
 
-                if (_OnBeforeDataBound != null)
-                {
-                    _OnBeforeDataBound(this, new KeyValuePair<Guid, List<T>>(DataGridId, content.Value.ToList()));
-                }
+                _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(DataGridId, content.Value.ToList()));
             }
             catch (JsonException e)
             {
@@ -705,5 +702,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             return gridData;
         }
+
+        [GeneratedRegex("[^a-zA-Z]")]
+        private static partial Regex ExportTitleRegex();
+        [GeneratedRegex("\\$skip=[0-9]+&?|\\$top=[0-9]+&?")]
+        private static partial Regex ExportUrlRegex();
     }
 }

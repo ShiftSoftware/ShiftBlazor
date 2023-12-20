@@ -16,7 +16,7 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftAutocomplete<TEntitySet> : MudAutocomplete<ShiftEntitySelectDTO>, ODataComponent
+    public partial class ShiftAutocomplete<TEntitySet> : MudAutocomplete<ShiftEntitySelectDTO>, IODataComponent
         where TEntitySet : ShiftEntityDTOBase
     {
         [Inject] private ODataQuery OData { get; set; } = default!;
@@ -68,7 +68,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string? _Placeholder = null;
         private string? _Class = null;
         private EventCallback<ShiftEntitySelectDTO>? _ValueChanged = null;
-        private string MultiSelectClassName = "multi-select";
+        private const string MultiSelectClassName = "multi-select";
 
         protected override void OnInitialized()
         {
@@ -77,10 +77,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 throw new ArgumentNullException(nameof(EntitySet));
             }
 
-            if (ToStringFunc == null)
-            {
-                ToStringFunc = (e) => e?.Text ?? "";
-            }
+            ToStringFunc ??= (e) => e?.Text ?? "";
 
             var shiftEntityKeyAndNameAttribute = Misc.GetAttribute<TEntitySet, ShiftEntityKeyAndNameAttribute>();
 

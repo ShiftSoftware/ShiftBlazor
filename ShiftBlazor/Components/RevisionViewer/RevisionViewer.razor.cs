@@ -33,8 +33,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 if (index >= 0)
                 {
-                    UserListBaseUrl = url.Substring(0, index);
-                    UserListEntitySet = url.Substring(index + 1);
+                    UserListBaseUrl = url[..index];
+                    UserListEntitySet = url[(index + 1)..];
                 }
             }
         }

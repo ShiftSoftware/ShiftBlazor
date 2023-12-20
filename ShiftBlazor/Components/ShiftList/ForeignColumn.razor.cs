@@ -12,7 +12,7 @@ using System.Net.Http.Json;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
 
-    public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtended<T, TProperty>, IDisposable, ODataComponent
+    public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtended<T, TProperty>, IDisposable, IODataComponent
         where T : ShiftEntityDTOBase, new()
         where TEntity : ShiftEntityDTOBase, new()
     {
@@ -35,7 +35,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? DataValueField { get; set; }
 
         [Parameter]
-        [EditorRequired]
         public string? ForeignTextField { get; set; }
 
         internal bool IsReady = false;
@@ -114,13 +113,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             var items = data.Value;
 
-            if (items != null && items.Count() > 0)
+            if (items != null && items.Any())
             {
                 var itemIds = items
                     .Select(x => Misc.GetValueFromPropertyPath(x, TValueField)?.ToString())
                     .Distinct();
 
-                if (itemIds.Count() > 0)
+                if (itemIds.Any())
                 {
                     try
                     {
