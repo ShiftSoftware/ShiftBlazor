@@ -53,6 +53,11 @@
     display: none;
 }
 
+.foreign-column .column-header {
+    font-weight: 500;
+    font-size: 14px;
+}
+
 .foreign-column .sortable-column-header {
     display: flex;
     align-items: center;
