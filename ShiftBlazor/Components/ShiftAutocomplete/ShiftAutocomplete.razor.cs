@@ -34,8 +34,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string? BaseUrlKey { get; set; }
 
-        internal string? DataValueField { get; set; }
-        internal string? DataTextField { get; set; }
+        [Parameter]
+        public string? DataValueField { get; set; }
+        [Parameter]
+        public string? DataTextField { get; set; }
 
         [Parameter]
         [Obsolete("Use Filters parameter instead")]
@@ -69,21 +71,25 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string? _Class = null;
         private EventCallback<ShiftEntitySelectDTO>? _ValueChanged = null;
         private const string MultiSelectClassName = "multi-select";
+        private string _DataValueField = string.Empty;
+        private string _DataTextField = string.Empty;
 
         protected override void OnInitialized()
         {
             if (string.IsNullOrWhiteSpace(EntitySet))
-            {
                 throw new ArgumentNullException(nameof(EntitySet));
-            }
-
-            ToStringFunc ??= (e) => e?.Text ?? "";
 
             var shiftEntityKeyAndNameAttribute = Misc.GetAttribute<TEntitySet, ShiftEntityKeyAndNameAttribute>();
+            _DataValueField = DataValueField ?? shiftEntityKeyAndNameAttribute?.Value ?? "";
+            _DataTextField = DataTextField ?? shiftEntityKeyAndNameAttribute?.Text ?? "";
 
-            this.DataValueField = shiftEntityKeyAndNameAttribute?.Value;
-            this.DataTextField = shiftEntityKeyAndNameAttribute?.Text;
+            if (string.IsNullOrWhiteSpace(_DataValueField))
+                throw new ArgumentNullException(nameof(DataValueField));
 
+            if (string.IsNullOrWhiteSpace(_DataTextField))
+                throw new ArgumentNullException(nameof(DataTextField));
+
+            ToStringFunc ??= (e) => e?.Text ?? "";
             SearchFuncWithCancel = Search;
 
             _ = UpdateInitialValue();
@@ -164,7 +170,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     string? baseUrl = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
                     url = OData.CreateNewQuery<TEntitySet>(EntitySet, baseUrl)
-                            .AddQueryOption("$select", $"{DataValueField},{DataTextField}")
+                            .AddQueryOption("$select", $"{_DataValueField},{_DataTextField}")
                             .WhereQuery(x => 1 == 1 && x.ID == Value.Value)
                             .Take(1)
                             .ToString();
@@ -205,7 +211,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             string? url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
             var builder = OData
                 .CreateNewQuery<TEntitySet>(EntitySet, url)
-                .AddQueryOptionIf("$select", $"{DataValueField},{DataTextField}", MinResponseContent);
+                .AddQueryOptionIf("$select", $"{_DataValueField},{_DataTextField}", MinResponseContent);
 
             if (!string.IsNullOrWhiteSpace(q))
             {
@@ -235,8 +241,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 return odataResult.Select(x => new ShiftEntitySelectDTO
                 {
-                    Value = odataResultType.GetProperty(DataValueField!)?.GetValue(x)?.ToString()!,
-                    Text = odataResultType.GetProperty(DataTextField)?.GetValue(x)?.ToString(),
+                    Value = odataResultType.GetProperty(_DataValueField)?.GetValue(x)?.ToString()!,
+                    Text = odataResultType.GetProperty(_DataTextField)?.GetValue(x)?.ToString(),
                 }).Where(x => !string.IsNullOrWhiteSpace(x.Value)).ToList();
             }
             catch (Exception)
