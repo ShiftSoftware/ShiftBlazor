@@ -12,6 +12,7 @@ using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -175,8 +176,48 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 && Mode != FormModes.Archive;
         }
 
+        public override async ValueTask HandleShortcut(KeyboardKeys key)
+        {
+            switch (key)
+            {
+                case KeyboardKeys.Escape:
+                    if (Mode == FormModes.Edit)
+                    {
+                        await CancelChanges();
+                    }
+                    else if (Mode == FormModes.Archive)
+                    {
+                        await CloseRevision();
+                    }
+                    else
+                    {
+                        await Cancel();
+                    }
+                    break;
+
+                case KeyboardKeys.KeyS:
+                    if (Form != null && _RenderSubmitButton)
+                    {
+                        await Form.OnSubmit.InvokeAsync(Form.EditContext);
+                    }
+                    break;
+
+                default:
+                    Shortcuts.TryGetValue(key, out dynamic? method);
+
+                    if (method?.HasDelegate == true)
+                    {
+                        await method.InvokeAsync();
+                    }
+                    break;
+            }
+        }
+
         public async Task DeleteItem()
         {
+            if (Mode >= FormModes.Archive && TaskInProgress != FormTasks.None)
+                return;
+
             await RunTask(FormTasks.Delete, async () =>
             {
                 var message = new Message
@@ -197,6 +238,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                     NoHeader = true,
+                    CloseOnEscapeKey = false,
                 }).Result;
 
                 if (!result.Canceled)
@@ -213,6 +255,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public async Task PrintItem()
         {
+            if (Mode >= FormModes.Edit && TaskInProgress != FormTasks.None)
+                return;
+
             await RunTask(FormTasks.Print, async () =>
             {
                 await OnPrint.InvokeAsync();
@@ -221,15 +266,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public async Task EditItem()
         {
-            await SetMode(FormModes.Edit);
+            if (HasWriteAccess && Key != null && Mode == FormModes.View && TaskInProgress == FormTasks.None)
+                await SetMode(FormModes.Edit);
         }
 
         public async Task CancelChanges()
         {
             if (TaskInProgress != FormTasks.None)
-            {
                 return;
-            }
 
             if (await ConfirmClose())
             {
@@ -269,6 +313,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var val = MadeChanges ? Value : null;
                 ShiftModal.Close(MudDialog, val);
+                IShortcutComponent.Remove(Id);
             }
             else if (OnSaveAction == FormOnSaveAction.ResetFormOnSave)
             {
@@ -441,6 +486,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task ViewRevisions()
         {
+            if (Mode >= FormModes.Archive)
+                return;
+
             DateTimeOffset? date = null;
 
             await RunTask(FormTasks.FetchRevisions, async () =>

@@ -74,3 +74,25 @@
     position: relative;
     z-index: 1;
 }
+
+.button-shortcut {
+    position: relative;
+}
+
+.shortcut-key {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #000000;
+    color: #fff;
+    font-size: 14px;
+    padding: 1px 5px;
+    border-radius: 10px;
+    display: none;
+    opacity: 0.7;
+}
+
+.show-keys .shortcut-key {
+    display: block;
+}

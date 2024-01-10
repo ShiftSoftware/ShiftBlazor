@@ -1,0 +1,42 @@
+﻿@inherits MudIconButton
+@namespace ShiftSoftware.ShiftBlazor.Components
+@implements IDisposable
+
+<div class="button-shortcut">
+    @{
+        base.BuildRenderTree(__builder);
+    }
+
+    @if (KeyboardKey != null)
+    {
+        <div class="shortcut-key">
+            @IShortcutComponent.CleanKeyName(KeyboardKey.ToString()!)
+        </div>
+    }
+</div>
+
+@code {
+    [CascadingParameter(Name = "EntityForm")]
+    public ComponentBase? ShiftEntityForm { get; set; }
+
+    [Parameter]
+    public KeyboardKeys? KeyboardKey { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (KeyboardKey != null && ShiftEntityForm is IShortcutComponent comp)
+        {
+            comp?.Shortcuts.TryAdd(KeyboardKey.Value, OnClick);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (KeyboardKey != null && ShiftEntityForm is IShortcutComponent comp)
+        {
+            comp?.Shortcuts.Remove(KeyboardKey.Value);
+        }
+    }
+}

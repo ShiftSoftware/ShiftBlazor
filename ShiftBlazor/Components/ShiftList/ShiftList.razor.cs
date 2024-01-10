@@ -21,7 +21,7 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> : IODataComponent where T : ShiftEntityDTOBase, new()
+    public partial class ShiftList<T> : IODataComponent, IShortcutComponent where T : ShiftEntityDTOBase, new()
     {
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
@@ -229,6 +229,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool IsAllSelected = false;
         public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
         public Uri? CurrentUri { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
 
 
         internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
@@ -238,7 +240,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool RenderAddButton = false;
         internal int SelectedPageSize;
         internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
-        internal Guid DataGridId = Guid.NewGuid();
         internal bool? deleteFilter = false;
         internal string? ErrorMessage;
         private ITypeAuthService? TypeAuthService;
@@ -261,6 +262,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
+            IsEmbed = ParentDisabled != null || ParentReadOnly != null;
+
+            if (MudDialog != null && !IsEmbed)
+            {
+                IShortcutComponent.Register(this);
+            }
+
             if (Values == null && EntitySet == null)
             {
                 throw new ArgumentNullException($"{nameof(Values)} and {nameof(EntitySet)} are null");
@@ -284,7 +292,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 DefaultFilter = filter.ToString();
             }
 
-            IsEmbed = ParentDisabled != null || ParentReadOnly != null;
             RenderAddButton = !(DisableAdd || ComponentType == null || (TypeAuthAction != null && TypeAuthService?.Can(TypeAuthAction, Access.Write) != true));
             IconSize = Dense ? Size.Medium : Size.Large;
             ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
@@ -330,6 +337,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 DataGrid.ReloadServerData();
             }
+        }
+
+        public ValueTask HandleShortcut(KeyboardKeys key)
+        {
+            switch (key)
+            {
+                case KeyboardKeys.Escape:
+                    CloseDialog();
+                    break;
+            }
+
+            return new ValueTask();
         }
 
         private void OnLoadHandler()
@@ -428,6 +447,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (MudDialog != null)
             {
                 ShiftModal.Close(MudDialog);
+                IShortcutComponent.Remove(Id);
             }
         }
 
@@ -684,9 +704,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     TotalItems = (int)content.Count.Value,
                 };
 
-                ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(DataGridId, content.Value.ToList<object>()));
+                ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, content.Value.ToList<object>()));
 
-                _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(DataGridId, content.Value.ToList()));
+                _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(Id, content.Value.ToList()));
             }
             catch (JsonException e)
             {
@@ -707,5 +727,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private static partial Regex ExportTitleRegex();
         [GeneratedRegex("\\$skip=[0-9]+&?|\\$top=[0-9]+&?")]
         private static partial Regex ExportUrlRegex();
+
+        void IDisposable.Dispose()
+        {
+            IShortcutComponent.Remove(Id);
+        }
     }
 }

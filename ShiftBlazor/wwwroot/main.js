@@ -17,6 +17,23 @@ window.ClickElementById = function (id) {
     document.getElementById(id)?.click();
 }
 
+window.handleKeydown = function (e) {
+    if (e.altKey || e.code.includes("Alt")) {
+        e.preventDefault();
+        document.body.classList.add("show-keys");
+    }
+
+    if ((e.altKey && !e.code.includes("Alt")) || e.code == "Escape") {
+        DotNet.invokeMethod('ShiftSoftware.ShiftBlazor', 'SendKeys', [e.code]);
+    }
+}
+
+window.handleKeyup = function (e) {
+    if (e.code.includes("Alt")) {
+        document.body.classList.remove("show-keys");
+    }
+}
+
 window.SetAsSortable = function (id) {
     if (typeof window["Sortable"] != "function") {
         return;
@@ -60,3 +77,8 @@ window.downloadFileFromUrl = function (fileName, url) {
     anchorElement.click();
     anchorElement.remove();
 }
+
+
+window.addEventListener("keydown", handleKeydown);
+window.addEventListener("keyup", handleKeyup);
+window.addEventListener("blur", handleKeyup);

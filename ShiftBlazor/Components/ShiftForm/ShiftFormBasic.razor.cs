@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.Localization;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
@@ -12,10 +11,11 @@ using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.TypeAuth.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.TypeAuth.Core.Actions;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftFormBasic<T> where T : class, new()
+    public partial class ShiftFormBasic<T> : IShortcutComponent where T : class, new()
     {
         [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
@@ -178,6 +178,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool HideSubmit { get; set; }
 
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+        public EditForm? Form { get; set; }
         internal virtual string _SubmitText { get; set; }
         internal FormTasks TaskInProgress { get; set; }
         internal bool AlertEnabled { get; set; } = false;
@@ -208,6 +211,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
+            IShortcutComponent.Register(this);
+
             TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
 
             if (TypeAuthAction is ReadWriteDeleteAction action)
@@ -253,6 +258,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
         //    return new ValueTask();
         //}
 
+        public virtual async ValueTask HandleShortcut(KeyboardKeys key)
+        {
+            switch (key)
+            {
+                case KeyboardKeys.Escape:
+                    await Cancel();
+                    break;
+
+                case KeyboardKeys.KeyS:
+                    if (Form != null && _RenderSubmitButton)
+                    {
+                        await Form.OnSubmit.InvokeAsync(Form.EditContext);
+                    }
+                    break;
+            }
+        }
 
         internal async Task Cancel()
         {
@@ -260,6 +281,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var val = MadeChanges ? Value : null;
                 ShiftModal.Close(MudDialog, val);
+                IShortcutComponent.Remove(Id);
             }
         }
 
@@ -400,6 +422,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             TaskInProgress = FormTasks.None;
             await _OnTaskFinished.InvokeAsync(Task);
             await OnTaskFinished.InvokeAsync(Task);
+        }
+
+        void IDisposable.Dispose()
+        {
+            IShortcutComponent.Remove(Id);
         }
     }
 

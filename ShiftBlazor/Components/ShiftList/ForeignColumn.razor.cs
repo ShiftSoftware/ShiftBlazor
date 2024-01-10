@@ -92,7 +92,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal void OnBeforeDataBound(object? sender, KeyValuePair<Guid, List<object>> data)
         {
-            if (ShiftList.DataGridId != data.Key)
+            if (ShiftList.Id != data.Key)
             {
                 return;
             }

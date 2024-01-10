@@ -32,9 +32,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             {
                 Assemblies.AddRange(SettingManager.Configuration.AdditionalAssemblies);
             }
-
         }
-
 
         /// <summary>
         ///     Open a form modal or page.
@@ -225,7 +223,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
 
             var options = new DialogOptions { NoHeader = true, ClassBackground = "shift-modal-background", CloseOnEscapeKey = false };
-            var result = await DialogService.Show(TComponent, "", dParams, options).Result;
+            var dialogRef = DialogService.Show(TComponent, "", dParams, options);
+            var result = await dialogRef.Result;
             return result;
         }
 

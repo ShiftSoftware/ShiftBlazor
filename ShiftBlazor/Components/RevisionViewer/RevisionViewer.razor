@@ -1,49 +1,50 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 
 <MudFocusTrap>
-<ShiftList T="RevisionDTO"
-           EntitySet="@EntitySet"
-           OnRowClick="@RowClickHandler"
-           DisableColumnChooser="true"
-           DisableHeaderToolbar="@true">
+    <ShiftList T="RevisionDTO"
+               EntitySet="@EntitySet"
+               OnRowClick="@RowClickHandler"
+               DisableColumnChooser="true"
+               DisableHeaderToolbar="@true">
 
-    <ChildContent>
-        
-        <PropertyColumn Property="x => x.ValidFrom" />
-        <PropertyColumn Property="x => x.ValidTo" />
+        <ChildContent>
 
-        <ForeignColumn TEntity="UserDetails"
-                       T="RevisionDTO"
-                       Property="x => x.SavedByUserID"
-                       ForeignTextField="@nameof(UserDetails.Name)"
-                       Title="Saved By"
-                       BaseUrl="@UserListBaseUrl"
-                       EntitySet="@UserListEntitySet"
-                       TProperty="string">
-        </ForeignColumn>
-    </ChildContent>
+            <PropertyColumn Property="x => x.ValidFrom" />
+            <PropertyColumn Property="x => x.ValidTo" />
 
-    <HeaderTemplate>
-        <MudToolBar Dense="@true" DisableGutters="@false" Class="light-toolbar shift-toolbar-header">
-            <MudIcon Icon="@Icons.Material.Filled.List"></MudIcon>
-            <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["DefaultTitle"])</MudText>
+            <ForeignColumn TEntity="UserDetails"
+                           T="RevisionDTO"
+                           Property="x => x.SavedByUserID"
+                           ForeignTextField="@nameof(UserDetails.Name)"
+                           Title="Saved By"
+                           BaseUrl="@UserListBaseUrl"
+                           EntitySet="@UserListEntitySet"
+                           TProperty="string">
+            </ForeignColumn>
+        </ChildContent>
 
-            <MudSpacer></MudSpacer>
+        <HeaderTemplate>
+            <MudToolBar Dense="@true" DisableGutters="@false" Class="light-toolbar shift-toolbar-header">
+                <MudIcon Icon="@Icons.Material.Filled.List"></MudIcon>
+                <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["DefaultTitle"])</MudText>
 
-            @if (MudDialog != null)
-            {
-                <MudTooltip Text="@Loc["CloseButton"]">
-                    <MudButton Style="min-width:40px;"
-                               Variant="@Variant.Text"
-                               Size="@Size.Medium"
-                               Color="@Color.Default"
-                               aria-label="@Loc["CloseButton"]"
-                               OnClick="@Close">
-                        <MudIcon Size="@Size.Medium" Icon="@Icons.Material.Filled.Close" />
-                    </MudButton>
-                </MudTooltip>
-            }
-        </MudToolBar>
-    </HeaderTemplate>
-</ShiftList>
+                <MudSpacer></MudSpacer>
+
+                @if (MudDialog != null)
+                {
+                    <MudTooltip Text="@Loc["CloseButton"]">
+                        <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                           Style="min-width:40px;"
+                                           Variant="@Variant.Text"
+                                           Size="@Size.Medium"
+                                           Color="@Color.Default"
+                                           aria-label="@Loc["CloseButton"]"
+                                           OnClick="@Close">
+                            <MudIcon Size="@Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                        </MudButtonExtended>
+                    </MudTooltip>
+                }
+            </MudToolBar>
+        </HeaderTemplate>
+    </ShiftList>
 </MudFocusTrap>

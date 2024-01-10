@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components;
 using ShiftSoftware.ShiftBlazor.Services;
+using Microsoft.JSInterop;
+using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Utils
 {
@@ -15,6 +18,12 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
             NavManager.LocationChanged += HandleLocationChanged;
             OpenModals();
+        }
+
+        [JSInvokable]
+        public static void SendKeys(IEnumerable<string> keys)
+        {
+            _ = IShortcutComponent.SendKeys(keys.Select(Enum.Parse<KeyboardKeys>));
         }
 
         private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)

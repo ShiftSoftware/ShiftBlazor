@@ -3,58 +3,59 @@
 @inject ClipboardService Clip
 @inject MessageService MsgService
 @namespace ShiftSoftware.ShiftBlazor.Components
+@implements IShortcutComponent
 
 <MudPaper Elevation="25" Style="height: 100%;">
     <MudFocusTrap>
-    <MudAppBar Color="@Color" Fixed="false" Dense Elevation="0">
-        <MudIcon Icon="@Icon"/>
-        <MudText title="@Message.Title" Class="px-4 text-overflow-ellipsis" Style="margin:0;">@Message.Title</MudText>
+        <MudAppBar Color="@Color" Fixed="false" Dense Elevation="0">
+             <MudIcon Icon="@Icon" />
+             <MudText title="@Message.Title" Class="px-4 text-overflow-ellipsis" Style="margin:0;">@Message.Title</MudText>
 
-        <MudSpacer/>
+            <MudSpacer />
 
-        <MudIconButton Size="Size.Medium"
-                       OnClick="() => Close(true)"
-                       Icon="@Icons.Material.Filled.Close"
-                       Edge="Edge.End"
-                       Color="Color.Inherit"
-                       Title="Close"/>
-    </MudAppBar>
+            <MudIconButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                    Size="Size.Medium"
+                                    OnClick="() => Close(true)"
+                                    Icon="@Icons.Material.Filled.Close"
+                                    Edge="Edge.End"
+                                    Color="Color.Inherit"
+                                    Title="Close" />
+        </MudAppBar>
 
-    <div class="pa-6">
+        <div class="pa-6">
 
-        <MudText Style="word-wrap: break-word;">@Message.Body</MudText>
-        
-        @if (Message.SubMessages != null && Message.SubMessages.Count > 0)
-        {
-            <MudList>
-                @foreach (var msg in Message.SubMessages)
-                {
-                   <MessageList Message="msg"></MessageList>
-                }
-            </MudList>
-        }
+            <MudText Style="word-wrap: break-word;">@Message.Body</MudText>
 
+            @if (Message.SubMessages != null && Message.SubMessages.Count > 0)
+            {
+                <MudList>
+                    @foreach (var msg in Message.SubMessages)
+                    {
+                        <MessageList Message="msg"></MessageList>
+                    }
+                </MudList>
+            }
 
-    </div>
+        </div>
 
-    <MudToolBar Dense DisableGutters>
-        <MudSpacer/>
-        @if (ReportButton)
-        {
-            <MudButton Variant="Variant.Text" OnClick="CopyToClipboard">Copy</MudButton>
-        }
+        <MudToolBar Dense DisableGutters>
+            <MudSpacer />
+            @if (ReportButton)
+            {
+                <MudButton Variant="Variant.Text" OnClick="CopyToClipboard">Copy</MudButton>
+            }
 
-        @if (!string.IsNullOrWhiteSpace(CancelText))
-        {
-            <MudButton Variant="Variant.Text" OnClick="() => Close(true)" Class="me-2">@CancelText</MudButton>
-        }
+            @if (!string.IsNullOrWhiteSpace(CancelText))
+            {
+                <MudButtonExtended KeyboardKey="KeyboardKeys.Escape" Variant="Variant.Text" OnClick="() => Close(true)" Class="me-2">@CancelText</MudButtonExtended>
+            }
 
-        <MudButton Variant="Variant.Text" Color="@Color" OnClick="() => Close()" Class="me-2">@ConfirmText</MudButton>
-    </MudToolBar>
+            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Variant="Variant.Text" Color="@Color" OnClick="() => Close()" Class="me-2">@ConfirmText</MudButtonExtended>
+        </MudToolBar>
     </MudFocusTrap>
 </MudPaper>
 
-@code {
+    @code {
     [Parameter, EditorRequired]
     public Message Message { get; set; } = default!;
 
@@ -73,9 +74,34 @@
     [Parameter]
     public bool ReportButton { get; set; }
 
-
     [CascadingParameter]
     internal MudDialogInstance? MudDialog { get; set; }
+
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Title { get; set; } = string.Empty;
+    public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        Title = Message.Title;
+        IShortcutComponent.Register(this);
+    }
+
+    public ValueTask HandleShortcut(KeyboardKeys key)
+    {
+        switch (key)
+        {
+            case KeyboardKeys.Escape:
+                Close(true);
+                break;
+
+            case KeyboardKeys.KeyS:
+                Close(false);
+                break;
+        }
+
+        return new ValueTask();
+    }
 
     private void Close(bool cancel = false)
     {
@@ -87,6 +113,8 @@
         {
             MudDialog?.Close();
         }
+
+        IShortcutComponent.Remove(Id);
     }
 
     private async Task CopyToClipboard()
@@ -94,5 +122,10 @@
         var msg = System.Text.Json.JsonSerializer.Serialize(Message);
         await Clip.WriteTextAsync(msg);
         MsgService.Success("Copied to clipboard");
+    }
+
+    void IDisposable.Dispose()
+    {
+        IShortcutComponent.Remove(Id);
     }
 }

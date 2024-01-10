@@ -11,285 +11,295 @@
     <PageTitle>@DocumentTitle</PageTitle>
 }
 
+<CascadingValue Value="this" IsFixed="true" Name="EntityForm">
+
 <article style="height: 100%;">
     <MudFocusTrap Disabled="MudDialog == null">
-    <EditForm EditContext="EditContext"
-              OnSubmit="SubmitHandler"
-              style="height: 100%;">
-        <FluentValidationValidator DisableAssemblyScanning="Validator != null" Validator="Validator" />
-        @if (Validator == null)
-        {
-            <DataAnnotationsValidator />
-        }
+        <EditForm EditContext="EditContext"
+                    @ref="Form"
+                    OnSubmit="SubmitHandler"
+                    style="height: 100%;">
+            <FluentValidationValidator DisableAssemblyScanning="Validator != null" Validator="Validator" />
+            @if (Validator == null)
+            {
+                <DataAnnotationsValidator />
+            }
 
-        <MudPaper Elevation="25" Style="height: 100%;">
+            <MudPaper Elevation="25" Style="height: 100%;">
 
-            <header>
-                @if (!DisableHeaderToolbar)
-                {
-                    <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header" Style="@ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)">
-                        <MudIcon Icon="@IconSvg"></MudIcon>
-                        <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FormDefaultTitle"])</MudText>
+                <header>
+                    @if (!DisableHeaderToolbar)
+                    {
+                        <MudToolBar Dense="true" DisableGutters="false" Class="light-toolbar shift-toolbar-header" Style="@ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)">
+                            <MudIcon Icon="@IconSvg"></MudIcon>
+                            <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FormDefaultTitle"])</MudText>
 
-                        @ToolbarStartTemplate
+                            @ToolbarStartTemplate
 
-                        @if (TaskInProgress == FormTasks.Fetch)
-                        {
-                            <MudProgressCircular Color="NavIconFlatColor ? Color.Inherit : Color.Default" Indeterminate="true" />
-                        }
+                            @if (TaskInProgress == FormTasks.Fetch)
+                            {
+                                <MudProgressCircular Color="NavIconFlatColor ? Color.Inherit : Color.Default" Indeterminate="true" />
+                            }
 
-                        <MudSpacer></MudSpacer>
-
-                        @if (ToolbarCenterTemplate != null)
-                        {
-                            @ToolbarCenterTemplate
                             <MudSpacer></MudSpacer>
-                        }
 
-                        @ToolbarEndTemplate
-
-                        @if (_RenderPrintButton)
-                        {
-                            <MudTooltip Text="@Loc["Print"]">
-                                <MudButton Style="min-width:40px;"
-                                           Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                           Variant="Variant.Text"
-                                           Size="Size.Medium"
-                                           Disabled="DisablePrint || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
-                                           aria-label="@Loc["Print"]"
-                                           OnClick="PrintItem">
-                                    @if (TaskInProgress == FormTasks.Print)
-                                    {
-                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    }
-                                    else
-                                    {
-                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Print" />
-                                    }
-                                </MudButton>
-                            </MudTooltip>
-                        }
-
-                        @if (_RenderRevisionButton)
-                        {
-                            <MudTooltip Text="@Loc["Revisions"]">
-                                <MudButton Style="min-width:40px;"
-                                            Disabled="DisableRevisions || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
-                                            Variant="Variant.Text"
-                                            Size="Size.Medium"
-                                            Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                            aria-label="@Loc["Revisions"]"
-                                            OnClick="ViewRevisions">
-                                    @if (TaskInProgress == FormTasks.FetchRevisions)
-                                    {
-                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    }
-                                    else
-                                    {
-                                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.History" />
-                                    }
-                                </MudButton>
-                            </MudTooltip>;
-                        }
-
-                        @if (_RenderDeleteButton)
-                        {
-                            <MudTooltip Text="@Loc["Delete"]">
-                                <MudButton Style="min-width:40px;"
-                                            Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
-                                            Variant="Variant.Text"
-                                            Size="Size.Medium"
-                                            Color="NavIconFlatColor ? Color.Inherit : Color.Error"
-                                            aria-label="@Loc["Delete"]"
-                                            OnClick="DeleteItem">
-                                    @if (TaskInProgress == FormTasks.Delete)
-                                    {
-                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    }
-
-                                    else
-                                    {
-                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
-                                    }
-                                </MudButton>
-                            </MudTooltip>
-                        }
-
-                        @if (_RenderEditButton)
-                        {
-                            <MudTooltip Text="@Loc["Edit"]">
-                                <MudButton Style="min-width:40px;"
-                                            Disabled="DisableEdit || Mode > FormModes.View || TaskInProgress != FormTasks.None"
-                                            Variant="Variant.Text"
-                                            Size="Size.Medium"
-                                            Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
-                                            aria-label="@Loc["Edit"]"
-                                            OnClick="EditItem">
-                                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
-                                </MudButton>
-                            </MudTooltip>
-                        }
-
-                        @if (_RenderHeaderControlsDivider && MudDialog != null)
-                        {
-                            <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
-                        }
-
-                        @if (MudDialog != null)
-                        {
-                            @ToolbarControlsTemplate
-
-                            <MudTooltip Text="@Loc["NewTab"]">
-                                <MudButton Variant="Variant.Text"
-                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                           Style="min-width:40px;"
-                                           aria-label="@Loc["NewTab"]"
-                                           OnClick="OpenInNewTab">
-                                    <MudIcon Icon="@Icons.Material.Filled.OpenInNew"></MudIcon>
-                                </MudButton>
-                            </MudTooltip>
-
-                            <MudTooltip Text="@(Maximized != true ? Loc["Maximize"] : Loc["Minimize"])">
-                                <MudButton Style="min-width:40px;"
-                                           Variant="Variant.Text"
-                                           Size="Size.Medium"
-                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                           aria-label="@(Maximized != true ? Loc["Maximize"] : Loc["Minimize"])"
-                                           OnClick="ResizeForm">
-                                    <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
-                                </MudButton>
-                            </MudTooltip>
-
-                            <MudTooltip Text="@Loc["ModalClose"]">
-                                <MudButton Style="min-width:40px;"
-                                           Variant="Variant.Text"
-                                           Size="Size.Medium"
-                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                           aria-label="@Loc["ModalClose"]"
-                                           OnClick="() => Cancel()">
-                                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
-                                </MudButton>
-                            </MudTooltip>
-                        }
-                    </MudToolBar>
-                }
-
-                @HeaderTemplate
-
-                @if (Mode == FormModes.Archive)
-                {
-                    <MudAlert Severity="Severity.Warning">@Loc["RevisionIndicator"]</MudAlert>
-                }
-
-                @if (Value.IsDeleted)
-                {
-                    <MudAlert Severity="Severity.Error">@Loc["DeletedIndicator"]</MudAlert>
-                }
-
-                @if (AlertEnabled)
-                {
-                    <MudAlert Severity="@AlertSeverity">@AlertMessage</MudAlert>
-                }
-            </header>
-
-            <div class="@ContentCssClass">
-                <div class="pa-6">
-                    <CascadingValue Value="Mode < FormModes.Edit" Name="@FormHelper.ParentReadOnlyName">
-                    <CascadingValue Value="TaskInProgress != FormTasks.None" Name="@FormHelper.ParentDisabledName">
-                    <CascadingValue Value="this" IsFixed="true">
-                    <CascadingValue Value="EditContext" IsFixed="true">
-                        @if (TypeAuthAction is null)
-                        {
-                            @ChildContent
-                        }
-                        else
-                        {
-                            if (Mode == FormModes.Create || Mode == FormModes.Edit)
+                            @if (ToolbarCenterTemplate != null)
                             {
-                                if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write))
+                                @ToolbarCenterTemplate
+                                <MudSpacer></MudSpacer>
+                            }
+
+                            @ToolbarEndTemplate
+
+                            @if (_RenderPrintButton)
+                            {
+                                <MudTooltip Text="@Loc["Print"]">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyP"
+                                                        Style="min-width:40px;"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Disabled="DisablePrint || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
+                                                        aria-label="@Loc["Print"]"
+                                                        OnClick="PrintItem">
+                                        @if (TaskInProgress == FormTasks.Print)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Print" />
+                                        }
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
+
+                            @if (_RenderRevisionButton)
+                            {
+                                <MudTooltip Text="@Loc["Revisions"]">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyR"
+                                                        Style="min-width:40px;"
+                                                        Disabled="DisableRevisions || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                                        aria-label="@Loc["Revisions"]"
+                                                        OnClick="ViewRevisions">
+                                        @if (TaskInProgress == FormTasks.FetchRevisions)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.History" />
+                                        }
+                                    </MudButtonExtended>
+                                </MudTooltip>;
+                            }
+
+                            @if (_RenderDeleteButton)
+                            {
+                                <MudTooltip Text="@Loc["Delete"]">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyD"
+                                                        Style="min-width:40px;"
+                                                        Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Error"
+                                                        aria-label="@Loc["Delete"]"
+                                                        OnClick="DeleteItem">
+                                        @if (TaskInProgress == FormTasks.Delete)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                        }
+
+                                        else
+                                        {
+                                            <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
+                                        }
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
+
+                            @if (_RenderEditButton)
+                            {
+                                <MudTooltip Text="@Loc["Edit"]">
+                                    <MudButtonExtended Style="min-width:40px;"
+                                                        Disabled="DisableEdit || Mode > FormModes.View || TaskInProgress != FormTasks.None"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
+                                                        aria-label="@Loc["Edit"]"
+                                                        KeyboardKey="KeyboardKeys.KeyE"
+                                                        OnClick="EditItem">
+                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
+
+                            @if (_RenderHeaderControlsDivider && MudDialog != null)
+                            {
+                                <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
+                            }
+
+                            @if (MudDialog != null)
+                            {
+                                @ToolbarControlsTemplate
+
+                                <MudTooltip Text="@Loc["NewTab"]">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyN"
+                                                        Variant="Variant.Text"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                        Style="min-width:40px;"
+                                                        aria-label="@Loc["NewTab"]"
+                                                        OnClick="OpenInNewTab">
+                                        <MudIcon Icon="@Icons.Material.Filled.OpenInNew"></MudIcon>
+                                    </MudButtonExtended>
+                                </MudTooltip>
+
+                                <MudTooltip Text="@(Maximized != true ? Loc["Maximize"] : Loc["Minimize"])">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyM"
+                                                        Style="min-width:40px;"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                        aria-label="@(Maximized != true ? Loc["Maximize"] : Loc["Minimize"])"
+                                                        OnClick="ResizeForm">
+                                        <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
+                                    </MudButtonExtended>
+                                </MudTooltip>
+
+                                <MudTooltip Text="@Loc["ModalClose"]">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                                        Style="min-width:40px;"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                        aria-label="@Loc["ModalClose"]"
+                                                        OnClick="() => Cancel()">
+                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
+                        </MudToolBar>
+                    }
+
+                    @HeaderTemplate
+
+                    @if (Mode == FormModes.Archive)
+                    {
+                        <MudAlert Severity="Severity.Warning">@Loc["RevisionIndicator"]</MudAlert>
+                    }
+
+                    @if (Value.IsDeleted)
+                    {
+                        <MudAlert Severity="Severity.Error">@Loc["DeletedIndicator"]</MudAlert>
+                    }
+
+                    @if (AlertEnabled)
+                    {
+                        <MudAlert Severity="@AlertSeverity">@AlertMessage</MudAlert>
+                    }
+                </header>
+
+                <div class="@ContentCssClass">
+                    <div class="pa-6">
+                        <CascadingValue Value="Mode < FormModes.Edit" Name="@FormHelper.ParentReadOnlyName">
+                        <CascadingValue Value="TaskInProgress != FormTasks.None" Name="@FormHelper.ParentDisabledName">
+                        <CascadingValue Value="EditContext" IsFixed="true">
+                            @if (TypeAuthAction is null)
+                            {
+                                @ChildContent
+                            }
+                            else
+                            {
+                                if (Mode == FormModes.Create || Mode == FormModes.Edit)
                                 {
-                                    @ChildContent
+                                    if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write))
+                                    {
+                                        @ChildContent
+                                    }
+                                    else
+                                    {
+                                        <MudAlert Severity="Severity.Error">@Loc["WriteAccessDenied", Title]</MudAlert>
+                                    }
                                 }
-                                else
+                                else if (Mode == FormModes.View || Mode == FormModes.Archive)
                                 {
-                                    <MudAlert Severity="Severity.Error">@Loc["WriteAccessDenied", Title]</MudAlert>
+                                    if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
+                                    {
+                                        @ChildContent
+                                    }
+                                    else
+                                    {
+                                        <MudAlert Severity="Severity.Error">@Loc["ReadAccessDenied", Title]</MudAlert>
+                                    }
                                 }
                             }
-                            else if (Mode == FormModes.View || Mode == FormModes.Archive)
-                            {
-                                if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
-                                {
-                                    @ChildContent
-                                }
-                                else
-                                {
-                                    <MudAlert Severity="Severity.Error">@Loc["ReadAccessDenied", Title]</MudAlert>
-                                }
-                            }
-                        }
-                    </CascadingValue>
-                    </CascadingValue>
-                    </CascadingValue>
-                    </CascadingValue>
+                        </CascadingValue>
+                        </CascadingValue>
+                        </CascadingValue>
+                    </div>
                 </div>
-            </div>
 
-            <footer>
-                @FooterTemplate
+                <footer>
+                    @FooterTemplate
 
-                @if (!(DisableFooterToolbar || IsFooterToolbarEmpty))
-                {
-                    <MudToolBar>
+                    @if (!(DisableFooterToolbar || IsFooterToolbarEmpty))
+                    {
+                        <MudToolBar>
 
-                        @FooterToolbarStartTemplate
+                            @FooterToolbarStartTemplate
 
-                        <MudSpacer></MudSpacer>
-
-                        @if (FooterToolbarCenterTemplate != null)
-                        {
-                            @FooterToolbarCenterTemplate
                             <MudSpacer></MudSpacer>
-                        }
 
-                        @FooterToolbarEndTemplate
+                            @if (FooterToolbarCenterTemplate != null)
+                            {
+                                @FooterToolbarCenterTemplate
+                                <MudSpacer></MudSpacer>
+                            }
 
-                        @if (Mode == FormModes.Edit)
-                        {
-                            <MudButton Disabled="@(TaskInProgress != FormTasks.None)"
-                                       StartIcon="@Icons.Material.Filled.Cancel"
-                                       OnClick="CancelChanges">
-                                @Loc["CancelChanges"]
-                            </MudButton>
-                        }
-                        else if (Mode == FormModes.Archive)
-                        {
-                            <MudButton Disabled="@(TaskInProgress != FormTasks.None)"
-                                       StartIcon="@Icons.Material.Filled.Cancel"
-                                       OnClick="CloseRevision">
-                                @Loc["CloseRevisions"]
-                            </MudButton>
-                        }
+                            @FooterToolbarEndTemplate
 
-                        @if (_RenderSubmitButton)
-                        {
-                            <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
-                                @if (TaskInProgress == FormTasks.Save)
-                                {
-                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.Save" />
-                                }
+                            @if (Mode == FormModes.Edit)
+                            {
+                                <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                            Disabled="@(TaskInProgress != FormTasks.None)"
+                                            StartIcon="@Icons.Material.Filled.Cancel"
+                                            OnClick="CancelChanges">
+                                    @Loc["CancelChanges"]
+                                </MudButtonExtended>
+                            }
+                            else if (Mode == FormModes.Archive)
+                            {
+                                <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                            Disabled="@(TaskInProgress != FormTasks.None)"
+                                            StartIcon="@Icons.Material.Filled.Cancel"
+                                            OnClick="CloseRevision">
+                                    @Loc["CloseRevisions"]
+                                </MudButtonExtended>
+                            }
 
-                                <MudText Style="padding:0 10px;">@_SubmitText</MudText>
-                            </MudButton>
-                        }
-                    </MudToolBar>
-                }
-            </footer>
-        </MudPaper>
-    </EditForm>
+                            @if (_RenderSubmitButton)
+                            {
+                                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
+                                    @if (TaskInProgress == FormTasks.Save)
+                                    {
+                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Save" />
+                                    }
+
+                                    <MudText Style="padding:0 10px;">@_SubmitText</MudText>
+                                </MudButtonExtended>
+                            }
+                        </MudToolBar>
+                    }
+                </footer>
+            </MudPaper>
+        </EditForm>
     </MudFocusTrap>
-
 </article>
+</CascadingValue>
