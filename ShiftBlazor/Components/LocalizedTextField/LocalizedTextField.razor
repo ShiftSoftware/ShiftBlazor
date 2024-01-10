@@ -4,8 +4,6 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Reflection
 
-@typeparam T where T : ShiftEntityViewAndUpsertDTO, new()
-
 @inject IServiceProvider ServiceProvidor
 @inject SettingManager SettingManager
 @inject MessageService MessageService
@@ -40,8 +38,8 @@
 }
 
 @code {
-    [CascadingParameter]
-    public ShiftEntityForm<T>? ShiftEntityForm { get; set; }
+    [CascadingParameter(Name = "ShiftForm")]
+    public IShiftForm? ShiftEntityForm { get; set; }
 
     /// <summary>
     /// The value of this input element.

@@ -21,7 +21,7 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> : IODataComponent, IShortcutComponent where T : ShiftEntityDTOBase, new()
+    public partial class ShiftList<T> : IODataComponent, IShortcutComponent, IShiftList where T : ShiftEntityDTOBase, new()
     {
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
@@ -226,15 +226,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool Outlined { get; set; }
 
-        public bool IsAllSelected = false;
         public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
         public Uri? CurrentUri { get; set; }
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; private set; } = Guid.NewGuid();
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+        public bool IsEmbed { get; private set; } = false;
+        public bool IsAllSelected { get; private set; } = false;
 
 
         internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
-        internal bool IsEmbed = false;
         internal Size IconSize = Size.Medium;
         internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
         internal bool RenderAddButton = false;

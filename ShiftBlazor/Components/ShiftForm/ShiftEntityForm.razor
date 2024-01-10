@@ -11,7 +11,7 @@
     <PageTitle>@DocumentTitle</PageTitle>
 }
 
-<CascadingValue Value="this" IsFixed="true" Name="EntityForm">
+<CascadingValue Value="this" Name="ShiftForm">
 
 <article style="height: 100%;">
     <MudFocusTrap Disabled="MudDialog == null">
@@ -206,7 +206,7 @@
                     <div class="pa-6">
                         <CascadingValue Value="Mode < FormModes.Edit" Name="@FormHelper.ParentReadOnlyName">
                         <CascadingValue Value="TaskInProgress != FormTasks.None" Name="@FormHelper.ParentDisabledName">
-                        <CascadingValue Value="EditContext" IsFixed="true">
+                        <CascadingValue Value="Mode" >
                             @if (TypeAuthAction is null)
                             {
                                 @ChildContent

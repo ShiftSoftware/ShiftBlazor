@@ -77,7 +77,7 @@
     [CascadingParameter]
     internal MudDialogInstance? MudDialog { get; set; }
 
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; private set; } = Guid.NewGuid();
     public string Title { get; set; } = string.Empty;
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
 

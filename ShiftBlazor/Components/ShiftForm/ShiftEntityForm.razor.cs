@@ -429,6 +429,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                     NoHeader = true,
+                    CloseOnEscapeKey = false,
                 });
 
                 return null;
@@ -506,6 +507,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var options = new DialogOptions
                 {
                     NoHeader = true,
+                    CloseOnEscapeKey = false,
                 };
 
                 var result = await DialogService.Show<RevisionViewer>("", dParams, options).Result;

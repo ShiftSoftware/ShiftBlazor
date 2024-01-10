@@ -28,8 +28,8 @@ window.handleKeydown = function (e) {
     }
 }
 
-window.handleKeyup = function (e) {
-    if (e.code.includes("Alt")) {
+window.releaseAltKey = function (e) {
+    if (e.type === "blur" || e.code.includes("Alt")) {
         document.body.classList.remove("show-keys");
     }
 }
@@ -80,5 +80,5 @@ window.downloadFileFromUrl = function (fileName, url) {
 
 
 window.addEventListener("keydown", handleKeydown);
-window.addEventListener("keyup", handleKeyup);
-window.addEventListener("blur", handleKeyup);
+window.addEventListener("keyup", releaseAltKey);
+window.addEventListener("blur", releaseAltKey);

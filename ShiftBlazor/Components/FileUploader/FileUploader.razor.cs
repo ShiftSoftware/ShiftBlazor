@@ -60,6 +60,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string? ContainerName { get; set; }
 
+        [CascadingParameter(Name = "ShiftForm")]
+        public IShiftForm? ShiftForm { get; set; }
+
         private FormModes? _mode;
 
         [CascadingParameter]
@@ -77,12 +80,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 _mode = value;
             }
         }
-
-        [CascadingParameter]
-        public FormTasks? TaskInProgress { get; set; }
-
-        [CascadingParameter(Name = "FormId")]
-        public Guid? FormId { get; set; }
 
         internal string InputId = "Input" + Guid.NewGuid().ToString().Replace("-", string.Empty);
         internal string UploaderId = "Uploader" + Guid.NewGuid().ToString().Replace("-", string.Empty);
@@ -130,10 +127,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         }
 
         public bool ReadOnly => Mode < FormModes.Edit;
-        public bool Disabled => TaskInProgress != null && TaskInProgress != FormTasks.None;
-
-        [CascadingParameter]
-        public EditContext? EditContext { get; set; }
+        public bool Disabled => ShiftForm?.TaskInProgress != null && ShiftForm.TaskInProgress != FormTasks.None;
 
         [Parameter]
         public Expression<Func<List<ShiftFileDTO>>>? For { get; set; }
@@ -145,12 +139,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             OnGridSort += HandleGridSort;
 
-            if (For != null && EditContext != null)
+            if (For != null && ShiftForm?.EditContext != null)
             {
                 _FieldIdentifier = FieldIdentifier.Create(For);
-                EditContext.OnValidationStateChanged += (o, args) =>
+                ShiftForm.EditContext.OnValidationStateChanged += (o, args) =>
                 {
-                    ErrorText = EditContext.GetValidationMessages(_FieldIdentifier).FirstOrDefault();
+                    ErrorText = ShiftForm.EditContext.GetValidationMessages(_FieldIdentifier).FirstOrDefault();
                 };
             }
         }

@@ -4,12 +4,14 @@
 @typeparam T where T : class, new()
 @namespace ShiftSoftware.ShiftBlazor.Components
 @implements IShortcutComponent
+@implements IShiftForm
 
 @if (!string.IsNullOrWhiteSpace(DocumentTitle))
 {
     <PageTitle>@DocumentTitle</PageTitle>
 }
 
+<CascadingValue Value="this" Name="ShiftForm">
 <article style="height: 100%;">
     <MudFocusTrap Disabled="MudDialog == null">
         <EditForm EditContext="EditContext"
@@ -79,8 +81,6 @@
                     <div class="pa-6">
                         <CascadingValue Value="Mode < FormModes.Edit" Name="@FormHelper.ParentReadOnlyName">
                         <CascadingValue Value="TaskInProgress != FormTasks.None" Name="@FormHelper.ParentDisabledName">
-                        <CascadingValue Value="@Mode">
-                        <CascadingValue Value="@TaskInProgress">
                             @if (TypeAuthAction is null)
                             {
                                 @ChildContent
@@ -110,8 +110,6 @@
                                     }
                                 }
                             }
-                        </CascadingValue>
-                        </CascadingValue>
                         </CascadingValue>
                         </CascadingValue>
                     </div>
@@ -158,3 +156,4 @@
         </EditForm>
     </MudFocusTrap>
 </article>
+</CascadingValue>

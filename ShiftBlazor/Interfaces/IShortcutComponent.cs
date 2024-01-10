@@ -14,7 +14,7 @@ namespace ShiftSoftware.ShiftBlazor.Interfaces
 {
     public interface IShortcutComponent : IDisposable
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; }
         public string Title { get; set; }
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; }
         public ValueTask HandleShortcut(KeyboardKeys actions);
@@ -38,11 +38,8 @@ namespace ShiftSoftware.ShiftBlazor.Interfaces
 
         public static async Task SendKeys(IEnumerable<KeyboardKeys> keys)
         {
-            Console.WriteLine(JsonSerializer.Serialize(Components.Values.Select(x => x.Title)));
-
             if (Components.Any())
             {
-                Console.WriteLine(Components.Last().Value.Title);
                 await Components.Last().Value.HandleShortcut(keys.First());
             }
         }

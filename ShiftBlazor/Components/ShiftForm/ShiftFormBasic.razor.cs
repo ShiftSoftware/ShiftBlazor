@@ -15,7 +15,8 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftFormBasic<T> : IShortcutComponent where T : class, new()
+    [CascadingTypeParameter(nameof(T))]
+    public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T : class, new()
     {
         [Inject] MessageService MsgService { get; set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
@@ -178,16 +179,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool HideSubmit { get; set; }
 
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; private set; } = Guid.NewGuid();
+        public FormTasks TaskInProgress { get; set; }
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+        public Dictionary<string, EditContext> ChildContexts { get; set; } = new();
         public EditForm? Form { get; set; }
+        public EditContext EditContext { get; set; } = default!;
         internal virtual string _SubmitText { get; set; }
-        internal FormTasks TaskInProgress { get; set; }
         internal bool AlertEnabled { get; set; } = false;
         internal MudBlazor.Severity AlertSeverity { get; set; }
         internal string AlertMessage { get; set; } = default!;
 
-        public EditContext EditContext = default!;
         internal bool MadeChanges = false;
 
         protected ITypeAuthService? TypeAuthService;
@@ -196,7 +198,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool HasReadAccess = true;
         internal bool IsFooterToolbarEmpty;
         internal bool _RenderSubmitButton;
-        internal Dictionary<string, EditContext> ChildContexts { get; set; } = new();
         internal string ContentCssClass
         {
             get
@@ -310,6 +311,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                     NoHeader = true,
+                    CloseOnEscapeKey = false,
                 }).Result;
 
                 return !result.Canceled;
