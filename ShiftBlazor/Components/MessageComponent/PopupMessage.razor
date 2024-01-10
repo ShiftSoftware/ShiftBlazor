@@ -5,6 +5,7 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 <MudPaper Elevation="25" Style="height: 100%;">
+    <MudFocusTrap>
     <MudAppBar Color="@Color" Fixed="false" Dense Elevation="0">
         <MudIcon Icon="@Icon"/>
         <MudText title="@Message.Title" Class="px-4 text-overflow-ellipsis" Style="margin:0;">@Message.Title</MudText>
@@ -50,6 +51,7 @@
 
         <MudButton Variant="Variant.Text" Color="@Color" OnClick="() => Close()" Class="me-2">@ConfirmText</MudButton>
     </MudToolBar>
+    </MudFocusTrap>
 </MudPaper>
 
 @code {
