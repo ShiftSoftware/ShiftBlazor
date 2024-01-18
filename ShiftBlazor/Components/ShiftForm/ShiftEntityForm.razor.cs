@@ -49,7 +49,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         ///     Specifies whether to render the Print button or not.
         /// </summary>
         [Parameter]
-        public bool HidePrint { get; set; }
+        public bool ShowPrint { get; set; }
 
         /// <summary>
         ///     Specifies whether to render the Delete button or not.
@@ -93,11 +93,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool DisableRevisions { get; set; }
 
-        /// <summary>
-        ///     An event triggered when Print button is clicked, by default Print button does nothing.
-        /// </summary>
-        [Parameter]
-        public EventCallback OnPrint { get; set; }
+        ///// <summary>
+        /////     An event triggered when Print button is clicked, by default Print button does nothing.
+        ///// </summary>
+        //[Parameter]
+        //public EventCallback OnPrint { get; set; }
 
         /// <summary>
         ///     An event triggered after getting a response from API.
@@ -161,7 +161,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             base.OnParametersSet();
 
-            _RenderPrintButton = OnPrint.HasDelegate && !HidePrint && HasReadAccess;
+            _RenderPrintButton = /*OnPrint.HasDelegate &&*/ ShowPrint && HasReadAccess;
             _RenderRevisionButton = !HideRevisions && HasReadAccess;
             _RenderEditButton = !HideEdit && HasWriteAccess;
             _RenderDeleteButton = !HideDelete && HasDeleteAccess;
@@ -260,7 +260,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             await RunTask(FormTasks.Print, async () =>
             {
-                await OnPrint.InvokeAsync();
+                //await OnPrint.InvokeAsync();
+
+                //Get a Signed Token to Authenticate /print end-point
+                var path = SettingManager.Configuration.ApiPath.AddUrlPath(Action);
+                
+                var tokenResult = await Http.GetAsync($"{path}/print-token/{Key?.ToString()}");
+
+                var token = await tokenResult.Content.ReadAsStringAsync();
+
+                //Open /print endpoint with the obtained token
+                await JsRuntime.InvokeVoidAsync("open", $"{path}/print/{Key?.ToString()}?{token}", "_blank");
             });
         }
 
