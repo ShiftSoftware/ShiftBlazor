@@ -4,13 +4,20 @@ using ShiftSoftware.ShiftBlazor.Services;
 using Microsoft.JSInterop;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Components;
 
 namespace ShiftSoftware.ShiftBlazor.Utils
 {
-    public class ShiftMainLayout : LayoutComponentBase
+    public partial class ShiftMainLayout : LayoutComponentBase
     {
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
         [Inject] private NavigationManager NavManager { get; set; } = default!;
+        [Inject] private  SettingManager SettingManager { get; set; } = default!;
+
+        [CascadingParameter]
+        public AppLayoutContext? App { get; set; }
+
+        bool _drawerOpen = false;
 
         protected override void OnInitialized()
         {
@@ -34,6 +41,11 @@ namespace ShiftSoftware.ShiftBlazor.Utils
         private void OpenModals()
         {
             ShiftModal.UpdateModals();
+        }
+
+        private void DrawerToggle()
+        {
+            _drawerOpen = !_drawerOpen;
         }
     }
 }

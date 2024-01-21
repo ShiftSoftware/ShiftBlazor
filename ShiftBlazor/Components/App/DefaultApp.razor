@@ -1,0 +1,122 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using ShiftSoftware.ShiftIdentity.Blazor.Services
+@using ShiftSoftware.ShiftIdentity.Core
+
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<CascadingValue Value="AppContext" IsFixed="true">
+    <Router AppAssembly="@AppAssembly"
+            AdditionalAssemblies="@AdditionalAssemblies"
+            NotFound="@(NotFoundTemplate ?? NotFoundDefault)"
+            Navigating="Navigating"
+            OnNavigateAsync="OnNavigateAsync">
+
+        <Found Context="routeData">
+            @if (AuthenticationStateTask == null)
+            {
+                <RouteView RouteData="@routeData" DefaultLayout="@(MainLayout ?? typeof(ShiftMainLayout))" />
+            }
+            else
+            {
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@(MainLayout ?? typeof(ShiftMainLayout))">
+                    <NotAuthorized>
+                        <MudText Align="Align.Center" Typo="Typo.h1">Not Authorized</MudText>
+                        <MudText Align="Align.Center" Typo="Typo.body1">Redirecting...</MudText>
+
+                        @{
+                            _ = RedirectToLogin();
+                        }
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            }
+                
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+    </Router>
+</CascadingValue>
+
+
+@code {
+    [Inject] NavigationManager NavManager { get; set; } = default!;
+    [Inject] ShiftIdentityService ShiftIdentityService { get; set; } = default!;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public System.Reflection.Assembly? AppAssembly { get; set; }
+
+    [Parameter]
+    public IEnumerable<System.Reflection.Assembly>? AdditionalAssemblies { get; set; }
+
+    [Parameter]
+    public string? AppTitle { get; set; }
+
+    [Parameter]
+    public RenderFragment? NotFoundTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment? Navigating { get; set; }
+
+    [Parameter]
+    public EventCallback<NavigationContext> OnNavigateAsync { get; set; }
+
+    [Parameter]
+    public RenderFragment<NavMenuContext>? NavMenuTemplate { get; set; }
+
+    [Parameter]
+    public Type? MainLayout { get; set; }
+
+    [Parameter]
+    public ShiftIdentityHostingTypes IdentityHostingType { get; set; }
+
+    private AppLayoutContext AppContext;
+
+    protected override void OnInitialized()
+    {
+        AppContext = new AppLayoutContext {
+            Title = AppTitle,
+            NavMenuTemplate = NavMenuTemplate,
+            EnableAutherization = AuthenticationStateTask != null,
+        };
+
+        base.OnInitialized();
+    }
+
+    public async Task RedirectToLogin()
+    {
+        const string url = $"{ShiftIdentity.Core.Constants.IdentityRoutePreifix}/login";
+        var authenticationState = await AuthenticationStateTask;
+
+        if (authenticationState?.User?.Identity is null || !authenticationState.User.Identity.IsAuthenticated)
+        {
+            var returnUrl = NavManager.ToBaseRelativePath(NavManager.Uri);
+
+            if (IdentityHostingType == ShiftIdentityHostingTypes.Internal)
+            {
+                var queryStrings = new Dictionary<string, object?>();
+
+                //Add return-url to login page
+                if (!string.IsNullOrWhiteSpace(returnUrl))
+                    queryStrings.Add("ReturnUrl", returnUrl);
+
+                var uri = NavManager.GetUriWithQueryParameters(url, queryStrings);
+                NavManager.NavigateTo(uri);
+            }
+            else
+            {
+                await ShiftIdentityService.LoginAsync(returnUrl);
+            }
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    private RenderFragment NotFoundDefault => @<text>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@(MainLayout ?? typeof(ShiftMainLayout))">
+            <p role="alert">Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </text>;
+}
