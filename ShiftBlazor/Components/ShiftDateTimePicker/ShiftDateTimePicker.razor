@@ -1,7 +1,6 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Linq.Expressions
-@using System.ComponentModel.DataAnnotations
 
 @inject SettingManager SettingManager
 
@@ -64,8 +63,8 @@
     [Parameter]
     public Expression<Func<DateTimeOffset?>>? For { get; set; }
 
-    [CascadingParameter(Name = "ShiftForm")]
-    public IShiftForm? ShiftForm { get; set; }
+    // [CascadingParameter(Name = "ShiftForm")]
+    // public IShiftForm? ShiftForm { get; set; }
 
     internal bool _IsRequired = false;
 
@@ -95,11 +94,11 @@
             }
         }
 
-        if (ShiftForm?.EditContext != null && For != null)
-        {
-            var field = FieldIdentifier.Create(For);
-            ShiftForm.EditContext.NotifyFieldChanged(field);
-        }
+        // if (ShiftForm?.EditContext != null && For != null)
+        // {
+        //     var field = FieldIdentifier.Create(For);
+        //     ShiftForm.EditContext.NotifyFieldChanged(field);
+        // }
 
         await this.DateTimeOffsetChanged.InvokeAsync(this.DateTimeOffset);
     }
@@ -125,11 +124,11 @@
             }
         }
 
-        if (ShiftForm?.EditContext != null && For != null)
-        {
-            var field = FieldIdentifier.Create(For);
-            ShiftForm.EditContext.NotifyFieldChanged(field);
-        }
+        // if (ShiftForm?.EditContext != null && For != null)
+        // {
+        //     var field = FieldIdentifier.Create(For);
+        //     ShiftForm.EditContext.NotifyFieldChanged(field);
+        // }
 
         await this.DateTimeOffsetChanged.InvokeAsync(this.DateTimeOffset);
     }
