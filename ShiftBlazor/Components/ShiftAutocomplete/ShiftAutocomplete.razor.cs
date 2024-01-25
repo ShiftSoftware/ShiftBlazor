@@ -217,7 +217,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (!string.IsNullOrWhiteSpace(q))
             {
                 builder = Filters == null
-                    ? builder.AddQueryOption("$filter", $"contains({DataTextField},'{q}')")
+                    ? builder.AddQueryOption("$filter", $"contains({_DataTextField},'{q}')")
                     : builder.AddQueryOption("$filter", string.Join(" and ", Filters.Invoke(q)));
             }
 
