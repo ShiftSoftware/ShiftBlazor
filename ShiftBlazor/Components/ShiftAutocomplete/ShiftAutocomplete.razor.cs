@@ -71,8 +71,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string? _Class = null;
         private EventCallback<ShiftEntitySelectDTO>? _ValueChanged = null;
         private const string MultiSelectClassName = "multi-select";
-        private string _DataValueField = string.Empty;
-        private string _DataTextField = string.Empty;
+        internal string _DataValueField = string.Empty;
+        internal string _DataTextField = string.Empty;
 
         protected override void OnInitialized()
         {
