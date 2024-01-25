@@ -114,6 +114,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             parameters.TryGetValue(nameof(Class), out _Class);
             parameters.TryGetValue(nameof(ValueChanged), out _ValueChanged);
 
+            MaxItems = 100;
             ResetValueOnEmptyText = true;
             ShowProgressIndicator = true;
             OnlyValidateIfDirty = true;
@@ -220,7 +221,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     : builder.AddQueryOption("$filter", string.Join(" and ", Filters.Invoke(q)));
             }
 
-            return builder.Take(100).ToString()!;
+            return builder.Take(MaxItems ?? 100).ToString()!;
         }
 
         internal async Task<List<ShiftEntitySelectDTO>> GetODataResult(string url, CancellationToken token = default)
