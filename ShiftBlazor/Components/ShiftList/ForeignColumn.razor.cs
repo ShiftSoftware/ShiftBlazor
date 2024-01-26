@@ -116,7 +116,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (items != null && items.Any())
             {
                 var itemIds = items
-                    .Select(x => Misc.GetValueFromPropertyPath(x, TValueField)?.ToString())
+                    .Select(x => Misc.GetValueFromPropertyPath(x, TValueField)?.ToString()) //The ?.ToString() translates to an empty string if null is returned
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
                     .Distinct();
 
                 if (itemIds.Any())
