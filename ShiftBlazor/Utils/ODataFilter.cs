@@ -185,7 +185,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
                 }
                 else if (fieldType.IsDateTime)
                 {
-                    valString = ((DateTime)value!).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                    valString = new DateTimeOffset(((DateTime)value!)).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                 }
                 else if (fieldType.IsBoolean)
                 {

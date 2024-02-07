@@ -71,8 +71,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string? _Class = null;
         private EventCallback<ShiftEntitySelectDTO>? _ValueChanged = null;
         private const string MultiSelectClassName = "multi-select";
-        private string _DataValueField = string.Empty;
-        private string _DataTextField = string.Empty;
+        internal string _DataValueField = string.Empty;
+        internal string _DataTextField = string.Empty;
 
         protected override void OnInitialized()
         {
@@ -114,6 +114,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             parameters.TryGetValue(nameof(Class), out _Class);
             parameters.TryGetValue(nameof(ValueChanged), out _ValueChanged);
 
+            MaxItems = 100;
             ResetValueOnEmptyText = true;
             ShowProgressIndicator = true;
             OnlyValidateIfDirty = true;
@@ -216,11 +217,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (!string.IsNullOrWhiteSpace(q))
             {
                 builder = Filters == null
-                    ? builder.AddQueryOption("$filter", $"contains({DataTextField},'{q}')")
+                    ? builder.AddQueryOption("$filter", $"contains({_DataTextField},'{q}')")
                     : builder.AddQueryOption("$filter", string.Join(" and ", Filters.Invoke(q)));
             }
 
-            return builder.Take(100).ToString()!;
+            return builder.Take(MaxItems ?? 100).ToString()!;
         }
 
         internal async Task<List<ShiftEntitySelectDTO>> GetODataResult(string url, CancellationToken token = default)
