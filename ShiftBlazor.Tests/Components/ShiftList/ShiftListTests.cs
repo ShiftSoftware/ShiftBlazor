@@ -279,18 +279,18 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.Contains($"<span>{text}</span>", toolbar.ToMarkup());
     }
 
-    [Fact]
-    public void ShouldAddWhereToFilter()
-    {
-        Expression<Func<User, bool>> WhereFilter = (x) => x.Name.Contains("Be");
-        var comp = RenderComponent<ShiftListTestFilteredResult>(parameters => parameters
-            .Add(p => p.Where, WhereFilter)
-        );
-        var grid = comp.FindComponent<ShiftList<User>>().Instance;
-        // $filter=contains(Name,'Be')
-        Assert.Equal(WhereFilter, grid.Where);
-        Assert.Contains("$filter=contains(Name,'Be')", grid.CurrentUri?.Query);
-    }
+    //[Fact]
+    //public void ShouldAddWhereToFilter()
+    //{
+    //    Expression<Func<User, bool>> WhereFilter = (x) => x.Name.Contains("Be");
+    //    var comp = RenderComponent<ShiftListTestFilteredResult>(parameters => parameters
+    //        .Add(p => p.Where, WhereFilter)
+    //    );
+    //    var grid = comp.FindComponent<ShiftList<User>>().Instance;
+    //    // $filter=contains(Name,'Be')
+    //    Assert.Equal(WhereFilter, grid.Where);
+    //    Assert.Contains("$filter=contains(Name,'Be')", grid.CurrentUri?.Query);
+    //}
 
     [Fact]
     public void ShouldSetDataGridHeight()

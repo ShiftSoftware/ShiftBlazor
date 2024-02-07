@@ -2,7 +2,7 @@
 
 namespace ShiftSoftware.ShiftBlazor.Tests;
 
-public class SampleDTO : ShiftEntityDTO
+public class SampleDTO : ShiftEntityViewAndUpsertDTO
 {
     public override string? ID { get; set; }
     public int Age { get; set; }

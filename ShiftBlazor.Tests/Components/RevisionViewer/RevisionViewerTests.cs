@@ -7,7 +7,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
         [Fact]
         public void ShouldRenderComponentCorrectly()
         {
-            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters.Add(p => p.EntitySet, "Users"));
+            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters.Add(p => p.EntitySet, "/User/1/revisions"));
 
             comp.FindComponent<ShiftList<RevisionDTO>>();
         }

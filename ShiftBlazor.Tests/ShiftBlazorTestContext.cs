@@ -1,6 +1,6 @@
 ﻿using Bunit.TestDoubles;
 using RichardSzalay.MockHttp;
-using ShiftBlazor.Tests.Viewer.Models;
+using ShiftBlazor.Tests.Shared.DTOs;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.TypeAuth.Blazor.Extensions;
 
@@ -37,6 +37,22 @@ public class ShiftBlazorTestContext : TestContext
         mock.When(HttpMethod.Put, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
         mock.When(HttpMethod.Delete, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First(x => x.IsDeleted == true) });
 
+        mock.When(HttpMethod.Get, ApiBaseUrl.AddUrlPath("/User/1/revisions")).RespondJson(new ODataDTO<RevisionDTO>
+        {
+            Value = new List<RevisionDTO> {
+                new RevisionDTO {
+                    ValidFrom = new DateTime(2020, 1, 1),
+                    ValidTo = new DateTime(2022, 1, 1),
+                    ID = "1",
+                },
+                new RevisionDTO {
+                    ValidFrom = new DateTime(2021, 1, 1),
+                    ValidTo = new DateTime(2022, 12, 1),
+                    ID = "2",
+                },
+            }
+        });
+
         Services.AddShiftBlazor(config =>
         {
             config.ShiftConfiguration = options =>
@@ -44,7 +60,7 @@ public class ShiftBlazorTestContext : TestContext
                 options.BaseAddress = BaseUrl;
                 options.ApiPath = ApiBaseUrl;
                 options.ODataPath = ODataBaseUrl;
-                options.UserListEndpoint = "/odata/PublicUser";
+                options.UserListEndpoint = BaseUrl + "/odata/PublicUser";
                 options.AddLanguage("en-US", "EN")
                        .AddLanguage("es-US", "EN")
                        .AddLanguage("ar-AE", "EN")
