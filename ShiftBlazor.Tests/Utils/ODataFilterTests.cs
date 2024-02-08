@@ -167,7 +167,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Utils
                     });
                 });
 
-            Assert.Equal($"Field1 eq 1 and Field2 eq true and Field3 eq 56 and (Field4 eq 1 and (Field5 eq 345 and Field6 eq {time.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")}) and Field4.1 eq 'val') and Field7 eq null and (Field8 eq false or Field8.1 ne 'abc' or Field8.2 eq true) and ((((((contains(Field9,'hello') or contains(Field10,'world')))))))", filter.ToString());
+            Assert.Equal($"Field1 eq 1 and Field2 eq true and Field3 eq 56 and (Field4 eq 1 and (Field5 eq 345 and Field6 eq {time.ToString("yyyy-MM-ddTHH:mm:ss.fff")}%2B00:00) and Field4.1 eq 'val') and Field7 eq null and (Field8 eq false or Field8.1 ne 'abc' or Field8.2 eq true) and ((((((contains(Field9,'hello') or contains(Field10,'world')))))))", filter.ToString());
         }
 
         [Fact]
@@ -223,7 +223,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Utils
                     });
                 });
 
-            Assert.Equal($"Field1 eq 1 or Field2 eq true or Field3 eq 56 or (Field4 eq 1 and (Field5 eq 345 and Field6 eq {time.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")}) and Field4.1 eq 'val') or Field7 eq null or (Field8 eq false or Field8.1 ne 'abc' or Field8.2 eq true) or ((((((contains(Field9,'hello') or contains(Field10,'world')))))))", filter.ToString());
+            Assert.Equal($"Field1 eq 1 or Field2 eq true or Field3 eq 56 or (Field4 eq 1 and (Field5 eq 345 and Field6 eq {time.ToString("yyyy-MM-ddTHH:mm:ss.fff")}%2B00:00) and Field4.1 eq 'val') or Field7 eq null or (Field8 eq false or Field8.1 ne 'abc' or Field8.2 eq true) or ((((((contains(Field9,'hello') or contains(Field10,'world')))))))", filter.ToString());
         }
 
         [Fact]
@@ -253,7 +253,8 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Utils
         {
             var date = DateTime.Now;
             var value = ODataFilter.GetValueString(new DateTime(2023, 12, 13));
-            Assert.Equal("2023-12-13T00:00:00.000Z", value);
+            var offset = date.ToString("zzz").Replace("+", "%2B");
+            Assert.Equal("2023-12-13T00:00:00.000" + offset, value);
         }
 
         [Fact]
@@ -273,9 +274,11 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Utils
         [Fact]
         public void GetValueStringShouldHandleEnumerableWithAllTypes()
         {
-            var list = new List<object?> { "abc", FormModes.Edit, new DateTime(2023, 12, 13), false, null };
+            var date = new DateTime(2023, 12, 13);
+            var list = new List<object?> { "abc", FormModes.Edit, date, false, null };
             var value = ODataFilter.GetValueString(list);
-            Assert.Equal("'abc','Edit',2023-12-13T00:00:00.000Z,false,null", value);
+            var offset = date.ToString("zzz").Replace("+", "%2B");
+            Assert.Equal("'abc','Edit',2023-12-13T00:00:00.000" + offset + ",false,null", value);
         }
 
         [Fact]
