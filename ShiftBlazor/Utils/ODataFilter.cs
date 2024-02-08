@@ -1,6 +1,7 @@
 ﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using System.Collections;
+using System.Text;
 
 namespace ShiftSoftware.ShiftBlazor.Utils
 {
@@ -28,6 +29,16 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
         private readonly bool IsAnd;
         private readonly List<object> Filters;
+
+        internal readonly static Dictionary<char, string> SpecialCharaters = new()
+        {
+            {'%', "%25"},
+            {'+', "%2B"},
+            {'/', "%2F"},
+            {'?', "%3F"},
+            {'#', "%23"},
+            {'&', "%26"},
+        };
 
         public ODataFilter Add(ODataFilter filter)
         {
@@ -196,8 +207,22 @@ namespace ShiftSoftware.ShiftBlazor.Utils
                     valString = value.ToString()!;
                 }
             }
-            
-            return valString;
+
+            var stringBuilder = new StringBuilder();
+
+            foreach (char x in valString)
+            {
+                if (SpecialCharaters.TryGetValue(x, out string? escaped))
+                {
+                    stringBuilder.Append(escaped);
+                }
+                else
+                {
+                    stringBuilder.Append(x);
+                }
+            }
+
+            return stringBuilder.ToString();
         }
 
         internal static string CreateFilterTemplate(object? filterOperator)
