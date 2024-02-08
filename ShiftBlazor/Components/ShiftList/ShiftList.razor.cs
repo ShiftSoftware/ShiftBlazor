@@ -226,6 +226,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool Outlined { get; set; }
 
+        [Parameter]
+        public string? DefaultSort { get; set; }
+
         public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
@@ -314,9 +317,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnAfterRender(bool firstRender)
         {
-            if (firstRender && !DisableColumnChooser)
+            if (firstRender)
             {
-                HideDisabledColumns();
+                if (!DisableColumnChooser)
+                {
+                    HideDisabledColumns();
+                }
+
+                if (DefaultSort != null)
+                {
+                   _ = DataGrid?.SetSortAsync(DefaultSort, SortDirection.Ascending, null);
+                }
             }
         }
 
