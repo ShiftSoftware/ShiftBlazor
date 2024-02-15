@@ -11,6 +11,7 @@ using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
 using System.Linq.Expressions;
@@ -511,9 +512,65 @@ namespace ShiftSoftware.ShiftBlazor.Components
             StateHasChanged();
         }
 
+        private async Task ProcessForeignColumns<TForeign>(List<TForeign> items)
+        {
+            var foreignColumns = DataGrid!
+                    .RenderedColumns
+                    .Where(x => x.Class?.Contains("foreign-column") == true)
+                    .Select(x => x as IForeignColumn);
+
+
+            var entityType = typeof(T);
+
+            foreach (var column in foreignColumns)
+            {
+                if (column == null) continue;
+
+                var itemIds = IForeignColumn.GetForeignIds(column, items);
+                var foreignData = await IForeignColumn.GetForeignColumnValues(column, itemIds, OData, HttpClient);
+                var field = IForeignColumn.GetDataValueFieldName(column);
+
+                var columnProperty = entityType.GetProperty(field);
+                var foreignType = column.GetType().GetGenericArguments().Last();
+
+                var attr = Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(foreignType);
+                var foreignTextField = column.ForeignTextField ?? attr?.Text ?? "";
+
+                var idProp = foreignType.GetProperty(nameof(ShiftEntityDTOBase.ID));
+                var textProp = foreignType.GetProperty(foreignTextField);
+
+                if (idProp == null || textProp == null || foreignData == null || columnProperty == null)
+                    continue;
+
+                foreach (var row in items)
+                {
+                    var id = columnProperty.GetValue(row);
+
+                    var test = foreignData.FirstOrDefault(x => idProp.GetValue(x)?.ToString() == id?.ToString());
+                    if (test != null)
+                    {
+                        columnProperty.SetValue(row, textProp.GetValue(test));
+                    }
+                }
+            }
+        }
+
         private async Task<Stream> GetStream(string url)
         {
             var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);
+
+            try
+            {
+                if (res?.Value == null || !res.Value.Any())
+                    throw new InvalidOperationException("No Items found");
+
+                await ProcessForeignColumns(res.Value);
+            }
+            catch (Exception e)
+            {
+                MessageService.Error("Error processing foreign columns", "Error processing foreign columns", e.ToString());
+            }
+
             return GetStream(res?.Value);
         }
 

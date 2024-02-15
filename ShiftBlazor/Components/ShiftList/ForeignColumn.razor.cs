@@ -7,12 +7,11 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
 
-    public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtended<T, TProperty>, IDisposable, IODataComponent
+    public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtended<T, TProperty>, IDisposable, IForeignColumn
         where T : ShiftEntityDTOBase, new()
         where TEntity : ShiftEntityDTOBase, new()
     {
@@ -37,6 +36,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string? ForeignTextField { get; set; }
 
+        public string? Url { get; private set; }
+        public string TEntityTextField { get; private set; } = string.Empty;
+        public string TEntityValueField { get; private set; } = nameof(ShiftEntityDTOBase.ID);
+
         internal bool IsReady = false;
         internal List<TEntity> RemoteData { get; set; } = new();
         internal bool IsFilterOpen = false;
@@ -44,9 +47,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal List<ShiftEntitySelectDTO> FilterItems { get; set; } = new();
 
         private DataServiceQuery<TEntity> QueryBuilder { get; set; }
-        private string TValueField = string.Empty;
-        private string TEntityTextField = string.Empty;
-        private string TEntityValueField = nameof(ShiftEntityDTOBase.ID);
+        private string? TValueField = null;
         private bool IsForbiddenStatusCode = false;
         private bool FailedToLoadData = false;
         private string? ErrorMessage = null;
@@ -66,8 +67,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             ShiftBlazorEvents.OnBeforeGridDataBound += OnBeforeDataBound;
 
-            string? url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
-            QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySet, url);
+            Url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
+            QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySet, Url);
 
             base.OnInitialized();
         }
@@ -75,7 +76,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         protected override void OnParametersSet()
         {
             base.OnParametersSet();
-            TValueField = GetDataValueFieldName();
+
+            TValueField ??= IForeignColumn.GetDataValueFieldName(this);
             KeyPropertyName ??= TValueField;
 
             ShowFilterIcon = false;
@@ -115,62 +117,25 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (items != null && items.Any())
             {
-                var itemIds = items
-                    .Select(x => Misc.GetValueFromPropertyPath(x, TValueField)?.ToString()) //The ?.ToString() translates to an empty string if null is returned
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Distinct();
+                FailedToLoadData = false;
 
-                if (itemIds.Any())
+                try
                 {
-                    try
+                    var itemIds = IForeignColumn.GetForeignIds(this, items);
+                    var foreignData = await IForeignColumn.GetForeignColumnValues<TEntity>(this, itemIds, OData, Http);
+                    if (foreignData != null)
                     {
-                        FailedToLoadData = false;
-
-                        var url = QueryBuilder
-                            .AddQueryOption("$select", $"{TEntityValueField},{TEntityTextField}")
-                            .WhereQuery(x => itemIds.Contains(x.ID))
-                            .ToString();
-
-                        var res = await Http.GetAsync(url);
-
-                        if (res.IsSuccessStatusCode)
-                        {
-                            var result = await res.Content.ReadFromJsonAsync<ODataDTO<TEntity>>();
-
-                            if (result != null)
-                            {
-                                RemoteData = result.Value;
-                            }
-                        }
-
-                        IsForbiddenStatusCode = res.StatusCode == System.Net.HttpStatusCode.Forbidden;
+                        RemoteData = foreignData.ToList();
                     }
-                    catch (Exception e)
-                    {
-                        ErrorMessage = e.ToString();
-                        FailedToLoadData = true;
-                    }
+                }
+                catch (Exception e)
+                {
+                    ErrorMessage = e.ToString();
+                    FailedToLoadData = true;
                 }
             }
             IsReady = true;
             ShiftList.GridStateHasChanged();
-        }
-
-        private string GetDataValueFieldName()
-        {
-            string? field = DataValueField;
-
-            if (string.IsNullOrWhiteSpace(DataValueField) && !string.IsNullOrWhiteSpace(PropertyName) && !Guid.TryParse(PropertyName, out _))
-            {
-                field = Misc.GetFieldFromPropertyPath(PropertyName);
-            }
-
-            if (string.IsNullOrWhiteSpace(field))
-            {
-                throw new Exception(message: $"'{nameof(DataValueField)}' cannot be null when '{nameof(Property)}' is null or is a dynamic expression");
-            }
-
-            return field;
         }
 
         private async Task ClearFilterAsync()
