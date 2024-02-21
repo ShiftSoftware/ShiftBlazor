@@ -2,6 +2,7 @@
 using Microsoft.OData.Client;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Events;
+using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
@@ -29,6 +30,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public string? BaseUrlKey { get; set; }
+        
+        [Parameter]
+        public string ODataPath { get; set; } = "odata";
 
         [Parameter]
         public string? DataValueField { get; set; }
@@ -68,6 +72,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             ShiftBlazorEvents.OnBeforeGridDataBound += OnBeforeDataBound;
 
             Url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
+            Url = Url?.AddUrlPath(this.ODataPath);
             QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySet, Url);
 
             base.OnInitialized();
