@@ -13,6 +13,8 @@ using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using System;
+using ShiftSoftware.ShiftBlazor.Extensions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -33,6 +35,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public string? BaseUrlKey { get; set; }
+        [Parameter]
+        public string ODataPath { get; set; } = "odata";
 
         [Parameter]
         public string? DataValueField { get; set; }
@@ -170,6 +174,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 try
                 {
                     string? baseUrl = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
+                    
+                    baseUrl = baseUrl?.AddUrlPath(this.ODataPath);
+
                     url = OData.CreateNewQuery<TEntitySet>(EntitySet, baseUrl)
                             .AddQueryOption("$select", $"{_DataValueField},{_DataTextField}")
                             .WhereQuery(x => 1 == 1 && x.ID == Value.Value)
@@ -210,6 +217,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string GetODataUrl(string q = "")
         {
             string? url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
+
+            url = url?.AddUrlPath(this.ODataPath);
+
             var builder = OData
                 .CreateNewQuery<TEntitySet>(EntitySet, url)
                 .AddQueryOptionIf("$select", $"{_DataValueField},{_DataTextField}", MinResponseContent);
