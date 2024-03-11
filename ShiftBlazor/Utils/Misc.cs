@@ -27,7 +27,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
         internal static string? GetFieldFromPropertyPath(string propertyPath)
         {
-            return propertyPath.Split(".").ElementAt(0);
+            return propertyPath?.Split(".").ElementAt(0);
         }
 
         public static Expression<Func<T, object>> CreateExpression<T>(string propertyName)
@@ -116,6 +116,34 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
             Type classType = typeBuilder.CreateType();
             return Activator.CreateInstance(classType);
+        }
+
+        public static string GetExpressionPath<T, P>(Expression<Func<T, P>> expr)
+        {
+            MemberExpression? memberExpression;
+
+            switch (expr.Body.NodeType)
+            {
+                case ExpressionType.Convert:
+                case ExpressionType.ConvertChecked:
+                    var ue = expr.Body as UnaryExpression;
+                    memberExpression = ((ue != null) ? ue.Operand : null) as MemberExpression;
+                    break;
+                default:
+                    memberExpression = expr.Body as MemberExpression;
+                    break;
+            }
+
+            var path = new List<string>();
+
+            while (memberExpression != null)
+            {
+                path.Add(memberExpression.Member.Name);
+                memberExpression = memberExpression.Expression as MemberExpression;
+            }
+
+            path.Reverse();
+            return string.Join(".", path);
         }
     }
 }

@@ -22,7 +22,7 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> : IODataComponent, IShortcutComponent, IShiftList where T : ShiftEntityDTOBase, new()
+    public partial class ShiftList<T> : IODataComponent, IShortcutComponent, ISortableComponent, IShiftList where T : ShiftEntityDTOBase, new()
     {
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
@@ -227,9 +227,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool Outlined { get; set; }
 
-        [Parameter]
-        public string? DefaultSort { get; set; }
-
         public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
@@ -323,11 +320,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (!DisableColumnChooser)
                 {
                     HideDisabledColumns();
-                }
-
-                if (DefaultSort != null)
-                {
-                   _ = DataGrid?.SetSortAsync(DefaultSort, SortDirection.Ascending, null);
                 }
             }
         }
@@ -679,6 +671,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
             IsAllSelected = selectAll;
             await context.Actions.SetSelectAllAsync(selectAll);
         }
+
+        public async Task SetSortAsync(string field, SortDirection sortDirection)
+        {
+            if (DataGrid != null)
+            {
+                await DataGrid.SetSortAsync(field, sortDirection, null);
+            }
+        }
+
+        public void SetSort(string field, SortDirection sortDirection)
+        {
+            DataGrid?.SortDefinitions.Add(field, new SortDefinition<T>(field, sortDirection == SortDirection.Descending, 0, null));
+            InvokeAsync(StateHasChanged);
+        }
+
 
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
