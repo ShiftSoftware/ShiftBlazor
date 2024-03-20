@@ -595,7 +595,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     {
                         foreach (var column in columns)
                         {
-                            //  Get the column's Property parameter
+                            // Get the column's Property parameter
                             var ColumnExpression = column.GetType().GetProperty("Property")?.GetValue(column);
                             if (ColumnExpression is LambdaExpression lambdaExpression)
                             {
@@ -604,7 +604,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
                                 try
                                 {
                                     object? result = compiled.DynamicInvoke(item);
+                                    if (result?.GetType().FullName == "System.DateTime")
+                                    {
+                                        csvWriter.WriteField(((DateTime)result).ToString("yyyy-MM-dd HH:mm:ss"));
+                                    }
+                                    else if (result?.GetType().FullName == "System.DateTimeOffset")
+                                    {
+                                        csvWriter.WriteField(((DateTimeOffset)result).DateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                                    }
+                                    else
+                                    {
                                     csvWriter.WriteField(result);
+                                }
                                 }
                                 catch (Exception)
                                 {
@@ -644,8 +655,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var url = ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
                 stream = await GetStream(url);
             }
+
+            if (stream.Length > 0)
+            {
             using var streamRef = new DotNetStreamReference(stream: stream);
             await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+        }
         }
 
         internal void SelectedItemsChangedHandler(HashSet<T> items)
