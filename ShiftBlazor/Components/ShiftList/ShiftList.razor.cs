@@ -549,7 +549,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task<Stream> GetStream(string url)
         {
-            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url);
+            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    Converters = { new LocalDateTimeOffsetJsonConverter() }
+                });
 
             try
             {
@@ -604,13 +608,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
                                 try
                                 {
                                     object? result = compiled.DynamicInvoke(item);
-                                    if (result?.GetType().FullName == "System.DateTime")
+
+                                    if (result is DateTime dtValue)
                                     {
-                                        csvWriter.WriteField(((DateTime)result).ToString("yyyy-MM-dd HH:mm:ss"));
+                                        csvWriter.WriteField(dtValue.ToString("yyyy-MM-dd HH:mm:ss"));
                                     }
-                                    else if (result?.GetType().FullName == "System.DateTimeOffset")
+                                    else if (result is DateTimeOffset dtoValue)
                                     {
-                                        csvWriter.WriteField(((DateTimeOffset)result).DateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                                        csvWriter.WriteField(dtoValue.DateTime.ToString("yyyy-MM-dd HH:mm:ss"));
                                     }
                                     else
                                     {
