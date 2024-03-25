@@ -134,6 +134,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             set => base._SubmitText = value;
         }
 
+        private bool ReadyToRender = false;
+
         protected override async Task OnInitializedAsync()
         {
             if (string.IsNullOrWhiteSpace(Action))
@@ -155,6 +157,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             SetTitle();
 
             OriginalValue = JsonSerializer.Serialize(Value);
+
+            ReadyToRender = true;
+        }
+
+        protected override bool ShouldRender()
+        {
+            return ReadyToRender;
         }
 
         protected override void OnParametersSet()

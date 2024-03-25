@@ -241,6 +241,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string ToolbarStyle = string.Empty;
         internal SortMode SortMode = SortMode.Multiple;
         private ODataFilter Filters = new ODataFilter();
+        private bool ReadyToRender = false;
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
 
@@ -298,6 +299,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
+
+            ReadyToRender = true;
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -309,6 +312,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     HideDisabledColumns();
                 }
             }
+        }
+
+        protected override bool ShouldRender()
+        {
+            return ReadyToRender;
         }
 
         protected override void OnParametersSet()
@@ -697,7 +705,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             Filters.Add(field, op, value);
         }
-
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
         {
