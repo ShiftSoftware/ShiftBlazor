@@ -11,6 +11,7 @@ using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Linq.Expressions;
 using ShiftSoftware.ShiftBlazor.Utils;
 using Microsoft.Extensions.Localization;
+using MudBlazor;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -21,6 +22,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] internal IStringLocalizer<Resources.Components.FileUploader> Loc { get; set; } = default!;
+        [Inject] IDialogService DialogService { get; set; } = default!;
 
         [Parameter]
         public List<ShiftFileDTO>? Values { get; set; }
@@ -85,6 +87,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string UploaderId = "Uploader" + Guid.NewGuid().ToString().Replace("-", string.Empty);
         internal string ImageTypes = "image/*";
         internal int ThumbnailSize = 150;
+        internal bool _ShowThumbnail;
 
         [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
         [Parameter]
@@ -137,6 +140,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
+            _ShowThumbnail = ShowThumbnail;
+
             OnGridSort += HandleGridSort;
 
             if (For != null && ShiftForm?.EditContext != null)
@@ -155,6 +160,30 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 SetAsSortable();
             }
+        }
+
+        void ToggleViewMode()
+        {
+            _ShowThumbnail = !_ShowThumbnail;
+        }
+
+        void ViewGallery()
+        {
+            if (Items.Count < 1) { return; }
+
+            var options = new DialogOptions
+            {
+                NoHeader = true,
+                DisableBackdropClick = false,
+                CloseOnEscapeKey = true,
+            };
+
+            var parameters = new DialogParameters
+            {
+                { "Files", Items },
+            };
+
+            DialogService.Show<ImageViewer>("", parameters, options);
         }
 
         private async Task OnInputFileChanged(InputFileChangeEventArgs e)

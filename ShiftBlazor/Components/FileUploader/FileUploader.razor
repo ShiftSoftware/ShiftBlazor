@@ -14,44 +14,51 @@
 
         @if (Items.Count > 0 || !ReadOnly)
         {
-            <MudGrid Spacing="@(ShowThumbnail ? 2 : 1)">
-                <CascadingValue Value="this" IsFixed="true">
-                    @foreach (var item in Items)
-                    {
-                        <MudItem @key="item.Id" Style="cursor: grab;" data-guid="@item.Id">
-                            @if (ShowThumbnail)
-                            {
-                                <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize"></UploaderItemThumbnail>
-                            }
-                            else
-                            {   
-                                <UploaderItemChip CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item"></UploaderItemChip>
-                            }
-                        </MudItem>
-                    }
-                </CascadingValue>
+             <MudGrid Spacing="@(_ShowThumbnail ? 2 : 1)">
+                 <CascadingValue Value="this" IsFixed="true">
+                     @foreach (var item in Items)
+                     {
+                         <MudItem @key="item.Id" Style="cursor: grab;" data-guid="@item.Id">
+                             @if (_ShowThumbnail)
+                             {
+                                 <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize"></UploaderItemThumbnail>
+                             }
+                             else
+                             {   
+                                 <UploaderItemChip CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item"></UploaderItemChip>
+                             }
+                         </MudItem>
+                     }
+                 </CascadingValue>
 
-                @if (Items.Count < MaxFileCount && !ReadOnly && (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)))
-                {
-                    <MudItem @key="@("add-file")" Class="add-file">
-                        @if (ShowThumbnail)
-                        {
-                            <MudTooltip Text="@Loc["AddButtonTitleThumbnail"]">
-                                <MudIconButton OnClick="OpenInput"
-                                               Icon="@Icons.Material.Filled.Add"
-                                               Size="Size.Large"
-                                               Variant="Variant.Filled"
-                                               aria-label="@Loc["AddButtonTitleThumbnail"]"
-                                               Style=@($"width: {ThumbnailSize}px;height: {ThumbnailSize}px;") />
-                            </MudTooltip>
-                        }
-                        else
-                        {
-                            <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput">@Loc["AddButtonChip"]</MudChip>
-                        }
-                    </MudItem>
-                }
-            </MudGrid>
+                 @if (Items.Count < MaxFileCount && !ReadOnly && (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)))
+                 {
+                     <MudItem @key="@("add-file")" Class="add-file">
+                         @if (_ShowThumbnail)
+                         {
+                             <MudTooltip Text="@Loc["AddButtonTitleThumbnail"]">
+                                 <MudIconButton OnClick="OpenInput"
+                                                Icon="@Icons.Material.Filled.Add"
+                                                Size="Size.Large"
+                                                Variant="Variant.Filled"
+                                                aria-label="@Loc["AddButtonTitleThumbnail"]"
+                                                Style=@($"width: {ThumbnailSize}px;height: {ThumbnailSize}px;") />
+                             </MudTooltip>
+                         }
+                         else
+                         {
+                             <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput">@Loc["AddButtonChip"]</MudChip>
+                         }
+                     </MudItem>
+                 }
+             </MudGrid>
+
+
+            <MudToolBar Dense Style="@($"background-color: {Colors.Grey.Lighten2}; margin-top: 16px; gap: 10px;")" Class="rounded">
+                 <MudButtonExtended StartIcon="@Icons.Material.Filled.ViewCarousel" OnClick="ViewGallery" Size="Size.Small">Gallery</MudButtonExtended>
+                 <MudButtonExtended StartIcon="@Icons.Material.Filled.GridView" OnClick="ToggleViewMode" Size="Size.Small">Toggle View</MudButtonExtended>
+            </MudToolBar>
+
             <InputFile id="@InputId" OnChange="OnInputFileChanged" hidden multiple accept="@InputAccept" />
 
         }
