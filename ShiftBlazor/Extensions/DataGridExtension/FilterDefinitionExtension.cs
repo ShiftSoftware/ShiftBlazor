@@ -12,7 +12,7 @@ namespace System.Collections.Generic
                 .Where(IsValidFilter)
                 .GroupBy(x =>
                     new { x.Column?.PropertyName, x.Operator },
-                    (key, filters) => filters.Select(GetFilterString).Distinct())
+                    (key, filters) => filters.Select(GetFilterString).Distinct().Where(x => !string.IsNullOrWhiteSpace(x)))
                 .Distinct();
         }
 

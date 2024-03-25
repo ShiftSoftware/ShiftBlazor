@@ -29,6 +29,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
         private readonly bool IsAnd;
         private readonly List<object> Filters;
+        public int Count => Filters.Count;
 
         internal readonly static Dictionary<char, string> SpecialCharaters = new()
         {

@@ -21,8 +21,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool Dense { get; set; }
         public bool ShowIDColumn { get; set; }
         public int? PageSize { get; set; }
-        public Action<ODataFilter>? Filter { get; set; }
-        public string? FilterString { get; set; }
         public bool Outlined { get; set; }
         public bool IsAllSelected { get; }
         public bool IsEmbed { get; }

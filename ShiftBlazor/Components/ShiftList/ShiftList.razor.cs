@@ -22,7 +22,7 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> : IODataComponent, IShortcutComponent, ISortableComponent, IShiftList where T : ShiftEntityDTOBase, new()
+    public partial class ShiftList<T> : IODataComponent, IShortcutComponent, ISortableComponent, IFilterableComponent, IShiftList where T : ShiftEntityDTOBase, new()
     {
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
@@ -219,12 +219,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public RenderFragment<CellContext<T>>? ActionsTemplate { get; set; }
 
         [Parameter]
-        public Action<ODataFilter>? Filter { get; set; }
-
-        [Parameter]
-        public string? FilterString { get; set; }
-
-        [Parameter]
         public bool Outlined { get; set; }
 
         public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
@@ -246,7 +240,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle = string.Empty;
         internal SortMode SortMode = SortMode.Multiple;
-        internal string? DefaultFilter;
+        private ODataFilter Filters = new ODataFilter();
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
 
@@ -284,13 +278,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 QueryBuilder = OData
                     .CreateNewQuery<T>(EntitySet, url)
                     .IncludeCount();
-            }
-
-            if (Filter != null)
-            {
-                var filter = new ODataFilter();
-                Filter.Invoke(filter);
-                DefaultFilter = filter.ToString();
             }
 
             RenderAddButton = !(DisableAdd || ComponentType == null || (TypeAuthAction != null && TypeAuthService?.Can(TypeAuthAction, Access.Write) != true));
@@ -619,8 +606,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                                     }
                                     else
                                     {
-                                    csvWriter.WriteField(result);
-                                }
+                                        csvWriter.WriteField(result);
+                                    }
                                 }
                                 catch (Exception)
                                 {
@@ -663,9 +650,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (stream.Length > 0)
             {
-            using var streamRef = new DotNetStreamReference(stream: stream);
-            await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
-        }
+                using var streamRef = new DotNetStreamReference(stream: stream);
+                await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+            }
         }
 
         internal void SelectedItemsChangedHandler(HashSet<T> items)
@@ -706,6 +693,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             InvokeAsync(StateHasChanged);
         }
 
+        public void AddFilter(string field, ODataOperator op = ODataOperator.Equal, object? value = null)
+        {
+            Filters.Add(field, op, value);
+        }
 
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
@@ -741,11 +732,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var filterList = new List<string>();
                 filterList.AddRange(userFilters);
 
-                if (!string.IsNullOrWhiteSpace(FilterString))
-                    filterList.Add(FilterString);
-
-                if (!string.IsNullOrWhiteSpace(DefaultFilter)) 
-                    filterList.Add(DefaultFilter);
+                if (Filters.Count > 0)
+                    filterList.Add(Filters.ToString());
 
                 if (filterList.Any())
                 {
