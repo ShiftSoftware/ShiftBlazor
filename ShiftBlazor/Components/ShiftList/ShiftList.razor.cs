@@ -299,8 +299,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
-
-            ReadyToRender = true;
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -775,6 +773,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (!res!.IsSuccessStatusCode)
                 {
                     ErrorMessage = $"Could not read server data ({(int)res!.StatusCode})";
+                    ReadyToRender = true;
                     return gridData;
                 }
 
@@ -782,9 +781,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     Converters = { new LocalDateTimeOffsetJsonConverter() }
                 });
+
                 if (content == null || content.Count == null)
                 {
                     ErrorMessage = $"Could not read server data (empty content)";
+                    ReadyToRender = true;
                     return gridData;
                 }
 
@@ -809,6 +810,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 ErrorMessage = $"Could not read server data";
                 MessageService.Error("Could not read server data", e.Message, e!.ToString());
             }
+
+            ReadyToRender = true;
 
             return gridData;
         }
