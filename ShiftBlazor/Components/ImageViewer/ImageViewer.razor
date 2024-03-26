@@ -1,4 +1,5 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
+@implements IShortcutComponent
 
 <MudDialog DisableSidePadding ContentStyle="padding: 0;">
     <DialogContent>
@@ -32,4 +33,35 @@
 
     [CascadingParameter]
     public MudDialogInstance? MudDialog { get; set; }
+
+    public Guid Id { get; private set; } = Guid.NewGuid();
+
+    public string Title { get; set; } = "Gallery";
+
+    public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        if (MudDialog != null)
+        {
+            IShortcutComponent.Register(this);
+        }
+    }
+
+    public ValueTask HandleShortcut(KeyboardKeys actions)
+    {
+        switch (actions)
+        {
+            case KeyboardKeys.Escape:
+                MudDialog?.Close();
+                break;
+        }
+
+        return new ValueTask();
+    }
+
+    void IDisposable.Dispose()
+    {
+        IShortcutComponent.Remove(Id);
+    }
 }
