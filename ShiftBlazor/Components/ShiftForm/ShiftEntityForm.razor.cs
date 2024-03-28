@@ -419,9 +419,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     Converters = { new LocalDateTimeOffsetJsonConverter() }
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase));
+                throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase, ex));
             }
 
             if (result == null)
