@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
+@using ShiftSoftware.ShiftIdentity.Blazor.Components
 @using ShiftSoftware.ShiftIdentity.Blazor.Services
 @using ShiftSoftware.ShiftIdentity.Core
 
@@ -30,12 +31,13 @@
                     </NotAuthorized>
                 </AuthorizeRouteView>
             }
-                
+
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
     </Router>
 </CascadingValue>
 
+<RedirectToChangePassword />
 
 @code {
     [Inject] NavigationManager NavManager { get; set; } = default!;
