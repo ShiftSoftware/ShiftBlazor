@@ -176,6 +176,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 NoHeader = true,
                 DisableBackdropClick = false,
                 CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.False,
             };
 
             var parameters = new DialogParameters

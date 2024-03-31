@@ -1,15 +1,37 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @implements IShortcutComponent
+@inject IStringLocalizer<Resources.Components.ImageViewer> Loc
+
 
 <MudDialog DisableSidePadding ContentStyle="padding: 0;">
     <DialogContent>
-        <MudCarousel Class="mud-width-full" Style="height: 60vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" AutoCycle="false" TData="object">
+        
+
+        <MudToolBar Dense Class="light-toolbar">
+
+            <MudIcon Icon="@Icons.Material.Filled.ViewCarousel"></MudIcon>
+            <MudText>@Title</MudText>
+            <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["GalleryDefaultTitle"])</MudText>
+            <MudSpacer/>
+
+                <MudTooltip Text="@Loc["ModalClose"]">
+                    <MudButton Style="min-width:40px;"
+                               Variant="Variant.Text"
+                               Size="Size.Medium"
+                               aria-label="@Loc["ModalClose"]"
+                               OnClick="Close">
+                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                    </MudButton>
+                </MudTooltip>
+        </MudToolBar>
+
+        <MudCarousel Class="mud-width-full" Style="height: 90vh;" ShowArrows="true" ShowBullets="true"  EnableSwipeGesture="true" AutoCycle="false" TData="UploaderItem">
 
             @if (Files?.Count > 0)
             {
                 foreach (var file in Files)
                 {
-                    <MudCarouselItem Transition="Transition.Slide" Color="@Color.Dark">
+                    <MudCarouselItem Transition="Transition.Slide" Color="@Color.Dark" Style="@($"color: #fff;background:{Colors.Grey.Darken4};")">
                         @if (file.IsImage()) {
                             <MudImage ObjectFit="ObjectFit.ScaleDown" ObjectPosition="ObjectPosition.Center" Src="@file?.File?.Url" Alt="@file?.GetFileName()" Elevation="25" Style="width: 100%; height: 100%;" />
                         }
@@ -31,12 +53,13 @@
     [Parameter]
     public List<UploaderItem>? Files { get; set; }
 
+    [Parameter]
+    public string? Title { get; set; }
+
     [CascadingParameter]
     public MudDialogInstance? MudDialog { get; set; }
 
     public Guid Id { get; private set; } = Guid.NewGuid();
-
-    public string Title { get; set; } = "Gallery";
 
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
 
@@ -58,6 +81,11 @@
         }
 
         return new ValueTask();
+    }
+
+    public void Close()
+    {
+        MudDialog?.Close();
     }
 
     void IDisposable.Dispose()

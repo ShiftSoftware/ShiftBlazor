@@ -54,6 +54,11 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>FileUploader.resx</DependentUpon>
 		</Compile>
+		<Compile Update="Resources\Components\ImageViewer.Designer.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>ImageViewer.resx</DependentUpon>
+		</Compile>
 		<Compile Update="Resources\Components\RevisionViewer.Designer.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
@@ -90,6 +95,10 @@
 		<EmbeddedResource Update="Resources\Components\FileUploader.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
 			<LastGenOutput>FileUploader.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\ImageViewer.resx">
+		  <Generator>ResXFileCodeGenerator</Generator>
+		  <LastGenOutput>ImageViewer.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 		<EmbeddedResource Update="Resources\Components\RevisionViewer.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
