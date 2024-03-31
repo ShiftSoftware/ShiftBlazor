@@ -37,7 +37,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         protected MudDialogInstance? MudDialog { get; set; }
 
         /// <summary>
-        ///     To check whether this list is currently embeded inside a form component.
+        /// To check whether this list is currently embeded inside a form component.
         /// </summary>
         [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
         public bool? ParentReadOnly { get; set; }
@@ -46,62 +46,69 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool? ParentDisabled { get; set; }
 
         /// <summary>
-        ///     The current fetched items, this will be fetched from the OData API endpoint that is provided in the Action paramater.
+        /// The current fetched items, this will be fetched from the OData API endpoint that is provided in the Action paramater.
         /// </summary>
         [Parameter]
         public List<T>? Values { get; set; }
 
         /// <summary>
-        ///     An event triggered when the state of Values has changed.
+        /// An event triggered when the state of Values has changed.
         /// </summary>
         [Parameter]
         public EventCallback<List<T>> ValuesChanged { get; set; }
 
         /// <summary>
-        ///     OData EntitySetName.
+        /// The OData EntitySet Name.
         /// </summary>
         [Parameter]
         public string? EntitySet { get; set; }
 
+        /// <summary>
+        /// The OData api endpoint.
+        /// </summary>
         [Parameter]
         public string? BaseUrl { get; set; }
 
+        /// <summary>
+        /// The OData api endpoint config key.
+        /// </summary>
         [Parameter]
         public string? BaseUrlKey { get; set; }
 
         /// <summary>
-        ///     The type of the component to open when clicking on Add or the Action button.
-        ///     If empty, Add and Action button column will be hidden.
+        /// The type of the component to be opened as a dialog when clicking on Add or the Action button.
+        /// If empty, 'Add' and 'Action button' column will be hidden.
         /// </summary>
         [Parameter]
         public Type? ComponentType { get; set; }
 
         /// <summary>
-        ///     To pass additional parameters to the ShiftFormContainer componenet.
+        /// To pass additional parameters to the 'ShiftFormContainer' component.
         /// </summary>
         [Parameter]
         public Dictionary<string, string>? AddDialogParameters { get; set; }
 
         /// <summary>
-        ///     Enable select
+        /// Enable row selection.
         /// </summary>
         [Parameter]
         public bool EnableSelection { get; set; }
 
         /// <summary>
-        ///     Enable Virtualization and disable Paging.
+        /// Enable Virtualization and disable Paging.
+        /// 'Height' paramater should have a valid value when this is enabled.
         /// </summary>
         [Parameter]
         public bool EnableVirtualization { get; set; }
 
         /// <summary>
-        ///     To set the list's fixed height.
+        /// Sets the css height property for the Datagrid.
         /// </summary>
         [Parameter]
         public string Height { get; set; } = string.Empty;
 
         /// <summary>
-        ///     The title to render on the form header.
+        /// The title used for the form and the browser tab title.
         /// </summary>
         [Parameter]
         public string? Title { get; set; }
@@ -110,72 +117,100 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
 
         /// <summary>
-        ///     If true, the toolbar in the header will not be rendered.
+        /// The css value used for the toolbar's 'background-color'.
+        /// Only RGB and Hex values work with 'NavIconFlatColor'.
         /// </summary>
-        [Parameter]
-        public bool DisableHeaderToolbar { get; set; }
-
-        [Parameter]
-        public bool DisableActionColumn { get; set; }
-
         [Parameter]
         public string? NavColor { get; set; }
 
+        /// <summary>
+        /// When true, the toolbar's text color will be in white or black, depending on the contrast of the background.
+        /// </summary>
         [Parameter]
         public bool NavIconFlatColor { get; set; }
 
         /// <summary>
-        /// The icon displayed before the Form Title, in a string in SVG format.
+        /// The icon displayed before the Form Title. (SVG string)
         /// </summary>
         [Parameter]
         public string IconSvg { get; set; } = @Icons.Material.Filled.List;
 
         /// <summary>
-        ///     Used to add custom elements to the start of the header toolbar.
+        /// Used to add custom elements to the start of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarStartTemplate { get; set; }
 
         /// <summary>
-        ///     Used to add custom elements to the end of the header toolbar.
+        /// Used to add custom elements to the end of the header toolbar.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarEndTemplate { get; set; }
 
         /// <summary>
-        ///     Used to add custom elements to the header.
+        /// Used to add custom elements to the header.
         /// </summary>
         [Parameter]
         public RenderFragment? HeaderTemplate { get; set; }
 
         /// <summary>
-        ///     Used to add custom elements to the controls section of the header toolbar.
-        ///     This section is only visible when the form is opened in a dialog.
+        /// Used to add custom elements to the controls section of the header toolbar.
+        /// This section is only visible when the form is opened in a dialog.
         /// </summary>
         [Parameter]
         public RenderFragment? ToolbarControlsTemplate { get; set; }
 
+        /// <summary>
+        /// When true, the header toolbar will not be rendered.
+        /// </summary>
+        [Parameter]
+        public bool DisableHeaderToolbar { get; set; }
+
+        /// <summary>
+        /// When true, the Action Column will not be rendered.
+        /// </summary>
+        [Parameter]
+        public bool DisableActionColumn { get; set; }
+
+        /// <summary>
+        /// When true, the Delete Filter will not be rendered.
+        /// </summary>
         [Parameter]
         public bool DisableDeleteFilter { get; set; }
 
+        /// <summary>
+        /// When true, the Column Chooser will not be rendered.
+        /// </summary>
         [Parameter]
         public bool DisableColumnChooser { get; set; }
 
         /// <summary>
-        ///     Disable the add item button to open a form.
+        /// When true, the 'Add' button will not be rendered.
         /// </summary>
         [Parameter]
         public bool DisableAdd { get; set; }
 
+        /// <summary>
+        /// When true, the form is more compact and smaller.
+        /// </summary>
         [Parameter]
         public bool Dense { get; set; }
 
+        /// <summary>
+        /// Fires when a row is clicked, sends 'DataGridRowClickEventArgs<T>' as argument.
+        /// </summary>
         [Parameter]
         public EventCallback<DataGridRowClickEventArgs<T>> OnRowClick { get; set; }
 
+        /// <summary>
+        /// Fires when form is closed, sends the form data when form is saved and null if cancelled.
+        /// </summary>
         [Parameter]
         public EventCallback<object?> OnFormClosed { get; set; }
 
+        /// <summary>
+        /// Fires when DataGrid is loaded.
+        /// </summary>
         [Parameter]
         public EventCallback OnLoad { get; set; }
 
@@ -185,39 +220,63 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public RenderFragment? ChildContent { get; set; }
 
+        /// <summary>
+        /// Whether to render or not render 'Entity ID' column
+        /// </summary>
         [Parameter]
         public bool ShowIDColumn { get; set; }
 
         /// <summary>
-        ///     The number of items to be displayed per page.
+        /// The number of items to be displayed per page.
         /// </summary>
         [Parameter]
         public int? PageSize { get; set; }
 
+        /// <summary>
+        /// Enable and show Export button.
+        /// </summary>
         [Parameter]
         public bool EnableExport { get; set; }
 
+        /// <summary>
+        /// Disable sticky header, works only with Height and EnableVirtualization.
+        /// </summary>
         [Parameter]
         public bool DisableStickyHeader { get; set; }
 
+        /// <summary>
+        /// When true, the pagination will not be rendered.
+        /// </summary>
         [Parameter]
         public bool DisablePagination { get; set; }
 
+        /// <summary>
+        /// Disable column sorting.
+        /// </summary>
         [Parameter]
         public bool DisableSorting { get; set; }
 
+        /// <summary>
+        /// Disables a feature where you can select multiple columns to sort. (Ctrl + Click)
+        /// </summary>
         [Parameter]
         public bool DisableMultiSorting { get; set; }
 
+        /// <summary>
+        /// Disable column filtering.
+        /// </summary>
         [Parameter]
         public bool DisableFilters { get; set; }
 
         /// <summary>
-        ///     Used to override any element in the Action column.
+        /// Used to override any element in the Action column.
         /// </summary>
         [Parameter]
         public RenderFragment<CellContext<T>>? ActionsTemplate { get; set; }
 
+        /// <summary>
+        /// Give the form window an outline and disable elevation.
+        /// </summary>
         [Parameter]
         public bool Outlined { get; set; }
 
@@ -252,7 +311,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             set
             {
                 _DataGrid = value;
-                OnLoadHandler();
+                OnLoad.InvokeAsync();
             }
         }
 
@@ -336,6 +395,78 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        /// <summary>
+        /// Opens a dialog form to create a new item or edit an existing one.
+        /// </summary>
+        /// <param name="key">The unique ID of the item to be edited. If null, the form will be in 'Create' mode.</param>
+        /// <returns>The data of the created or edited item after the dialog is closed. Returns null if the form is not saved.</returns>
+        public async Task ViewAddItem(object? key = null)
+        {
+            if (ComponentType != null)
+            {
+                var result = await OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters);
+                await OnFormClosed.InvokeAsync(result?.Data);
+            }
+        }
+
+        /// <summary>
+        /// Opens a dialog window.
+        /// </summary>
+        /// <param name="ComponentType">The type of component to be opened.</param>
+        /// <param name="key">The unique ID of the item to be opened.</param>
+        /// <param name="openMode">Specifies how the dialog window opens.</param>
+        /// <param name="parameters">The parameters to be passed to the component.</param>
+        /// <returns>A DialogResult object representing the outcome of the dialog.</returns>
+        public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
+        {
+            var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
+            if (result != null && result.Canceled != true)
+            {
+                await DataGrid!.ReloadServerData();
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Asynchronously sets the sorting configuration for the data grid.
+        /// </summary>
+        /// <param name="field">The field by which the data should be sorted.</param>
+        /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
+        public async Task SetSortAsync(string field, SortDirection sortDirection)
+        {
+            if (DataGrid != null)
+            {
+                await DataGrid.SetSortAsync(field, sortDirection, null);
+            }
+        }
+
+        /// <summary>
+        /// Sets the sorting configuration for the data grid.
+        /// </summary>
+        /// <param name="field">The field by which the data should be sorted.</param>
+        /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
+        public void SetSort(string field, SortDirection sortDirection)
+        {
+            DataGrid?.SortDefinitions.Add(field, new SortDefinition<T>(field, sortDirection == SortDirection.Descending, 0, null));
+            InvokeAsync(StateHasChanged);
+        }
+
+        /// <summary>
+        /// Adds a filter to the data grid.
+        /// </summary>
+        /// <param name="field">The field to apply the filter on.</param>
+        /// <param name="op">The comparison operator for the filter (e.g., Equal, GreaterThan).</param>
+        /// <param name="value">The value to compare against for the filter.</param>
+        public void AddFilter(string field, ODataOperator op = ODataOperator.Equal, object? value = null)
+        {
+            Filters.Add(field, op, value);
+        }
+
+        public void GridStateHasChanged()
+        {
+            StateHasChanged();
+        }
+
         public ValueTask HandleShortcut(KeyboardKeys key)
         {
             switch (key)
@@ -348,9 +479,116 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return new ValueTask();
         }
 
-        private void OnLoadHandler()
+        private async Task<GridData<T>> ServerReload(GridState<T> state)
         {
-            OnLoad.InvokeAsync();
+            var builder = QueryBuilder;
+            ErrorMessage = null;
+
+            // Save current PageSize as user preference 
+            if (state.PageSize != SelectedPageSize)
+            {
+                SettingManager.SetListPageSize(state.PageSize);
+            }
+
+            // Convert MudBlazor's SortDefinitions to OData query
+            if (state.SortDefinitions.Count > 0)
+            {
+                var sortList = state.SortDefinitions.ToODataFilter();
+                builder = builder.AddQueryOption("$orderby", string.Join(',', sortList));
+            }
+
+            // Remove multiple empty filters but keep the last added empty filter
+            var emptyFields = state.FilterDefinitions.Where(x => x.Value == null && x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty);
+            for (var i = 0; i < emptyFields.Count() - 1; i++)
+            {
+                DataGrid!.FilterDefinitions.Remove(emptyFields.ElementAt(i));
+            }
+
+            try
+            {
+                // Convert MudBlazor's FilterDefinitions to OData query
+                var userFilters = state.FilterDefinitions.ToODataFilter().Select(x => string.Join(" or ", x));
+
+                var filterList = new List<string>();
+                filterList.AddRange(userFilters);
+
+                if (Filters.Count > 0)
+                    filterList.Add(Filters.ToString());
+
+                if (filterList.Any())
+                {
+                    builder = builder.AddQueryOption("$filter", $"({string.Join(") and (", filterList)})");
+                }
+            }
+            catch (Exception e)
+            {
+                ErrorMessage = $"An error has occured";
+                MessageService.Error("Could not parse filter", e.Message, e!.ToString());
+            }
+
+            var builderQueryable = builder.AsQueryable();
+
+            // apply pagination values
+            if (!EnableVirtualization)
+            {
+                builderQueryable = builderQueryable
+                    .Skip(state.Page * state.PageSize)
+                    .Take(state.PageSize);
+            }
+
+            var url = builderQueryable.ToString();
+            GridData<T> gridData = new();
+            HttpResponseMessage? res = default;
+
+            try
+            {
+                CurrentUri = new Uri(url!);
+                res = await HttpClient.GetAsync(url);
+
+                if (!res!.IsSuccessStatusCode)
+                {
+                    ErrorMessage = $"Could not read server data ({(int)res!.StatusCode})";
+                    ReadyToRender = true;
+                    return gridData;
+                }
+
+                var content = await res.Content.ReadFromJsonAsync<ODataDTO<T>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    Converters = { new LocalDateTimeOffsetJsonConverter() }
+                });
+
+                if (content == null || content.Count == null)
+                {
+                    ErrorMessage = $"Could not read server data (empty content)";
+                    ReadyToRender = true;
+                    return gridData;
+                }
+
+                gridData = new GridData<T>
+                {
+                    Items = content.Value.ToList(),
+                    TotalItems = (int)content.Count.Value,
+                };
+
+                ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, content.Value.ToList<object>()));
+
+                _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(Id, content.Value.ToList()));
+            }
+            catch (JsonException e)
+            {
+                var body = await res!.Content.ReadAsStringAsync();
+                ErrorMessage = $"Could not read server data (parse error)";
+                MessageService.Error("Could not read server data", e.Message, body);
+            }
+            catch (Exception e)
+            {
+                ErrorMessage = $"Could not read server data";
+                MessageService.Error("Could not read server data", e.Message, e!.ToString());
+            }
+
+            ReadyToRender = true;
+
+            return gridData;
         }
 
         private void HideDisabledColumns()
@@ -377,25 +615,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 item.HiddenChanged = new EventCallback<bool>(this, ColumnStateChanged);
                 #pragma warning restore BL0005
             }
-        }
-
-        public async Task ViewAddItem(object? key = null)
-        {
-            if (ComponentType != null)
-            {
-                var result = await OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters);
-                await OnFormClosed.InvokeAsync(result?.Data);
-            }
-        }
-
-        public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
-        {
-            var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
-            if (result != null && result.Canceled != true)
-            {
-                await DataGrid!.ReloadServerData();
-            }
-            return result;
         }
 
         /// <summary>
@@ -490,11 +709,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal async Task RerenderDataGrid()
         {
             await InvokeAsync(StateHasChanged);
-        }
-
-        public void GridStateHasChanged()
-        {
-            StateHasChanged();
         }
 
         private async Task ProcessForeignColumns<TForeign>(List<TForeign> items)
@@ -683,137 +897,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             IsAllSelected = selectAll;
             await context.Actions.SetSelectAllAsync(selectAll);
-        }
-
-        public async Task SetSortAsync(string field, SortDirection sortDirection)
-        {
-            if (DataGrid != null)
-            {
-                await DataGrid.SetSortAsync(field, sortDirection, null);
-            }
-        }
-
-        public void SetSort(string field, SortDirection sortDirection)
-        {
-            DataGrid?.SortDefinitions.Add(field, new SortDefinition<T>(field, sortDirection == SortDirection.Descending, 0, null));
-            InvokeAsync(StateHasChanged);
-        }
-
-        public void AddFilter(string field, ODataOperator op = ODataOperator.Equal, object? value = null)
-        {
-            Filters.Add(field, op, value);
-        }
-
-        private async Task<GridData<T>> ServerReload(GridState<T> state)
-        {
-            var builder = QueryBuilder;
-            ErrorMessage = null;
-
-            // Save current PageSize as user preference 
-            if (state.PageSize != SelectedPageSize)
-            {
-                SettingManager.SetListPageSize(state.PageSize);
-            }
-
-            // Convert MudBlazor's SortDefinitions to OData query
-            if (state.SortDefinitions.Count > 0)
-            {
-                var sortList = state.SortDefinitions.ToODataFilter();
-                builder = builder.AddQueryOption("$orderby", string.Join(',', sortList));
-            }
-
-            // Remove multiple empty filters but keep the last added empty filter
-            var emptyFields = state.FilterDefinitions.Where(x => x.Value == null && x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty);
-            for (var i = 0; i < emptyFields.Count() - 1; i++)
-            {
-                DataGrid!.FilterDefinitions.Remove(emptyFields.ElementAt(i));
-            }
-
-            try
-            {
-                // Convert MudBlazor's FilterDefinitions to OData query
-                var userFilters = state.FilterDefinitions.ToODataFilter().Select(x => string.Join(" or ", x));
-
-                var filterList = new List<string>();
-                filterList.AddRange(userFilters);
-
-                if (Filters.Count > 0)
-                    filterList.Add(Filters.ToString());
-
-                if (filterList.Any())
-                {
-                    builder = builder.AddQueryOption("$filter", $"({string.Join(") and (", filterList)})");
-                }
-            }
-            catch (Exception e)
-            {
-                ErrorMessage = $"An error has occured";
-                MessageService.Error("Could not parse filter", e.Message, e!.ToString());
-            }
-
-            var builderQueryable = builder.AsQueryable();
-
-            // apply pagination values
-            if (!EnableVirtualization)
-            {
-                builderQueryable = builderQueryable
-                    .Skip(state.Page * state.PageSize)
-                    .Take(state.PageSize);
-            }
-
-            var url = builderQueryable.ToString();
-            GridData<T> gridData = new();
-            HttpResponseMessage? res = default;
-
-            try
-            {
-                CurrentUri = new Uri(url!);
-                res = await HttpClient.GetAsync(url);
-
-                if (!res!.IsSuccessStatusCode)
-                {
-                    ErrorMessage = $"Could not read server data ({(int)res!.StatusCode})";
-                    ReadyToRender = true;
-                    return gridData;
-                }
-
-                var content = await res.Content.ReadFromJsonAsync<ODataDTO<T>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new LocalDateTimeOffsetJsonConverter() }
-                });
-
-                if (content == null || content.Count == null)
-                {
-                    ErrorMessage = $"Could not read server data (empty content)";
-                    ReadyToRender = true;
-                    return gridData;
-                }
-
-                gridData = new GridData<T>
-                {
-                    Items = content.Value.ToList(),
-                    TotalItems = (int)content.Count.Value,
-                };
-
-                ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, content.Value.ToList<object>()));
-
-                _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(Id, content.Value.ToList()));
-            }
-            catch (JsonException e)
-            {
-                var body = await res!.Content.ReadAsStringAsync();
-                ErrorMessage = $"Could not read server data (parse error)";
-                MessageService.Error("Could not read server data", e.Message, body);
-            }
-            catch (Exception e)
-            {
-                ErrorMessage = $"Could not read server data";
-                MessageService.Error("Could not read server data", e.Message, e!.ToString());
-            }
-
-            ReadyToRender = true;
-
-            return gridData;
         }
 
         [GeneratedRegex("[^a-zA-Z]")]
