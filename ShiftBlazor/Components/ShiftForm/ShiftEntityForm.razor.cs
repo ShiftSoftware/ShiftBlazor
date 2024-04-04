@@ -117,6 +117,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool _RenderEditButton;
         internal bool _RenderHeaderControlsDivider;
 
+        internal Guid IdempotencyToken;
+
         internal string ItemUrl
         {
             get
@@ -310,7 +312,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (Mode == FormModes.Create)
             {
-                res = await Http.PostAsJsonAsync(ItemUrl, Value);
+                JsonContent content = JsonContent.Create(Value);
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, ItemUrl)
+                {
+                    Version = Http.DefaultRequestVersion,
+                    VersionPolicy = Http.DefaultVersionPolicy,
+                    Content = content,
+                    Headers =
+                    {
+                        { "IdempotencyKey", IdempotencyToken.ToString() },
+                    },
+                };
+                res = await Http.SendAsync(request);
+
+                //res = await Http.PostAsJsonAsync(ItemUrl, Value);
                 message = Loc["ItemCreated"];
             }
             else
@@ -354,6 +369,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal override async Task SetMode(FormModes mode)
         {
+            if (mode == FormModes.Create)
+            {
+                IdempotencyToken = Guid.NewGuid();
+            }
             await base.SetMode(mode);
             SetTitle();
         }
