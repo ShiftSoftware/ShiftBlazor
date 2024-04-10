@@ -411,7 +411,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             await RunTask(FormTasks.Fetch, async () =>
             {
-                var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + Uri.EscapeDataString((asOf.Value).ToString());
+                var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + Uri.EscapeDataString((asOf.Value).ToString("O"));
 
                 using (var res = await Http.GetAsync(url))
                 {
@@ -552,19 +552,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 date = (DateTimeOffset?)result.Data;
             });
 
-            if (date != null)
+            if (date == null)
             {
-                if (date.Value.Year > 9000)
-                {
-                    await CloseRevision();
-                }
-                else
-                {
-                    await FetchItem(date);
-                    await SetMode(FormModes.Archive);
-                }
+                await CloseRevision();
             }
-
+            else
+            {
+                await FetchItem(date);
+                await SetMode(FormModes.Archive);
+            }
         }
 
         internal async Task CloseRevision()
