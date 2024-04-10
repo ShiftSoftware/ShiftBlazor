@@ -525,7 +525,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task ViewRevisions()
         {
-            if (Mode >= FormModes.Archive)
+            if (Mode > FormModes.Archive)
                 return;
 
             DateTimeOffset? date = null;
