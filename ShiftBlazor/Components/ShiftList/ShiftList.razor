@@ -173,6 +173,8 @@
 
                     <PropertyColumn Property="x => x.IsDeleted" Title="@Loc["IsDeletedColumnHeaderText"]" Hidden HeaderStyle="width: 0;"/>
 
+                    <ShiftSoftware.ShiftBlazor.Components.ShiftList.HasBrandForeignColumn T="T" />
+
                     @if (!DisableActionColumn && ComponentType != null)
                     {
                         <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="@Loc["ActionsColumnHeaderText"]">

@@ -1,0 +1,16 @@
+@typeparam T where T : ShiftEntityViewAndUpsertDTO, new()
+
+@if (Value is ShiftSoftware.ShiftEntity.Core.Flags.IHasBrandSelection<T> dtoWithBrand)
+{
+    <ShiftAutocomplete Label="Brand"
+                       @bind-Value="dtoWithBrand.Brand"
+                       TEntitySet="ShiftSoftware.ShiftIdentity.Core.DTOs.Brand.BrandListDTO"
+                       EntitySet="IdentityBrand"
+                       BaseUrlKey="ShiftIdentityApi"
+                       For="() => dtoWithBrand.Brand" />
+}
+
+@code {
+    [Parameter]
+    public T Value { get; set; } = new();
+}
