@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
-	<Import Project="..\..\ShiftFrameworkGlobalSettings.props" Condition="Exists('..\..\ShiftFrameworkGlobalSettings.props')" />
+	<Import Project="..\..\ShiftTemplates\ShiftFrameworkGlobalSettings.props"  Condition="Exists('..\..\ShiftTemplates\ShiftFrameworkGlobalSettings.props')"/>
 
 	<PropertyGroup>
 		<ShiftFrameworkVersion Condition="!Exists('..\..\ShiftFrameworkGlobalSettings.props')">2023.11.30.1</ShiftFrameworkVersion>
