@@ -1,6 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 	<Import Project="..\..\ShiftTemplates\ShiftFrameworkGlobalSettings.props"  Condition="Exists('..\..\ShiftTemplates\ShiftFrameworkGlobalSettings.props')"/>
 
+	<!--The Azure Pipeline clones ShiftTemplates into a directory called 's' by default-->
+	<Import Project="..\..\s\ShiftFrameworkGlobalSettings.props" Condition="Exists('..\..\s\ShiftFrameworkGlobalSettings.props')" />
+
 	<PropertyGroup>
 		<ShiftFrameworkVersion Condition="!Exists('..\..\ShiftFrameworkGlobalSettings.props')">2023.11.30.1</ShiftFrameworkVersion>
 	</PropertyGroup>
