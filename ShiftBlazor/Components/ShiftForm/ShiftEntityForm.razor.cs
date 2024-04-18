@@ -13,6 +13,9 @@ using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+using ShiftSoftware.TypeAuth.Core.Actions;
+using ShiftSoftware.TypeAuth.Core;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -25,6 +28,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftEntityForm> Loc { get; set; } = default!;
+        [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
         
         /// <summary>
         ///     The URL endpoint that processes the CRUD operations.
@@ -138,6 +142,27 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private bool ReadyToRender = false;
 
+        protected override void OnInitialized()
+        {
+            IShortcutComponent.Register(this);
+
+            TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
+
+            if (TypeAuthAction is ReadWriteDeleteAction action)
+            {
+                HasReadAccess = TypeAuthService?.CanRead(action) == true;
+                HasWriteAccess = TypeAuthService?.CanWrite(action) == true;
+                HasDeleteAccess = TypeAuthService?.CanDelete(action) == true;
+            }
+
+            OnSaveAction = SettingManager.Settings.FormOnSaveAction ?? OnSaveAction ?? DefaultAppSetting.FormOnSaveAction;
+
+            _SubmitText = string.IsNullOrWhiteSpace(SubmitText)
+                ? Loc["SubmitTextDefault"]
+                : SubmitText;
+
+        }
+
         protected override async Task OnInitializedAsync()
         {
             if (string.IsNullOrWhiteSpace(Action))
@@ -150,10 +175,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 await SetMode(FormModes.Create);
             }
 
-            if (Mode != FormModes.Create)
+            if (Mode != FormModes.Create && HasReadAccess)
             {
-                if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
-                    await FetchItem();
+                await FetchItem();
+            }
+            else
+            {
+                EditContext = new EditContext(Value);
             }
 
             SetTitle();
@@ -411,12 +439,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             await RunTask(FormTasks.Fetch, async () =>
             {
-                var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + Uri.EscapeDataString((asOf.Value).ToString());
-
-                using (var res = await Http.GetAsync(url))
+                try
                 {
-                    await SetValue(await ParseEntityResponse(res), asOf == null);
+                    var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + Uri.EscapeDataString((asOf.Value).ToString());
+
+                    using (var res = await Http.GetAsync(url))
+                    {
+                        await SetValue(await ParseEntityResponse(res), asOf == null);
+                    }
                 }
+                catch (Exception)
+                {
+                    EditContext = new EditContext(Value);
+                    throw;
+                }
+                
             });
         }
 
