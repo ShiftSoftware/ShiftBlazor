@@ -1,5 +1,5 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
-@using ShiftSoftware.ShiftBlazor.Events;
+@using ShiftSoftware.ShiftBlazor.Events
 @typeparam T where T : ShiftEntityDTOBase, new()
 @inherits EventComponentBase
 @implements IODataComponent
@@ -172,6 +172,11 @@
                     @ChildContent
 
                     <PropertyColumn Property="x => x.IsDeleted" Title="@Loc["IsDeletedColumnHeaderText"]" Hidden HeaderStyle="width: 0;"/>
+
+                    <ShiftSoftware.ShiftBlazor.Components.ShiftList.Flags.HasBrandForeignColumn T="T" />
+
+                    <ShiftSoftware.ShiftBlazor.Components.ShiftList.Flags.HasDraftColumn T="T" />
+
 
                     @if (!DisableActionColumn && ComponentType != null)
                     {

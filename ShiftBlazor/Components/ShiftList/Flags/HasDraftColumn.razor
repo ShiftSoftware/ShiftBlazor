@@ -1,0 +1,27 @@
+@using ShiftSoftware.ShiftEntity.Core.Flags
+
+@typeparam T where T : ShiftEntityDTOBase, new()
+
+@if (Array.Exists(typeof(T).GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHasDraftColumn<>)))
+{
+    <TemplateColumn T="T" Title="Draft">
+        <CellTemplate>
+            @if ((context.Item as IHasDraftColumn<T>)!.IsDraft)
+            {
+                <MudChip Icon="@Icons.Material.Filled.Edit"
+                         Variant="Variant.Text"
+                         Color="Color.Warning">
+                    Draft
+                </MudChip>
+            }
+            else
+            {
+                <MudChip Icon="@Icons.Material.Filled.CheckCircle"
+                         Variant="Variant.Text"
+                         Color="Color.Success">
+                    Final
+                </MudChip>
+            }
+        </CellTemplate>
+    </TemplateColumn>
+}

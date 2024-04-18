@@ -1,0 +1,27 @@
+@using ShiftSoftware.ShiftEntity.Core.Flags
+
+@typeparam T where T : ShiftEntityDTOBase, new()
+
+@if (Array.Exists(typeof(T).GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHasBrandForeignColumn<>)))
+{
+    @* 
+        Setting Property='x => ""' works fine for viewing and loading the foreign data. But the filtering does not work correctly, it uses the Title for the filter ((Brand eq 'Dr8dr'))
+        This is why the FakeDTO is used, just so that it generates the filter correctly ((BrandID eq 'Dr8dr'))
+    *@
+
+    <ForeignColumn Property="x => new FakeDTO().BrandID"
+                   T="T"
+                   Title="Brand"
+                   DataValueField="BrandID"
+                   TEntity="ShiftIdentity.Core.DTOs.Brand.BrandListDTO"
+                   TProperty="string"
+                   BaseUrlKey="ShiftIdentityApi"
+                   EntitySet="IdentityBrand" />
+}
+
+@code {
+    private class FakeDTO
+    {
+        public string? BrandID { get; set; }
+    }
+}

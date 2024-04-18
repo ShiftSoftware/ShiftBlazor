@@ -42,7 +42,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private async Task RowClickHandler(DataGridRowClickEventArgs<RevisionDTO> args)
         {
             await Task.Delay(1);
-            MudDialog?.Close(args.Item.ValidTo);
+            MudDialog?.Close(args.Item.ValidTo == DateTime.MaxValue ? null : args.Item.ValidFrom);
         }
 
         private void Close()

@@ -221,7 +221,9 @@
                             <CascadingValue Value="Mode" >
                                 @if (TypeAuthAction is null)
                                 {
+                                    <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasBrandSelection T="T" Value="Value" />
                                     @ChildContent
+                                    <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasDraftCheckBox T="T" Value="Value" />
                                 }
                                 else
                                 {
@@ -229,7 +231,9 @@
                                     {
                                         if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write))
                                         {
+                                            <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasBrandSelection T="T" Value="Value" />
                                             @ChildContent
+                                            <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasDraftCheckBox T="T" Value="Value" />
                                         }
                                         else
                                         {
@@ -240,7 +244,9 @@
                                     {
                                         if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
                                         {
+                                            <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasBrandSelection T="T" Value="Value" />
                                             @ChildContent
+                                            <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasDraftCheckBox T="T" Value="Value" />
                                         }
                                         else
                                         {
