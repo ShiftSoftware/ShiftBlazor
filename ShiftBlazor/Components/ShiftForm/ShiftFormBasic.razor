@@ -115,45 +115,46 @@
                         </CascadingValue>
                     </div>
                 </div>
-            </EditForm>
+            
 
-            <footer>
-                @FooterTemplate
+                <footer>
+                    @FooterTemplate
 
-                @if (!(DisableFooterToolbar || IsFooterToolbarEmpty))
-                {
-                    <MudToolBar>
+                    @if (!(DisableFooterToolbar || IsFooterToolbarEmpty))
+                    {
+                        <MudToolBar>
 
-                        @FooterToolbarStartTemplate
+                            @FooterToolbarStartTemplate
 
-                        <MudSpacer></MudSpacer>
-
-                        @if (FooterToolbarCenterTemplate != null)
-                        {
-                            @FooterToolbarCenterTemplate
                             <MudSpacer></MudSpacer>
-                        }
 
-                        @FooterToolbarEndTemplate
+                            @if (FooterToolbarCenterTemplate != null)
+                            {
+                                @FooterToolbarCenterTemplate
+                                <MudSpacer></MudSpacer>
+                            }
 
-                        @if (_RenderSubmitButton)
-                        {
-                            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
-                                @if (TaskInProgress == FormTasks.Save)
-                                {
-                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.Save" />
-                                }
+                            @FooterToolbarEndTemplate
 
-                                <MudText Style="padding:0 10px;">@_SubmitText</MudText>
-                            </MudButtonExtended>
-                        }
-                    </MudToolBar>
-                }
-            </footer>
+                            @if (_RenderSubmitButton)
+                            {
+                                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
+                                    @if (TaskInProgress == FormTasks.Save)
+                                    {
+                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Save" />
+                                    }
+
+                                    <MudText Style="padding:0 10px;">@_SubmitText</MudText>
+                                </MudButtonExtended>
+                            }
+                        </MudToolBar>
+                    }
+                </footer>
+            </EditForm>
         </MudPaper>
     </MudFocusTrap>
 </article>

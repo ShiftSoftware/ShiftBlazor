@@ -212,7 +212,6 @@
                     {
                         <DataAnnotationsValidator />
                     }
-                    <ValidationSummary></ValidationSummary>
 
                     <div class="@ContentCssClass">
                         <div class="pa-6">
@@ -259,65 +258,66 @@
                             </CascadingValue>
                         </div>
                     </div>
+
+                    <footer>
+                        @FooterTemplate
+
+                        @if (!(DisableFooterToolbar || IsFooterToolbarEmpty))
+                        {
+                            <MudToolBar>
+
+                                @FooterToolbarStartTemplate
+
+                                <MudSpacer></MudSpacer>
+
+                                @if (FooterToolbarCenterTemplate != null)
+                                {
+                                    @FooterToolbarCenterTemplate
+                                    <MudSpacer></MudSpacer>
+                                }
+
+                                @FooterToolbarEndTemplate
+
+                                @if (Mode == FormModes.Edit)
+                                {
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                                Disabled="@(TaskInProgress != FormTasks.None)"
+                                                StartIcon="@Icons.Material.Filled.Cancel"
+                                                OnClick="CancelChanges">
+                                        @Loc["CancelChanges"]
+                                    </MudButtonExtended>
+                                }
+                                else if (Mode == FormModes.Archive)
+                                {
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                                Disabled="@(TaskInProgress != FormTasks.None)"
+                                                StartIcon="@Icons.Material.Filled.Cancel"
+                                                OnClick="CloseRevision">
+                                        @Loc["CloseRevisions"]
+                                    </MudButtonExtended>
+                                }
+
+                                @if (_RenderSubmitButton)
+                                {
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
+                                        @if (TaskInProgress == FormTasks.Save)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.Save" />
+                                        }
+
+                                        <MudText Style="padding:0 10px;">@_SubmitText</MudText>
+                                    </MudButtonExtended>
+                                }
+                            </MudToolBar>
+                        }
+                    </footer>
+
                 </EditForm>
             }
-
-            <footer>
-                @FooterTemplate
-
-                @if (!(DisableFooterToolbar || IsFooterToolbarEmpty))
-                {
-                    <MudToolBar>
-
-                        @FooterToolbarStartTemplate
-
-                        <MudSpacer></MudSpacer>
-
-                        @if (FooterToolbarCenterTemplate != null)
-                        {
-                            @FooterToolbarCenterTemplate
-                            <MudSpacer></MudSpacer>
-                        }
-
-                        @FooterToolbarEndTemplate
-
-                        @if (Mode == FormModes.Edit)
-                        {
-                            <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
-                                        Disabled="@(TaskInProgress != FormTasks.None)"
-                                        StartIcon="@Icons.Material.Filled.Cancel"
-                                        OnClick="CancelChanges">
-                                @Loc["CancelChanges"]
-                            </MudButtonExtended>
-                        }
-                        else if (Mode == FormModes.Archive)
-                        {
-                            <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
-                                        Disabled="@(TaskInProgress != FormTasks.None)"
-                                        StartIcon="@Icons.Material.Filled.Cancel"
-                                        OnClick="CloseRevision">
-                                @Loc["CloseRevisions"]
-                            </MudButtonExtended>
-                        }
-
-                        @if (_RenderSubmitButton)
-                        {
-                            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
-                                @if (TaskInProgress == FormTasks.Save)
-                                {
-                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.Save" />
-                                }
-
-                                <MudText Style="padding:0 10px;">@_SubmitText</MudText>
-                            </MudButtonExtended>
-                        }
-                    </MudToolBar>
-                }
-            </footer>
         </MudPaper>
     </MudFocusTrap>
 </article>
