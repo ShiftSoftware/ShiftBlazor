@@ -149,7 +149,7 @@
                                         Filterable="false" IsEditable="false">
                             <HeaderTemplate>
                                 <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
-                                    <MudCheckBox T="bool" Size="@IconSize" Checked="@IsAllSelected" CheckedChanged="x => SelectAll(context, x)" />
+                                    <MudCheckBox T="bool" Size="@IconSize" Value="@IsAllSelected" ValueChanged="x => SelectAll(context, x)" />
                                 </MudTooltip>
                             </HeaderTemplate>
                             <CellTemplate>
@@ -157,7 +157,7 @@
                                     var isSelected = SelectedItems.Any(x => x.ID == context.Item.ID) || IsAllSelected;
                                     Func<bool, Task> changeHandler = (x) => SelectRow(context.Item);
                                 }
-                                <MudCheckBox T="bool" Size="@IconSize" Checked="@isSelected" CheckedChanged="@changeHandler" />
+                                <MudCheckBox T="bool" Size="@IconSize" Value="@isSelected" ValueChanged="@changeHandler" />
                             </CellTemplate>
                         </TemplateColumn>
                     }

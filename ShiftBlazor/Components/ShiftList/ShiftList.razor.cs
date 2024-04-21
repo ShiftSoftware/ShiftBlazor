@@ -570,6 +570,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     TotalItems = (int)content.Count.Value,
                 };
 
+                if (IsAllSelected)
+                {
+                    DataGrid.SelectedItems = content.Value.ToHashSet();
+                }
                 ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, content.Value.ToList<object>()));
 
                 _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(Id, content.Value.ToList()));
