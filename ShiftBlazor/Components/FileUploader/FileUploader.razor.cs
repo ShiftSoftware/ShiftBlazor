@@ -309,6 +309,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await JsRuntime.InvokeVoidAsync("downloadFileFromUrl", file.Name, file.Url);
         }
 
+        public async Task ClearAll()
+        {
+            if (Mode >= FormModes.Edit)
+            {
+                foreach (var item in Items.Where(x => x.CancellationTokenSource != null))
+                {
+                    item.CancellationTokenSource!.Cancel();
+                };
+                Items.Clear();
+                await SetValue([]);
+            }
+        }
+
         [JSInvokable]
         public static void ReorderGrid(KeyValuePair<string, List<Guid>> order)
         {

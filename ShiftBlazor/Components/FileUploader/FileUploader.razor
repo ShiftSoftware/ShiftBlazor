@@ -57,6 +57,10 @@
             <MudToolBar Dense Style="@($"background-color: {Colors.Grey.Lighten2}; margin-top: 16px; gap: 10px;")" Class="rounded">
                  <MudButtonExtended StartIcon="@Icons.Material.Filled.ViewCarousel" OnClick="ViewGallery" Size="Size.Small">Gallery</MudButtonExtended>
                  <MudButtonExtended StartIcon="@Icons.Material.Filled.GridView" OnClick="ToggleViewMode" Size="Size.Small">Toggle View</MudButtonExtended>
+                @if (Mode >= FormModes.Edit)
+                {
+                    <MudButtonExtended StartIcon="@Icons.Material.Filled.ClearAll" OnClick="ClearAll" Size="Size.Small">Clear</MudButtonExtended>
+                }
             </MudToolBar>
 
             <InputFile id="@InputId" OnChange="OnInputFileChanged" hidden multiple accept="@InputAccept" />
