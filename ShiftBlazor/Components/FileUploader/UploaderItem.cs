@@ -10,10 +10,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public IBrowserFile? LocalFile { get; set; }
         public ShiftFileDTO? File { get; set; }
         public Message? Message { get; set; }
+        public CancellationTokenSource? CancellationTokenSource { get; set; }
 
         public UploaderItem(IBrowserFile file)
         {
             LocalFile = file;
+            CancellationTokenSource = new CancellationTokenSource();
         }
 
         public UploaderItem(ShiftFileDTO file)

@@ -238,7 +238,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (!string.IsNullOrWhiteSpace(ContainerName))
                     multipartContent.Headers.Add("Container-Name", ContainerName);
 
-                var postResponse = await HttpClient.PostAsync(url, multipartContent);
+                var postResponse = await HttpClient.PostAsync(url, multipartContent, item.CancellationTokenSource!.Token);
 
                 try
                 {
@@ -254,7 +254,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
                 catch (Exception)
                 {
-
                     throw;
                 }
 
@@ -262,6 +261,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             catch
             {
                 item.Message = new Message { Title = "Something went wrong" };
+                item.CancellationTokenSource?.Cancel();
             }
 
             await InvokeAsync(StateHasChanged);
@@ -281,6 +281,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))
             {
+                item.CancellationTokenSource?.Cancel();
                 Items.Remove(item);
                 await SetValue(Items);
             }
