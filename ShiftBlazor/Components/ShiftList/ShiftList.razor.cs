@@ -471,16 +471,23 @@ namespace ShiftSoftware.ShiftBlazor.Components
             StateHasChanged();
         }
 
-        public ValueTask HandleShortcut(KeyboardKeys key)
+        public async ValueTask HandleShortcut(KeyboardKeys key)
         {
             switch (key)
             {
                 case KeyboardKeys.Escape:
                     CloseDialog();
                     break;
+                case KeyboardKeys.KeyA:
+                    await ViewAddItem();
+                    break;
+                case KeyboardKeys.KeyE:
+                    await ExportList();
+                    break;
+                case KeyboardKeys.KeyC:
+                    OpenColumnChooser();
+                    break;
             }
-
-            return new ValueTask();
         }
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
@@ -604,9 +611,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             // Use Shortcut components to find out if the datagrid is on top of the component list
             if (!IsModalOpen)
             {
-                var shortcutComp = IShortcutComponent.Components.SkipLast(1).Last();
+                var beforeLastIndex = IShortcutComponent.Components.Count - 2;
+                var compId = IShortcutComponent.Components.Keys.ElementAtOrDefault(beforeLastIndex);
 
-                if (shortcutComp.Key == Id && data != null)
+                if (compId == Id && data != null)
                 {
                     DataGrid!.ReloadServerData();
                 }

@@ -33,7 +33,6 @@ namespace ShiftSoftware.ShiftBlazor.Interfaces
                 await Components.Last().Value.HandleShortcut(keys.First());
             }
         }
-
-
     }
 }
+ 

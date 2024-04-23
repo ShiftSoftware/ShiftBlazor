@@ -30,11 +30,12 @@
                         @if (!DisableColumnChooser)
                         {
                             <MudTooltip Text="@Loc["ColumnChooserTitle"]">
-                                <MudIconButton Size="@IconSize"
-                                               Icon="@Icons.Material.Filled.ViewColumn"
-                                               Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                               aria-label="@Loc["ColumnChooserTitle"]"
-                                               OnClick="OpenColumnChooser" />
+                                <MudIconButtonExtended Size="@IconSize"
+                                                       KeyboardKey="KeyboardKeys.KeyC"
+                                                       Icon="@Icons.Material.Filled.ViewColumn"
+                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                       aria-label="@Loc["ColumnChooserTitle"]"
+                                                       OnClick="OpenColumnChooser" />
                             </MudTooltip>
                         }
 
@@ -56,22 +57,24 @@
                         @if (EnableExport)
                         {
                             <MudTooltip Text="@Loc["ExportButtonTitle"]">
-                                <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
-                                               Size="@IconSize"
-                                               Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                               aria-label="@Loc["ExportButtonTitle"]"
-                                               OnClick="@ExportList" />
+                                <MudIconButtonExtended Icon="@Icons.Material.Filled.FileDownload"
+                                                       KeyboardKey="KeyboardKeys.KeyE"
+                                                       Size="@IconSize"
+                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                                       aria-label="@Loc["ExportButtonTitle"]"
+                                                       OnClick="@ExportList" />
                             </MudTooltip>
                         }
 
                         @if (RenderAddButton)
                         {
                             <MudTooltip Text="@Loc["AddNewItemTitle"]">
-                                <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
-                                               Size="@IconSize"
-                                               Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
-                                               aria-label="@Loc["AddNewItemTitle"]"
-                                               OnClick="() => ViewAddItem()" />
+                                <MudIconButtonExtended Icon="@Icons.Material.Filled.AddCircle"
+                                                       KeyboardKey="KeyboardKeys.KeyA"
+                                                       Size="@IconSize"
+                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
+                                                       aria-label="@Loc["AddNewItemTitle"]"
+                                                       OnClick="() => ViewAddItem()" />
                             </MudTooltip>
                         }
 
@@ -85,14 +88,15 @@
                             @ToolbarControlsTemplate
 
                             <MudTooltip Text="@Loc["CloseModalButtonTitle"]">
-                                <MudButton Style="min-width:40px; z-index: 100;"
-                                           Variant="Variant.Text"
-                                           Size="Size.Medium"
-                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                           aria-label="@Loc["CloseModalButtonTitle"]"
-                                           OnClick="CloseDialog">
+                                <MudButtonExtended Style="min-width:40px; z-index: 100;"
+                                                   KeyboardKey="KeyboardKeys.Escape"
+                                                   Variant="Variant.Text"
+                                                   Size="Size.Medium"
+                                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                   aria-label="@Loc["CloseModalButtonTitle"]"
+                                                   OnClick="CloseDialog">
                                     <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
-                                </MudButton>
+                                </MudButtonExtended>
                             </MudTooltip>
                         }
                         
