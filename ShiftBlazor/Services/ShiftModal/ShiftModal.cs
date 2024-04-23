@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Events;
 
 namespace ShiftSoftware.ShiftBlazor.Services
 {
@@ -123,6 +124,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <param name="mudDialog">An instance of the MudDialog.</param>
         public void Close(MudDialogInstance mudDialog, object? data = null)
         {
+            ShiftBlazorEvents.TriggerOnModalClosed(data);
+
             RemoveFrontModalFromUrl();
             if (data == null)
             {

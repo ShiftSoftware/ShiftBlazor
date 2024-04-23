@@ -301,6 +301,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal SortMode SortMode = SortMode.Multiple;
         private ODataFilter Filters = new ODataFilter();
         private bool ReadyToRender = false;
+        private bool IsModalOpen = false;
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
 
@@ -319,7 +320,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
-            if (MudDialog != null && !IsEmbed)
+            if (!IsEmbed)
             {
                 IShortcutComponent.Register(this);
             }
@@ -329,6 +330,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 throw new ArgumentNullException($"{nameof(Values)} and {nameof(EntitySet)} are null");
             }
 
+            ShiftBlazorEvents.OnModalClosed += ShiftBlazorEvents_OnModalClosed;
             TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
 
             if (EntitySet != null)
@@ -419,11 +421,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <returns>A DialogResult object representing the outcome of the dialog.</returns>
         public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
         {
+            IsModalOpen = true;
             var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
             if (result != null && result.Canceled != true)
             {
                 await DataGrid!.ReloadServerData();
             }
+            IsModalOpen = false;
             return result;
         }
 
@@ -593,6 +597,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
             ReadyToRender = true;
 
             return gridData;
+        }
+
+        private void ShiftBlazorEvents_OnModalClosed(object? sender, object? data)
+        {
+            // Use Shortcut components to find out if the datagrid is on top of the component list
+            if (!IsModalOpen)
+            {
+                var shortcutComp = IShortcutComponent.Components.SkipLast(1).Last();
+
+                if (shortcutComp.Key == Id && data != null)
+                {
+                    DataGrid!.ReloadServerData();
+                }
+            }
         }
 
         private void HideDisabledColumns()
@@ -910,6 +928,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         void IDisposable.Dispose()
         {
+            ShiftBlazorEvents.OnModalClosed -= ShiftBlazorEvents_OnModalClosed;
             IShortcutComponent.Remove(Id);
         }
     }

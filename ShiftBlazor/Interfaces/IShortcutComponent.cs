@@ -1,14 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Web;
-using MudBlazor.Services;
-using ShiftSoftware.ShiftBlazor.Enums;
-using ShiftSoftware.ShiftBlazor.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Interfaces
 {
@@ -38,7 +28,7 @@ namespace ShiftSoftware.ShiftBlazor.Interfaces
 
         public static async Task SendKeys(IEnumerable<KeyboardKeys> keys)
         {
-            if (Components.Any())
+            if (Components.Count != 0)
             {
                 await Components.Last().Value.HandleShortcut(keys.First());
             }
