@@ -623,7 +623,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private void HideDisabledColumns()
         {
-            var columns = DataGrid?.RenderedColumns.Where(x => x.Hideable == true);
+            var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
             if (columns == null || !columns.Any())
             {
                 return;
@@ -634,6 +634,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             foreach (var item in columnStates)
             {
                 var column = columns.FirstOrDefault(x => x.Title == item.Title);
+                column.Hidden = !item.Visible;
                 _ = item.Visible == true
                     ? column?.ShowAsync()
                     : column?.HideAsync();
@@ -642,7 +643,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             foreach (var item in columns)
             {
                 #pragma warning disable BL0005 // Component parameter should not be set outside of its component.
-                item.HiddenChanged = new EventCallback<bool>(this, ColumnStateChanged);
+                item.HiddenChanged = new EventCallback<bool>(this, delegate (bool value) { ColumnStateChanged(item.Title, value); });
                 #pragma warning restore BL0005
             }
         }
@@ -714,9 +715,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return $"{EntitySet}_{typeof(T).Name}";
         }
 
+        private void ColumnStateChanged(string name, bool hidden)
+        {
+            var col = DataGrid?.RenderedColumns.FirstOrDefault(x => (x.Hideable ?? DataGrid?.Hideable) == true && x.Title == name);
+            col.Hidden = hidden;
+            SaveColumnState();
+        }
+
         private void SaveColumnState()
         {
-            var columns = DataGrid?.RenderedColumns.Where(x => x.Hideable == true);
+            var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
             if (columns == null || !columns.Any())
             {
                 return;
@@ -725,15 +733,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var columnStates = columns.Select(x => new ColumnState
             {
                 Title = x.Title,
-                Visible = !x.Hidden
+                Visible = !x.Hidden,
             }).ToList();
 
             SettingManager.SetHiddenColumns(GetListIdentifier(), columnStates);
-        }
-
-        private void ColumnStateChanged(bool hidden)
-        {
-            SaveColumnState();
         }
 
         internal async Task RerenderDataGrid()
