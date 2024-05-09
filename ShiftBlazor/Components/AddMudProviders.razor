@@ -6,10 +6,11 @@
 <MudDialogProvider CloseButton="_DialogOptions.CloseButton"
                    Position="_DialogOptions.Position"
                    CloseOnEscapeKey="_DialogOptions.CloseOnEscapeKey"
-                   DisableBackdropClick="_DialogOptions.DisableBackdropClick"
+                   BackdropClick="_DialogOptions.BackdropClick"
                    FullWidth="_DialogOptions.FullWidth"
                    MaxWidth="_DialogOptions.MaxWidth"
                    NoHeader="_DialogOptions.NoHeader" />
+<MudPopoverProvider />
 <MudSnackbarProvider />
 
 @code {
@@ -34,7 +35,7 @@
     protected override void OnInitialized()
     {
         _DialogOptions.CloseOnEscapeKey = true;
-        _DialogOptions.DisableBackdropClick = true;
+        _DialogOptions.BackdropClick = false;
         _DialogOptions.FullWidth = true;
         _DialogOptions.NoHeader = false;
         _DialogOptions.CloseButton = true;

@@ -3,13 +3,13 @@
 
 @if (NestedLists == null)
 {
-    <MudListItem>
+    <MudListItem T="object">
         @MessageBody
     </MudListItem>
 }
 else
 {
-    <MudListItem NestedList="@NestedLists">
+    <MudListItem T="object" NestedList="@NestedLists">
         @MessageBody
     </MudListItem>
 }

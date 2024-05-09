@@ -225,7 +225,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 }
             }
 
-            var options = new DialogOptions { NoHeader = true, ClassBackground = "shift-modal-background", CloseOnEscapeKey = false };
+            var options = new DialogOptions { NoHeader = true, BackgroundClass = "shift-modal-background", CloseOnEscapeKey = false };
             var dialogRef = DialogService.Show(TComponent, "", dParams, options);
             var result = await dialogRef.Result;
             return result;

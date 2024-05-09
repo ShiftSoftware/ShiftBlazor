@@ -8,7 +8,7 @@
         <CellTemplate>
             @if ((context.Item as IHasDraftColumn<T>)!.IsDraft)
             {
-                <MudChip Icon="@Icons.Material.Filled.Edit"
+                <MudChip T="string" Icon="@Icons.Material.Filled.Edit"
                          Variant="Variant.Text"
                          Color="Color.Warning">
                     Draft
@@ -16,7 +16,7 @@
             }
             else
             {
-                <MudChip Icon="@Icons.Material.Filled.CheckCircle"
+                <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle"
                          Variant="Variant.Text"
                          Color="Color.Success">
                     Final

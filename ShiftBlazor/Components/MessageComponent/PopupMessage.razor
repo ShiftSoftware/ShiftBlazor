@@ -28,7 +28,7 @@
 
             @if (Message.SubMessages != null && Message.SubMessages.Count > 0)
             {
-                <MudList>
+                <MudList T="object">
                     @foreach (var msg in Message.SubMessages)
                     {
                         <MessageList Message="msg"></MessageList>
@@ -38,7 +38,7 @@
 
         </div>
 
-        <MudToolBar Dense DisableGutters>
+        <MudToolBar Dense>
             <MudSpacer />
             @if (ReportButton)
             {

@@ -174,7 +174,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var options = new DialogOptions
             {
                 NoHeader = true,
-                DisableBackdropClick = false,
+                BackdropClick = true,
                 CloseOnEscapeKey = true,
                 MaxWidth = MaxWidth.False,
             };

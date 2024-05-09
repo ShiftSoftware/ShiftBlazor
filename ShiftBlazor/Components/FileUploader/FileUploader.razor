@@ -47,14 +47,14 @@
                          }
                          else
                          {
-                             <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput">@Loc["AddButtonChip"]</MudChip>
+                            <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput" T="string">@Loc["AddButtonChip"]</MudChip>
                          }
                      </MudItem>
                  }
              </MudGrid>
 
 
-            <MudToolBar Dense Style="@($"background-color: {Colors.Grey.Lighten2}; margin-top: 16px; gap: 10px;")" Class="rounded">
+            <MudToolBar Dense Style="@($"background-color: {Colors.Gray.Lighten2}; margin-top: 16px; gap: 10px;")" Class="rounded">
                  <MudButtonExtended StartIcon="@Icons.Material.Filled.ViewCarousel" OnClick="ViewGallery" Size="Size.Small">Gallery</MudButtonExtended>
                  <MudButtonExtended StartIcon="@Icons.Material.Filled.GridView" OnClick="ToggleViewMode" Size="Size.Small">Toggle View</MudButtonExtended>
                 @if (Mode >= FormModes.Edit)

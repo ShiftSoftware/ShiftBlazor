@@ -3,13 +3,13 @@
 
 @if (Uploader.ReadOnly || !CanDelete)
 {
-    <MudChip @ondblclick="DownloadFile" OnClick="@DownloadTip">
+    <MudChip @ondblclick="DownloadFile" OnClick="@DownloadTip" T="object">
         @renderFragment
     </MudChip>
 }
 else
 {
-    <MudChip @ondblclick="DownloadFile" OnClick="@DownloadTip" OnClose="@RemoveFile">
+    <MudChip @ondblclick="DownloadFile" OnClick="@DownloadTip" OnClose="@RemoveFile" T="object">
         @renderFragment
     </MudChip>
 }
@@ -23,7 +23,6 @@ else
 
     [Parameter]
     public bool CanDelete { get; set; } = default!;
-
 
     internal string Icon => Item.IsImage() ? Filled.Image : Filled.InsertDriveFile;
 

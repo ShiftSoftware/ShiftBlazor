@@ -94,7 +94,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 throw new ArgumentNullException(nameof(DataTextField));
 
             ToStringFunc ??= (e) => e?.Text ?? "";
-            SearchFuncWithCancel = Search;
+            SearchFunc = Search;
 
             _ = UpdateInitialValue();
 
