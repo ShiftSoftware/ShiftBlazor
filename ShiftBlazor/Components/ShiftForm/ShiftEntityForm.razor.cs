@@ -492,7 +492,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return value;
             }
 
-            if (TaskInProgress == FormTasks.Save && result.Message != null)
+            if (result.Message != null)
             {
                 var parameters = new DialogParameters {
                     { "Message", result.Message },
