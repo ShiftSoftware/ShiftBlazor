@@ -7,7 +7,7 @@
         base.BuildRenderTree(__builder);
     }
 
-    @if (KeyboardKey != null)
+    @if (KeyboardKey != null && !(ShiftEntityForm is IShortcutComponent comp && ShiftList != null))
     {
         <div class="shortcut-key">
             @IShortcutComponent.CleanKeyName(KeyboardKey.ToString()!)
@@ -19,6 +19,9 @@
     [CascadingParameter(Name = "ShiftForm")]
     public ComponentBase? ShiftEntityForm { get; set; }
 
+    [CascadingParameter]
+    public IShiftList? ShiftList { get; set; }
+
     [Parameter]
     public KeyboardKeys? KeyboardKey { get; set; }
 
@@ -26,7 +29,7 @@
     {
         base.OnInitialized();
 
-        if (KeyboardKey != null && ShiftEntityForm is IShortcutComponent comp)
+        if (KeyboardKey != null && ShiftEntityForm is IShortcutComponent comp && ShiftList == null)
         {
             comp?.Shortcuts.TryAdd(KeyboardKey.Value, OnClick);
         }
@@ -34,7 +37,7 @@
 
     public void Dispose()
     {
-        if (KeyboardKey != null && ShiftEntityForm is IShortcutComponent comp)
+        if (KeyboardKey != null && ShiftEntityForm is IShortcutComponent comp && ShiftList == null)
         {
             comp?.Shortcuts.Remove(KeyboardKey.Value);
         }
