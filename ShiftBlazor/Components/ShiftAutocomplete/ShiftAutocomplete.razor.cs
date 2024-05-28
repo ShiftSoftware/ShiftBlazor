@@ -18,7 +18,7 @@ using ShiftSoftware.ShiftBlazor.Extensions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftAutocomplete<TEntitySet> : MudAutocomplete<ShiftEntitySelectDTO>, IODataComponent
+    public partial class ShiftAutocomplete<TEntitySet> : MudAutocomplete<ShiftEntitySelectDTO>, IODataComponent, IFilterableComponent
         where TEntitySet : ShiftEntityDTOBase
     {
         [Inject] private ODataQuery OData { get; set; } = default!;
@@ -44,11 +44,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? DataTextField { get; set; }
 
         [Parameter]
-        [Obsolete("Use Filters parameter instead")]
-        public Func<string, Expression<Func<TEntitySet, bool>>>? Where { get; set; }
-
-        [Parameter]
-        public Func<string, List<string>>? Filters { get; set; }
+        public Func<string, List<string>>? FilterFunc { get; set; }
 
         [Parameter]
         public bool Tags { get; set; }
@@ -68,6 +64,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool MinResponseContent { get; set; }
 
+        [Parameter]
+        public RenderFragment? ChildContent { get; set; }
+
         internal string LastTypedValue = "";
         internal List<TEntitySet> Items = new();
 
@@ -77,6 +76,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private const string MultiSelectClassName = "multi-select";
         internal string _DataValueField = string.Empty;
         internal string _DataTextField = string.Empty;
+        private ODataFilterGenerator Filters = new ODataFilterGenerator();
 
         protected override void OnInitialized()
         {
@@ -132,6 +132,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             return base.SetParametersAsync(parameters);
+        }
+
+        public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null)
+        {
+            Filters.Add(field, op, value, id);
         }
 
         private async Task HandleKeyDown(KeyboardEventArgs args)
@@ -224,11 +229,28 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 .CreateNewQuery<TEntitySet>(EntitySet, url)
                 .AddQueryOptionIf("$select", $"{_DataValueField},{_DataTextField}", MinResponseContent);
 
+            var filters = new List<string>();
+
+            if (Filters.Count > 0)
+            {
+                filters.Add(Filters.ToString());
+            }
+            
             if (!string.IsNullOrWhiteSpace(q))
             {
-                builder = Filters == null
-                    ? builder.AddQueryOption("$filter", $"contains({_DataTextField},'{q}')")
-                    : builder.AddQueryOption("$filter", string.Join(" and ", Filters.Invoke(q)));
+                if (FilterFunc == null)
+                {
+                    filters.Add($"contains({_DataTextField},'{q}')");
+                }
+                else
+                {
+                    filters.Add(string.Join(" and ", FilterFunc.Invoke(q)));
+                }
+            }
+
+            if (filters.Count > 0)
+            {
+                builder = builder.AddQueryOption("$filter", string.Join(" and ", filters));
             }
 
             return builder.Take(MaxItems ?? 100).ToString()!;
