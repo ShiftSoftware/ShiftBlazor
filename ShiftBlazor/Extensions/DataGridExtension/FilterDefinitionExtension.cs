@@ -42,8 +42,8 @@ namespace System.Collections.Generic
         private static string GetFilterString(string field, string op, object? value, FieldType? fieldType = null)
         {
             var _field = Misc.GetFieldFromPropertyPath(field);
-            var _value = ODataFilter.GetValueString(value, fieldType!);
-            var filterTemplate = ODataFilter.CreateFilterTemplate(op);
+            var _value = ODataFilterGenerator.GetValueString(value, fieldType!);
+            var filterTemplate = ODataFilterGenerator.CreateFilterTemplate(op);
 
             return string.Format(filterTemplate, _field, _value);
         }

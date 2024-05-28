@@ -299,7 +299,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle = string.Empty;
         internal SortMode SortMode = SortMode.Multiple;
-        private ODataFilter Filters = new ODataFilter();
+        private ODataFilterGenerator Filters = new ODataFilterGenerator();
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
 
@@ -451,7 +451,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
         public void SetSort(string field, SortDirection sortDirection)
         {
-            DataGrid?.SortDefinitions.Add(field, new SortDefinition<T>(field, sortDirection == SortDirection.Descending, 0, null));
+            DataGrid?.SortDefinitions.Add(field, new SortDefinition<T>(field, sortDirection == SortDirection.Descending, DataGrid?.SortDefinitions.Count ?? 0, null));
             InvokeAsync(StateHasChanged);
         }
 
@@ -461,9 +461,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <param name="field">The field to apply the filter on.</param>
         /// <param name="op">The comparison operator for the filter (e.g., Equal, GreaterThan).</param>
         /// <param name="value">The value to compare against for the filter.</param>
-        public void AddFilter(string field, ODataOperator op = ODataOperator.Equal, object? value = null)
+        public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null)
         {
-            Filters.Add(field, op, value);
+            Filters.Add(field, op, value, id);
         }
 
         public void GridStateHasChanged()

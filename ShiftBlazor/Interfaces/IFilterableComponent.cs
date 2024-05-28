@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 namespace ShiftSoftware.ShiftBlazor.Interfaces;
 public interface IFilterableComponent
 {
-    public void AddFilter(string field, ODataOperator op = ODataOperator.Equal, object? value = null);
+    public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null);
 
 }
