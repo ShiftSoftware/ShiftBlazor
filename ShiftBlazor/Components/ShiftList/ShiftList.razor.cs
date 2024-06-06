@@ -280,6 +280,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool Outlined { get; set; }
 
+        [Parameter]
+        public Dictionary<string, SortDirection> Sort { get; set; } = [];
+
         public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
@@ -312,6 +315,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             set
             {
                 _DataGrid = value;
+                OnDataGridLoad();
                 OnLoad.InvokeAsync();
             }
         }
@@ -618,6 +622,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     DataGrid!.ReloadServerData();
                 }
+            }
+        }
+
+        internal void OnDataGridLoad()
+        {
+            foreach (var sort in Sort)
+            {
+                SetSort(sort.Key, sort.Value);
             }
         }
 
