@@ -659,22 +659,32 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return;
             }
 
-            var columnStates = SettingManager.GetHiddenColumns(GetListIdentifier()).ToList();
-
-            foreach (var item in columnStates)
+            try
             {
-                var column = columns.FirstOrDefault(x => x.Title == item.Title);
-                column.Hidden = !item.Visible;
-                _ = item.Visible == true
-                    ? column?.ShowAsync()
-                    : column?.HideAsync();
+                var columnStates = SettingManager.GetHiddenColumns(GetListIdentifier()).ToList();
+
+                foreach (var item in columnStates)
+                {
+                    var column = columns.FirstOrDefault(x => x.Title == item.Title);
+                    if (column != null)
+                    {
+                        column.Hidden = !item.Visible;
+                        _ = item.Visible == true
+                            ? column?.ShowAsync()
+                            : column?.HideAsync();
+                    }
+                }
+
+                foreach (var item in columns)
+                {
+#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
+                    item.HiddenChanged = new EventCallback<bool>(this, delegate (bool value) { ColumnStateChanged(item.Title, value); });
+#pragma warning restore BL0005
+                }
             }
-
-            foreach (var item in columns)
+            catch (Exception e)
             {
-                #pragma warning disable BL0005 // Component parameter should not be set outside of its component.
-                item.HiddenChanged = new EventCallback<bool>(this, delegate (bool value) { ColumnStateChanged(item.Title, value); });
-                #pragma warning restore BL0005
+                MessageService.Error("Could not get or set column states", e.Message, e.ToString());
             }
         }
 
