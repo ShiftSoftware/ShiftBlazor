@@ -65,6 +65,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool MinResponseContent { get; set; }
 
         [Parameter]
+        public Action<ODataFilterGenerator>? Filter { get; set; }
+
+        [Parameter]
         public RenderFragment? ChildContent { get; set; }
 
         internal string LastTypedValue = "";
@@ -76,7 +79,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private const string MultiSelectClassName = "multi-select";
         internal string _DataValueField = string.Empty;
         internal string _DataTextField = string.Empty;
-        private ODataFilterGenerator Filters = new ODataFilterGenerator();
+        private ODataFilterGenerator Filters = new ODataFilterGenerator(true);
+        private string PreviousFilters = string.Empty;
+        public Guid Id { get; private set; } = Guid.NewGuid();
 
         protected override void OnInitialized()
         {
@@ -110,6 +115,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             base.OnInitialized();
+        }
+
+        protected override void OnParametersSet()
+        {
+            if (Filter != null)
+            {
+                var filter = new ODataFilterGenerator(true, Id);
+                Filter.Invoke(filter);
+                Filters.Add(filter);
+            }
+
+            if (Filters.ToString() != PreviousFilters)
+            {
+                PreviousFilters = Filters.ToString();
+                ResetValueAsync();
+            }
         }
 
         public override Task SetParametersAsync(ParameterView parameters)
@@ -235,7 +256,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 filters.Add(Filters.ToString());
             }
-            
+
             if (!string.IsNullOrWhiteSpace(q))
             {
                 if (FilterFunc == null)

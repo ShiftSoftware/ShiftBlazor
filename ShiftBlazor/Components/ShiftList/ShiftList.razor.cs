@@ -283,6 +283,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public Dictionary<string, SortDirection> Sort { get; set; } = [];
 
+        [Parameter]
+        public Action<ODataFilterGenerator>? Filter { get; set; }
+
         public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
@@ -302,7 +305,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle = string.Empty;
         internal SortMode SortMode = SortMode.Multiple;
-        private ODataFilterGenerator Filters = new ODataFilterGenerator();
+        private ODataFilterGenerator Filters = new ODataFilterGenerator(true);
+        private string PreviousFilters = string.Empty;
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
 
@@ -384,6 +388,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnParametersSet()
         {
+            if (Filter != null)
+            {
+                var filter = new ODataFilterGenerator(true, Id);
+                Filter.Invoke(filter);
+                Filters.Add(filter);
+            }
+
+            if (Filters.ToString() != PreviousFilters)
+            {
+                PreviousFilters = Filters.ToString();
+                DataGrid?.ReloadServerData();
+            }
+
             if (DataGrid == null)
             {
                 return;
@@ -455,7 +472,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
         public void SetSort(string field, SortDirection sortDirection)
         {
-            DataGrid?.SortDefinitions.Add(field, new SortDefinition<T>(field, sortDirection == SortDirection.Descending, DataGrid?.SortDefinitions.Count ?? 0, null));
+            var sort = new SortDefinition<T>(field, sortDirection == SortDirection.Descending, DataGrid?.SortDefinitions.Count ?? 0, null);
+            DataGrid?.SortDefinitions.Add(field, sort);
             InvokeAsync(StateHasChanged);
         }
 

@@ -34,7 +34,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             {
                 count += GetCount(gen);
             }
-            return Filters.Count + count;
+            return generator.Filters.Count + count;
         }
 
         internal readonly static Dictionary<char, string> SpecialCharaters = new()
@@ -50,7 +50,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
         public ODataFilterGenerator Add(ODataFilterGenerator generator)
         {
             var found = ChildFilters.FirstOrDefault(x => generator.Id != null && x.Id == generator.Id);
-            
+
             if (found != null)
             {
                 ChildFilters.Remove(found);
@@ -135,6 +135,17 @@ namespace ShiftSoftware.ShiftBlazor.Utils
                 return Add(filterConfig);
 
             return this;
+        }
+
+        public ODataFilterGenerator AddIf(bool condition, string field, ODataOperator Operator, object? Value, Guid? id = null)
+        {
+            return AddIf(condition, x =>
+            {
+                x.Id = id;
+                x.Field = field;
+                x.Operator = Operator;
+                x.Value = Value;
+            });
         }
 
         public ODataFilterGenerator AndIf(bool condition, Action<ODataFilterGenerator> filterConfig)
