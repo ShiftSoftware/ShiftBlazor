@@ -348,7 +348,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     Content = content,
                     Headers =
                     {
-                        { "IdempotencyKey", IdempotencyToken.ToString() },
+                        { "Idempotency-Key", IdempotencyToken.ToString() },
                     },
                 };
                 res = await Http.SendAsync(request);
