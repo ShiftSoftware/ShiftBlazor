@@ -476,13 +476,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 throw new Exception("Could not get response from server");
             }
 
-            if (res.IsSuccessStatusCode)
-            {
-                var value = result.Entity;
-                await OnEntityResponse.InvokeAsync(value);
-                return value;
-            }
-
             if (result.Message != null)
             {
                 var parameters = new DialogParameters {
@@ -498,7 +491,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     CloseOnEscapeKey = false,
                 });
 
-                return null;
+                if (!res.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+            }
+
+            if (res.IsSuccessStatusCode)
+            {
+                var value = result.Entity;
+                await OnEntityResponse.InvokeAsync(value);
+                return value;
             }
 
             throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase));
