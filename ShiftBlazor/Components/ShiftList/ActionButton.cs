@@ -152,13 +152,13 @@ public class ActionButton<T> : MudButtonExtended
             {
                 if (Confirm)
                 {
-                    DialogTextTemplate ??= $"Are you sure you want to perform this action on {ShiftListGeneric?.DataGrid?.SelectedItems.Count} items?";
-                    DialogTitleTemplate ??= "Continue?";
+                    var text = DialogTextTemplate ?? "Are you sure you want to perform this action on {0} items?";
+                    var title = DialogTitleTemplate ?? "Continue?";
                     
                     var message = new Message
                     {
-                        Title = DialogTitleTemplate,
-                        Body = string.Format(DialogTextTemplate, ShiftListGeneric?.DataGrid?.SelectedItems.Count),
+                        Title = title,
+                        Body = string.Format(text, ShiftListGeneric?.DataGrid?.SelectedItems.Count),
                     };
 
                     var parameters = new DialogParameters
