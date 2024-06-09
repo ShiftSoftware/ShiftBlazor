@@ -17,7 +17,7 @@ public static class HttpClientExtension
             Content = content,
             Headers =
             {
-                { "IdempotencyKey", idempotencyToken.ToString() },
+                { "Idempotency-Key", idempotencyToken.ToString() },
             },
         };
     }
