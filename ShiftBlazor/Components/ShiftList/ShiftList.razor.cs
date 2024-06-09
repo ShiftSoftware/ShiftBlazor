@@ -309,6 +309,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string PreviousFilters = string.Empty;
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
+        private int TotalItemCount = 0;
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
 
@@ -365,6 +366,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (PageSize != null && !PageSizes.Any(x => x == PageSize))
             {
                 PageSizes = PageSizes.Append(PageSize.Value).Order().ToArray();
+            }
+
+            if (Values != null)
+            {
+                TotalItemCount = Values.Count;
             }
 
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
@@ -623,6 +629,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 MessageService.Error("Could not read server data", e.Message, e!.ToString());
             }
 
+            TotalItemCount = gridData.TotalItems;
             ReadyToRender = true;
 
             return gridData;

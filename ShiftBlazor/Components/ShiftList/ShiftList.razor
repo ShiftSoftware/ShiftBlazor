@@ -210,6 +210,11 @@
                 <PagerContent>
                     @if (!EnableVirtualization && !DisablePagination)
                     {
+                        if (DataGrid?.SelectedItems.Count > 0)
+                        {
+                            <MudText Style="padding: 10px;" Typo="Typo.body2">@(IsAllSelected ? TotalItemCount : SelectedItems.Count) of @TotalItemCount selected</MudText>
+                        }
+                        <MudSpacer/>
                         <MudDataGridPager Style="border: 0;" PageSizeOptions="@PageSizes" RowsPerPageString="@Loc["ItemsPerPageLabel"]" />
                     }
                 </PagerContent>

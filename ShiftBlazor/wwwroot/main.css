@@ -97,3 +97,8 @@
 .show-keys .shortcut-key {
     display: block;
 }
+
+.mud-table .mud-table-pagination {
+    display: flex;
+    align-items: center;
+}
