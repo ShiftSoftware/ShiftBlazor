@@ -340,17 +340,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (Mode == FormModes.Create)
             {
-                JsonContent content = JsonContent.Create(Value);
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, ItemUrl)
-                {
-                    Version = Http.DefaultRequestVersion,
-                    VersionPolicy = Http.DefaultVersionPolicy,
-                    Content = content,
-                    Headers =
-                    {
-                        { "IdempotencyKey", IdempotencyToken.ToString() },
-                    },
-                };
+                var request = Http.CreateIdempotencyRequest(Value, ItemUrl, IdempotencyToken);
+
                 res = await Http.SendAsync(request);
 
                 //res = await Http.PostAsJsonAsync(ItemUrl, Value);
