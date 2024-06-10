@@ -154,6 +154,9 @@
                             <HeaderTemplate>
                                 <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
                                     <MudCheckBox T="bool" Size="@IconSize" Value="@IsAllSelected" ValueChanged="x => SelectAll(context, x)" />
+                                    @{
+                                        SetSelectAllAsync = context.Actions.SetSelectAllAsync;
+                                    }
                                 </MudTooltip>
                             </HeaderTemplate>
                             <CellTemplate>
@@ -210,9 +213,11 @@
                 <PagerContent>
                     @if (!EnableVirtualization && !DisablePagination)
                     {
-                        if (DataGrid?.SelectedItems.Count > 0)
+                        if (EnableSelection && DataGrid?.SelectedItems.Count > 0)
                         {
-                            <MudText Style="padding: 10px;" Typo="Typo.body2">@(IsAllSelected ? TotalItemCount : SelectedItems.Count) of @TotalItemCount selected</MudText>
+                            <MudText Style="padding-inline: 20px 2px;" Typo="Typo.body2">@(IsAllSelected ? TotalItemCount : SelectedItems.Count) of @TotalItemCount selected</MudText>
+                            <MudIconButton OnClick="@(() => SetSelectAllAsync!(false))" Size="Size.Small" Icon="@Icons.Material.Filled.Close" />
+                                
                         }
                         <MudSpacer/>
                         <MudDataGridPager Style="border: 0;" PageSizeOptions="@PageSizes" RowsPerPageString="@Loc["ItemsPerPageLabel"]" />

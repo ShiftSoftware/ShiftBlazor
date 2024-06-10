@@ -310,6 +310,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
         private int TotalItemCount = 0;
+        private Func<bool?, Task>? SetSelectAllAsync { get; set; }
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
 
