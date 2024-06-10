@@ -125,6 +125,7 @@
                          RowsPerPage="@SelectedPageSize"
                          ServerData="ServerData"
                          FixedHeader="!DisableStickyHeader"
+                         SelectOnRowClick="SelectOnRowClick"
                          RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
                          SelectedItemsChanged="SelectedItemsChangedHandler"
                          T="T">
@@ -210,7 +211,7 @@
                 <PagerContent>
                     @if (!EnableVirtualization && !DisablePagination)
                     {
-                        if (DataGrid?.SelectedItems.Count > 0)
+                        if (this.EnableSelection && DataGrid?.SelectedItems.Count > 0)
                         {
                             <MudText Style="padding: 10px;" Typo="Typo.body2">@(IsAllSelected ? TotalItemCount : SelectedItems.Count) of @TotalItemCount selected</MudText>
                         }

@@ -286,6 +286,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public Action<ODataFilterGenerator>? Filter { get; set; }
 
+
+        /// <summary>
+        /// When true, row-click also toggles the checkbox state
+        /// </summary>
+        [Parameter]
+        public bool SelectOnRowClick { get; set; } = false;
+
         public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
