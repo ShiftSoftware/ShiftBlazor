@@ -125,6 +125,8 @@
                          RowsPerPage="@SelectedPageSize"
                          ServerData="ServerData"
                          FixedHeader="!DisableStickyHeader"
+                         SelectOnRowClick="SelectOnRowClick"
+                         SelectedItemChanged="SelectRow"
                          RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
                          T="T">
 
