@@ -22,7 +22,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool ShowIDColumn { get; set; }
         public int? PageSize { get; set; }
         public bool Outlined { get; set; }
-        public bool IsAllSelected { get; }
         public bool IsEmbed { get; }
 
         public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null);

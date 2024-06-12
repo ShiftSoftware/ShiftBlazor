@@ -215,7 +215,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback OnLoad { get; set; }
 
         [Parameter]
+        [Obsolete]
         public EventCallback<HashSet<T>> OnSelectedItemsChanged { get; set; }
+        
+        [Parameter]
+        public EventCallback<SelectState<T>> OnSelectStateChanged { get; set; }
 
         [Parameter]
         public RenderFragment? ChildContent { get; set; }
@@ -286,13 +290,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public Action<ODataFilterGenerator>? Filter { get; set; }
 
-        public HashSet<T> SelectedItems => DataGrid?.SelectedItems ?? new HashSet<T>();
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
         public bool IsEmbed { get; private set; } = false;
-        public bool IsAllSelected { get; private set; } = false;
-
+        [Obsolete]
+        public HashSet<T> SelectedItems => SelectState.Items.ToHashSet();
+        [Obsolete]
+        public bool IsAllSelected => SelectState.All;
+        public readonly SelectState<T> SelectState = new();
 
         internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
         internal Size IconSize = Size.Medium;
@@ -309,8 +315,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string PreviousFilters = string.Empty;
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
-        private int TotalItemCount = 0;
-        private Func<bool?, Task>? SetSelectAllAsync { get; set; }
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
 
@@ -371,7 +375,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (Values != null)
             {
-                TotalItemCount = Values.Count;
+                SelectState.Total = Values.Count;
             }
 
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
@@ -405,6 +409,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (Filters.ToString() != PreviousFilters)
             {
                 PreviousFilters = Filters.ToString();
+                SelectState.Clear();
                 DataGrid?.ReloadServerData();
             }
 
@@ -557,7 +562,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 if (filterList.Any())
                 {
-                    builder = builder.AddQueryOption("$filter", $"({string.Join(") and (", filterList)})");
+                    var filterQueryString = $"({string.Join(") and (", filterList)})";
+                    builder = builder.AddQueryOption("$filter", filterQueryString);
+                    SelectState.Filter = filterQueryString;
                 }
             }
             catch (Exception e)
@@ -610,10 +617,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     TotalItems = (int)content.Count.Value,
                 };
 
-                if (IsAllSelected)
+                if (SelectState.All)
                 {
-                    DataGrid.SelectedItems = content.Value.ToHashSet();
+                    SelectState.Items = content.Value.ToList();
                 }
+                SelectState.Total = gridData.TotalItems;
+
                 ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, content.Value.ToList<object>()));
 
                 _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(Id, content.Value.ToList()));
@@ -630,7 +639,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 MessageService.Error("Could not read server data", e.Message, e!.ToString());
             }
 
-            TotalItemCount = gridData.TotalItems;
             ReadyToRender = true;
 
             return gridData;
@@ -956,28 +964,27 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        internal void SelectedItemsChangedHandler(HashSet<T> items)
-        {
-            OnSelectedItemsChanged.InvokeAsync(items);
-        }
-
         internal async Task SelectRow(T item)
         {
-            var removedItems = DataGrid?.SelectedItems.RemoveWhere(x => x.ID == item.ID);
+            var removedItems = SelectState.Items.RemoveAll(x => x.ID == item.ID);
 
-            if (removedItems == 0 && !IsAllSelected)
+            if (removedItems == 0 && !SelectState.All)
             {
-                DataGrid?.SelectedItems.Add(item);
+                SelectState.Items.Add(item);
             }
 
-            IsAllSelected = false;
-            await OnSelectedItemsChanged.InvokeAsync(SelectedItems);
+            SelectState.All = false;
+            await OnSelectStateChanged.InvokeAsync(SelectState);
         }
 
-        internal async Task SelectAll(HeaderContext<T> context, bool selectAll)
+        internal async Task SelectAll(bool selectAll)
         {
-            IsAllSelected = selectAll;
-            await context.Actions.SetSelectAllAsync(selectAll);
+            SelectState.All = selectAll;
+            if (!selectAll)
+            {
+                SelectState.Clear();
+            }
+            await OnSelectStateChanged.InvokeAsync(SelectState);
         }
 
         [GeneratedRegex("[^a-zA-Z]")]
