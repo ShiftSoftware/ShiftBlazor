@@ -11,7 +11,6 @@ using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-[CascadingTypeParameter(nameof(T))]
 public class ActionButton<T> : MudButtonExtended
     where T : ShiftEntityDTOBase, new()
 {
@@ -31,7 +30,7 @@ public class ActionButton<T> : MudButtonExtended
     public Type? ComponentType { get; set; }
 
     [Parameter]
-    public Func<HashSet<T>?, ValueTask<bool>>? OnClickGetItems { get; set; }
+    public Func<SelectState<T>, ValueTask<bool>>? OnClickGetItems { get; set; }
 
     [Parameter]
     public string? Action { get; set; }
@@ -43,10 +42,22 @@ public class ActionButton<T> : MudButtonExtended
     public string? BaseUrlKey { get; set; }
 
     [Parameter]
-    public string? DialogTitleTemplate { get; set; }
+    public string? DialogTitle { get; set; }
 
     [Parameter]
     public string? DialogTextTemplate { get; set; }
+
+    [Parameter]
+    public string? DialogIcon { get; set; } = Icons.Material.Filled.Warning;
+
+    [Parameter]
+    public Color? DialogColor { get; set; } = Color.Error;
+
+    [Parameter]
+    public string? DialogConfirmText { get; set; }
+
+    [Parameter]
+    public string? DialogCancelText { get; set; }
 
     internal Guid IdempotencyToken = Guid.NewGuid();
     internal bool HasOnClickDelegate;
@@ -58,10 +69,9 @@ public class ActionButton<T> : MudButtonExtended
 
         return base.SetParametersAsync(parameters);
     }
-
     protected override void OnParametersSet()
     {
-        Disabled = ShiftListGeneric?.DataGrid?.SelectedItems.Count == 0;
+        Disabled = ShiftListGeneric?.SelectState.Count == 0;
 
         if (HasOnClickDelegate)
         {
@@ -93,7 +103,7 @@ public class ActionButton<T> : MudButtonExtended
             string? baseUrl = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
             baseUrl = baseUrl?.AddUrlPath(Action) ?? SettingManager.Configuration.ApiPath.AddUrlPath(Action);
 
-            var request = Http.CreateIdempotencyRequest(ShiftListGeneric?.DataGrid?.SelectedItems, baseUrl, IdempotencyToken);
+            var request = Http.CreateIdempotencyRequest(ShiftListGeneric?.SelectState ?? new(), baseUrl, IdempotencyToken);
             var response = await Http.SendAsync(request);
 
             var result = await response.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -127,7 +137,7 @@ public class ActionButton<T> : MudButtonExtended
     {
         if (OnClickGetItems != null)
         {
-            return await OnClickGetItems.Invoke(ShiftListGeneric?.DataGrid?.SelectedItems);
+            return await OnClickGetItems.Invoke(ShiftListGeneric?.SelectState ?? new());
         }
 
         return false;
@@ -137,7 +147,7 @@ public class ActionButton<T> : MudButtonExtended
     {
         var parameters = new DialogParameters
         {
-            { "Items", ShiftListGeneric?.DataGrid?.SelectedItems },
+            { "Selected", ShiftListGeneric?.SelectState ?? new() },
         };
 
         var result = await (DialogService.Show(ComponentType, "", parameters).Result);
@@ -152,21 +162,25 @@ public class ActionButton<T> : MudButtonExtended
             {
                 if (Confirm)
                 {
-                    var text = DialogTextTemplate ?? "Are you sure you want to perform this action on {0} items?";
-                    var title = DialogTitleTemplate ?? "Continue?";
-                    
+                    var selectCount = ShiftListGeneric?.SelectState.Count ?? 0;
+                    var text = DialogTextTemplate ?? $"Are you sure you want to perform this action on {{0}} item{(selectCount == 1 ? "" : "s")}?";
+                    var title = DialogTitle ?? "Continue?";
+                    var confirmText = DialogConfirmText ?? "Yes";
+                    var cancelText = DialogCancelText ?? "No";
+
                     var message = new Message
                     {
                         Title = title,
-                        Body = string.Format(text, ShiftListGeneric?.DataGrid?.SelectedItems.Count),
+                        Body = string.Format(text, selectCount),
                     };
 
                     var parameters = new DialogParameters
                     {
                         { "Message", message },
-                        { "Color", Color.Error },
-                        { "ConfirmText",  "Yes"},
-                        { "CancelText",  "No" }
+                        { "Color", DialogColor },
+                        { "Icon", DialogIcon },
+                        { "ConfirmText",  confirmText},
+                        { "CancelText",  cancelText },
                     };
 
                     var result = await DialogService.Show<PopupMessage>("", parameters, new DialogOptions
@@ -185,13 +199,10 @@ public class ActionButton<T> : MudButtonExtended
                         }
                     }
                 }
-                else
+                else if (await action.Invoke() && ShiftListGeneric?.DataGrid != null)
                 {
-                    if (await action.Invoke() && ShiftListGeneric?.DataGrid != null)
-                    {
-                        IdempotencyToken = Guid.NewGuid();
-                        await ShiftListGeneric.DataGrid.ReloadServerData();
-                    }
+                    IdempotencyToken = Guid.NewGuid();
+                    await ShiftListGeneric.DataGrid.ReloadServerData();
                 }
 
             }
