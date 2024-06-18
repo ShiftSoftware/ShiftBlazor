@@ -164,6 +164,20 @@ public class ActionButton<T> : MudButtonExtended
     {
         var func = async delegate (MouseEventArgs args)
         {
+            // Inject loading icon into the button's ChildContent
+            var originalChildContent = ChildContent;
+            ChildContent = builder =>
+            {
+                var color = ShiftListGeneric?.NavIconFlatColor == true ? Color.Inherit : Color.Default;
+                builder.OpenComponent<MudProgressCircular>(0);
+                builder.AddAttribute(1, "Color", color);
+                builder.AddAttribute(2, "Indeterminate", true);
+                builder.AddAttribute(3, "Size", Size.Small);
+                builder.CloseComponent();
+                builder.AddContent(4, originalChildContent);
+            };
+            StateHasChanged();
+
             try
             {
                 if (Confirm)
@@ -219,6 +233,10 @@ public class ActionButton<T> : MudButtonExtended
             {
                 MessageService.Error($"Could not execute this action.", e.Message, e.ToString());
             }
+
+            // Restore ChildConent to original state when task is finished
+            ChildContent = originalChildContent;
+            StateHasChanged();
         };
 
         return new EventCallback<MouseEventArgs>(this, func);
