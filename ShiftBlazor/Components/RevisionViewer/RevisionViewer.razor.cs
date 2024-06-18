@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Localization;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -39,10 +40,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        private async Task RowClickHandler(DataGridRowClickEventArgs<RevisionDTO> args)
+        private async Task RowClickHandler(ShiftEvent<DataGridRowClickEventArgs<RevisionDTO>> args)
         {
             await Task.Delay(1);
-            MudDialog?.Close(args.Item.ValidTo == DateTime.MaxValue ? null : args.Item.ValidFrom);
+            MudDialog?.Close(args.Data.Item.ValidTo == DateTime.MaxValue ? null : args.Data.Item.ValidFrom);
         }
 
         private void Close()

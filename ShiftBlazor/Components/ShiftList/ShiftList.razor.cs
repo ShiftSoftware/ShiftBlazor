@@ -8,6 +8,7 @@ using Microsoft.OData.Client;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
+using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
@@ -200,7 +201,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// Fires when a row is clicked, sends 'DataGridRowClickEventArgs<T>' as argument.
         /// </summary>
         [Parameter]
-        public EventCallback<DataGridRowClickEventArgs<T>> OnRowClick { get; set; }
+        public EventCallback<ShiftEvent<DataGridRowClickEventArgs<T>>> OnRowClick { get; set; }
 
         /// <summary>
         /// Fires when form is closed, sends the form data when form is saved and null if cancelled.
@@ -765,7 +766,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (OnRowClick.HasDelegate)
             {
-                await OnRowClick.InvokeAsync(args);
+                if (await OnRowClick.PreventableInvokeAsync(args)) return;
+            }
+
+            if (SelectOnRowClick)
+            {
+                await SelectRow(args.Item);
             }
         }
 
