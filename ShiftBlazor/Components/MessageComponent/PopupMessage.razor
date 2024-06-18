@@ -24,16 +24,25 @@
 
         <div class="pa-6">
 
-            <MudText Style="word-wrap: break-word;">@Message.Body</MudText>
 
-            @if (Message.SubMessages != null && Message.SubMessages.Count > 0)
+            @if (MessageBodyTemplate == null)
             {
-                <MudList T="object">
-                    @foreach (var msg in Message.SubMessages)
-                    {
-                        <MessageList Message="msg"></MessageList>
-                    }
-                </MudList>
+                <MudText Style="word-wrap: break-word;">@Message.Body</MudText>
+
+                @if (Message.SubMessages?.Count > 0)
+                {
+                    <MudList T="object">
+                        @foreach (var msg in Message.SubMessages)
+                        {
+                            <MessageList Message="msg"></MessageList>
+                        }
+                    </MudList>
+                }
+
+            }
+            else
+            {
+                @MessageBodyTemplate(Message)
             }
 
         </div>
@@ -55,9 +64,12 @@
     </MudFocusTrap>
 </MudPaper>
 
-    @code {
+@code {
     [Parameter, EditorRequired]
     public Message Message { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment<Message>? MessageBodyTemplate { get; set; }
 
     [Parameter]
     public Color Color { get; set; } = Color.Warning;

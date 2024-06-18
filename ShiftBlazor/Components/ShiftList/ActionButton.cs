@@ -59,6 +59,12 @@ public class ActionButton<T> : MudButtonExtended
     [Parameter]
     public string? DialogCancelText { get; set; }
 
+    [Parameter]
+    public MaxWidth DialogWidth { get; set; } = MaxWidth.ExtraSmall;
+
+    [Parameter]
+    public RenderFragment<SelectState<T>>? DialogBodyTemplate { get; set; }
+
     internal Guid IdempotencyToken = Guid.NewGuid();
     internal bool HasOnClickDelegate;
 
@@ -167,16 +173,19 @@ public class ActionButton<T> : MudButtonExtended
                     var title = DialogTitle ?? "Continue?";
                     var confirmText = DialogConfirmText ?? "Yes";
                     var cancelText = DialogCancelText ?? "No";
+                    var message = new Message(title, string.Format(text, selectCount));
 
-                    var message = new Message
+                    RenderFragment<Message>? messageTemplate = null;
+
+                    if (DialogBodyTemplate != null && ShiftListGeneric != null)
                     {
-                        Title = title,
-                        Body = string.Format(text, selectCount),
-                    };
+                        messageTemplate = (msg) => builder => builder.AddContent(0, DialogBodyTemplate(ShiftListGeneric.SelectState));
+                    }
 
                     var parameters = new DialogParameters
                     {
                         { "Message", message },
+                        { "MessageBodyTemplate", messageTemplate },
                         { "Color", DialogColor },
                         { "Icon", DialogIcon },
                         { "ConfirmText",  confirmText},
@@ -185,7 +194,7 @@ public class ActionButton<T> : MudButtonExtended
 
                     var result = await DialogService.Show<PopupMessage>("", parameters, new DialogOptions
                     {
-                        MaxWidth = MaxWidth.ExtraSmall,
+                        MaxWidth = DialogWidth,
                         NoHeader = true,
                         CloseOnEscapeKey = false,
                     }).Result;
