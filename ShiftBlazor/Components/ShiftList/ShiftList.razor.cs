@@ -973,8 +973,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task SelectRow(T item)
         {
+            // search the selected list, if we find an item with the current item id, then remove it
             var removedItems = SelectState.Items.RemoveAll(x => x.ID == item.ID);
 
+            // if no items were removed from the list, it means we want to add it to the list
             if (removedItems == 0 && !SelectState.All)
             {
                 SelectState.Items.Add(item);
@@ -987,7 +989,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal async Task SelectAll(bool selectAll)
         {
             SelectState.All = selectAll;
-            if (!selectAll)
+            if (selectAll)
+            {
+                SelectState.Items = DataGrid?.ServerItems.ToList() ?? new();
+            }
+            else
             {
                 SelectState.Clear();
             }
