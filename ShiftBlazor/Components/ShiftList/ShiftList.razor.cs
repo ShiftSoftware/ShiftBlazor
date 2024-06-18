@@ -223,6 +223,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback<SelectState<T>> OnSelectStateChanged { get; set; }
 
         [Parameter]
+        public EventCallback<List<T>> OnFetch { get; set; }
+
+        [Parameter]
         public RenderFragment? ChildContent { get; set; }
 
         /// <summary>
@@ -631,9 +634,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
                 SelectState.Total = gridData.TotalItems;
 
+                await OnFetch.InvokeAsync(content.Value);
                 ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, content.Value.ToList<object>()));
-
-                _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(Id, content.Value.ToList()));
+                _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(Id, content.Value));
             }
             catch (JsonException e)
             {
