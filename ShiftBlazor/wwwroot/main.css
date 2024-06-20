@@ -75,26 +75,12 @@
     z-index: 1;
 }
 
-.button-shortcut {
-    position: relative;
-}
-
-.shortcut-key {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #000000;
-    color: #fff;
-    font-size: 14px;
-    padding: 1px 5px;
-    border-radius: 10px;
+.shortcut-key-badge {
     display: none;
-    opacity: 0.7;
-    pointer-events: none;
+    pointer-events: none !important;
 }
 
-.show-keys .shortcut-key {
+.show-keys .shortcut-key, .show-keys .shortcut-key-badge {
     display: block;
 }
 
