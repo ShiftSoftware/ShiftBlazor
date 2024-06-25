@@ -265,9 +265,9 @@ public class ActionButton<T> : MudButtonExtended
                         CloseOnEscapeKey = false,
                     }).Result;
 
+                    // Only reload if user doesn't cancel the confirmation dialog.
                     if (!result.Canceled)
                     {
-                        // Only reload if user doesn't cancel the confirmation dialog.
                         reload = await action.Invoke();
                     }
                 }
