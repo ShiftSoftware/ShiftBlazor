@@ -22,14 +22,14 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class RevisionViewer {
+    internal class PopupMessage {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal RevisionViewer() {
+        internal PopupMessage() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ShiftSoftware.ShiftBlazor.Resources.Components.RevisionViewer", typeof(RevisionViewer).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ShiftSoftware.ShiftBlazor.Resources.Components.PopupMessage", typeof(PopupMessage).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -63,45 +63,45 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
-        internal static string CloseButton {
+        internal static string ClosePopupButtonLabel {
             get {
-                return ResourceManager.GetString("CloseButton", resourceCulture);
+                return ResourceManager.GetString("ClosePopupButtonLabel", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Revisions.
+        ///   Looks up a localized string similar to Ok.
         /// </summary>
-        internal static string DefaultTitle {
+        internal static string ConfirmDefaultText {
             get {
-                return ResourceManager.GetString("DefaultTitle", resourceCulture);
+                return ResourceManager.GetString("ConfirmDefaultText", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Saved By.
+        ///   Looks up a localized string similar to Could not copy to clipboard.
         /// </summary>
-        internal static string SavedByColumnTitle {
+        internal static string CopyActionFail {
             get {
-                return ResourceManager.GetString("SavedByColumnTitle", resourceCulture);
+                return ResourceManager.GetString("CopyActionFail", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Valid From.
+        ///   Looks up a localized string similar to Copied to clipboard.
         /// </summary>
-        internal static string ValidFromColumnTitle {
+        internal static string CopyActionSuccess {
             get {
-                return ResourceManager.GetString("ValidFromColumnTitle", resourceCulture);
+                return ResourceManager.GetString("CopyActionSuccess", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Valid To.
+        ///   Looks up a localized string similar to Copy.
         /// </summary>
-        internal static string ValidToColumnTitle {
+        internal static string CopyButtonLabel {
             get {
-                return ResourceManager.GetString("ValidToColumnTitle", resourceCulture);
+                return ResourceManager.GetString("CopyButtonLabel", resourceCulture);
             }
         }
     }

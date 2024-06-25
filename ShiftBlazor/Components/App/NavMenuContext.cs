@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace ShiftSoftware.ShiftBlazor.Components;
 
-namespace ShiftSoftware.ShiftBlazor.Components
+public class NavMenuContext
 {
-    public class NavMenuContext
-    {
-        public bool IsOpen { get; set; }
-    }
+    public bool IsOpen { get; set; }
 }

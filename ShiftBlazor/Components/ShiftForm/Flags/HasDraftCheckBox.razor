@@ -1,11 +1,12 @@
 @typeparam T where T : ShiftEntityViewAndUpsertDTO, new()
+@inject IStringLocalizer<Resources.Components.Column> Loc
 
 @if (Value is ShiftSoftware.ShiftEntity.Core.Flags.IHasDraftCheckBox<T> dtoWithDraftFlag)
 {
     if (Value.ID == default && !dtoWithDraftFlag.IsDraft.HasValue)
         dtoWithDraftFlag.IsDraft = true;
 
-    <MudCheckBoxExtended Label="Draft Version"
+    <MudCheckBoxExtended Label="@Loc["DraftVersionCheckboxLabel"]"
                          For="() => dtoWithDraftFlag.IsDraft"
                          @bind-Value="dtoWithDraftFlag.IsDraft" />
 }

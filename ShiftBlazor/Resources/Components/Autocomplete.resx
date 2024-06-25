@@ -117,19 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CloseButton" xml:space="preserve">
-    <value>Close</value>
+  <data name="DropdownNoItemsFound" xml:space="preserve">
+    <value>No Items Found, Add New</value>
   </data>
-  <data name="DefaultTitle" xml:space="preserve">
-    <value>Revisions</value>
-  </data>
-  <data name="SavedByColumnTitle" xml:space="preserve">
-    <value>Saved By</value>
-  </data>
-  <data name="ValidFromColumnTitle" xml:space="preserve">
-    <value>Valid From</value>
-  </data>
-  <data name="ValidToColumnTitle" xml:space="preserve">
-    <value>Valid To</value>
+  <data name="DropdownViewButtonText" xml:space="preserve">
+    <value>View</value>
   </data>
 </root>

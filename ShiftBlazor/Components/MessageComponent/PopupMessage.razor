@@ -4,6 +4,7 @@
 @inject MessageService MsgService
 @namespace ShiftSoftware.ShiftBlazor.Components
 @implements IShortcutComponent
+@inject IStringLocalizer<Resources.Components.PopupMessage> Loc
 
 <MudPaper Elevation="25" Style="height: 100%;">
     <MudFocusTrap>
@@ -14,16 +15,15 @@
             <MudSpacer />
 
             <MudIconButtonExtended KeyboardKey="KeyboardKeys.Escape"
-                                    Size="Size.Medium"
-                                    OnClick="() => Close(true)"
-                                    Icon="@Icons.Material.Filled.Close"
-                                    Edge="Edge.End"
-                                    Color="Color.Inherit"
-                                    Title="Close" />
+                                   Size="Size.Medium"
+                                   OnClick="() => Close(true)"
+                                   Icon="@Icons.Material.Filled.Close"
+                                   Edge="Edge.End"
+                                   Color="Color.Inherit"
+                                   Title="@Loc["ClosePopupButtonLabel"]" />
         </MudAppBar>
 
         <div class="pa-6">
-
 
             @if (MessageBodyTemplate == null)
             {
@@ -38,7 +38,6 @@
                         }
                     </MudList>
                 }
-
             }
             else
             {
@@ -51,7 +50,7 @@
             <MudSpacer />
             @if (ReportButton)
             {
-                <MudButton Variant="Variant.Text" OnClick="CopyToClipboard">Copy</MudButton>
+                <MudButton Variant="Variant.Text" OnClick="CopyToClipboard">@Loc["CopyButtonLabel"]</MudButton>
             }
 
             @if (!string.IsNullOrWhiteSpace(CancelText))
@@ -59,7 +58,7 @@
                 <MudButtonExtended KeyboardKey="KeyboardKeys.Escape" Variant="Variant.Text" OnClick="() => Close(true)" Class="me-2">@CancelText</MudButtonExtended>
             }
 
-            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Variant="Variant.Text" Color="@Color" OnClick="() => Close()" Class="me-2">@ConfirmText</MudButtonExtended>
+            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Variant="Variant.Text" Color="@Color" OnClick="() => Close()" Class="me-2">@(ConfirmText ?? Loc["ConfirmDefaultText"])</MudButtonExtended>
         </MudToolBar>
     </MudFocusTrap>
 </MudPaper>
@@ -78,7 +77,7 @@
     public string Icon { get; set; } = Filled.Warning;
 
     [Parameter]
-    public string ConfirmText { get; set; } = "Ok";
+    public string? ConfirmText { get; set; }
 
     [Parameter]
     public string? CancelText { get; set; }
@@ -131,9 +130,16 @@
 
     private async Task CopyToClipboard()
     {
-        var msg = System.Text.Json.JsonSerializer.Serialize(Message);
-        await Clip.WriteTextAsync(msg);
-        MsgService.Success("Copied to clipboard");
+        try
+        {
+            var msg = System.Text.Json.JsonSerializer.Serialize(Message);
+            await Clip.WriteTextAsync(msg);
+            MsgService.Success(Loc["CopyActionSuccess"]);
+        }
+        catch (Exception)
+        {
+            MsgService.Error(Loc["CopyActionFail"]);
+        }
     }
 
     void IDisposable.Dispose()

@@ -21,11 +21,11 @@
                          <MudItem @key="item.Id" Style="cursor: grab;" data-guid="@item.Id">
                              @if (_ShowThumbnail)
                              {
-                                 <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize"></UploaderItemThumbnail>
+                                 <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize"/>
                              }
                              else
-                             {   
-                                 <UploaderItemChip CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item"></UploaderItemChip>
+                             {
+                                 <UploaderItemChip CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item"/>
                              }
                          </MudItem>
                      }
@@ -53,13 +53,12 @@
                  }
              </MudGrid>
 
-
             <MudToolBar Dense Style="@($"background-color: {Colors.Gray.Lighten2}; margin-top: 16px; gap: 10px;")" Class="rounded">
-                 <MudButtonExtended StartIcon="@Icons.Material.Filled.ViewCarousel" OnClick="ViewGallery" Size="Size.Small">Gallery</MudButtonExtended>
-                 <MudButtonExtended StartIcon="@Icons.Material.Filled.GridView" OnClick="ToggleViewMode" Size="Size.Small">Toggle View</MudButtonExtended>
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.ViewCarousel" OnClick="ViewGallery" Size="Size.Small">@Loc["ViewGalleryButton"]</MudButtonExtended>
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.GridView" OnClick="ToggleViewMode" Size="Size.Small">@Loc["ToggleViewMode"]</MudButtonExtended>
                 @if (Mode >= FormModes.Edit)
                 {
-                    <MudButtonExtended StartIcon="@Icons.Material.Filled.ClearAll" OnClick="ClearAll" Size="Size.Small">Clear</MudButtonExtended>
+                    <MudButtonExtended StartIcon="@Icons.Material.Filled.ClearAll" OnClick="ClearAll" Size="Size.Small">@Loc["ClearAllFiles"]</MudButtonExtended>
                 }
             </MudToolBar>
 

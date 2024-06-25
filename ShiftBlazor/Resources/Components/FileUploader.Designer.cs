@@ -79,6 +79,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Clear.
+        /// </summary>
+        internal static string ClearAllFiles {
+            get {
+                return ResourceManager.GetString("ClearAllFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Download File.
         /// </summary>
         internal static string DownloadFile {
@@ -93,6 +102,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string FileUploadSuccess {
             get {
                 return ResourceManager.GetString("FileUploadSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max file count for this form is {0}.
+        /// </summary>
+        internal static string MaxAllowedFileUploadWarning {
+            get {
+                return ResourceManager.GetString("MaxAllowedFileUploadWarning", resourceCulture);
             }
         }
         
@@ -115,6 +133,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Toggle View.
+        /// </summary>
+        internal static string ToggleViewMode {
+            get {
+                return ResourceManager.GetString("ToggleViewMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File Upload Failed.
         /// </summary>
         internal static string UploadFailedDefaultMessage {
@@ -129,6 +156,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string UploadInProgress {
             get {
                 return ResourceManager.GetString("UploadInProgress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gallery.
+        /// </summary>
+        internal static string ViewGalleryButton {
+            get {
+                return ResourceManager.GetString("ViewGalleryButton", resourceCulture);
             }
         }
     }

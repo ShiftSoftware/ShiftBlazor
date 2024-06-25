@@ -61,6 +61,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Brand.
+        /// </summary>
+        internal static string BrandAutocompleteLabel {
+            get {
+                return ResourceManager.GetString("BrandAutocompleteLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         internal static string CancelChanges {
@@ -147,6 +156,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string DeleteWarningTitle {
             get {
                 return ResourceManager.GetString("DeleteWarningTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Draft Version.
+        /// </summary>
+        internal static string DraftVersionCheckboxLabel {
+            get {
+                return ResourceManager.GetString("DraftVersionCheckboxLabel", resourceCulture);
             }
         }
         

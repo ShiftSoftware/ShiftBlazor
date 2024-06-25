@@ -27,7 +27,7 @@
                        EndIcon="@Icons.Material.Filled.OpenInNew"
                        Color="@Color.Primary"
                        Size="@Size.Small">
-                View
+                @Loc["DropdownViewButtonText"]
             </MudButton>
         </div>;
     }
@@ -42,7 +42,7 @@
         }
         else
         {
-            <MudButton OnClick="() => { _ = AddEditItem(); base.Clear();}">No Items Found, Add New</MudButton>
+            <MudButton OnClick="() => { _ = AddEditItem(); base.Clear();}">@Loc["DropdownNoItemsFound"]</MudButton>
         }
     </MudText>;
 }

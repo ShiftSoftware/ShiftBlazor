@@ -9,14 +9,14 @@
 
         <ChildContent>
 
-            <PropertyColumn Property="x => x.ValidFrom" />
-            <PropertyColumn Property="x => x.ValidTo" />
+            <PropertyColumn Property="x => x.ValidFrom" Title="@Loc["ValidFromColumnTitle"]" />
+            <PropertyColumn Property="x => x.ValidTo" Title="@Loc["ValidToColumnTitle"]" />
 
             <ForeignColumn TEntity="UserDetails"
                            T="RevisionDTO"
                            Property="x => x.SavedByUserID"
                            ForeignTextField="@nameof(UserDetails.Name)"
-                           Title="Saved By"
+                           Title="@Loc["SavedByColumnTitle"]"
                            BaseUrl="@UserListBaseUrl"
                            EntitySet="@UserListEntitySet"
                            TProperty="string">

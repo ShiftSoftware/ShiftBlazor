@@ -1,8 +1,9 @@
 @typeparam T where T : ShiftEntityViewAndUpsertDTO, new()
+@inject IStringLocalizer<Resources.Components.ShiftEntityForm> Loc
 
 @if (Value is ShiftSoftware.ShiftEntity.Core.Flags.IHasBrandSelection<T> dtoWithBrand)
 {
-    <ShiftAutocomplete Label="Brand"
+    <ShiftAutocomplete Label="@Loc["BrandAutocompleteLabel"]"
                        @bind-Value="dtoWithBrand.Brand"
                        TEntitySet="ShiftSoftware.ShiftIdentity.Core.DTOs.Brand.BrandListDTO"
                        EntitySet="IdentityBrand"

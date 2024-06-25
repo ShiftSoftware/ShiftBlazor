@@ -22,14 +22,14 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class RevisionViewer {
+    internal class Autocomplete {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal RevisionViewer() {
+        internal Autocomplete() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ShiftSoftware.ShiftBlazor.Resources.Components.RevisionViewer", typeof(RevisionViewer).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ShiftSoftware.ShiftBlazor.Resources.Components.Autocomplete", typeof(Autocomplete).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,47 +61,20 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Close.
+        ///   Looks up a localized string similar to No Items Found, Add New.
         /// </summary>
-        internal static string CloseButton {
+        internal static string DropdownNoItemsFound {
             get {
-                return ResourceManager.GetString("CloseButton", resourceCulture);
+                return ResourceManager.GetString("DropdownNoItemsFound", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Revisions.
+        ///   Looks up a localized string similar to View.
         /// </summary>
-        internal static string DefaultTitle {
+        internal static string DropdownViewButtonText {
             get {
-                return ResourceManager.GetString("DefaultTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Saved By.
-        /// </summary>
-        internal static string SavedByColumnTitle {
-            get {
-                return ResourceManager.GetString("SavedByColumnTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Valid From.
-        /// </summary>
-        internal static string ValidFromColumnTitle {
-            get {
-                return ResourceManager.GetString("ValidFromColumnTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Valid To.
-        /// </summary>
-        internal static string ValidToColumnTitle {
-            get {
-                return ResourceManager.GetString("ValidToColumnTitle", resourceCulture);
+                return ResourceManager.GetString("DropdownViewButtonText", resourceCulture);
             }
         }
     }

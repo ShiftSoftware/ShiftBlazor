@@ -123,11 +123,17 @@
   <data name="AddButtonTitleThumbnail" xml:space="preserve">
     <value>Add Button</value>
   </data>
+  <data name="ClearAllFiles" xml:space="preserve">
+    <value>Clear</value>
+  </data>
   <data name="DownloadFile" xml:space="preserve">
     <value>Download File</value>
   </data>
   <data name="FileUploadSuccess" xml:space="preserve">
     <value>File Uploaded Successfully</value>
+  </data>
+  <data name="MaxAllowedFileUploadWarning" xml:space="preserve">
+    <value>Max file count for this form is {0}</value>
   </data>
   <data name="NoFilesSelected" xml:space="preserve">
     <value>No files attached</value>
@@ -135,10 +141,16 @@
   <data name="RemoveFile" xml:space="preserve">
     <value>Remove File</value>
   </data>
+  <data name="ToggleViewMode" xml:space="preserve">
+    <value>Toggle View</value>
+  </data>
   <data name="UploadFailedDefaultMessage" xml:space="preserve">
     <value>File Upload Failed</value>
   </data>
   <data name="UploadInProgress" xml:space="preserve">
     <value>Uploading in progress...</value>
+  </data>
+  <data name="ViewGalleryButton" xml:space="preserve">
+    <value>Gallery</value>
   </data>
 </root>

@@ -57,6 +57,11 @@
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>ActionButton.resx</DependentUpon>
 		</Compile>
+		<Compile Update="Resources\Components\Autocomplete.Designer.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Autocomplete.resx</DependentUpon>
+		</Compile>
 		<Compile Update="Resources\Components\Column.Designer.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
@@ -71,6 +76,11 @@
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>ImageViewer.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Resources\Components\PopupMessage.Designer.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>PopupMessage.resx</DependentUpon>
 		</Compile>
 		<Compile Update="Resources\Components\RevisionViewer.Designer.cs">
 			<DesignTime>True</DesignTime>
@@ -109,6 +119,10 @@
 		  <Generator>ResXFileCodeGenerator</Generator>
 		  <LastGenOutput>ActionButton.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\Autocomplete.resx">
+		  <Generator>ResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Autocomplete.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
 		<EmbeddedResource Update="Resources\Components\Column.resx">
 		  <Generator>ResXFileCodeGenerator</Generator>
 		  <LastGenOutput>Column.Designer.cs</LastGenOutput>
@@ -120,6 +134,10 @@
 		<EmbeddedResource Update="Resources\Components\ImageViewer.resx">
 		  <Generator>ResXFileCodeGenerator</Generator>
 		  <LastGenOutput>ImageViewer.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\PopupMessage.resx">
+		  <Generator>ResXFileCodeGenerator</Generator>
+		  <LastGenOutput>PopupMessage.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 		<EmbeddedResource Update="Resources\Components\RevisionViewer.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
