@@ -25,15 +25,28 @@ public class ActionButton<T> : MudButtonExtended
     [CascadingParameter]
     public ShiftList<T>? ShiftListGeneric { get; set; }
 
+
+    /// <summary>
+    /// When true, display a dialog to confirm the action.
+    /// </summary>
     [Parameter]
     public bool Confirm { get; set; }
 
+    /// <summary>
+    /// The type of the component to be opened on click.
+    /// </summary>
     [Parameter]
     public Type? ComponentType { get; set; }
 
+    /// <summary>
+    /// A replacement for OnClick that has a SelectState object as an argument.
+    /// </summary>
     [Parameter]
     public Func<SelectState<T>, ValueTask<bool>>? OnClickGetItems { get; set; }
 
+    /// <summary>
+    /// The URL endpoint path that the SelectState will be sent to on button click.
+    /// </summary>
     [Parameter]
     public string? Action { get; set; }
 
@@ -43,44 +56,77 @@ public class ActionButton<T> : MudButtonExtended
     [Parameter]
     public string? BaseUrlKey { get; set; }
 
+    /// <summary>
+    /// The confirmation dialog title.
+    /// </summary>
     [Parameter]
     public string? DialogTitle { get; set; }
 
+    /// <summary>
+    /// The confirmation dialog text, uses string template with a Select Items Count parameter,
+    /// will be ignored if DialogBodyTemplate has value.
+    /// </summary>
     [Parameter]
     public string? DialogTextTemplate { get; set; }
 
+    /// <summary>
+    /// The confirmation dialog icon.
+    /// </summary>
     [Parameter]
     public string? DialogIcon { get; set; } = Icons.Material.Filled.Warning;
 
+    /// <summary>
+    /// The confirmation dialog color.
+    /// </summary>
     [Parameter]
     public Color? DialogColor { get; set; } = Color.Error;
 
+    /// <summary>
+    /// The confirmation dialog Confirm button text.
+    /// </summary>
     [Parameter]
     public string? DialogConfirmText { get; set; }
 
+    /// <summary>
+    /// The confirmation dialog Cancel button text.
+    /// </summary>
     [Parameter]
     public string? DialogCancelText { get; set; }
 
+    /// <summary>
+    /// The confirmation dialog size.
+    /// </summary>
     [Parameter]
     public MaxWidth DialogWidth { get; set; } = MaxWidth.ExtraSmall;
 
+    /// <summary>
+    /// The confirmation dialog body template, this will replace the DialogTextTemplate.
+    /// </summary>
     [Parameter]
     public RenderFragment<SelectState<T>>? DialogBodyTemplate { get; set; }
+
 
     internal Guid IdempotencyToken = Guid.NewGuid();
     internal bool HasOnClickDelegate;
 
     public override Task SetParametersAsync(ParameterView parameters)
     {
+        // Check if OnClick has a method provided by the user
+        // before we inject our own method in OnParametersSet.
         parameters.TryGetValue(nameof(OnClick), out EventCallback<MouseEventArgs> onClick);
         HasOnClickDelegate = onClick.HasDelegate;
 
         return base.SetParametersAsync(parameters);
     }
+
     protected override void OnParametersSet()
     {
+        // Since this component is intended to be used with DataGrid,
+        // disable the button when there are no items selected in the DataGrid.
         Disabled = ShiftListGeneric?.SelectState.Count == 0;
 
+        // Inject our own custom methods to the MudButton's OnClick method
+        // to override the default behavior of the action.
         if (HasOnClickDelegate)
         {
             var originalClickMethod = OnClick;
@@ -182,6 +228,8 @@ public class ActionButton<T> : MudButtonExtended
 
             try
             {
+                var reload = false;
+
                 if (Confirm)
                 {
                     var selectCount = ShiftListGeneric?.SelectState.Count ?? 0;
@@ -196,6 +244,7 @@ public class ActionButton<T> : MudButtonExtended
 
                     if (DialogBodyTemplate != null && ShiftListGeneric != null)
                     {
+                        // Use RenderTreeBuilder to change the template type.
                         messageTemplate = (msg) => builder => builder.AddContent(0, DialogBodyTemplate(ShiftListGeneric.SelectState));
                     }
 
@@ -218,14 +267,16 @@ public class ActionButton<T> : MudButtonExtended
 
                     if (!result.Canceled)
                     {
-                        if (await action.Invoke() && ShiftListGeneric?.DataGrid != null)
-                        {
-                            IdempotencyToken = Guid.NewGuid();
-                            await ShiftListGeneric.DataGrid.ReloadServerData();
-                        }
+                        // Only reload if user doesn't cancel the confirmation dialog.
+                        reload = await action.Invoke();
                     }
                 }
-                else if (await action.Invoke() && ShiftListGeneric?.DataGrid != null)
+                else
+                {
+                    reload = await action.Invoke();
+                }
+
+                if (reload && ShiftListGeneric?.DataGrid != null)
                 {
                     IdempotencyToken = Guid.NewGuid();
                     await ShiftListGeneric.DataGrid.ReloadServerData();
