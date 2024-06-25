@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Localization;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Services;
@@ -18,6 +19,7 @@ public class ActionButton<T> : MudButtonExtended
     [Inject] private HttpClient Http { get; set; } = default!;
     [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] private SettingManager SettingManager { get; set; } = default!;
+    [Inject] IStringLocalizer<Resources.Components.ActionButton> Loc { get; set; } = default!;
 
 
     [CascadingParameter]
@@ -183,10 +185,11 @@ public class ActionButton<T> : MudButtonExtended
                 if (Confirm)
                 {
                     var selectCount = ShiftListGeneric?.SelectState.Count ?? 0;
-                    var text = DialogTextTemplate ?? $"Are you sure you want to perform this action on {{0}} item{(selectCount == 1 ? "" : "s")}?";
-                    var title = DialogTitle ?? "Continue?";
-                    var confirmText = DialogConfirmText ?? "Yes";
-                    var cancelText = DialogCancelText ?? "No";
+                    var defaultText = selectCount == 1 ? Loc["DialogDefaultText"] : Loc["DialogDefaultTextPlural", selectCount];
+                    var text = DialogTextTemplate ?? defaultText;
+                    var title = DialogTitle ?? Loc["DialogDefaultTitle"];
+                    var confirmText = DialogConfirmText ?? Loc["DialogDefaultConfirm"];
+                    var cancelText = DialogCancelText ?? Loc["DialogDefaultCancel"];
                     var message = new Message(title, string.Format(text, selectCount));
 
                     RenderFragment<Message>? messageTemplate = null;

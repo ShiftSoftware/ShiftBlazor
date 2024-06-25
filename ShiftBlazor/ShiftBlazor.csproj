@@ -52,6 +52,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Update="Resources\Components\ActionButton.Designer.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>ActionButton.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Resources\Components\Column.Designer.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Column.resx</DependentUpon>
+		</Compile>
 		<Compile Update="Resources\Components\FileUploader.Designer.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
@@ -95,6 +105,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Update="Resources\Components\ActionButton.resx">
+		  <Generator>ResXFileCodeGenerator</Generator>
+		  <LastGenOutput>ActionButton.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Components\Column.resx">
+		  <Generator>ResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Column.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
 		<EmbeddedResource Update="Resources\Components\FileUploader.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
 			<LastGenOutput>FileUploader.Designer.cs</LastGenOutput>

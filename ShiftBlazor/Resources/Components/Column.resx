@@ -117,65 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ActionsColumnHeaderText" xml:space="preserve">
-    <value>Actions</value>
+  <data name="ApplyFilterButton" xml:space="preserve">
+    <value>Filter</value>
   </data>
-  <data name="AddNewItemTitle" xml:space="preserve">
-    <value>Add</value>
+  <data name="BrandColumnTitle" xml:space="preserve">
+    <value>Brand</value>
   </data>
-  <data name="CloseModalButtonTitle" xml:space="preserve">
-    <value>Close</value>
+  <data name="ClearFilterButton" xml:space="preserve">
+    <value>Clear</value>
   </data>
-  <data name="ColumnChooserTitle" xml:space="preserve">
-    <value>Hide or Show Columns</value>
+  <data name="DraftColumnStateDraft" xml:space="preserve">
+    <value>Draft</value>
   </data>
-  <data name="ExportButtonTitle" xml:space="preserve">
-    <value>Export as CSV</value>
-  </data>
-  <data name="FilterDeletedItemsTitle" xml:space="preserve">
-    <value>Filter deleted items</value>
-  </data>
-  <data name="GridItemsLoadingText" xml:space="preserve">
-    <value>Loading...</value>
-  </data>
-  <data name="IdColumnHeaderText" xml:space="preserve">
-    <value>ID</value>
-  </data>
-  <data name="IsDeletedColumnHeaderText" xml:space="preserve">
-    <value>Is Deleted</value>
-  </data>
-  <data name="ItemsPerPageLabel" xml:space="preserve">
-    <value>Rows per page:</value>
-  </data>
-  <data name="ListDefaultTitle" xml:space="preserve">
-    <value>List</value>
-  </data>
-  <data name="NoItemsFound" xml:space="preserve">
-    <value>No Items Found.</value>
-  </data>
-  <data name="ReadAccessDenied" xml:space="preserve">
-    <value>You can't access ({0})</value>
-  </data>
-  <data name="RefreshList" xml:space="preserve">
-    <value>Reload</value>
-  </data>
-  <data name="SelectAllButtonTitle" xml:space="preserve">
-    <value>Select All</value>
-  </data>
-  <data name="SelectedItemsCounterLabel" xml:space="preserve">
-    <value>{0} of {1} selected</value>
-    <comment>0=SelectedCount, 1=TotalCount</comment>
-  </data>
-  <data name="ShowActiveOnlyOption" xml:space="preserve">
-    <value>Show Active Only</value>
-  </data>
-  <data name="ShowBothDeletedAndActiveOption" xml:space="preserve">
-    <value>Show all</value>
-  </data>
-  <data name="ShowDeletedOnlyOption" xml:space="preserve">
-    <value>Show Deleted Only</value>
-  </data>
-  <data name="ViewItemButtonText" xml:space="preserve">
-    <value>View</value>
+  <data name="DraftColumnStateFinal" xml:space="preserve">
+    <value>Final</value>
   </data>
 </root>

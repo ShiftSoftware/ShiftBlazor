@@ -61,15 +61,6 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not create action button.
-        /// </summary>
-        internal static string ActionButtonError {
-            get {
-                return ResourceManager.GetString("ActionButtonError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Actions.
         /// </summary>
         internal static string ActionsColumnHeaderText {
@@ -106,15 +97,6 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not initiate download action.
-        /// </summary>
-        internal static string DownloadFailed {
-            get {
-                return ResourceManager.GetString("DownloadFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Export as CSV.
         /// </summary>
         internal static string ExportButtonTitle {
@@ -133,20 +115,11 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error getting list of items.
+        ///   Looks up a localized string similar to Loading....
         /// </summary>
-        internal static string GetItemListError {
+        internal static string GridItemsLoadingText {
             get {
-                return ResourceManager.GetString("GetItemListError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Page {0}.
-        /// </summary>
-        internal static string GoToPage {
-            get {
-                return ResourceManager.GetString("GoToPage", resourceCulture);
+                return ResourceManager.GetString("GridItemsLoadingText", resourceCulture);
             }
         }
         
@@ -187,38 +160,11 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} of {1} pages ({2} items).
+        ///   Looks up a localized string similar to No Items Found..
         /// </summary>
-        internal static string PageCountAndTotal {
+        internal static string NoItemsFound {
             get {
-                return ResourceManager.GetString("PageCountAndTotal", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Print List.
-        /// </summary>
-        internal static string PrintButtonTitle {
-            get {
-                return ResourceManager.GetString("PrintButtonTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not initiate print action.
-        /// </summary>
-        internal static string PrintFailed {
-            get {
-                return ResourceManager.GetString("PrintFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Opening Print Window, this might take a while.
-        /// </summary>
-        internal static string PrintMessage {
-            get {
-                return ResourceManager.GetString("PrintMessage", resourceCulture);
+                return ResourceManager.GetString("NoItemsFound", resourceCulture);
             }
         }
         
@@ -250,7 +196,7 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Selected Items.
+        ///   Looks up a localized string similar to {0} of {1} selected.
         /// </summary>
         internal static string SelectedItemsCounterLabel {
             get {
@@ -282,15 +228,6 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string ShowDeletedOnlyOption {
             get {
                 return ResourceManager.GetString("ShowDeletedOnlyOption", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Total Items.
-        /// </summary>
-        internal static string TotalItemsLabel {
-            get {
-                return ResourceManager.GetString("TotalItemsLabel", resourceCulture);
             }
         }
         

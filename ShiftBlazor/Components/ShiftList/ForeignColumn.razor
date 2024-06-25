@@ -5,6 +5,7 @@
 @inherits PropertyColumnExtended<T, TProperty>
 @implements IDisposable
 @implements IODataComponent
+@inject IStringLocalizer<Resources.Components.Column> Loc
 
 @{
     base.BuildRenderTree(__builder);
@@ -79,11 +80,16 @@
             <MudOverlay Visible="IsFilterOpen" LockScroll="false" OnClick="@CloseFilter" />
             <MudPopover Open="IsFilterOpen" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Paper Elevation="8" Style="width:400px" Class="pa-4">
                 <MudStack>
-                    <ShiftAutocomplete BaseUrl="@this.BaseUrl" BaseUrlKey="@this.BaseUrlKey" TEntitySet="TEntity" EntitySet="@EntitySet" MultiSelect @bind-SelectedValues="FilterItems" />
+                    <ShiftAutocomplete BaseUrl="@this.BaseUrl"
+                                       BaseUrlKey="@this.BaseUrlKey"
+                                       TEntitySet="TEntity"
+                                       EntitySet="@EntitySet"
+                                       MultiSelect
+                                       @bind-SelectedValues="FilterItems" />
                     <MudStack Row>
                         <MudSpacer />
-                        <MudButton OnClick="ClearFilterAsync">Clear</MudButton>
-                        <MudButton Color="@Color.Primary" OnClick="ApplyFilterAsync">Filter</MudButton>
+                        <MudButton OnClick="ClearFilterAsync">@Loc["ClearFilterButton"]</MudButton>
+                        <MudButton Color="@Color.Primary" OnClick="ApplyFilterAsync">@Loc["ApplyFilterButton"]</MudButton>
                     </MudStack>
                 </MudStack>
             </MudPopover>

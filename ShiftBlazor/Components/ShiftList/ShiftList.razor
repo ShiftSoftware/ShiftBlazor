@@ -135,12 +135,12 @@
                     }
                     else
                     {
-                        <MudText>No Items Found.</MudText>
+                        <MudText>@Loc["NoItemsFound"]</MudText>
                     }
                 </NoRecordsContent>
 
                 <LoadingContent>
-                    <MudText>Loading...</MudText>
+                    <MudText>@Loc["GridItemsLoadingText"]</MudText>
                 </LoadingContent>
 
                 <Columns>
@@ -209,7 +209,7 @@
                 <PagerContent>
                     @if (EnableSelection && SelectState.Count > 0)
                     {
-                        <MudText Style="padding-inline: 20px 2px;" Typo="Typo.body2">@(SelectState.Count) of @SelectState.Total selected</MudText>
+                        <MudText Style="padding-inline: 20px 2px;" Typo="Typo.body2">@Loc["SelectedItemsCounterLabel", SelectState.Count, SelectState.Total]</MudText>
                         <MudIconButton OnClick="@SelectState.Clear" Size="Size.Small" Icon="@Icons.Material.Filled.Close" />
                     }
 
