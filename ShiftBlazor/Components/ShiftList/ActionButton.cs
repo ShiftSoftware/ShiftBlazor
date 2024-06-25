@@ -148,6 +148,8 @@ public class ActionButton<T> : MudButtonExtended
         {
             OnClick = CreateEvent(SendRequest);
         }
+
+        base.OnParametersSet();
     }
 
     private async ValueTask<bool> SendRequest()

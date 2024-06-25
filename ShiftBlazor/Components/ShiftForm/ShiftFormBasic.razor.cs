@@ -289,7 +289,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal async Task<bool> ConfirmClose(string? messageBody = null)
         {
             var childContextsModified = ChildContexts.Any(x => x.Value.IsModified());
-            var mainContextModified = EditContext.IsModified();
+            var mainContextModified = EditContext?.IsModified() == true;
 
             if (mainContextModified || childContextsModified)
             {

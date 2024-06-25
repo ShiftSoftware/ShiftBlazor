@@ -83,56 +83,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string PreviousFilters = string.Empty;
         public Guid Id { get; private set; } = Guid.NewGuid();
 
-        protected override void OnInitialized()
-        {
-            if (string.IsNullOrWhiteSpace(EntitySet))
-                throw new ArgumentNullException(nameof(EntitySet));
-
-            var shiftEntityKeyAndNameAttribute = Misc.GetAttribute<TEntitySet, ShiftEntityKeyAndNameAttribute>();
-            _DataValueField = DataValueField ?? shiftEntityKeyAndNameAttribute?.Value ?? "";
-            _DataTextField = DataTextField ?? shiftEntityKeyAndNameAttribute?.Text ?? "";
-
-            if (string.IsNullOrWhiteSpace(_DataValueField))
-                throw new ArgumentNullException(nameof(DataValueField));
-
-            if (string.IsNullOrWhiteSpace(_DataTextField))
-                throw new ArgumentNullException(nameof(DataTextField));
-
-            ToStringFunc ??= (e) => e?.Text ?? "";
-            SearchFunc = Search;
-
-            _ = UpdateInitialValue();
-
-            if (MultiSelect)
-            {
-                if (_ValueChanged != null)
-                {
-                    throw new Exception($"{nameof(ValueChanged)} parameter cannot have a value when {nameof(MultiSelect)} is true");
-                }
-
-                OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
-                ValueChanged = new EventCallback<ShiftEntitySelectDTO>(this, HandleValueChanged);
-            }
-
-            base.OnInitialized();
-        }
-
-        protected override void OnParametersSet()
-        {
-            if (Filter != null)
-            {
-                var filter = new ODataFilterGenerator(true, Id);
-                Filter.Invoke(filter);
-                Filters.Add(filter);
-            }
-
-            if (Filters.ToString() != PreviousFilters)
-            {
-                PreviousFilters = Filters.ToString();
-                ResetValueAsync();
-            }
-        }
-
         public override Task SetParametersAsync(ParameterView parameters)
         {
             parameters.TryGetValue(nameof(Placeholder), out _Placeholder);
@@ -153,6 +103,59 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             return base.SetParametersAsync(parameters);
+        }
+
+        protected override void OnInitialized()
+        {
+            if (string.IsNullOrWhiteSpace(EntitySet))
+                throw new ArgumentNullException(nameof(EntitySet));
+
+            var shiftEntityKeyAndNameAttribute = Misc.GetAttribute<TEntitySet, ShiftEntityKeyAndNameAttribute>();
+            _DataValueField = DataValueField ?? shiftEntityKeyAndNameAttribute?.Value ?? "";
+            _DataTextField = DataTextField ?? shiftEntityKeyAndNameAttribute?.Text ?? "";
+
+            if (string.IsNullOrWhiteSpace(_DataValueField))
+                throw new ArgumentNullException(nameof(DataValueField));
+
+            if (string.IsNullOrWhiteSpace(_DataTextField))
+                throw new ArgumentNullException(nameof(DataTextField));
+
+            ToStringFunc ??= (e) => e?.Text ?? "";
+            SearchFunc = Search;
+
+            _ = UpdateInitialValue();
+
+            base.OnInitialized();
+        }
+
+        protected override void OnParametersSet()
+        {
+            if (MultiSelect)
+            {
+                OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
+                ValueChanged = new EventCallback<ShiftEntitySelectDTO>(this, async delegate (ShiftEntitySelectDTO value)
+                {
+                    await HandleValueChanged();
+                    if (_ValueChanged?.HasDelegate == true)
+                    {
+                        await _ValueChanged.Value.InvokeAsync(value);
+                    }
+                });
+            }
+
+
+            if (Filter != null)
+            {
+                var filter = new ODataFilterGenerator(true, Id);
+                Filter.Invoke(filter);
+                Filters.Add(filter);
+            }
+
+            if (Filters.ToString() != PreviousFilters)
+            {
+                PreviousFilters = Filters.ToString();
+                ResetValueAsync();
+            }
         }
 
         public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null)
