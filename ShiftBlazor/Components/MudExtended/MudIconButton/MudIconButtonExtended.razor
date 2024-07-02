@@ -2,15 +2,18 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @implements IDisposable
 
-<MudBadge Content="@IShortcutComponent.CleanKeyName(KeyboardKey.ToString()!)"
-          Origin="Origin.CenterCenter"
-          BadgeClass="shortcut-key-badge"
-          Visible="KeyboardKey != null && !(ShiftEntityForm is IShortcutComponent comp && ShiftList != null)">
-
+<div class="button-shortcut">
     @{
         base.BuildRenderTree(__builder);
     }
-</MudBadge>
+
+    @if (KeyboardKey != null && !(ShiftEntityForm is IShortcutComponent comp && ShiftList != null))
+    {
+        <div class="shortcut-key">
+            @IShortcutComponent.CleanKeyName(KeyboardKey.ToString()!)
+        </div>
+    }
+</div>
 
 @code {
     [CascadingParameter(Name = "ShiftForm")]
