@@ -11,7 +11,7 @@
         <PageTitle>@Title</PageTitle>
     }
 
-    <MudPaper Elevation="25" Outlined="Outlined">
+    <MudPaper Elevation="25" Outlined="Outlined" id="@($"Grid-{Id}")">
         <CascadingValue Value="this" IsFixed="true">
 
             <header>
@@ -99,12 +99,99 @@
                                 </MudButtonExtended>
                             </MudTooltip>
                         }
-                        
 
                     </MudToolBar>
                 }
 
                 @HeaderTemplate
+
+                <MudOverlay Visible="IsGridEditorOpen" LockScroll="false" OnClick="@CloseColumnChooser" />
+                <MudPopover Open="IsGridEditorOpen" Fixed AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Paper Elevation="8" Class="pa-4">
+                    <MudPaper>
+                        @if (DataGrid != null)
+                        {
+
+                            <MudDropContainer @ref="_columnsPanelDropContainer" T="Column<T>" Items="@DraggableColumns" ItemsSelector="(item, dropzone) => true"
+                                              ItemIsDisabled="@((item) => false)" ItemDropped="ColumnOrderUpdated" Class="d-flex flex-wrap flex-grow-1">
+                                <ChildContent>
+                                    <MudStack Spacing="0">
+                                        <MudStack Row="true" Spacing="2" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px; min-width: 500px;">
+                                            <MudText Typo="Typo.h6">Column</MudText>
+                                            <MudSpacer />
+                                            <MudText Typo="Typo.h6">Visible</MudText>
+                                            <MudText Typo="Typo.h6">Sticky</MudText>
+                                            <MudIconButton Ripple="false" Disabled Icon="@Icons.Material.Filled.DragIndicator" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
+                                        </MudStack>
+                                        @if (EnableSelection)
+                                        {
+                                            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px;">
+                                                @{
+                                                    var context = DataGrid.RenderedColumns.First();
+                                                }
+                                                <MudText Class="flex-grow-1">@context.Title</MudText>
+
+                                                <MudSpacer />
+
+                                                <MudSwitch T="bool"
+                                                           Ripple="false"
+                                                           Color="Color.Primary"
+                                                           Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
+                                                           Value="@context.Hidden"
+                                                           ValueChanged="@context.ToggleAsync"
+                                                           Converter="_oppositeBoolConverter" />
+
+                                                <MudSwitch T="bool"
+                                                           Ripple="false"
+                                                           Color="Color.Primary"
+                                                           LabelPosition="LabelPosition.Start"
+                                                           Value="@context.StickyLeft"
+                                                           ValueChanged="@(x => {
+                                                    context.StickyLeft = x;
+                                                    context.StickyRight = x;
+                                                    SaveColumnState();
+                                                })" />
+
+                                                <MudIconButton Ripple="false" Disabled Icon="@context.DataGrid.DragIndicatorIcon" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
+                                            </MudStack>
+                                        }
+                                        <MudDropZone T="Column<T>" Class="flex-grow-1" AllowReorder="true" />
+
+                                        <MudButton OnClick="ResetColumnSettings">Reset</MudButton>
+                                    </MudStack>
+                                </ChildContent>
+                                <ItemRenderer>
+                                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px;">
+
+                                        <MudText Class="flex-grow-1">@context.Title</MudText>
+
+                                        <MudSpacer />
+
+                                        <MudSwitch T="bool"
+                                                   Ripple="false"
+                                                   Color="Color.Primary"
+                                                   Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
+                                                   Value="@context.Hidden"
+                                                   ValueChanged="@context.ToggleAsync"
+                                                   Converter="_oppositeBoolConverter" />
+
+                                        <MudSwitch T="bool"
+                                                   Ripple="false"
+                                                   Color="Color.Primary"
+                                                   LabelPosition="LabelPosition.Start"
+                                                   Value="@context.StickyLeft"
+                                                   ValueChanged="@(x => {
+                                                    context.StickyLeft = x;
+                                                    context.StickyRight = x;
+                                                    SaveColumnState();
+                                                })" />
+
+                                        <MudIconButton Ripple="false" Icon="@context.DataGrid.DragIndicatorIcon" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
+                                    </MudStack>
+                                </ItemRenderer>
+                            </MudDropContainer>
+                        }
+                    </MudPaper>
+                </MudPopover>
             </header>
 
             <MudDataGrid
@@ -149,7 +236,7 @@
                     {
                         // Using SelectColumn doesn't work as expected with ServerData
                         <TemplateColumn T="T" Tag="@("select-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%"
-                                        Filterable="false" IsEditable="false">
+                                        Filterable="false" IsEditable="false" Title="Select">
                             <HeaderTemplate>
                                 <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
                                     <MudCheckBox T="bool" Size="@IconSize" Value="@SelectState.All" ValueChanged="SelectAll" />
@@ -222,4 +309,13 @@
             </MudDataGrid>
         </CascadingValue>
     </MudPaper>
+}
+
+@code {
+    private MudDropContainer<Column<T>> _columnsPanelDropContainer { get; set; }
+
+    internal void DropContainerHasChanged()
+    {
+        _columnsPanelDropContainer?.Refresh();
+    }
 }

@@ -33,6 +33,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] MessageService MessageService { get; set; } = default!;
+        [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
         [CascadingParameter]
         protected MudDialogInstance? MudDialog { get; set; }
@@ -326,6 +327,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string PreviousFilters = string.Empty;
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
+        private bool HasStickyColumn = false;
+        private bool IsGridEditorOpen = false;
+        private List<Column<T>> DraggableColumns
+        {
+            get
+            {
+                if (DataGrid == null)
+                {
+                    return [];
+                }
+
+                if (EnableSelection)
+                {
+                    var count = DataGrid.RenderedColumns.Count;
+                    return DataGrid.RenderedColumns.GetRange(1, count - 1);
+                }
+
+                return DataGrid.RenderedColumns;
+            }
+        }
 
         internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
 
@@ -396,10 +417,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (firstRender)
             {
+                var columnStates = SettingManager.GetColumnState(GetListIdentifier());
+
                 if (!DisableColumnChooser)
                 {
-                    HideDisabledColumns();
+                    HideDisabledColumns(columnStates);
                 }
+
+                MakeColumnsSticky(columnStates);
+                ReorderColumns(columnStates);
+            }
+
+            if (HasStickyColumn)
+            {
+                _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
             }
         }
 
@@ -429,6 +460,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return;
             }
 
+            // Should only check on DisableActionColumn paramater change
             if (DisableActionColumn)
             {
                 var actionColumn = DataGrid.RenderedColumns.LastOrDefault(x => x.Title == Loc["ActionsColumnHeaderText"]);
@@ -678,43 +710,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        private void HideDisabledColumns()
-        {
-            var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
-            if (columns == null || !columns.Any())
-            {
-                return;
-            }
-
-            try
-            {
-                var columnStates = SettingManager.GetHiddenColumns(GetListIdentifier()).ToList();
-
-                foreach (var item in columnStates)
-                {
-                    var column = columns.FirstOrDefault(x => x.Title == item.Title);
-                    if (column != null)
-                    {
-                        column.Hidden = !item.Visible;
-                        _ = item.Visible == true
-                            ? column?.ShowAsync()
-                            : column?.HideAsync();
-                    }
-                }
-
-                foreach (var item in columns)
-                {
-#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
-                    item.HiddenChanged = new EventCallback<bool>(this, delegate (bool value) { ColumnStateChanged(item.Title, value); });
-#pragma warning restore BL0005
-                }
-            }
-            catch (Exception e)
-            {
-                MessageService.Error("Could not get or set column states", e.Message, e.ToString());
-            }
-        }
-
         /// <summary>
         /// 
         /// </summary>
@@ -778,20 +773,119 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        private void OpenColumnChooser()
-        {
-            DataGrid?.ShowColumnsPanel();
-        }
         private string GetListIdentifier()
         {
             return $"{EntitySet}_{typeof(T).Name}";
         }
+
+        #region Columns
 
         private void ColumnStateChanged(string name, bool hidden)
         {
             var col = DataGrid?.RenderedColumns.FirstOrDefault(x => (x.Hideable ?? DataGrid?.Hideable) == true && x.Title == name);
             col.Hidden = hidden;
             SaveColumnState();
+        }
+
+        private void HideDisabledColumns(List<ColumnState> columnStates)
+        {
+            if (columnStates.Count == 0)
+            {
+                return;
+            }
+
+            var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
+            if (columns == null || !columns.Any())
+            {
+                return;
+            }
+
+#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
+            try
+            {
+                foreach (var item in columnStates)
+                {
+                    var column = columns.FirstOrDefault(x => x.Title == item.Title);
+                    if (column != null)
+                    {
+                        column.Hidden = !item.Visible;
+                        _ = item.Visible == true
+                            ? column?.ShowAsync()
+                            : column?.HideAsync();
+                    }
+                }
+
+                foreach (var item in columns)
+                {
+                    item.HiddenChanged = new EventCallback<bool>(this, delegate (bool value) { ColumnStateChanged(item.Title, value); });
+                }
+            }
+            catch (Exception e)
+            {
+                MessageService.Error("Could not get or set column states", e.Message, e.ToString());
+            }
+#pragma warning restore BL0005
+        }
+
+        private void MakeColumnsSticky(List<ColumnState> columnStates)
+        {
+            if (DataGrid == null || columnStates.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var item in columnStates)
+            {
+                if (item.Sticky) HasStickyColumn = true;
+                var column = DataGrid.RenderedColumns.FirstOrDefault(x => x.Title == item.Title);
+                if (column != null)
+                {
+                    column.StickyLeft = column.StickyRight = item.Sticky;
+                }
+            }
+        }
+
+        private void ReorderColumns(List<ColumnState> columnStates)
+        {
+            // This methods needs some rework and testing
+            if (DataGrid == null || columnStates.Count == 0)
+            {
+                return;
+            }
+
+            // reorder the columns
+            var columnOrderByNames = columnStates.Select(x => x.Title).ToList();
+            var reorderedColumns = columnOrderByNames
+                .Select(x => DraggableColumns.FirstOrDefault(y => y.Title == x))
+                .Where(x => x != null)
+                .ToList();
+
+            // add any missing columns in columnState
+            reorderedColumns.AddRange(DraggableColumns.Where(col => !columnStates.Any(state => state.Title == col.Title)));
+
+            // add select column at the beginning after reordering
+            if (EnableSelection)
+            {
+                reorderedColumns.Insert(0, DataGrid.RenderedColumns.First());
+            }
+
+            DataGrid.RenderedColumns.Clear();
+            DataGrid.RenderedColumns.AddRange(reorderedColumns);
+        }
+
+        private Task ColumnOrderUpdated(MudItemDropInfo<Column<T>> dropItem)
+        {
+            if (DataGrid != null)
+            {
+                DataGrid.RenderedColumns.Remove(dropItem.Item);
+                DataGrid.RenderedColumns.Insert(dropItem.IndexInZone, dropItem.Item);
+
+                DropContainerHasChanged();
+
+                SaveColumnState();
+            }
+
+            return Task.CompletedTask;
         }
 
         private void SaveColumnState()
@@ -806,10 +900,34 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 Title = x.Title,
                 Visible = !x.Hidden,
+                Sticky = x.StickyLeft,
             }).ToList();
 
-            SettingManager.SetHiddenColumns(GetListIdentifier(), columnStates);
+            if (columnStates.Any(x => x.Sticky))
+            {
+                _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+            }
+
+            SettingManager.SetColumnState(GetListIdentifier(), columnStates);
         }
+
+        private void OpenColumnChooser()
+        {
+            IsGridEditorOpen = true;
+        }
+
+        private void CloseColumnChooser()
+        {
+            IsGridEditorOpen = false;
+        }
+
+        private void ResetColumnSettings()
+        {
+            SettingManager.SetColumnState(GetListIdentifier(), []);
+            NavigationManager.Refresh(true);
+        }
+
+        #endregion
 
         internal async Task RerenderDataGrid()
         {
@@ -1008,6 +1126,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             await OnSelectStateChanged.InvokeAsync(SelectState);
         }
+
+        private readonly MudBlazor.Converter<bool, bool?> _oppositeBoolConverter = new()
+        {
+            SetFunc = value => !value,
+            GetFunc = value => !value ?? true,
+        };
 
         [GeneratedRegex("[^a-zA-Z]")]
         private static partial Regex ExportTitleRegex();

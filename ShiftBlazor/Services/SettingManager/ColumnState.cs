@@ -10,5 +10,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
     {
         public string Title { get; set; }
         public bool Visible { get; set; }
+        public bool Sticky { get; set; }
     }
 }

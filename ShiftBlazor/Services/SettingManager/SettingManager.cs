@@ -124,19 +124,21 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return Settings.FormOnSaveAction ?? DefaultAppSetting.FormOnSaveAction;
         }
         
-        public void SetHiddenColumns(string id, List<ColumnState> columnNames)
+        public void SetColumnState(string id, List<ColumnState> columnNames)
         {
             if (Settings.ColumnStates == null)
             {
-                Settings.ColumnStates = new();
+                Settings.ColumnStates = [];
             }
+
             Settings.ColumnStates.Remove(id);
             Settings.ColumnStates.Add(id, columnNames);
             SyncLocalStorage.SetItem(Key, Settings);
         }
-        public List<ColumnState> GetHiddenColumns(string id)
+
+        public List<ColumnState> GetColumnState(string id)
         {
-            return Settings.ColumnStates?.GetValueOrDefault(id) ?? new();
+            return Settings.ColumnStates?.GetValueOrDefault(id) ?? [];
         }
 
         public void SwitchLanguage(LanguageInfo lang, bool forceReload = true)

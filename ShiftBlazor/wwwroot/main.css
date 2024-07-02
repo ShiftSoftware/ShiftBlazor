@@ -88,3 +88,8 @@
     display: flex;
     align-items: center;
 }
+
+.mud-table-cell.sticky-left, .mud-table-cell.sticky-right {
+    z-index: 5 !important;
+    background-color: var(--mud-palette-background-gray) !important;
+}

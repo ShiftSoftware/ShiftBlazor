@@ -61,6 +61,41 @@ window.SetAsSortable = function (id) {
     }
 }
 
+window.fixStickyColumn = function (gridId) {
+
+    var grid = document.getElementById(gridId);
+    var headRow = grid.querySelector(".mud-table-container .mud-table-head .mud-table-row");
+    var leftCells = [...headRow.getElementsByClassName("sticky-left")];
+    var rightCells = [...headRow.getElementsByClassName("sticky-right")];
+    var offset = 0;
+    var css = [];
+
+    for (var cell of leftCells) {
+        css.push(`#${gridId} .mud-table-container .mud-table-row .mud-table-cell.sticky-left:nth-child(${cell.cellIndex + 1}) { left: ${offset}px}`);
+        var cellWidth = cell.getBoundingClientRect().width;
+        offset += cellWidth;
+    }
+
+    offset = 0;
+    for (var cell of rightCells.reverse()) {
+        css.push(`#${gridId} .mud-table-container .mud-table-row .mud-table-cell.sticky-right:nth-child(${cell.cellIndex + 1}) { right: ${offset}px}`);
+        var cellWidth = cell.getBoundingClientRect().width;
+        offset += cellWidth;
+    }
+
+    var cssId = "css-" + gridId;
+    document.getElementById(cssId)?.remove();
+    var style = document.createElement("style");
+    style.id = cssId;
+    style.innerHTML = css.join(" ");
+
+    grid.appendChild(style);
+}
+
+function fixAllStickyColumns() {
+    document.querySelectorAll("[id^='Grid-']").forEach(x => fixStickyColumn(x.id));
+}
+
 window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     const arrayBuffer = await contentStreamReference.arrayBuffer();
     const blob = new Blob([arrayBuffer]);
@@ -82,3 +117,4 @@ window.downloadFileFromUrl = function (fileName, url) {
 window.addEventListener("keydown", handleKeydown);
 window.addEventListener("keyup", releaseAltKey);
 window.addEventListener("blur", releaseAltKey);
+window.addEventListener("resize", fixAllStickyColumns);
