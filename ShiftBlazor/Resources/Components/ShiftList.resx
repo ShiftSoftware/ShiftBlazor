@@ -127,7 +127,22 @@
     <value>Close</value>
   </data>
   <data name="ColumnChooserTitle" xml:space="preserve">
-    <value>Hide or Show Columns</value>
+    <value>Edit Columns</value>
+  </data>
+  <data name="ColumnEditorCloseMenuButton" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ColumnEditorColumnHeader" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="ColumnEditorResetSettingsButton" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="ColumnEditorStickyToggleHeader" xml:space="preserve">
+    <value>Sticky</value>
+  </data>
+  <data name="ColumnEditorVisiblityToggleHeader" xml:space="preserve">
+    <value>Visible</value>
   </data>
   <data name="ExportButtonTitle" xml:space="preserve">
     <value>Export as CSV</value>
@@ -161,6 +176,9 @@
   </data>
   <data name="SelectAllButtonTitle" xml:space="preserve">
     <value>Select All</value>
+  </data>
+  <data name="SelectColumnHeaderText" xml:space="preserve">
+    <value>Select</value>
   </data>
   <data name="SelectedItemsCounterLabel" xml:space="preserve">
     <value>{0} of {1} selected</value>

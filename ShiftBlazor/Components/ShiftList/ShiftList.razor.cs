@@ -184,7 +184,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// When true, the Column Chooser will not be rendered.
         /// </summary>
         [Parameter]
+        [Obsolete]
         public bool DisableColumnChooser { get; set; }
+
+        /// <summary>
+        /// Disables the column editor menu.
+        /// </summary>
+        [Parameter]
+        public bool DisableGridEditor { get; set; }
 
         /// <summary>
         /// When true, the 'Add' button will not be rendered.
@@ -327,8 +334,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string PreviousFilters = string.Empty;
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
-        private bool HasStickyColumn = false;
         private bool IsGridEditorOpen = false;
+        private bool IsDeleteColumnHidden = true;
+
         private List<Column<T>> DraggableColumns
         {
             get
@@ -417,21 +425,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             if (firstRender)
             {
-                var columnStates = SettingManager.GetColumnState(GetListIdentifier());
-
-                if (!DisableColumnChooser)
+                if (!DisableGridEditor)
                 {
+                    var columnStates = SettingManager.GetColumnState(GetListIdentifier());
                     HideDisabledColumns(columnStates);
+                    MakeColumnsSticky(columnStates);
+                    ReorderColumns(columnStates);
                 }
-
-                MakeColumnsSticky(columnStates);
-                ReorderColumns(columnStates);
             }
 
-            if (HasStickyColumn)
-            {
-                _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
-            }
+            _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
         }
 
         protected override bool ShouldRender()
@@ -562,7 +565,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     await ExportList();
                     break;
                 case KeyboardKeys.KeyC:
-                    OpenColumnChooser();
+                    OpenGridEditor();
                     break;
             }
         }
@@ -780,7 +783,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         #region Columns
 
-        private void ColumnStateChanged(string name, bool hidden)
+        private void ColumnHiddenStateChanged(string name, bool hidden)
         {
             var col = DataGrid?.RenderedColumns.FirstOrDefault(x => (x.Hideable ?? DataGrid?.Hideable) == true && x.Title == name);
             col.Hidden = hidden;
@@ -789,11 +792,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private void HideDisabledColumns(List<ColumnState> columnStates)
         {
-            if (columnStates.Count == 0)
-            {
-                return;
-            }
-
             var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
             if (columns == null || !columns.Any())
             {
@@ -806,7 +804,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 foreach (var item in columnStates)
                 {
                     var column = columns.FirstOrDefault(x => x.Title == item.Title);
-                    if (column != null)
+
+                    if (column?.Title == @Loc["IsDeletedColumnHeaderText"])
+                    {
+                        IsDeleteColumnHidden = !item.Visible;
+                    } 
+                    else if (column != null)
                     {
                         column.Hidden = !item.Visible;
                         _ = item.Visible == true
@@ -817,7 +820,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 foreach (var item in columns)
                 {
-                    item.HiddenChanged = new EventCallback<bool>(this, delegate (bool value) { ColumnStateChanged(item.Title, value); });
+                    item.HiddenChanged = new EventCallback<bool>(this, delegate (bool value) { ColumnHiddenStateChanged(item.Title, value); });
                 }
             }
             catch (Exception e)
@@ -836,7 +839,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             foreach (var item in columnStates)
             {
-                if (item.Sticky) HasStickyColumn = true;
                 var column = DataGrid.RenderedColumns.FirstOrDefault(x => x.Title == item.Title);
                 if (column != null)
                 {
@@ -871,6 +873,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             DataGrid.RenderedColumns.Clear();
             DataGrid.RenderedColumns.AddRange(reorderedColumns);
+        }
+
+        private void ToggleSticky(Column<T> column, bool sticky)
+        {
+#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
+            column.StickyLeft = sticky;
+            column.StickyRight = sticky;
+            SaveColumnState();
+#pragma warning restore BL0005
         }
 
         private Task ColumnOrderUpdated(MudItemDropInfo<Column<T>> dropItem)
@@ -911,12 +922,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
             SettingManager.SetColumnState(GetListIdentifier(), columnStates);
         }
 
-        private void OpenColumnChooser()
+        private void OpenGridEditor()
         {
             IsGridEditorOpen = true;
         }
 
-        private void CloseColumnChooser()
+        private void CloseGridEditor()
         {
             IsGridEditorOpen = false;
         }
@@ -977,6 +988,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        #region Export
         private async Task<Stream> GetStream(string url)
         {
             var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url,
@@ -1097,6 +1109,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
             }
         }
+
+        #endregion
 
         internal async Task SelectRow(T item)
         {

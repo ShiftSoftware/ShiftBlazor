@@ -88,11 +88,56 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Hide or Show Columns.
+        ///   Looks up a localized string similar to Edit Columns.
         /// </summary>
         internal static string ColumnChooserTitle {
             get {
                 return ResourceManager.GetString("ColumnChooserTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Close.
+        /// </summary>
+        internal static string ColumnEditorCloseMenuButton {
+            get {
+                return ResourceManager.GetString("ColumnEditorCloseMenuButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column.
+        /// </summary>
+        internal static string ColumnEditorColumnHeader {
+            get {
+                return ResourceManager.GetString("ColumnEditorColumnHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reset.
+        /// </summary>
+        internal static string ColumnEditorResetSettingsButton {
+            get {
+                return ResourceManager.GetString("ColumnEditorResetSettingsButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sticky.
+        /// </summary>
+        internal static string ColumnEditorStickyToggleHeader {
+            get {
+                return ResourceManager.GetString("ColumnEditorStickyToggleHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Visible.
+        /// </summary>
+        internal static string ColumnEditorVisiblityToggleHeader {
+            get {
+                return ResourceManager.GetString("ColumnEditorVisiblityToggleHeader", resourceCulture);
             }
         }
         
@@ -192,6 +237,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
         internal static string SelectAllButtonTitle {
             get {
                 return ResourceManager.GetString("SelectAllButtonTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        internal static string SelectColumnHeaderText {
+            get {
+                return ResourceManager.GetString("SelectColumnHeaderText", resourceCulture);
             }
         }
         
