@@ -117,6 +117,8 @@ public class ActionButton<T> : MudButtonExtended
     [Parameter]
     public string? TaskFailMessage { get; set; }
 
+    [Parameter]
+    public EventCallback<ShiftEvent<ShiftEntityResponse<List<T>>>> OnResponse { get; set; }
 
     internal Guid IdempotencyToken = Guid.NewGuid();
     internal bool HasOnClickDelegate;
@@ -174,20 +176,26 @@ public class ActionButton<T> : MudButtonExtended
         base.OnParametersSet();
     }
 
-    private async ValueTask<bool> SendRequest()
+    private async ValueTask<bool?> SendRequest()
     {
         if (!string.IsNullOrWhiteSpace(Action))
         {
             string? baseUrl = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
             baseUrl = baseUrl?.AddUrlPath(Action) ?? SettingManager.Configuration.ApiPath.AddUrlPath(Action);
 
-            var request = Http.CreateIdempotencyRequest(ShiftListGeneric?.SelectState ?? new(), baseUrl, IdempotencyToken);
-            var response = await Http.SendAsync(request);
+            using var request = Http.CreateIdempotencyRequest(ShiftListGeneric?.SelectState ?? new(), baseUrl, IdempotencyToken);
+            using var response = await Http.SendAsync(request);
 
-            var result = await response.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            var result = await response.Content.ReadFromJsonAsync<ShiftEntityResponse<List<T>>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
             {
                 Converters = { new LocalDateTimeOffsetJsonConverter() }
             });
+
+            if (OnResponse.HasDelegate && result != null)
+            {
+                var preventDefault = await OnResponse.PreventableInvokeAsync(result);
+                if (preventDefault) { return null; }
+            }
 
             if (result?.Message != null)
             {
@@ -211,7 +219,7 @@ public class ActionButton<T> : MudButtonExtended
         return false;
     }
 
-    private async ValueTask<bool> RunFuncOnClick()
+    private async ValueTask<bool?> RunFuncOnClick()
     {
         if (OnClickGetItems != null)
         {
@@ -228,7 +236,7 @@ public class ActionButton<T> : MudButtonExtended
         return false;
     }
 
-    private async ValueTask<bool> OpenComponentOnClick()
+    private async ValueTask<bool?> OpenComponentOnClick()
     {
         var parameters = new DialogParameters
         {
@@ -239,7 +247,7 @@ public class ActionButton<T> : MudButtonExtended
         return !result.Canceled;
     }
 
-    private EventCallback<MouseEventArgs> CreateEvent(Func<ValueTask<bool>> action)
+    private EventCallback<MouseEventArgs> CreateEvent(Func<ValueTask<bool?>> action)
     {
         var func = async delegate (MouseEventArgs args)
         {
@@ -259,12 +267,12 @@ public class ActionButton<T> : MudButtonExtended
 
             try
             {
-                var success = false;
+                bool? success = false;
                 var userCanceled = false;
+                var selectCount = ShiftListGeneric?.SelectState.Count ?? 0;
 
                 if (Confirm)
                 {
-                    var selectCount = ShiftListGeneric?.SelectState.Count ?? 0;
                     var defaultText = selectCount == 1 ? Loc["DialogDefaultText"] : Loc["DialogDefaultTextPlural", selectCount];
                     var text = DialogTextTemplate ?? defaultText;
                     var title = DialogTitle ?? Loc["DialogDefaultTitle"];
@@ -309,19 +317,22 @@ public class ActionButton<T> : MudButtonExtended
                     success = await action.Invoke();
                 }
 
-                if (success && TaskSuccessMessage != null && !userCanceled)
+                if (success.HasValue)
                 {
-                    MessageService.Success(TaskSuccessMessage);
-                }
-                else if (!success && TaskFailMessage != null && !userCanceled)
-                {
-                    MessageService.Error(TaskFailMessage);
-                }
+                    if (success.Value && TaskSuccessMessage != null && !userCanceled)
+                    {
+                        MessageService.Success(string.Format(TaskSuccessMessage, selectCount));
+                    }
+                    else if (!success.Value && TaskFailMessage != null && !userCanceled)
+                    {
+                        MessageService.Error(string.Format(TaskFailMessage, selectCount));
+                    }
 
-                if (success && ShiftListGeneric?.DataGrid != null)
-                {
-                    IdempotencyToken = Guid.NewGuid();
-                    await ShiftListGeneric.DataGrid.ReloadServerData();
+                    if (success.Value && ShiftListGeneric?.DataGrid != null)
+                    {
+                        IdempotencyToken = Guid.NewGuid();
+                        await ShiftListGeneric.DataGrid.ReloadServerData();
+                    }
                 }
 
             }
