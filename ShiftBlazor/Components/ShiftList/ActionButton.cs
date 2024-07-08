@@ -105,6 +105,18 @@ public class ActionButton<T> : MudButtonExtended
     [Parameter]
     public RenderFragment<SelectState<T>>? DialogBodyTemplate { get; set; }
 
+    /// <summary>
+    /// Will display message as a snackbar when task is finished successfully.
+    /// </summary>
+    [Parameter]
+    public string? TaskSuccessMessage { get; set; }
+
+    /// <summary>
+    /// Will display message as a snackbar when task has failed.
+    /// </summary>
+    [Parameter]
+    public string? TaskFailMessage { get; set; }
+
 
     internal Guid IdempotencyToken = Guid.NewGuid();
     internal bool HasOnClickDelegate;
@@ -130,10 +142,20 @@ public class ActionButton<T> : MudButtonExtended
         if (HasOnClickDelegate)
         {
             var originalClickMethod = OnClick;
-            OnClick = CreateEvent(() =>
+            // delegate needs to be async to catch exception.
+            OnClick = CreateEvent(async () =>
             {
-                originalClickMethod.InvokeAsync(null);
-                return new ValueTask<bool>(true);
+                var success = true;
+                try
+                {
+                    await originalClickMethod.InvokeAsync(null);
+                }
+                catch (Exception)
+                {
+                    success = false;
+                }
+
+                return success;
             });
         }
         else if (ComponentType != null)
@@ -193,7 +215,14 @@ public class ActionButton<T> : MudButtonExtended
     {
         if (OnClickGetItems != null)
         {
-            return await OnClickGetItems.Invoke(ShiftListGeneric?.SelectState ?? new());
+            try
+            {
+                return await OnClickGetItems.Invoke(ShiftListGeneric?.SelectState ?? new());
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         return false;
@@ -230,7 +259,8 @@ public class ActionButton<T> : MudButtonExtended
 
             try
             {
-                var reload = false;
+                var success = false;
+                var userCanceled = false;
 
                 if (Confirm)
                 {
@@ -267,18 +297,28 @@ public class ActionButton<T> : MudButtonExtended
                         CloseOnEscapeKey = false,
                     }).Result;
 
+                    userCanceled = result.Canceled;
                     // Only reload if user doesn't cancel the confirmation dialog.
-                    if (!result.Canceled)
+                    if (!userCanceled)
                     {
-                        reload = await action.Invoke();
-                    }
+                        success = await action.Invoke();
                 }
+                    }
                 else
                 {
-                    reload = await action.Invoke();
+                    success = await action.Invoke();
                 }
 
-                if (reload && ShiftListGeneric?.DataGrid != null)
+                if (success && TaskSuccessMessage != null && !userCanceled)
+                {
+                    MessageService.Success(TaskSuccessMessage);
+                }
+                else if (!success && TaskFailMessage != null && !userCanceled)
+                {
+                    MessageService.Error(TaskFailMessage);
+                }
+
+                if (success && ShiftListGeneric?.DataGrid != null)
                 {
                     IdempotencyToken = Guid.NewGuid();
                     await ShiftListGeneric.DataGrid.ReloadServerData();
