@@ -22,7 +22,7 @@
     {
         base.ShiftItemTemplate = (e) =>
         @<div>
-            <MudButton OnClick="@(() => ShiftModal.Open(QuickAddComponentType, e.ID, Enums.ModalOpenMode.Popup))"
+            <MudButton OnClick="@(() => OpenDialogFromDropDown(e.ID))"
                        Variant="@Variant.Outlined"
                        EndIcon="@Icons.Material.Filled.OpenInNew"
                        Color="@Color.Primary"

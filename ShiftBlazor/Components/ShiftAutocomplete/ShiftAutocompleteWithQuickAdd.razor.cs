@@ -85,5 +85,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             await ValueChanged.InvokeAsync(Value);
         }
+
+        private void OpenDialogFromDropDown(string? id)
+        {
+            if (QuickAddComponentType == null || id == null) { return; }
+
+            _ = ShiftModal.Open(QuickAddComponentType, id, Enums.ModalOpenMode.Popup);
+             CloseMenuAsync();
+        }
     }
 }
