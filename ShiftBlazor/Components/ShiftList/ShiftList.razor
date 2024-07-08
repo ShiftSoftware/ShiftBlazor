@@ -234,7 +234,7 @@
                     {
                         // Using SelectColumn doesn't work as expected with ServerData
                         <TemplateColumn T="T" Tag="@("select-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%"
-                                        Filterable="false" IsEditable="false" Title="@Loc["SelectColumnHeaderText"]">
+                                        Filterable="false" IsEditable="false" StickyLeft Title="@Loc["SelectColumnHeaderText"]">
                             <HeaderTemplate>
                                 <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
                                     <MudCheckBox T="bool" Size="@IconSize" Value="@SelectState.All" ValueChanged="SelectAll" />
@@ -252,9 +252,11 @@
 
                     @if (ShowIDColumn)
                     {
-                        <PropertyColumn Property="x => x.ID"
-                                        Title="@Loc["IdColumnHeaderText"]"
-                                        HeaderStyle="width: 0;" />
+                        <PropertyColumnExtended Property="x => x.ID"
+                                                Title="@Loc["IdColumnHeaderText"]"
+                                                IsButtonColumn="ComponentType != null"
+                                                StickyLeft
+                                                HeaderStyle="width: 0;" />
                     }
 
                     @ChildContent

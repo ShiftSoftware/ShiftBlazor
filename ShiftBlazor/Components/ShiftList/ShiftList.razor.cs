@@ -172,7 +172,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// When true, the Action Column will not be rendered.
         /// </summary>
         [Parameter]
-        public bool DisableActionColumn { get; set; }
+        public bool DisableActionColumn { get; set; } = true;
 
         /// <summary>
         /// When true, the Delete Filter will not be rendered.
@@ -240,7 +240,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// Whether to render or not render 'Entity ID' column
         /// </summary>
         [Parameter]
-        public bool ShowIDColumn { get; set; }
+        public bool ShowIDColumn { get; set; } = true;
 
         /// <summary>
         /// The number of items to be displayed per page.
