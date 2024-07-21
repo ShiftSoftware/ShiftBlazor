@@ -1,6 +1,4 @@
 using System.Linq.Expressions;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
@@ -10,10 +8,8 @@ using System.Net.Http.Json;
 using Microsoft.OData.Client;
 using Microsoft.AspNetCore.Components.Web;
 using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftBlazor.Interfaces;
-using System;
 using ShiftSoftware.ShiftBlazor.Extensions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
@@ -70,6 +66,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public RenderFragment? ChildContent { get; set; }
 
+        [Parameter]
+        public bool FreeInput { get; set; }
+
         internal string LastTypedValue = "";
         internal List<TEntitySet> Items = new();
 
@@ -81,6 +80,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string _DataTextField = string.Empty;
         private ODataFilterGenerator Filters = new ODataFilterGenerator(true);
         private string PreviousFilters = string.Empty;
+        private int DropdownItemCount = 0;
         public Guid Id { get; private set; } = Guid.NewGuid();
 
         public override Task SetParametersAsync(ParameterView parameters)
@@ -120,7 +120,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (string.IsNullOrWhiteSpace(_DataTextField))
                 throw new ArgumentNullException(nameof(DataTextField));
 
-            ToStringFunc ??= (e) => e?.Text ?? "";
+            Converter = ValueConverter;
             SearchFunc = Search;
 
             _ = UpdateInitialValue();
@@ -130,19 +130,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnParametersSet()
         {
+            ReturnedItemsCountChanged = new EventCallback<int>(this, delegate (int itemCount)
+            {
+                DropdownItemCount = itemCount;
+            });
+
+            OnBlur = new EventCallback<FocusEventArgs>(this, SelectFreeInputValue);
+            OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
+
             if (MultiSelect)
             {
-                OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
-                ValueChanged = new EventCallback<ShiftEntitySelectDTO>(this, async delegate (ShiftEntitySelectDTO value)
-                {
-                    await HandleValueChanged();
-                    if (_ValueChanged?.HasDelegate == true)
-                    {
-                        await _ValueChanged.Value.InvokeAsync(value);
-                    }
-                });
+                ValueChanged = new EventCallback<ShiftEntitySelectDTO>(this, HandleValueChanged);
             }
-
 
             if (Filter != null)
             {
@@ -165,30 +164,45 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task HandleKeyDown(KeyboardEventArgs args)
         {
-            if (args.Code == "Backspace" && string.IsNullOrWhiteSpace(Text) && SelectedValues.Count > 0)
+            if (args.Code == "Enter" && FreeInput)
+            {
+                // Add FreeInput value only when there are no results in search (dropdown items).
+                if (DropdownItemCount == 0)
+                {
+                    await SelectFreeInputValue();
+                }
+            }
+
+            if (MultiSelect && args.Code == "Backspace" && string.IsNullOrWhiteSpace(Text) && SelectedValues.Count > 0)
             {
                 SelectedValues.Remove(SelectedValues.Last());
                 await SelectedValuesChanged.InvokeAsync(SelectedValues);
             }
         }
 
-        private async Task HandleValueChanged()
+        private async Task HandleValueChanged(ShiftEntitySelectDTO value)
         {
-            if (Value == null)
+            if (value == null || (value.Value == null && string.IsNullOrWhiteSpace(value.Text)))
             {
                 return;
             }
 
-            var findMatch = SelectedValues.FirstOrDefault(x => x.Value == Value.Value);
+            var findMatch = SelectedValues.FirstOrDefault(x =>
+            {
+                if (value.Value == null)
+                    return x.Text == value.Text;
+                return x.Value == value.Value;
+            });
+
             if (findMatch == null)
             {
-                SelectedValues.Add(Value);
+                SelectedValues.Add(value);
             }
             else
             {
                 SelectedValues.Remove(findMatch);
             }
-            Value = new();
+
             await Clear();
             await SelectedValuesChanged.InvokeAsync(SelectedValues);
         }
@@ -240,7 +254,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             LastTypedValue = val;
             var url = GetODataUrl(val);
-            return await GetODataResult(url, token);
+            var DropdownValues = await GetODataResult(url, token);
+
+            if (MultiSelect && SelectedValues != null)
+            {
+                DropdownValues.AddRange(SelectedValues.Where(x => x.Value == null && (val == null || x.Text?.Contains(val) == true)));
+            }
+
+            return DropdownValues;
         }
 
         internal string GetODataUrl(string q = "")
@@ -308,11 +329,32 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        private async Task SelectFreeInputValue()
+        {
+            var value = new ShiftEntitySelectDTO { Text = Text };
+
+            if (MultiSelect)
+            {
+                await HandleValueChanged(value);
+            }
+            else
+            {
+                Value = value;
+                await ValueChanged.InvokeAsync(value);
+            }
+        }
+
         public RenderFragment RenderItem(string id)
         {
             var item = Items.First(x => x.ID == id);
 
             return ShiftItemTemplate(item);
         }
+
+        private readonly Converter<ShiftEntitySelectDTO> ValueConverter = new()
+        {
+            SetFunc = value => value?.Text,
+            GetFunc = text => new ShiftEntitySelectDTO() { Text = text },
+        };
     }
 }
