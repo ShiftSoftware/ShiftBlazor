@@ -22,7 +22,7 @@
                     @e.Text
                 </MudText>
                 <MudSpacer/>
-                @if (ShiftItemTemplate != null)
+                @if (ShiftItemTemplate != null && e.Value != null)
                 {
                     @RenderItem(e.Value);
                 }
@@ -40,7 +40,7 @@
         {
             Class = _Class + " " + MultiSelectClassName;
             Placeholder = MultiSelectText;
-        }
+        }   
     }
 
     base.BuildRenderTree(__builder);

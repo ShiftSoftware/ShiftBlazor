@@ -22,13 +22,15 @@
     {
         base.ShiftItemTemplate = (e) =>
         @<div>
-            <MudButton OnClick="@(() => OpenDialogFromDropDown(e.ID))"
-                       Variant="@Variant.Outlined"
-                       EndIcon="@Icons.Material.Filled.OpenInNew"
-                       Color="@Color.Primary"
-                       Size="@Size.Small">
-                @Loc["DropdownViewButtonText"]
-            </MudButton>
+            @if (e?.ID != null) {
+                <MudButton OnClick="@(() => OpenDialogFromDropDown(e.ID))"
+                           Variant="@Variant.Outlined"
+                           EndIcon="@Icons.Material.Filled.OpenInNew"
+                           Color="@Color.Primary"
+                           Size="@Size.Small">
+                    @Loc["DropdownViewButtonText"]
+                </MudButton>
+            }
         </div>;
     }
 

@@ -46,7 +46,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool Tags { get; set; }
 
         [Parameter]
-        public RenderFragment<TEntitySet> ShiftItemTemplate { get; set; }
+        public RenderFragment<TEntitySet?> ShiftItemTemplate { get; set; }
 
         [Parameter]
         public bool MultiSelect { get; set; }
@@ -135,8 +135,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 DropdownItemCount = itemCount;
             });
 
-            OnBlur = new EventCallback<FocusEventArgs>(this, SelectFreeInputValue);
             OnKeyDown = new EventCallback<KeyboardEventArgs>(this, HandleKeyDown);
+
+            if (FreeInput)
+            {
+                OnBlur = new EventCallback<FocusEventArgs>(this, SelectFreeInputValue);
+            }
 
             if (MultiSelect)
             {
@@ -346,9 +350,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public RenderFragment RenderItem(string id)
         {
-            var item = Items.First(x => x.ID == id);
-
-            return ShiftItemTemplate(item);
+            return ShiftItemTemplate(Items.FirstOrDefault(x => x.ID == id));
         }
 
         private readonly Converter<ShiftEntitySelectDTO> ValueConverter = new()
