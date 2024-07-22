@@ -3,8 +3,11 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @implements IODataComponent
 
+<div class="shift-autocomplete" id="@($"Input-{Id}")">
+
 @{
     base.NoItemsTemplate = @<MudText Align="Align.Center" Class="px-4 py-1">No items found</MudText>;
+    base.ShrinkLabel = SelectedValues?.Count > 0;
 
     if (ShiftItemTemplate != null && !MultiSelect)
     {
@@ -17,7 +20,7 @@
         {
             return
             @<MudStack Row>
-                <MudIcon Icon="@(SelectedValues.Any(x => x.Value == e.Value) ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)" Class="mb-n1 mr-3" />
+                <MudIcon Icon="@(SelectedValues?.Any(x => x.Value == e.Value) == true ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)" Class="mb-n1 mr-3" />
                 <MudText>
                     @e.Text
                 </MudText>
@@ -29,14 +32,14 @@
             </MudStack>;
         };
 
-        var MultiSelectText = string.Join(", ", SelectedValues.Select(x => x.Text));
+        var MultiSelectText = string.Join(", ", SelectedValues?.Select(x => x.Text) ?? new List<string>());
 
         if (!string.IsNullOrWhiteSpace(_Placeholder) && string.IsNullOrWhiteSpace(MultiSelectText))
         {
             Class = _Class;
             Placeholder = _Placeholder;
         }
-        else
+        else if (SelectedValueTemplate == null)
         {
             Class = _Class + " " + MultiSelectClassName;
             Placeholder = MultiSelectText;
@@ -45,6 +48,39 @@
 
     base.BuildRenderTree(__builder);
 }
+
+    @if (MultiSelect && SelectedValueTemplate != null)
+    {
+        <MudStack Row Spacing="0" Class="autocomplete-tags">
+            @if (SelectedValues != null)
+            {
+                if (ShrinkTags && SelectedValues.Count > 1)
+                {
+                    @SelectedValueTemplate(new ShiftEntitySelectDTO { Text = $"+{SelectedValues.Count - 1}" })
+                    @SelectedValueTemplate(SelectedValues.Last())
+                }
+                else
+                {
+                    foreach (var value in SelectedValues)
+                    {
+                        @SelectedValueTemplate(value);
+                    }
+                }
+            }
+        </MudStack>
+
+        <MudStack Row Spacing="0" Class="autocomplete-tags" Style="visibility: hidden !important; opacity: 0 !important; pointer-events: none;">
+            @if (SelectedValues != null)
+            {
+                foreach (var value in SelectedValues)
+                {
+                    @SelectedValueTemplate(value);
+                }
+            }
+        </MudStack>
+    }
+
+</div>
 
 <CascadingValue Value="this">
     @ChildContent

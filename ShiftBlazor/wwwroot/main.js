@@ -96,6 +96,21 @@ function fixAllStickyColumns() {
     document.querySelectorAll("[id^='Grid-']").forEach(x => fixStickyColumn(x.id));
 }
 
+function fixAutocompleteIndent(inputId) {
+    // calculate visible tags size
+    var input = document.getElementById(inputId);
+    var tags = input.getElementsByClassName("autocomplete-tags")[0];
+    var tagsWidth = tags.getBoundingClientRect().width;
+    input.querySelector("input").style.textIndent = tagsWidth + "px";
+
+    // calculate total tags size
+    var inputWidth = input.getBoundingClientRect().width;
+    var hiddenTags = input.getElementsByClassName("autocomplete-tags")[1];
+    var hiddenTagsWidth = hiddenTags.getBoundingClientRect().width;
+
+    return hiddenTagsWidth / inputWidth;
+}
+
 window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     const arrayBuffer = await contentStreamReference.arrayBuffer();
     const blob = new Blob([arrayBuffer]);

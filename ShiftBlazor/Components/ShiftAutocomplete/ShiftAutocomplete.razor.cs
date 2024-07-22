@@ -11,6 +11,7 @@ using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Extensions;
+using Microsoft.JSInterop;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -21,6 +22,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private HttpClient Http { get; set; } = default!;
         [Inject] private MessageService Message { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
+        [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
         [Parameter]
         [EditorRequired]
@@ -69,6 +71,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool FreeInput { get; set; }
 
+        [Parameter]
+        public RenderFragment<ShiftEntitySelectDTO>? SelectedValueTemplate { get; set; }
+
         internal string LastTypedValue = "";
         internal List<TEntitySet> Items = new();
 
@@ -81,6 +86,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private ODataFilterGenerator Filters = new ODataFilterGenerator(true);
         private string PreviousFilters = string.Empty;
         private int DropdownItemCount = 0;
+        private bool ShrinkTags = false;
         public Guid Id { get; private set; } = Guid.NewGuid();
 
         public override Task SetParametersAsync(ParameterView parameters)
@@ -139,7 +145,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (FreeInput)
             {
-                OnBlur = new EventCallback<FocusEventArgs>(this, SelectFreeInputValue);
+                OnBlur = new EventCallback<FocusEventArgs>(this, async delegate ()
+                {
+                    if (Value?.Text != Text)
+                        await SelectFreeInputValue();
+                });
             }
 
             if (MultiSelect)
@@ -158,6 +168,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 PreviousFilters = Filters.ToString();
                 ResetValueAsync();
+            }
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (MultiSelect && SelectedValueTemplate != null)
+            {
+                // Add text indent to the input based on the width of the tags.
+                // Then return the size of the tags compared to the parent element.
+                var size = await JsRuntime.InvokeAsync<float>("fixAutocompleteIndent", $"Input-{Id}");
+
+                var preVal = ShrinkTags;
+                ShrinkTags = size > 0.8;
+
+                // We need to force rerender the component to shrink the tags
+                // Otherwise it will wait until next render
+                if (preVal != ShrinkTags)
+                {
+                    StateHasChanged();
+                }
             }
         }
 
@@ -335,6 +365,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task SelectFreeInputValue()
         {
+            if (string.IsNullOrWhiteSpace(Text))
+            {
+                return;
+            }
+
             var value = new ShiftEntitySelectDTO { Text = Text };
 
             if (MultiSelect)

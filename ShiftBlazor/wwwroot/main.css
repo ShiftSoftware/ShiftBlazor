@@ -107,3 +107,19 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     z-index: 5 !important;
     background-color: var(--mud-palette-background-gray) !important;
 }
+
+.shift-autocomplete {
+    position: relative;
+}
+
+.shift-autocomplete .autocomplete-tags {
+    position: absolute;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.shift-autocomplete .mud-input-adornment-icon-button {
+    z-index: 1;
+}
