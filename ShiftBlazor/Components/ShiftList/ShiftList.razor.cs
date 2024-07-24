@@ -663,10 +663,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     TotalItems = (int)content.Count.Value,
                 };
 
-                if (SelectState.All)
-                {
-                    SelectState.Items = content.Value.ToList();
-                }
                 SelectState.Total = gridData.TotalItems;
 
                 await OnFetch.InvokeAsync(content.Value);
@@ -1132,7 +1128,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             SelectState.All = selectAll;
             if (selectAll)
             {
-                SelectState.Items = DataGrid?.ServerItems.ToList() ?? new();
+                SelectState.Items.Clear();
             }
             else
             {
