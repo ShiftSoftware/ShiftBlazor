@@ -151,7 +151,7 @@
                                                 <MudIconButton Ripple="false" Disabled Icon="@context.DataGrid.DragIndicatorIcon" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
                                             </MudStack>
                                         }
-                                        <MudDropZone T="Column<T>" Class="flex-grow-1" AllowReorder="true" />
+                                        <MudDropZone T="Column<T>" Class="flex-grow-1" AllowReorder="true" Style="@($"overflow: auto;max-height: {GridEditorHeight};")" />
 
                                         <MudButtonGroup>
                                             <MudButton OnClick="ResetColumnSettings" FullWidth>@Loc["ColumnEditorResetSettingsButton"]</MudButton>

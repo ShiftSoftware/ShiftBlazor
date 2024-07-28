@@ -336,6 +336,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsModalOpen = false;
         private bool IsGridEditorOpen = false;
         private bool IsDeleteColumnHidden = true;
+        private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
 
         private List<Column<T>> DraggableColumns
         {
