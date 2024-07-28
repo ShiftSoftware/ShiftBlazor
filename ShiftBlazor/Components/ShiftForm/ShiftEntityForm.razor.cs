@@ -29,7 +29,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftEntityForm> Loc { get; set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
-        
+
         /// <summary>
         ///     The URL endpoint that processes the CRUD operations.
         /// </summary>
@@ -468,7 +468,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             catch (Exception ex)
             {
-                throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase, ex));
+                var resBody = await res.Content.ReadAsStringAsync();
+                throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(resBody, ex));
             }
 
             if (result == null)
@@ -504,7 +505,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return value;
             }
 
-            throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(res.ReasonPhrase));
+            throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(await res.Content.ReadAsStringAsync()));
         }
 
         internal void SetTitle()

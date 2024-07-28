@@ -12,6 +12,7 @@ using ShiftSoftware.TypeAuth.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.TypeAuth.Core.Actions;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -24,6 +25,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IStringLocalizer<Resources.Components.ShiftFormBasic> Loc { get; set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
+        [Inject] IWebAssemblyHostEnvironment Env { get; set; } = default!;
 
         [CascadingParameter]
         internal MudDialogInstance? MudDialog { get; set; }
@@ -418,7 +420,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             catch (Exception e)
             {
-                MsgService.Error($"Could not {Task} the item.", e.Message, e.ToString());
+                if (Env?.IsDevelopment() == true)
+                {
+                    MsgService.Error($"Could not {Task} the item.", e.Message, e.ToString());
+                }
+                else
+                {
+                    MsgService.Error($"Could not {Task} the item.");
+                }
             }
 
             TaskInProgress = FormTasks.None;
