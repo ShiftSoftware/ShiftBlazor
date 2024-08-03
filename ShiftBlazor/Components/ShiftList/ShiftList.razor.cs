@@ -613,6 +613,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     builder = builder.AddQueryOption("$filter", filterQueryString);
                     SelectState.Filter = filterQueryString;
                 }
+                else
+                {
+                    SelectState.Filter = null;
+                }
             }
             catch (Exception e)
             {
