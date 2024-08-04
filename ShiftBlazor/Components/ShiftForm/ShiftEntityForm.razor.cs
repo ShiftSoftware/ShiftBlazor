@@ -16,6 +16,7 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.TypeAuth.Core.Actions;
 using ShiftSoftware.TypeAuth.Core;
+using ShiftSoftware.ShiftEntity.Core;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -120,6 +121,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool _RenderDeleteButton;
         internal bool _RenderEditButton;
         internal bool _RenderHeaderControlsDivider;
+        internal bool IsTemporal = false;
 
         internal Guid IdempotencyToken;
 
@@ -201,7 +203,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             base.OnParametersSet();
 
             _RenderPrintButton = /*OnPrint.HasDelegate &&*/ ShowPrint && HasReadAccess;
-            _RenderRevisionButton = !HideRevisions && HasReadAccess;
+            _RenderRevisionButton = !HideRevisions && HasReadAccess && IsTemporal;
             _RenderEditButton = !HideEdit && HasWriteAccess;
             _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
@@ -344,7 +346,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 res = await Http.SendAsync(request);
 
-                //res = await Http.PostAsJsonAsync(ItemUrl, Value);
                 message = Loc["ItemCreated"];
             }
             else
@@ -436,6 +437,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                     using (var res = await Http.GetAsync(url))
                     {
+                        res.Headers.TryGetValues(Constants.HttpHeaderVersioning, out IEnumerable<string>? versioning);
+                        IsTemporal = versioning?.Contains("Temporal") == true;
                         await SetValue(await ParseEntityResponse(res), asOf == null);
                     }
                 }
