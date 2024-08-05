@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace System.Net.Http;
 
@@ -9,7 +10,7 @@ public static class HttpClientExtension
     {
         method ??= HttpMethod.Post;
 
-        JsonContent content = JsonContent.Create(value);
+        JsonContent content = JsonContent.Create(value, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
         return new HttpRequestMessage(method, url)
         {
             Version = httpClient.DefaultRequestVersion,
