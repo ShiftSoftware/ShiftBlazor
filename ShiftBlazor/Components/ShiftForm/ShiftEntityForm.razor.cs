@@ -187,8 +187,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             SetTitle();
-
-            OriginalValue = JsonSerializer.Serialize(Value);
+            CacheValue();
 
             ReadyToRender = true;
         }
@@ -318,7 +317,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public async Task EditItem()
         {
             if (HasWriteAccess && Key != null && Mode == FormModes.View && TaskInProgress == FormTasks.None)
+            {
+                CacheValue();
                 await SetMode(FormModes.Edit);
+            }
         }
 
         public async Task CancelChanges()
@@ -620,5 +622,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        internal void CacheValue()
+        {
+            OriginalValue = JsonSerializer.Serialize(Value);
+        }
     }
 }
