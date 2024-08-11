@@ -255,7 +255,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     baseUrl = baseUrl?.AddUrlPath(this.ODataPath);
 
                     url = OData.CreateNewQuery<TEntitySet>(EntitySet, baseUrl)
-                            .AddQueryOption("$select", $"{_DataValueField},{_DataTextField}")
+                            //.AddQueryOption("$select", $"{_DataValueField},{_DataTextField}")
                             .WhereQuery(x => 1 == 1 && x.ID == Value.Value)
                             .Take(1)
                             .ToString();
@@ -266,7 +266,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
 
                 var value = await GetODataResult(url!);
-                var text = value.First().Text;
+
+                var firstValue = value.First();
+
+                var text = firstValue.Text;
+                var data = firstValue.Data;
 
                 if (string.IsNullOrWhiteSpace(text))
                 {
@@ -277,6 +281,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     Value = Value.Value,
                     Text = text,
+                    Data = data,
                 };
 
                 Placeholder = "";
@@ -355,6 +360,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     Value = odataResultType.GetProperty(_DataValueField)?.GetValue(x)?.ToString()!,
                     Text = odataResultType.GetProperty(_DataTextField)?.GetValue(x)?.ToString(),
+                    Data = x,
                 }).Where(x => !string.IsNullOrWhiteSpace(x.Value)).ToList();
             }
             catch (Exception)

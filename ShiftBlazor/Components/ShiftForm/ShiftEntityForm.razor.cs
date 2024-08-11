@@ -352,7 +352,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             else
             {
-                res = await Http.PutAsJsonAsync(ItemUrl, Value);
+                res = await Http.PutAsJsonAsync(ItemUrl, Value, new JsonSerializerOptions(JsonSerializerDefaults.Web));
                 message = Loc["ItemSaved"];
             }
 
