@@ -24,6 +24,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
+        [CascadingParameter]
+        public FormModes Mode { get; set; }
+
         [Parameter]
         [EditorRequired]
         public string EntitySet { get; set; }
@@ -84,7 +87,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string _DataValueField = string.Empty;
         internal string _DataTextField = string.Empty;
         private ODataFilterGenerator Filters = new ODataFilterGenerator(true);
-        private string PreviousFilters = string.Empty;
+        private string? PreviousFilters;
         private int DropdownItemCount = 0;
         private bool ShrinkTags = false;
         public Guid Id { get; private set; } = Guid.NewGuid();
@@ -128,7 +131,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             Converter = ValueConverter;
             SearchFunc = Search;
-
             _ = UpdateInitialValue();
 
             base.OnInitialized();
@@ -166,8 +168,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (Filters.ToString() != PreviousFilters)
             {
+                if (PreviousFilters != null && Mode >= FormModes.Edit)
+                    ResetValueAsync();
+
                 PreviousFilters = Filters.ToString();
-                ResetValueAsync();
             }
         }
 
