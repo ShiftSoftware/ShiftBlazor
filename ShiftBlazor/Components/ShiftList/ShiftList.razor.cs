@@ -371,6 +371,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        public bool ExportIsInProgress { get; private set; } = false;
+
         protected override void OnInitialized()
         {
             IsEmbed = ParentDisabled != null || ParentReadOnly != null;
@@ -1084,6 +1086,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task ExportList()
         {
+            this.ExportIsInProgress = true;
+
             var name = Title != null && ExportTitleRegex().IsMatch(Title)
                 ? Title
                 : EntitySet ?? typeof(T).Name;
@@ -1109,6 +1113,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 using var streamRef = new DotNetStreamReference(stream: stream);
                 await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
             }
+
+            this.ExportIsInProgress = false;
         }
 
         #endregion

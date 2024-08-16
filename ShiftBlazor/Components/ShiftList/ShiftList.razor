@@ -57,12 +57,20 @@
                         @if (EnableExport)
                         {
                             <MudTooltip Text="@Loc["ExportButtonTitle"]">
-                                <MudIconButtonExtended Icon="@Icons.Material.Filled.FileDownload"
-                                                       KeyboardKey="KeyboardKeys.KeyE"
-                                                       Size="@IconSize"
-                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                                       aria-label="@Loc["ExportButtonTitle"]"
-                                                       OnClick="@ExportList" />
+                                @if (this.ExportIsInProgress)
+                                {
+                                    <MudProgressCircular Class="pa-2" Color="Color.Warning" Size="IconSize" Indeterminate="true" />
+                                }
+
+                                else
+                                {
+                                    <MudIconButtonExtended Icon="@Icons.Material.Filled.FileDownload"
+                                    KeyboardKey="KeyboardKeys.KeyE"
+                                    Size="@IconSize"
+                                    Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                    aria-label="@Loc["ExportButtonTitle"]"
+                                    OnClick="@ExportList" />
+                                }
                             </MudTooltip>
                         }
 
