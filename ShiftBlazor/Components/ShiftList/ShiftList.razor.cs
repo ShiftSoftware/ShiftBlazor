@@ -958,9 +958,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             var entityType = typeof(T);
 
-            foreach (var column in foreignColumns)
+            var lockObject = new object();
+
+            var tasks = foreignColumns
+            .Where(column => column != null)
+            .Select(async column =>
             {
-                if (column == null) continue;
+                if (column is null)
+                    return;
 
                 var itemIds = IForeignColumn.GetForeignIds(column, items);
                 var foreignData = await IForeignColumn.GetForeignColumnValues(column, itemIds, OData, HttpClient);
@@ -976,7 +981,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var textProp = foreignType.GetProperty(foreignTextField);
 
                 if (idProp == null || textProp == null || foreignData == null || columnProperty == null)
-                    continue;
+                    return;
 
                 foreach (var row in items)
                 {
@@ -985,10 +990,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     var test = foreignData.FirstOrDefault(x => idProp.GetValue(x)?.ToString() == id?.ToString());
                     if (test != null)
                     {
-                        columnProperty.SetValue(row, textProp.GetValue(test));
+                        lock (lockObject)
+                        {
+                            columnProperty.SetValue(row, textProp.GetValue(test));
+                        }
                     }
                 }
-            }
+            });
+
+            await Task.WhenAll(tasks);
         }
 
         #region Export
