@@ -1,17 +1,19 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
+﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
+using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
-using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Extensions;
-using System.Net.Http.Json;
-using System.Net.Http.Headers;
+using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Linq.Expressions;
-using ShiftSoftware.ShiftBlazor.Utils;
-using Microsoft.Extensions.Localization;
-using MudBlazor;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -199,12 +201,70 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         Items.AddRange(files.Select(x => new UploaderItem(x)).ToList());
 
-        foreach (var item in Items.Where(x => x.IsWaitingForUpload()))
+        var filesToUpload = Items.Where(x => x.IsWaitingForUpload()).ToList();
+
+        await GetSASForFilesAsync(filesToUpload);
+
+        foreach (var item in filesToUpload)
         {
-            await UploadFile(item);
+            await UploadFileToAzureAsync(item);
         }
 
         await SetValue(Items);
+    }
+
+    internal async Task GetSASForFilesAsync(IEnumerable<UploaderItem> items)
+    {
+        var url = SettingManager.Configuration.ApiPath.AddUrlPath(Url);
+
+        List<ShiftFileDTO> files = new();
+
+        foreach (var item in items)
+        {
+            if (item.LocalFile == null)
+            {
+                item.Message = new Message { Title = "Could not find file" };
+                return;
+            }
+
+            item.File = null;
+            item.Message = null;
+
+            var file = new ShiftFileDTO();
+
+            file.Blob = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(item.LocalFile.Name);
+
+            file.Name = item.LocalFile.Name;
+
+            if (!string.IsNullOrWhiteSpace(AccountName))
+                file.AccountName = AccountName;
+
+            if (!string.IsNullOrWhiteSpace(ContainerName))
+                file.ContainerName = ContainerName;
+
+            files.Add(file);
+        }
+
+        var postResponse = await HttpClient.PostAsJsonAsync(url, files);
+
+        try
+        {
+            var detail = await postResponse.Content.ReadFromJsonAsync<ShiftEntityResponse<List<ShiftFileDTO>>>();
+
+            if (postResponse.IsSuccessStatusCode && detail?.Entity != null)
+            {
+                detail.Entity.ForEach((file) =>
+                {
+                    var match = items.FirstOrDefault(x => x.LocalFile?.Name == file.Name)!;
+
+                    match.File = file;
+                });
+            }
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
     internal async Task UploadFile(UploaderItem item)
@@ -261,6 +321,36 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         catch
         {
             item.Message = new Message { Title = "Something went wrong" };
+            item.CancellationTokenSource?.Cancel();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    internal async Task UploadFileToAzureAsync(UploaderItem item)
+    {
+        if (item.LocalFile == null)
+        {
+            item.Message = new Message { Title = "Could not find file" };
+            return;
+        }
+
+        item.Message = null;
+
+        try
+        {
+            var maxFileSize = MaxFileSizeInMegaBytes * 1024 * 1024;
+            var stream = item.LocalFile.OpenReadStream(maxFileSize);
+
+            var blobClient = new BlobClient(new Uri(item.File!.Url!));
+
+            await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = item.LocalFile.ContentType });
+
+            item.LocalFile = null;
+        }
+        catch (Exception ex)
+        {
+            item.Message = new Message { Title = $"Something went wrong: {ex.Message}" };
             item.CancellationTokenSource?.Cancel();
         }
 
