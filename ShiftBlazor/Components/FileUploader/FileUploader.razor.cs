@@ -253,19 +253,15 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         try
         {
-            var filesWithSASTokenReponse = await postResponse.Content.ReadFromJsonAsync<ShiftEntityResponse<List<KeyValuePair<string, string>>>>();
+            var filesWithSASTokenReponse = await postResponse.Content.ReadFromJsonAsync<ShiftEntityResponse<List<ShiftFileDTO>>>();
 
             if (postResponse.IsSuccessStatusCode && filesWithSASTokenReponse?.Entity != null)
             {
-                filesWithSASTokenReponse.Entity.ForEach((fileSAS) =>
+                filesWithSASTokenReponse.Entity.ForEach((file) =>
                 {
-                    var match = items.FirstOrDefault(x => x.LocalFile?.Name == fileSAS.Key)!;
+                    var match = items.FirstOrDefault(x => x.LocalFile?.Name == file.Name)!;
 
-                    match.File = new ShiftFileDTO
-                    {
-                        Name = fileSAS.Key,
-                        Url = fileSAS.Value,
-                    };
+                    match.File = file;
                 });
             }
         }
