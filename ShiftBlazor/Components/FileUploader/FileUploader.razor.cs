@@ -205,10 +205,14 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         await GetSASForFilesAsync(filesToUpload);
 
+        var tasks = new List<Task>();
+
         foreach (var item in filesToUpload)
         {
-            await UploadFileToAzureAsync(item);
+            tasks.Add(Task.Run(async () => await UploadFileToAzureAsync(item)));
         }
+
+        await Task.WhenAll(tasks);
 
         await SetValue(Items);
     }
@@ -249,15 +253,19 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         try
         {
-            var detail = await postResponse.Content.ReadFromJsonAsync<ShiftEntityResponse<List<ShiftFileDTO>>>();
+            var filesWithSASTokenReponse = await postResponse.Content.ReadFromJsonAsync<ShiftEntityResponse<List<KeyValuePair<string, string>>>>();
 
-            if (postResponse.IsSuccessStatusCode && detail?.Entity != null)
+            if (postResponse.IsSuccessStatusCode && filesWithSASTokenReponse?.Entity != null)
             {
-                detail.Entity.ForEach((file) =>
+                filesWithSASTokenReponse.Entity.ForEach((fileSAS) =>
                 {
-                    var match = items.FirstOrDefault(x => x.LocalFile?.Name == file.Name)!;
+                    var match = items.FirstOrDefault(x => x.LocalFile?.Name == fileSAS.Key)!;
 
-                    match.File = file;
+                    match.File = new ShiftFileDTO
+                    {
+                        Name = fileSAS.Key,
+                        Url = fileSAS.Value,
+                    };
                 });
             }
         }
