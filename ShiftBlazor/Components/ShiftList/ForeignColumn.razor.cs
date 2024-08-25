@@ -32,7 +32,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? BaseUrlKey { get; set; }
         
         [Parameter]
-        public string ODataPath { get; set; } = "odata";
+        public string ODataPath { get; set; } = "api";
 
         [Parameter]
         public string? DataValueField { get; set; }
