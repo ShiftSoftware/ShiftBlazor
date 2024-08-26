@@ -40,8 +40,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Parameter]
     public int MaxFileSizeInMegaBytes { get; set; } = 32;
 
-    [Parameter, EditorRequired]
-    public string Url { get; set; } = string.Empty;
+    [Parameter]
+    public string? Url { get; set; } = "/AzureStorage/generate-file-upload-sas";
 
     [Parameter]
     public string? Label { get; set; }
@@ -347,6 +347,10 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             var stream = item.LocalFile.OpenReadStream(maxFileSize);
 
             var blobClient = new BlobClient(new Uri(item.File!.Url!));
+
+            item.File.ContentType = item.LocalFile.ContentType;
+
+            item.File.Size = item.LocalFile.Size;
 
             await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = item.LocalFile.ContentType });
 
