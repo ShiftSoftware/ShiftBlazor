@@ -1,21 +1,21 @@
-﻿@using Blazored.LocalStorage;
-@using ShiftSoftware.ShiftIdentity.Blazor;
-@using ShiftSoftware.ShiftIdentity.Core.DTOs;
+﻿@using ShiftSoftware.ShiftIdentity.Blazor;
 @using ShiftSoftware.ShiftIdentity.Core;
-@inject IDialogService Dialog
-@inject IIdentityStore tokenStore
-@inject NavigationManager NavigationManager
 @inject ShiftIdentityBlazorOptions IdentityOptions
 @inject IStringLocalizer<Resources.Components.UserAvatar> Loc
 
 @namespace ShiftSoftware.ShiftBlazor.Components
 
-<MudMenu class="py-1 px-2" AnchorOrigin="Origin.BottomLeft" Style="align-items: center;gap: 8px" ActivationEvent="MouseEvent.MouseOver" ListClass="user-avatar-dropdown">
+<MudMenu Class="py-1 px-2"
+         IsOpenChanged="IsOpenHandler"
+         AnchorOrigin="Origin.BottomLeft"
+         Style="align-items: center;gap: 8px"
+         ActivationEvent="@ActivationEvent"
+         ListClass="user-avatar-dropdown">
+
     <ActivatorContent>
         <MudAvatar Color="Color.Tertiary">
             @if (userdata == null) {
                 <MudIcon Color="Color.Dark" Icon="@Icons.Material.Filled.Person" />
-
             }
             else
             {
@@ -31,39 +31,33 @@
         {
             <MudText>@userdata.FullName</MudText>
         }
+
+        @if (ShowClosedOpenIcon)
+        {
+            <MudIcon Icon="@(IsOpen ? IconOpen : IconClosed )" />
+        } 
     </ActivatorContent>
     <ChildContent>
-        <MudLink Href="@($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm")"
-                 Color="Color.Inherit"
-                 Underline="Underline.None">
-            <MudMenuItem Icon="@Icons.Material.Filled.People">@Loc["IdentityProfileButton"]</MudMenuItem>
-        </MudLink>
-        <MudMenuItem Icon="@Icons.Material.Filled.Settings" OnClick="OpenSettings">@Loc["SettingsButton"]</MudMenuItem>
-        <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">@Loc["LogoutButton"]</MudMenuItem>
+        <MudList T="string">
+
+            <MudLink Href="@($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm")"
+                     Color="Color.Inherit"
+                     Underline="Underline.None">
+                <MudListItem Icon="@Icons.Material.Filled.People">@Loc["IdentityProfileButton"]</MudListItem>
+            </MudLink>
+
+            <MudListItem Icon="@Icons.Material.Filled.Settings" OnClick="OpenSettings">@Loc["SettingsButton"]</MudListItem>
+
+            @if (MenuItemsTemplate != null)
+            {
+                <MudDivider/>
+                @MenuItemsTemplate
+                <MudDivider />
+            }
+
+            <MudListItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">@Loc["LogoutButton"]</MudListItem>
+
+        </MudList>
+
     </ChildContent>
 </MudMenu>
-
-@code {
-    TokenUserDataDTO? userdata;
-
-    protected override async Task OnInitializedAsync()
-    {
-        userdata = (await tokenStore.GetTokenAsync())?.UserData;
-    }
-
-    internal async Task Logout()
-    {
-        await tokenStore.RemoveTokenAsync();
-        NavigationManager.NavigateTo("/", true);
-    }
-
-    internal void OpenSettings()
-    {
-        Dialog.Show<Settings>();
-    }
-
-    internal void GoToIdentity()
-    {
-        NavigationManager.NavigateTo($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm");
-    }
-}
