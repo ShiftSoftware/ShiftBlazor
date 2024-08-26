@@ -37,5 +37,5 @@ public class UploaderItem
     public string GetFileName() => (File?.Name ?? LocalFile?.Name)!;
 
     public bool IsNew() => File != null && LocalFile != null;
-    public bool IsWaitingForUpload() => File == null && LocalFile != null && Message == null;
+    public bool IsWaitingForUpload() => (File == null || File.Url != null) && LocalFile != null && Message == null;
 }

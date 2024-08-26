@@ -6,6 +6,9 @@
                OnRowClick="@RowClickHandler"
                DisableGridEditor="true"
                ShowIDColumn="false"
+               Sort='new Dictionary<string, SortDirection>{
+                    { nameof(RevisionDTO.ValidFrom), SortDirection.Descending }     
+               }'
                DisableHeaderToolbar="@true">
 
         <ChildContent>
