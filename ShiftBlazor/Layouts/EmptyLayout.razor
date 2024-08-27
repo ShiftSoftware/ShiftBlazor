@@ -1,0 +1,30 @@
+﻿@inherits LayoutComponentBase
+@namespace ShiftSoftware.ShiftBlazor.Layouts
+
+<MudRTLProvider RightToLeft="SettingManager.GetLanguage().RTL">
+
+    <AddMudProviders />
+
+    <MudLayout>
+
+        @if (App?.HeaderTemplate != null)
+        {
+            <header>
+                @App.HeaderTemplate
+            </header>
+        }
+
+        <MudMainContent>
+            @Body
+        </MudMainContent>
+
+        @if (App?.FooterTemplate != null)
+        {
+            <footer>
+                @App.FooterTemplate
+            </footer>
+        }
+
+    </MudLayout>
+
+</MudRTLProvider>
