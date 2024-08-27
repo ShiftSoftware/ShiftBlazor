@@ -439,8 +439,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                     using (var res = await Http.GetAsync(url))
                     {
-                        res.Headers.TryGetValues(Constants.HttpHeaderVersioning, out IEnumerable<string>? versioning);
-                        IsTemporal = versioning?.Contains("Temporal") == true;
+                        //res.Headers.TryGetValues(Constants.HttpHeaderVersioning, out IEnumerable<string>? versioning);
+                        IsTemporal = true; //versioning?.Contains("Temporal") == true;
                         await SetValue(await ParseEntityResponse(res), asOf == null);
                     }
                 }
