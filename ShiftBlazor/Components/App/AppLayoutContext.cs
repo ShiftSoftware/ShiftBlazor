@@ -2,11 +2,17 @@
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public class AppLayoutContext
+public class AppContext
 {
     public string? Title { get; set; }
-    public RenderFragment<NavMenuContext>? NavMenuTemplate { get; set; }
-    public RenderFragment? HeaderTemplate { get; set; }
-    public RenderFragment? FooterTemplate { get; set; }
     public bool EnableAutherization { get; set; }
+    public bool IsDrawerOpen = false;
+    public void ToggleDrawer() => IsDrawerOpen = !IsDrawerOpen;
+}
+
+public class AppLayoutContext : AppContext
+{
+    public RenderFragment<AppContext>? NavMenuTemplate { get; set; }
+    public RenderFragment<AppContext>? HeaderTemplate { get; set; }
+    public RenderFragment<AppContext>? FooterTemplate { get; set; }
 }

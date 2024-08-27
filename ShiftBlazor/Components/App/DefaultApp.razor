@@ -65,7 +65,13 @@
     public EventCallback<Microsoft.AspNetCore.Components.Routing.NavigationContext> OnNavigateAsync { get; set; }
 
     [Parameter]
-    public RenderFragment<NavMenuContext>? NavMenuTemplate { get; set; }
+    public RenderFragment<AppContext>? NavMenuTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment<AppContext>? HeaderTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment<AppContext>? FooterTemplate { get; set; }
 
     [Parameter]
     public Type? MainLayout { get; set; }
@@ -80,6 +86,8 @@
         AppContext = new AppLayoutContext {
             Title = AppTitle,
             NavMenuTemplate = NavMenuTemplate,
+            HeaderTemplate = HeaderTemplate,
+            FooterTemplate = FooterTemplate,
             EnableAutherization = AuthenticationStateTask != null,
         };
 

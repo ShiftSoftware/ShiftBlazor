@@ -1,5 +1,7 @@
-﻿@inherits LayoutComponentBase
-@namespace ShiftSoftware.ShiftBlazor.Layouts
+﻿@namespace ShiftSoftware.ShiftBlazor.Layouts
+
+@inherits LayoutBase
+@inject SettingManager SettingManager
 
 <MudRTLProvider RightToLeft="SettingManager.GetLanguage().RTL">
 
@@ -10,7 +12,7 @@
         @if (App?.HeaderTemplate != null)
         {
             <header>
-                @App.HeaderTemplate
+                @App.HeaderTemplate(App)
             </header>
         }
 
@@ -21,7 +23,7 @@
         @if (App?.FooterTemplate != null)
         {
             <footer>
-                @App.FooterTemplate
+                @App.FooterTemplate(App)
             </footer>
         }
 

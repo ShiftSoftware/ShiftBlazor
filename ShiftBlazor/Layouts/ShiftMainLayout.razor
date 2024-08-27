@@ -1,6 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
-@inherits LayoutComponentBase
 @namespace ShiftSoftware.ShiftBlazor.Layouts
+
+@inherits LayoutBase
+@inject SettingManager SettingManager
 
 <MudRTLProvider RightToLeft="SettingManager.GetLanguage().RTL">
 
@@ -11,18 +13,19 @@
         @if (App?.HeaderTemplate != null)
         {
             <header>
-                @App.HeaderTemplate
+                @App.HeaderTemplate(App)
             </header>
         }
-        else
+        else if (App != null)
         {
             <MudAppBar>
-                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-                <MudLink Href="/"><MudText Style="color: #fff;">@(App?.Title ?? "New App")</MudText></MudLink>
+
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@App.ToggleDrawer" />
+                <MudLink Href="/"><MudText Style="color: #fff;">@(App.Title ?? "New App")</MudText></MudLink>
 
                 <MudSpacer />
 
-                @if (App?.EnableAutherization == true)
+                @if (App.EnableAutherization == true)
                 {
                     <AuthorizeView>
                         <UserAvatar></UserAvatar>
@@ -34,8 +37,8 @@
 
         @if (App?.NavMenuTemplate != null)
         {
-            <MudDrawer @bind-Open="@_drawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="1" Variant="@DrawerVariant.Mini" Breakpoint="Breakpoint.Lg" OpenMiniOnHover="true">
-                    @App.NavMenuTemplate(new NavMenuContext { IsOpen = _drawerOpen })
+            <MudDrawer @bind-Open="@App.IsDrawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="1" Variant="@DrawerVariant.Mini" Breakpoint="Breakpoint.Lg" OpenMiniOnHover="true">
+                @App.NavMenuTemplate(App)
             </MudDrawer>
         }
 
@@ -48,7 +51,7 @@
         @if (App?.FooterTemplate != null)
         {
             <footer>
-                @App.FooterTemplate
+                @App.FooterTemplate(App)
             </footer>
         }
 

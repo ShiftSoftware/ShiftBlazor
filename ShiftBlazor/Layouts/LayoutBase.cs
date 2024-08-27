@@ -1,18 +1,17 @@
-﻿using Microsoft.AspNetCore.Components.Routing;
-using Microsoft.AspNetCore.Components;
-using ShiftSoftware.ShiftBlazor.Services;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
-using ShiftSoftware.ShiftBlazor.Interfaces;
-using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Components;
+using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Services;
 
 namespace ShiftSoftware.ShiftBlazor.Layouts;
 
-public partial class EmptyLayout : LayoutComponentBase
+public class LayoutBase : LayoutComponentBase
 {
     [Inject] private ShiftModal ShiftModal { get; set; } = default!;
     [Inject] private NavigationManager NavManager { get; set; } = default!;
-    [Inject] private SettingManager SettingManager { get; set; } = default!;
 
     [CascadingParameter]
     public AppLayoutContext? App { get; set; }
