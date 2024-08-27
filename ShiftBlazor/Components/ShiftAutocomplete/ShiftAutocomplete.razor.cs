@@ -168,6 +168,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (Filters.ToString() != PreviousFilters)
             {
+                // We need to check null here otherwise the value will be reset on initialized
                 if (PreviousFilters != null && Mode >= FormModes.Edit)
                     ResetValueAsync();
 
