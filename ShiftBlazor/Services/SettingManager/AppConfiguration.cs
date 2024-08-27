@@ -11,18 +11,18 @@ public class AppConfiguration
     public string? UserListEndpoint { get; set; }
 
     private string _ApiPath = "/api";
-    private string _ODataPath = "/odata";
+    //private string _ODataPath = "/odata";
     public string ApiPath
     {
         get => BaseAddress.AddUrlPath(_ApiPath);
         set => _ApiPath = value;
     }
 
-    public string ODataPath
-    {
-        get => BaseAddress.AddUrlPath(_ODataPath);
-        set => _ODataPath = value;
-    }
+    //public string ODataPath
+    //{
+    //    get => BaseAddress.AddUrlPath(_ODataPath);
+    //    set => _ODataPath = value;
+    //}
 
     public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
 
