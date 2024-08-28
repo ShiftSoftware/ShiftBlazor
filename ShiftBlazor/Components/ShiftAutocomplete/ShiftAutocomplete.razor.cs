@@ -242,7 +242,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 SelectedValues.Remove(findMatch);
             }
 
-            await Clear();
+            await ClearAsync();
             await SelectedValuesChanged.InvokeAsync(SelectedValues);
         }
 

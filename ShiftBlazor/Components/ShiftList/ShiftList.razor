@@ -120,7 +120,7 @@
                         {
 
                             <MudDropContainer @ref="_columnsPanelDropContainer" T="Column<T>" Items="@DraggableColumns" ItemsSelector="(item, dropzone) => true"
-                                              ItemIsDisabled="@((item) => false)" ItemDropped="ColumnOrderUpdated" Class="d-flex flex-wrap flex-grow-1">
+                                              ItemDisabled="@((item) => false)" ItemDropped="ColumnOrderUpdated" Class="d-flex flex-wrap flex-grow-1">
                                 <ChildContent>
                                     <MudStack Spacing="0">
                                         <MudStack Row="true" Spacing="2" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px; min-width: 500px;">
