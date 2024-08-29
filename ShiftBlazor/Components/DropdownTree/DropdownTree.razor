@@ -1,0 +1,49 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
+
+<div @attributes="UserAttributes"
+     class="@Class"
+     style="@Style"
+     @onpointerenter="@PointerEnterAsync"
+     @onpointerleave="@PointerLeaveAsync">
+
+    <MudButton Color="@Color"
+               Variant="@Variant"
+               StartIcon="@StartIcon"
+               EndIcon="@EndIcon"
+               IconColor="@IconColor"
+               IconSize="@IconSize"
+               IconClass="@IconClass"
+               Disabled="@Disabled"
+               Size="@Size"
+               Ripple="@Ripple"
+               DropShadow="@DropShadow"
+               aria-label="@AriaLabel"
+               OnClick="ToggleMenuAsync">
+        @Label
+    </MudButton>
+    <MudPopover AnchorOrigin="@AnchorOrigin"
+                TransformOrigin="@TransformOrigin"
+                MaxHeight="@MaxHeight"
+                RelativeWidth="@FullWidth"
+                Class="@PopoverClass"
+                DropShadow="@DropShadow"
+                Open="@IsOpen">
+
+        <CascadingValue Value="@this">
+            <MudTreeView SelectionMode="@SelectionMode"
+                         Hover
+                         Color="@Color"
+                         Dense="@Dense"
+                         @onpointerenter="@PointerEnterAsync"
+                         @onpointerleave="@PointerLeaveAsync"
+                         Class="@ListClass"
+                         SelectedValueChanged="SelectedValueChanged"
+                         SelectedValuesChanged="SelectedValuesChanged"
+                         T="string">
+                @CreateTreeList(Value)
+            </MudTreeView>
+        </CascadingValue>
+    </MudPopover>
+
+    <MudOverlay Visible="IsOpen && !_isTemporary" AutoClose OnClosed="CloseMenuAsync" LockScroll="LockScroll" />
+</div>
