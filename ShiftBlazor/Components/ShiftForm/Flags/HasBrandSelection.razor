@@ -1,5 +1,5 @@
 @typeparam T where T : ShiftEntityViewAndUpsertDTO, new()
-@inject IStringLocalizer<Resources.Components.ShiftEntityForm> Loc
+@inject ShiftBlazorLocalizer Loc
 
 @if (Value is ShiftSoftware.ShiftEntity.Core.Flags.IHasBrandSelection<T> dtoWithBrand)
 {

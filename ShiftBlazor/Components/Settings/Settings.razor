@@ -4,7 +4,7 @@
 @inject SettingManager SettingManager
 @inject NavigationManager NavManager
 @inject  IJSRuntime JsRuntime
-@inject IStringLocalizer<Resources.Components.Settings> Loc
+@inject ShiftBlazorLocalizer Loc
 
 @namespace ShiftSoftware.ShiftBlazor.Components
 
@@ -18,7 +18,7 @@
 
 <MudDialog>
     <DialogContent>
-        <h2>@Loc["Settings"]</h2>
+        <h2>@Loc["SettingsHeader"]</h2>
         <br />
 
         <MudStack Spacing="6">
@@ -33,7 +33,7 @@
                         <MudSelect Margin="Margin.Dense" T="LanguageInfo" Value="@Language" ValueChanged="LanguageChangedHandler" ToStringFunc="(lang) => lang.Label">
                             @foreach (var lang in SettingManager.Configuration.Languages)
                             {
-                                <MudSelectItem Value="@lang">@lang.Label</MudSelectItem>
+                                <MudSelectItem Value="@lang">@Loc[lang.Label]</MudSelectItem>
                             }
 
                         </MudSelect>
@@ -99,7 +99,7 @@
                         <MudSelect Margin="Margin.Dense" T="DialogPosition" Value="ModalPosition" ValueChanged="DialogPositionChangedHandler">
                             @foreach (var pos in Enum.GetValues<DialogPosition>().Where(x => x != DialogPosition.Custom))
                             {
-                                <MudSelectItem Value="@pos">@Regex.Replace(pos.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                                <MudSelectItem Value="@pos">@Loc[$"DialogPosition{pos.ToString()}"]</MudSelectItem>
                             }
                         </MudSelect>
                     </MudItem>
@@ -112,7 +112,7 @@
                         <MudSelect Margin="Margin.Dense" T="MaxWidth" Value="ModalWidth" ValueChanged="ModalWidthChangedHandler">
                             @foreach (var width in Enum.GetValues<MaxWidth>())
                             {
-                                <MudSelectItem Value="@width">@Regex.Replace(width.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                                <MudSelectItem Value="@width">@Loc[$"DialogSize{width.ToString()}"]</MudSelectItem>
                             }
                         </MudSelect>
                     </MudItem>
@@ -125,7 +125,7 @@
                         <MudSelect Margin="Margin.Dense" T="FormOnSaveAction" Value="FormCloseAction" ValueChanged="FormCloseActionChangedHandler">
                             @foreach (var action in Enum.GetValues<FormOnSaveAction>())
                             {
-                                <MudSelectItem Value="@action">@Regex.Replace(action.ToString(), "([A-Z])", " $1").TrimStart()</MudSelectItem>
+                                <MudSelectItem Value="@action">@Loc[$"FormAction{action.ToString()}"]</MudSelectItem>
                             }
                         </MudSelect>
                     </MudItem>

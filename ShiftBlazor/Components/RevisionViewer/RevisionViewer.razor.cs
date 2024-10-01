@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Localization;
 using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
@@ -9,7 +9,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
     public partial class RevisionViewer
     {
         [Inject] internal SettingManager SettingManager { get; set; } = default!;
-        [Inject] internal IStringLocalizer<Resources.Components.RevisionViewer> Loc { get; set; } = default!;
+        [Inject] internal ShiftBlazorLocalizer Loc { get; set; } = default!;
 
         [CascadingParameter]
         public MudDialogInstance? MudDialog { get; set; }
