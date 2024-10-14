@@ -5,6 +5,7 @@
 @using ShiftSoftware.ShiftIdentity.Core
 
 @namespace ShiftSoftware.ShiftBlazor.Components
+@inject ShiftBlazorLocalizer Loc
 
 <CascadingValue Value="AppContext" IsFixed="true">
     <Router AppAssembly="@AppAssembly"
@@ -22,8 +23,8 @@
             {
                 <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@(MainLayout ?? typeof(ShiftMainLayout))">
                     <NotAuthorized>
-                        <MudText Align="Align.Center" Typo="Typo.h1">Not Authorized</MudText>
-                        <MudText Align="Align.Center" Typo="Typo.body1">Redirecting...</MudText>
+                        <MudText Align="Align.Center" Typo="Typo.h1">@Loc["DefaultAppNotAuthorized"]</MudText>
+                        <MudText Align="Align.Center" Typo="Typo.body1">@Loc["DefaultAppRedirecting"]</MudText>
 
                         @{
                             _ = RedirectToLogin();
@@ -124,9 +125,9 @@
     }
 
     private RenderFragment NotFoundDefault => @<text>
-        <PageTitle>Not found</PageTitle>
+        <PageTitle>@Loc["DefaultAppNotFoundTitle"]</PageTitle>
         <LayoutView Layout="@(MainLayout ?? typeof(ShiftMainLayout))">
-            <p role="alert">Sorry, there's nothing at this address.</p>
+            <p role="alert">@Loc["DefaultAppNotFoundText"]</p>
         </LayoutView>
     </text>;
 }

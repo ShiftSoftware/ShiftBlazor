@@ -5,6 +5,8 @@ using ShiftSoftware.ShiftBlazor.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using ShiftSoftware.ShiftBlazor.Localization;
+using ShiftSoftwareLocalization.Blazor;
 
 namespace ShiftSoftware.ShiftBlazor.Extensions
 {
@@ -48,6 +50,11 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
             });
 
             services.AddLocalization();
+
+            if(options.LocalizationResource is null)
+                services.AddTransient(x => new ShiftBlazorLocalizer(x, typeof(Resource)));
+            else
+                services.AddTransient(x => new ShiftBlazorLocalizer(x, options.LocalizationResource));
 
             return services;
         }

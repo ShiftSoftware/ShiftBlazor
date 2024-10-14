@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.Localization;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
@@ -19,7 +19,7 @@ public class ActionButton<T> : MudButtonExtended
     [Inject] private HttpClient Http { get; set; } = default!;
     [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] private SettingManager SettingManager { get; set; } = default!;
-    [Inject] IStringLocalizer<Resources.Components.ActionButton> Loc { get; set; } = default!;
+    [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
 
 
     [CascadingParameter]
@@ -338,7 +338,7 @@ public class ActionButton<T> : MudButtonExtended
             }
             catch (Exception e)
             {
-                MessageService.Error($"Could not execute this action.", e.Message, e.ToString());
+                MessageService.Error(Loc["ActionButtonCreateError"], e.Message, e.ToString());
             }
 
             // Restore ChildConent to original state when task is finished

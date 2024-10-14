@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Extensions;
@@ -17,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.TypeAuth.Core.Actions;
 using ShiftSoftware.TypeAuth.Core;
 using ShiftSoftware.ShiftEntity.Core;
+using ShiftSoftware.ShiftBlazor.Localization;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -28,7 +28,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
         [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
-        [Inject] IStringLocalizer<Resources.Components.ShiftEntityForm> Loc { get; set; } = default!;
+        [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
 
         /// <summary>

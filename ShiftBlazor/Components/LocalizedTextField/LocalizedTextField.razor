@@ -7,6 +7,7 @@
 @inject IServiceProvider ServiceProvidor
 @inject SettingManager SettingManager
 @inject MessageService MessageService
+@inject ShiftBlazorLocalizer Loc
 @implements IDisposable
 
 @if (EditContext != null && MultiLangValue != null)
@@ -15,7 +16,7 @@
         @foreach (var prop in MultiLangValue.GetType().GetProperties())
         {
             var langLabel = LanguageInfo[prop.Name].FirstOrDefault()?.Label;
-            var label = Label == null ? langLabel : $"{Label} ({langLabel})";
+            var label = Label == null ? langLabel : $"{Label} ({Loc[langLabel].Value})";
             var value = prop.GetValue(MultiLangValue) as string;
             var field = EditContext.Field(prop.Name);
             var errorMessage = EditContext.GetValidationMessages(field).FirstOrDefault();
@@ -102,7 +103,7 @@
         }
         catch (Exception)
         {
-            MessageService.Error("Could not create language fields");
+            MessageService.Error(Loc["LocalizedTextFieldError"]);
             return;
         }
 

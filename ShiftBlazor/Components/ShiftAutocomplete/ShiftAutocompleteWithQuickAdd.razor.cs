@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using Microsoft.Extensions.Localization;
+using ShiftSoftware.ShiftBlazor.Localization;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -11,7 +11,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         where TEntitySet : ShiftEntityDTOBase
     {
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
-        [Inject] IStringLocalizer<Resources.Components.Autocomplete> Loc { get; set; } = default!;
+        [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
 
         [Parameter, EditorRequired]
         public Type? QuickAddComponentType { get; set; }

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Components;
+using ShiftSoftware.ShiftBlazor.Localization;
+using ShiftSoftware.ShiftEntity.Core.Localization;
 using ShiftSoftware.ShiftEntity.Model;
 
 namespace ShiftSoftware.ShiftBlazor.Services
@@ -10,11 +12,13 @@ namespace ShiftSoftware.ShiftBlazor.Services
     {
         private readonly ISnackbar Snackbar;
         private readonly IDialogService DialogService;
+        private readonly ShiftBlazorLocalizer Loc;
 
-        public MessageService(ISnackbar snackbar, IDialogService dialogService)
+        public MessageService(ISnackbar snackbar, IDialogService dialogService, ShiftBlazorLocalizer loc)
         {
             Snackbar = snackbar;
             DialogService = dialogService;
+            Loc = loc;
         }
 
         /// <summary>
@@ -143,7 +147,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 { "Message", message },
                 { "Color", color },
                 { "Icon", Icon },
-                { "ConfirmText", "Close" },
+                { "ConfirmText", Loc["ModalClose"].ToString() },
                 { "ReportButton", true },
             };
 

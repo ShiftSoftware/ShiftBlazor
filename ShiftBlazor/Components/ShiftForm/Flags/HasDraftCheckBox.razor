@@ -1,5 +1,5 @@
 @typeparam T where T : ShiftEntityViewAndUpsertDTO, new()
-@inject IStringLocalizer<Resources.Components.Column> Loc
+@inject ShiftBlazorLocalizer Loc
 
 @if (Value is ShiftSoftware.ShiftEntity.Core.Flags.IHasDraftCheckBox<T> dtoWithDraftFlag)
 {

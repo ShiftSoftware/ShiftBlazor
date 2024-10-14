@@ -3,6 +3,7 @@
 @using System.Linq.Expressions
 
 @inject SettingManager SettingManager
+@inject ShiftBlazorLocalizer Loc
 
 <MudItem lg="DateLg" md="DateMd" sm="DateSm" xs="DateXs">
     <MudDatePickerExtended DateFormat="@(SettingManager.GetDateFormat())"
@@ -73,6 +74,15 @@
         if (For != null)
         {
             _IsRequired = FormHelper.IsRequired(For);
+        }
+
+        if (string.IsNullOrWhiteSpace(DateLabel)){
+            DateLabel = Loc["DateTimePickerTimeLabel"];
+        }
+
+        if (string.IsNullOrWhiteSpace(TimeLabel))
+        {
+            TimeLabel = Loc["DateTimePickerDateLabel"];
         }
     }
 

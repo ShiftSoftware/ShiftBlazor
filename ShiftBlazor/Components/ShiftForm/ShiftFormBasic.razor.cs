@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.Localization;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Extensions;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.TypeAuth.Core.Actions;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using ShiftSoftware.ShiftBlazor.Localization;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -23,7 +23,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
         [Inject] IDialogService DialogService { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
-        [Inject] IStringLocalizer<Resources.Components.ShiftFormBasic> Loc { get; set; } = default!;
+        [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
         [Inject] IWebAssemblyHostEnvironment Env { get; set; } = default!;
 
@@ -422,11 +422,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 if (Env?.IsDevelopment() == true)
                 {
-                    MsgService.Error($"Could not {Task} the item.", e.Message, e.ToString());
+                    MsgService.Error(Loc["FormTaskError", Loc[$"FormTask{Task.ToString()}"]], e.Message, e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
                 }
                 else
                 {
-                    MsgService.Error($"Could not {Task} the item.");
+                    MsgService.Error(Loc["FormTaskError", Loc[$"FormTask{Task.ToString()}"]], buttonText: Loc["DropdownViewButtonText"]);
                 }
             }
 

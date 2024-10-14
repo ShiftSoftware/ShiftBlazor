@@ -37,6 +37,7 @@
 		</PackageReference>
 		<PackageReference Include="MudBlazor" Version="7.6.0" />
 		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
+		<PackageReference Include="ShiftSoftwareLocalization" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\ShiftFrameworkLocalization\ShiftSoftwareLocalization\ShiftSoftwareLocalization.csproj')" />
 		<PackageReference Include="ShiftSoftware.ShiftIdentity.Blazor" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj')" />
 		<PackageReference Include="ShiftSoftware.TypeAuth.Blazor" Version="$(TypeAuthVersion)" Condition="!Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
 		<PackageReference Include="Syncfusion.Blazor.FileManager" Version="27.1.51" />
@@ -169,7 +170,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj" Condition="Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
-		<ProjectReference Include="..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj" Condition="Exists('..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj')" />
+		<ProjectReference Include="..\..\ShiftFrameworkLocalization\ShiftSoftwareLocalization\ShiftSoftwareLocalization.csproj" Condition="Exists('..\..\ShiftFrameworkLocalization\ShiftSoftwareLocalization\ShiftSoftwareLocalization.csproj')"  /><ProjectReference Include="..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj" Condition="Exists('..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj')" />
 		<ProjectReference Include="..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj" Condition="Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
 	</ItemGroup>
 

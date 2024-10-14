@@ -7,6 +7,6 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
     {
         public Action<MudServicesConfiguration> MudBlazorConfiguration { get; set; }
         public Action<AppConfiguration> ShiftConfiguration { get; set; }
-
+        public Type? LocalizationResource { get; set; }
     }
 }

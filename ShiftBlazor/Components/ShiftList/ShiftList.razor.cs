@@ -2,7 +2,6 @@
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
@@ -10,6 +9,7 @@ using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
@@ -28,7 +28,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
-        [Inject] IStringLocalizer<Resources.Components.ShiftList> Loc { get; set; } = default!;
+        [Inject] ShiftBlazorLocalizer Loc  { get; set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
         [Inject] SettingManager SettingManager { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
@@ -623,7 +623,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             catch (Exception e)
             {
                 ErrorMessage = $"An error has occured";
-                MessageService.Error("Could not parse filter", e.Message, e!.ToString());
+                MessageService.Error(Loc["ShiftListFilterParseError"], e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
 
             var builderQueryable = builder.AsQueryable();
@@ -647,7 +647,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 if (!res!.IsSuccessStatusCode)
                 {
-                    ErrorMessage = $"Could not read server data ({(int)res!.StatusCode})";
+                    ErrorMessage = Loc["DataReadStatusError", (int)res!.StatusCode];
                     ReadyToRender = true;
                     return gridData;
                 }
@@ -659,7 +659,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 if (content == null || content.Count == null)
                 {
-                    ErrorMessage = $"Could not read server data (empty content)";
+                    ErrorMessage = Loc["DataReadEmptyError"];
                     ReadyToRender = true;
                     return gridData;
                 }
@@ -679,13 +679,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             catch (JsonException e)
             {
                 var body = await res!.Content.ReadAsStringAsync();
-                ErrorMessage = $"Could not read server data (parse error)";
-                MessageService.Error("Could not read server data", e.Message, body);
+                ErrorMessage = Loc["DataParseError"];
+                MessageService.Error(Loc["DataReadError"], e.Message, body, buttonText: Loc["DropdownViewButtonText"]);
             }
             catch (Exception e)
             {
-                ErrorMessage = $"Could not read server data";
-                MessageService.Error("Could not read server data", e.Message, e!.ToString());
+                ErrorMessage = Loc["DataReadError"];
+                MessageService.Error(Loc["DataReadError"], e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
 
             ReadyToRender = true;
@@ -828,7 +828,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             catch (Exception e)
             {
-                MessageService.Error("Could not get or set column states", e.Message, e.ToString());
+                MessageService.Error(Loc["HideDisabledColumnError"], e.Message, e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
 #pragma warning restore BL0005
         }
@@ -1019,7 +1019,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             catch (Exception e)
             {
-                MessageService.Error("Error processing foreign columns", "Error processing foreign columns", e.ToString());
+                MessageService.Error(Loc["ShiftListForeignColumnError"], Loc["ShiftListForeignColumnError"], e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
 
             return GetStream(res?.Value);

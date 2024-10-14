@@ -7,6 +7,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
@@ -23,7 +24,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Inject] HttpClient HttpClient { get; set; } = default!;
     [Inject] SettingManager SettingManager { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
-    [Inject] internal IStringLocalizer<Resources.Components.FileUploader> Loc { get; set; } = default!;
+    [Inject] internal ShiftBlazorLocalizer Loc { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
 
     [Parameter]
@@ -227,7 +228,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         {
             if (item.LocalFile == null)
             {
-                item.Message = new Message { Title = "Could not find file" };
+                item.Message = new Message { Title = Loc["FileUploaderError1"] };
                 return;
             }
 
@@ -275,7 +276,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     {
         if (item.LocalFile == null)
         {
-            item.Message = new Message { Title = "Could not find file" };
+            item.Message = new Message { Title = Loc["FileUploaderError1"] };
             return;
         }
 
@@ -324,7 +325,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         }
         catch
         {
-            item.Message = new Message { Title = "Something went wrong" };
+            item.Message = new Message { Title = Loc["FileUploaderError2"] };
             item.CancellationTokenSource?.Cancel();
         }
 
@@ -335,7 +336,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     {
         if (item.LocalFile == null)
         {
-            item.Message = new Message { Title = "Could not find file" };
+            item.Message = new Message { Title = Loc["FileUploaderError1"] };
             return;
         }
 
@@ -358,7 +359,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         }
         catch (Exception ex)
         {
-            item.Message = new Message { Title = $"Something went wrong: {ex.Message}" };
+            item.Message = new Message { Title = Loc["FileUploaderError3", ex.Message] };
             item.CancellationTokenSource?.Cancel();
         }
 
