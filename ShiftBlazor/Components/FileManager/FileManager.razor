@@ -1,0 +1,31 @@
+﻿@using Syncfusion.Blazor.FileManager
+@using Syncfusion.Blazor.Navigations
+@using System.Text.Json
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<SfFileManager @ref="SfFileManager"
+               TValue="FileManagerDirectoryContent"
+               ShowThumbnail="true"
+               ShowTooltip
+               ShowFileExtension
+               ShowItemCheckBoxes="false"
+               EnableRangeSelection="false"
+               View="@View"
+               AllowMultiSelection>
+
+    <FileManagerAjaxSettings HttpClientInstance="HttpClient"
+                             Url="@(Url?.AddUrlPath("FileOperations"))"
+                             UploadUrl="@(Url?.AddUrlPath("AzureUpload"))"
+                             />
+
+    <FileManagerEvents TValue="FileManagerDirectoryContent"
+                       BeforeImageLoad="OnBeforeImageLoad"
+                       BeforeDownload="OnBeforeDownload"
+                       FileSelected="OnFileSelected"
+                       />
+
+    <FileManagerToolbarSettings ToolbarItems="@Items"/>
+    
+    <FileManagerUploadSettings MaxFileSize="@MaxUploadSize" />
+    
+</SfFileManager>
