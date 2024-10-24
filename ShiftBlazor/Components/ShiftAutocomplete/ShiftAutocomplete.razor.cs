@@ -12,6 +12,7 @@ using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using Microsoft.JSInterop;
+using ShiftSoftware.ShiftEntity.Core.Extensions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {

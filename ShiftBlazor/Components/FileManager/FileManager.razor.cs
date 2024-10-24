@@ -3,6 +3,7 @@ using Microsoft.JSInterop;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Resources.Components;
 using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using Syncfusion.Blazor.FileManager;
 using Syncfusion.Blazor.Navigations;
@@ -81,11 +82,13 @@ public partial class FileManager
     {
         if (SfFileManager == null) return;
 
+        var fileNames = SfFileManager.GetSelectedFiles().Select(x => x.IsFile ? x.Name : x.Name + "/");
+
         var filesToZip = new ZipOptionsDTO
         {
             ContainerName = "development",
             Path = "FileManager" + SfFileManager.Path,
-            Names = SfFileManager.SelectedItems.ToList(),
+            Names = fileNames,
         };
         HttpClient.PostAsJsonAsync(Url.AddUrlPath("ZipFiles"), filesToZip);
     }

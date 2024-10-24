@@ -17,6 +17,7 @@ using ShiftSoftware.TypeAuth.Core.Actions;
 using ShiftSoftware.TypeAuth.Core;
 using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftBlazor.Localization;
+using ShiftSoftware.ShiftEntity.Core.Extensions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
