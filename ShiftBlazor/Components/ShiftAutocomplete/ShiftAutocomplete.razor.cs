@@ -249,7 +249,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task UpdateInitialValue()
         {
-            if (Value != null && !string.IsNullOrWhiteSpace(Value.Value) && string.IsNullOrWhiteSpace(Value.Text))
+            var values = SelectedValues.ToList();
+
+            if (Value != null)
+                values.Add(Value);
+
+            var valuesToLoad = new List<string>();
+
+            Expression<Func<TEntitySet, bool>>? where = x => 1 == 1;
+
+            foreach (var value in values)
+            {
+                if (value != null && !string.IsNullOrWhiteSpace(value.Value) && string.IsNullOrWhiteSpace(value.Text))
+                {
+                    valuesToLoad.Add(value.Value);
+
+                    where = where.Or(x => x.ID == value.Value);
+                }
+            }
+
+            if (valuesToLoad.Count > 0)
             {
                 Placeholder = "Loading...";
                 var url = "";
@@ -257,13 +276,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 try
                 {
                     string? baseUrl = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
-                    
+
                     baseUrl = baseUrl?.AddUrlPath(this.ODataPath);
 
                     url = OData.CreateNewQuery<TEntitySet>(EntitySet, baseUrl)
                             //.AddQueryOption("$select", $"{_DataValueField},{_DataTextField}")
-                            .WhereQuery(x => 1 == 1 && x.ID == Value.Value)
-                            .Take(1)
+                            .WhereQuery(where)
+                            //.Take(1)
                             .ToString();
                 }
                 catch (Exception e)
@@ -271,27 +290,52 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     Message.Error("Failed to retrieve data", "Failed to retrieve data", e.Message);
                 }
 
-                var value = await GetODataResult(url!);
-
-                var firstValue = value.First();
-
-                var text = firstValue.Text;
-                var data = firstValue.Data;
-
-                if (string.IsNullOrWhiteSpace(text))
-                {
-                    return;
-                }
-
-                Value = new ShiftEntitySelectDTO
-                {
-                    Value = Value.Value,
-                    Text = text,
-                    Data = data,
-                };
+                var loadedValues = await GetODataResult(url!);
 
                 Placeholder = "";
-                await ValueChanged.InvokeAsync(Value);
+
+                if (MultiSelect)
+                {
+                    foreach (var value in loadedValues)
+                    {
+                        var text = value.Text;
+                        var data = value.Data;
+
+                        var match = SelectedValues.Where(x => x.Value == value.Value).FirstOrDefault();
+
+                        if (match is not null)
+                        {
+                            match.Text = text;
+                            match.Data = data;
+                        }
+                    }
+
+                    await SelectedValuesChanged.InvokeAsync(SelectedValues);
+                }
+                else
+                {
+                    var firstValue = loadedValues.First();
+
+                    var text = firstValue.Text;
+                    var data = firstValue.Data;
+
+                    Console.WriteLine("value is: " + firstValue);
+
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        await ValueChanged.InvokeAsync(Value);
+                        return;
+                    }
+
+                    Value = new ShiftEntitySelectDTO
+                    {
+                        Value = Value.Value,
+                        Text = text,
+                        Data = data,
+                    };
+
+                    await ValueChanged.InvokeAsync(Value);
+                }
             }
         }
 
