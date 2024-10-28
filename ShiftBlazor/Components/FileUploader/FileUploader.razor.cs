@@ -66,6 +66,12 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Parameter]
     public string? ContainerName { get; set; }
 
+    [Parameter]
+    public bool? DisableToolbar { get; set; }
+
+    [Parameter]
+    public string? DropAreaSelector { get; set; }
+
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftForm { get; set; }
 
@@ -92,6 +98,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     internal string ImageTypes = "image/*";
     internal int ThumbnailSize = 150;
     internal bool _ShowThumbnail;
+    private string InputStyle = "position: absolute;top: 0;left: 0;height: 100%;width: 100%;z-index:1000;display: none;opacity: 0;";
 
     [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
     [Parameter]
@@ -163,6 +170,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         if (firstRender)
         {
             SetAsSortable();
+            SetDropZone();
         }
     }
 
@@ -420,6 +428,15 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             Items.Clear();
             await SetValue([]);
         }
+    }
+
+    private void SetDropZone()
+    {
+        _ = JsRuntime.InvokeVoidAsync(
+                "setDropZone",
+                $"#" + UploaderId,
+                DropAreaSelector
+            );
     }
 
     [JSInvokable]

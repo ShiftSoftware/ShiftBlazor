@@ -111,6 +111,25 @@ function fixAutocompleteIndent(inputId) {
     return hiddenTagsWidth / inputWidth;
 }
 
+window.setDropZone = function (UploaderId, dropZoneSelector) {
+
+    let input = document.querySelector(`${UploaderId} [id^="Input"]`);
+    let dropZone = document.querySelector(dropZoneSelector ?? UploaderId);
+
+    input.addEventListener("drop", () => input.style.display = "none");
+    input.addEventListener("dragleave", () => input.style.display = "none");
+    input.addEventListener("dragend", () => input.style.display = "none");
+    dropZone.addEventListener("dragenter", () => input.style.display = "block");
+
+    if (dropZone.style.position === "static" || dropZone.style.position === "") {
+        dropZone.style.position = "relative";
+    }
+
+    if (dropZoneSelector != null) {
+        dropZone.appendChild(input);
+    }
+};
+
 window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     const arrayBuffer = await contentStreamReference.arrayBuffer();
     const blob = new Blob([arrayBuffer]);

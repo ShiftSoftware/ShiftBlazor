@@ -51,18 +51,25 @@
                          }
                      </MudItem>
                  }
-             </MudGrid>
+            </MudGrid>
 
-            <MudToolBar Dense Style="@($"background-color: {Colors.Gray.Lighten2}; margin-top: 16px; gap: 10px;")" Class="rounded">
-                <MudButtonExtended StartIcon="@Icons.Material.Filled.ViewCarousel" OnClick="ViewGallery" Size="Size.Small">@Loc["ViewGalleryButton"]</MudButtonExtended>
-                <MudButtonExtended StartIcon="@Icons.Material.Filled.GridView" OnClick="ToggleViewMode" Size="Size.Small">@Loc["ToggleViewMode"]</MudButtonExtended>
-                @if (Mode >= FormModes.Edit)
-                {
-                    <MudButtonExtended StartIcon="@Icons.Material.Filled.ClearAll" OnClick="ClearAll" Size="Size.Small">@Loc["ClearAllFiles"]</MudButtonExtended>
-                }
-            </MudToolBar>
+            if (DisableToolbar != true)
+            {
+                <MudToolBar Dense Style="@($"background-color: {Colors.Gray.Lighten2}; margin-top: 16px; gap: 10px;")" Class="rounded">
+                    <MudButtonExtended StartIcon="@Icons.Material.Filled.ViewCarousel" OnClick="ViewGallery" Size="Size.Small">@Loc["ViewGalleryButton"]</MudButtonExtended>
+                    <MudButtonExtended StartIcon="@Icons.Material.Filled.GridView" OnClick="ToggleViewMode" Size="Size.Small">@Loc["ToggleViewMode"]</MudButtonExtended>
+                    @if (Mode >= FormModes.Edit)
+                    {
+                        <MudButtonExtended StartIcon="@Icons.Material.Filled.ClearAll" OnClick="ClearAll" Size="Size.Small">@Loc["ClearAllFiles"]</MudButtonExtended>
+                    }
+                </MudToolBar>
+            }
 
-            <InputFile id="@InputId" OnChange="OnInputFileChanged" hidden multiple accept="@InputAccept" />
+            <InputFile id="@InputId"
+                OnChange="OnInputFileChanged"
+                style="@InputStyle"
+                multiple
+                accept="@InputAccept"/>
 
         }
         else
