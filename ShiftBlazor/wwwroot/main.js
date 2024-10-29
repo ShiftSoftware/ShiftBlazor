@@ -92,11 +92,11 @@ window.fixStickyColumn = function (gridId) {
     grid.appendChild(style);
 }
 
-function fixAllStickyColumns() {
+window.fixAllStickyColumns = function () {
     document.querySelectorAll("[id^='Grid-']").forEach(x => fixStickyColumn(x.id));
 }
 
-function fixAutocompleteIndent(inputId) {
+window.fixAutocompleteIndent = function (inputId) {
     // calculate visible tags size
     var input = document.getElementById(inputId);
     var tags = input.getElementsByClassName("autocomplete-tags")[0];
@@ -146,7 +146,6 @@ window.downloadFileFromUrl = function (fileName, url) {
     anchorElement.click();
     anchorElement.remove();
 }
-
 
 window.addEventListener("keydown", handleKeydown);
 window.addEventListener("keyup", releaseAltKey);

@@ -123,3 +123,8 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .shift-autocomplete .mud-input-adornment-icon-button {
     z-index: 1;
 }
+
+/* hide the native upload button in SfFileManager because we have our own implementation */
+.e-filemanager .e-toolbar-item[id$='upload'] {
+    display: none !important;
+}

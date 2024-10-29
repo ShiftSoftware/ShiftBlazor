@@ -171,8 +171,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         private async void UpdateModalQueryUrl(string? name, object? key, Dictionary<string, string>? parameters = null)
         {
-            var url = await JsRuntime.InvokeAsync<string>("GetUrl");
-            var modals = ParseModalUrl(url);
+            var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
+
+            if (!url.success) return;
+
+            var modals = ParseModalUrl(url.value);
 
             if (name == null)
             {
@@ -188,7 +191,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 modals.Add(new ModalInfo { Name = name, Key = key, Parameters = parameters });
             }
 
-            var newUrl = CreateModalUrlQuery(modals, url);
+            var newUrl = CreateModalUrlQuery(modals, url.value);
             await JsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
         }
 
