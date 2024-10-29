@@ -72,6 +72,12 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Parameter]
     public string? DropAreaSelector { get; set; }
 
+    [Parameter]
+    public string? Prefix { get; set; }
+
+    [Parameter]
+    public bool? HideUI { get; set; }
+
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftForm { get; set; }
 
@@ -244,11 +250,12 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             item.File = null;
             item.Message = null;
 
-            var file = new ShiftFileDTO();
-
-            file.Blob = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(item.LocalFile.Name);
-
-            file.Name = item.LocalFile.Name;
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(item.LocalFile.Name);
+            var file = new ShiftFileDTO
+            {
+                Blob = string.IsNullOrWhiteSpace(Prefix) ? fileName : Prefix.AddUrlPath(fileName),
+                Name = item.LocalFile.Name
+            };
 
             if (!string.IsNullOrWhiteSpace(AccountName))
                 file.AccountName = AccountName;
@@ -375,9 +382,9 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    internal void OpenInput()
+    internal async Task OpenInput()
     {
-        _ = JsRuntime.InvokeVoidAsync("ClickElementById", InputId);
+        await JsRuntime.InvokeVoidAsync("ClickElementById", InputId);
     }
 
     internal void SetAsSortable()

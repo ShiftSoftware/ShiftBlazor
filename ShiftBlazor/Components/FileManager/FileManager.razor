@@ -3,29 +3,40 @@
 @using System.Text.Json
 @namespace ShiftSoftware.ShiftBlazor.Components
 
-<SfFileManager @ref="SfFileManager"
-               TValue="FileManagerDirectoryContent"
-               ShowThumbnail="true"
-               ShowTooltip
-               ShowFileExtension
-               ShowItemCheckBoxes="false"
-               EnableRangeSelection="false"
-               View="@View"
-               AllowMultiSelection>
+<div id="@FileManagerId">
+    <FileUploader @ref="_FileUploader"
+                  DisableToolbar="true"
+                  ContainerName="@ContainerName"
+                  AccountName="@AccountName"
+                  Prefix="@("FileManager" + SfFileManager?.Path)"
+                  DropAreaSelector="@($"#{FileManagerId}")"
+                  HideUI="true"
+                  ValuesChanged="Refresh" />
 
-    <FileManagerAjaxSettings HttpClientInstance="HttpClient"
-                             Url="@(Url?.AddUrlPath("FileOperations"))"
-                             UploadUrl="@(Url?.AddUrlPath("AzureUpload"))"
-                             />
+    <SfFileManager @ref="SfFileManager"
+                   TValue="FileManagerDirectoryContent"
+                   ShowThumbnail="true"
+                   ShowTooltip
+                   ShowFileExtension
+                   ShowItemCheckBoxes="false"
+                   EnableRangeSelection="false"
+                   View="@View"
+                   AllowMultiSelection>
 
-    <FileManagerEvents TValue="FileManagerDirectoryContent"
-                       BeforeImageLoad="OnBeforeImageLoad"
-                       BeforeDownload="OnBeforeDownload"
-                       FileSelected="OnFileSelected"
-                       />
+        <FileManagerAjaxSettings HttpClientInstance="HttpClient"
+                                 Url="@(Url?.AddUrlPath("FileOperations"))" />
 
-    <FileManagerToolbarSettings ToolbarItems="@Items"/>
-    
-    <FileManagerUploadSettings MaxFileSize="@MaxUploadSize" />
-    
-</SfFileManager>
+        <FileManagerEvents TValue="FileManagerDirectoryContent"
+                           BeforeImageLoad="OnBeforeImageLoad"
+                           BeforeDownload="OnBeforeDownload"
+                           FileSelected="OnFileSelected"
+                           ItemsUploading="OnItemsUploading"
+                           BeforePopupOpen="OnBeforePopupOpen" />
+
+        <FileManagerToolbarSettings ToolbarItems="@Items" />
+        <FileManagerContextMenuSettings Visible="false" />
+
+        <FileManagerUploadSettings MaxFileSize="@MaxUploadSize" AutoUpload="false" DropArea="@Guid.Empty.ToString()" />
+
+    </SfFileManager>
+</div>

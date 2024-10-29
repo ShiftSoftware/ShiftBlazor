@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using ShiftSoftware.ShiftBlazor.Extensions;
-using ShiftSoftware.ShiftBlazor.Resources.Components;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using Syncfusion.Blazor.FileManager;
 using Syncfusion.Blazor.Navigations;
-using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
@@ -31,11 +28,19 @@ public partial class FileManager
     [Parameter]
     public ViewType View { get; set; } = ViewType.LargeIcons;
 
+    [Parameter]
+    public string? AccountName { get; set; }
+
+    [Parameter]
+    public string? ContainerName { get; set; }
+
     public List<ToolBarItemModel> Items = new();
 
     private SfFileManager<FileManagerDirectoryContent>? SfFileManager { get; set; }
     private string? Url;
     private double MaxUploadSize => MaxUploadSizeInBytes * 1024 * 1024;
+    private FileUploader? _FileUploader { get; set; }
+    private string FileManagerId = "FileManager" + Guid.NewGuid().ToString().Replace("-", string.Empty);
 
     protected override void OnInitialized()
     {
@@ -50,7 +55,8 @@ public partial class FileManager
             new ToolBarItemModel() { Name = "Cut" },
             new ToolBarItemModel() { Name = "Copy" },
             new ToolBarItemModel() { Name = "Paste" },
-            new ToolBarItemModel() { Name = "Upload" },
+            new ToolBarItemModel() { Name = "Upload"},
+            new ToolBarItemModel() { Name = "DirectAzureUpload", Text="Upload Files", TooltipText="Upload Files", PrefixIcon="e-icons e-import", Visible=true, Click=new EventCallback<ClickEventArgs>(null, UploadFiles)},
             new ToolBarItemModel() { Name = "SortBy" },
             new ToolBarItemModel() { Name = "Refresh" },
             new ToolBarItemModel() { Name = "Delete" },
@@ -64,7 +70,6 @@ public partial class FileManager
         };
     }
 
-
     public void OnFileSelected(FileSelectEventArgs<FileManagerDirectoryContent> args)
     {
         if (SfFileManager == null) return;
@@ -76,6 +81,7 @@ public partial class FileManager
 
         Items.First(x => x.Name.Equals("Zip")).Visible = isMoreThanOneFileSelected || isOneFileSelected && isDirSelected;
         Items.First(x => x.Name.Equals("Unzip")).Visible = isOneFileSelected && isZipFile;
+        Items.First(x => x.Name.Equals("DirectAzureUpload")).Visible = SfFileManager.SelectedItems.Length == 0;
     }
 
     private void ZipFiles(ClickEventArgs args)
@@ -125,4 +131,25 @@ public partial class FileManager
         }
     }
 
+    private async Task UploadFiles()
+    {
+        if (_FileUploader != null)
+        {
+            await _FileUploader.OpenInput();
+        }
+    }
+
+    private void Refresh()
+    {
+        SfFileManager?.RefreshFilesAsync();
+    }
+
+    private void OnItemsUploading(ItemsUploadEventArgs<FileManagerDirectoryContent> args)
+    {
+        args.Cancel = true;
+    }
+    private void OnBeforePopupOpen(BeforePopupOpenCloseEventArgs args)
+    {
+        args.Cancel = true;
+    }
 }

@@ -10,7 +10,8 @@
               Class="@Classes"
               Variant="Variant.Outlined"
               Error="!string.IsNullOrWhiteSpace(ErrorText)"
-              ErrorText="@ErrorText">
+              ErrorText="@ErrorText"
+              Style="@(HideUI == true ? "display: none;" : "")">
 
         @if (Items.Count > 0 || !ReadOnly)
         {
@@ -66,10 +67,10 @@
             }
 
             <InputFile id="@InputId"
-                OnChange="OnInputFileChanged"
-                style="@InputStyle"
-                multiple
-                accept="@InputAccept"/>
+                       OnChange="OnInputFileChanged"
+                       style="@InputStyle"
+                       multiple
+                       accept="@InputAccept" />
 
         }
         else
