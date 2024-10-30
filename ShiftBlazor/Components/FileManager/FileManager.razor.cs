@@ -150,6 +150,9 @@ public partial class FileManager
     }
     private void OnBeforePopupOpen(BeforePopupOpenCloseEventArgs args)
     {
-        args.Cancel = true;
+        if (args.PopupName == "Upload")
+        {
+            args.Cancel = true;
+        }
     }
 }
