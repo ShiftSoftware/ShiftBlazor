@@ -23,6 +23,10 @@ public partial class FileManager
     public string? BaseUrlKey { get; set; }
 
     [Parameter]
+    public string? FileManagerRoot { get; set; }
+
+
+    [Parameter]
     public double MaxUploadSizeInBytes { get; set; } = 128;
 
     [Parameter]
@@ -40,15 +44,19 @@ public partial class FileManager
     private string? Url;
     private double MaxUploadSize => MaxUploadSizeInBytes * 1024 * 1024;
     private FileUploader? _FileUploader { get; set; }
-    private string FileManagerId = "FileManager" + Guid.NewGuid().ToString().Replace("-", string.Empty);
+    private string FileManagerId { get; set; }
 
     protected override void OnInitialized()
     {
+        FileManagerId = FileManagerRoot + Guid.NewGuid().ToString().Replace("-", string.Empty);
+
         var url = BaseUrl
             ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "")
             ?? SettingManager.Configuration.ApiPath;
 
         Url = url.AddUrlPath("FileManager");
+
+        this.HttpClient.DefaultRequestHeaders.Add("Root-Dir", FileManagerRoot);
 
         Items = new List<ToolBarItemModel>(){
             new ToolBarItemModel() { Name = "NewFolder" },
@@ -93,7 +101,7 @@ public partial class FileManager
         var filesToZip = new ZipOptionsDTO
         {
             ContainerName = "development",
-            Path = "FileManager" + SfFileManager.Path,
+            Path = FileManagerRoot + SfFileManager.Path,
             Names = fileNames,
         };
         HttpClient.PostAsJsonAsync(Url.AddUrlPath("ZipFiles"), filesToZip);
@@ -106,7 +114,7 @@ public partial class FileManager
         var zipFileInfo = new ZipOptionsDTO
         {
             ContainerName = "development",
-            Path = "FileManager" + SfFileManager.Path,
+            Path = FileManagerRoot + SfFileManager.Path,
             Names = [SfFileManager.SelectedItems.First()],
         };
         HttpClient.PostAsJsonAsync(Url.AddUrlPath("UnzipFiles"), zipFileInfo);
