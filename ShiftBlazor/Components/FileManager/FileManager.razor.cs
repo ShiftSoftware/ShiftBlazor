@@ -37,6 +37,9 @@ public partial class FileManager
     [Parameter]
     public string? ContainerName { get; set; }
 
+    [Parameter]
+    public string Height { get; set; } = "600px";
+
     public List<ToolBarItemModel> Items = new();
 
     private SfFileManager<FileManagerDirectoryContent>? SfFileManager { get; set; }
