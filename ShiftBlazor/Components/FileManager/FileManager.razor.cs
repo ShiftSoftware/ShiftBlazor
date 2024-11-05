@@ -67,6 +67,7 @@ public partial class FileManager
             new ToolBarItemModel() { Name = "Paste" },
             new ToolBarItemModel() { Name = "Upload"},
             new ToolBarItemModel() { Name = "DirectAzureUpload", Text="Upload Files", TooltipText="Upload Files", PrefixIcon="e-icons e-import", Visible=true, Click=new EventCallback<ClickEventArgs>(null, UploadFiles)},
+            new ToolBarItemModel() { Name = "DirectAzureDirUpload", Text="Upload Folders", TooltipText="Upload Folders", PrefixIcon="e-icons e-import", Visible=true, Click=new EventCallback<ClickEventArgs>(null, UploadDir)},
             new ToolBarItemModel() { Name = "SortBy" },
             new ToolBarItemModel() { Name = "Refresh" },
             new ToolBarItemModel() { Name = "Delete" },
@@ -150,7 +151,15 @@ public partial class FileManager
     {
         if (_FileUploader != null)
         {
-            await _FileUploader.OpenInput();
+            await _FileUploader.OpenInput(directoryUpload: false);
+        }
+    }
+
+    private async Task UploadDir()
+    {
+        if (_FileUploader != null)
+        {
+            await _FileUploader.OpenInput(directoryUpload: true);
         }
     }
 

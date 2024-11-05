@@ -130,6 +130,19 @@ window.setDropZone = function (UploaderId, dropZoneSelector) {
     }
 };
 
+window.openInput = function (id, dirUpload) {
+    var input = document.getElementById(id);
+
+    if (dirUpload) {
+        input.setAttribute("webkitdirectory", "");
+    }
+    else {
+        input.removeAttribute("webkitdirectory");
+    }
+
+    input?.click();
+}
+
 window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     const arrayBuffer = await contentStreamReference.arrayBuffer();
     const blob = new Blob([arrayBuffer]);

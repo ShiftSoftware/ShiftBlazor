@@ -6,7 +6,6 @@ using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
-using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
@@ -382,9 +381,9 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    internal async Task OpenInput()
+    internal async Task OpenInput(string? id = null, bool? directoryUpload = false)
     {
-        await JsRuntime.InvokeVoidAsync("ClickElementById", InputId);
+        await JsRuntime.InvokeVoidAsync("openInput", id ?? InputId, directoryUpload);
     }
 
     internal void SetAsSortable()

@@ -38,7 +38,7 @@
                          @if (_ShowThumbnail)
                          {
                              <MudTooltip Text="@Loc["AddButtonTitleThumbnail"]">
-                                 <MudIconButton OnClick="OpenInput"
+                                 <MudIconButton OnClick="() => OpenInput()"
                                                 Icon="@Icons.Material.Filled.Add"
                                                 Size="Size.Large"
                                                 Variant="Variant.Filled"
@@ -48,7 +48,7 @@
                          }
                          else
                          {
-                            <MudChip Icon="@Icons.Material.Filled.Add" OnClick="OpenInput" T="string">@Loc["AddButtonChip"]</MudChip>
+                            <MudChip Icon="@Icons.Material.Filled.Add" OnClick="() => OpenInput()" T="string">@Loc["AddButtonChip"]</MudChip>
                          }
                      </MudItem>
                  }
