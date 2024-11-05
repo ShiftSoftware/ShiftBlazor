@@ -128,3 +128,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .e-filemanager .e-toolbar-item[id$='upload'] {
     display: none !important;
 }
+
+.e-filemanager .e-fe-grid-icon[aria-label^="Directory"] ~ [aria-colindex="4"] {
+    color: transparent !important;
+}

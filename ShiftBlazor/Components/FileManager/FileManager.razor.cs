@@ -25,7 +25,6 @@ public partial class FileManager
     [Parameter]
     public string? FileManagerRoot { get; set; }
 
-
     [Parameter]
     public double MaxUploadSizeInBytes { get; set; } = 128;
 
@@ -82,6 +81,8 @@ public partial class FileManager
     {
         if (SfFileManager == null) return;
 
+        SfFileManager.PreventRender();
+
         var isMoreThanOneFileSelected = SfFileManager.SelectedItems.Length > 1;
         var isOneFileSelected = SfFileManager.SelectedItems.Length == 1;
         var isDirSelected = SfFileManager.GetSelectedFiles().Any(x => !x.IsFile);
@@ -90,6 +91,9 @@ public partial class FileManager
         Items.First(x => x.Name.Equals("Zip")).Visible = isMoreThanOneFileSelected || isOneFileSelected && isDirSelected;
         Items.First(x => x.Name.Equals("Unzip")).Visible = isOneFileSelected && isZipFile;
         Items.First(x => x.Name.Equals("DirectAzureUpload")).Visible = SfFileManager.SelectedItems.Length == 0;
+
+
+        SfFileManager.PreventRender(false);
     }
 
     private void ZipFiles(ClickEventArgs args)
