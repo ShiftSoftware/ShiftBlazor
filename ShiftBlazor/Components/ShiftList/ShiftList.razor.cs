@@ -17,6 +17,7 @@ using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
 using System.Linq.Expressions;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -1033,7 +1034,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (items != null && items.Count > 0)
             {
-                using (var streamWriter = new StreamWriter(stream, leaveOpen: true))
+                using (var streamWriter = new StreamWriter(stream, new UTF8Encoding(true), leaveOpen: true))
                 {
                     var csvWriter = new CsvWriter(streamWriter, config);
 
