@@ -62,22 +62,22 @@ public partial class FileManager
 
         Items = new List<ToolBarItemModel>(){
             new ToolBarItemModel() { Name = "NewFolder" },
-            new ToolBarItemModel() { Name = "Cut" },
-            new ToolBarItemModel() { Name = "Copy" },
-            new ToolBarItemModel() { Name = "Paste" },
+            //new ToolBarItemModel() { Name = "Cut" },
+            //new ToolBarItemModel() { Name = "Copy" },
+            //new ToolBarItemModel() { Name = "Paste" },
             new ToolBarItemModel() { Name = "Upload"},
             new ToolBarItemModel() { Name = "DirectAzureUpload", Text="Upload Files", TooltipText="Upload Files", PrefixIcon="e-icons e-import", Visible=true, Click=new EventCallback<ClickEventArgs>(null, UploadFiles)},
-            new ToolBarItemModel() { Name = "DirectAzureDirUpload", Text="Upload Folders", TooltipText="Upload Folders", PrefixIcon="e-icons e-import", Visible=true, Click=new EventCallback<ClickEventArgs>(null, UploadDir)},
+            //new ToolBarItemModel() { Name = "DirectAzureDirUpload", Text="Upload Folders", TooltipText="Upload Folders", PrefixIcon="e-icons e-import", Visible=true, Click=new EventCallback<ClickEventArgs>(null, UploadDir)},
             new ToolBarItemModel() { Name = "SortBy" },
             new ToolBarItemModel() { Name = "Refresh" },
             new ToolBarItemModel() { Name = "Delete" },
             new ToolBarItemModel() { Name = "Download" },
-            new ToolBarItemModel() { Name = "Rename" },
+            //new ToolBarItemModel() { Name = "Rename" },
             new ToolBarItemModel() { Name = "Selection" },
             new ToolBarItemModel() { Name = "View" },
             new ToolBarItemModel() { Name = "Details" },
-            new ToolBarItemModel() { Name = "Zip", Text="Zip", TooltipText="Zip Files", PrefixIcon="e-icons e-import", Visible=false, Click=new EventCallback<ClickEventArgs>(null, ZipFiles)},
-            new ToolBarItemModel() { Name = "Unzip", Text="Unzip", TooltipText="Unzip Files", PrefixIcon="e-icons e-export", Visible=false, Click=new EventCallback<ClickEventArgs>(null, UnzipFiles)},
+            //new ToolBarItemModel() { Name = "Zip", Text="Zip", TooltipText="Zip Files", PrefixIcon="e-icons e-import", Visible=false, Click=new EventCallback<ClickEventArgs>(null, ZipFiles)},
+            //new ToolBarItemModel() { Name = "Unzip", Text="Unzip", TooltipText="Unzip Files", PrefixIcon="e-icons e-export", Visible=false, Click=new EventCallback<ClickEventArgs>(null, UnzipFiles)},
         };
     }
 
@@ -92,41 +92,41 @@ public partial class FileManager
         var isDirSelected = SfFileManager.GetSelectedFiles().Any(x => !x.IsFile);
         var isZipFile = SfFileManager.GetSelectedFiles().Any(x => x.IsFile && x.Name.EndsWith(".zip"));
 
-        Items.First(x => x.Name.Equals("Zip")).Visible = isMoreThanOneFileSelected || isOneFileSelected && isDirSelected;
-        Items.First(x => x.Name.Equals("Unzip")).Visible = isOneFileSelected && isZipFile;
-        Items.First(x => x.Name.Equals("DirectAzureUpload")).Visible = SfFileManager.SelectedItems.Length == 0;
+        //Items.First(x => x.Name.Equals("Zip")).Visible = isMoreThanOneFileSelected || isOneFileSelected && isDirSelected;
+        //Items.First(x => x.Name.Equals("Unzip")).Visible = isOneFileSelected && isZipFile;
+        //Items.First(x => x.Name.Equals("DirectAzureUpload")).Visible = SfFileManager.SelectedItems.Length == 0;
 
 
         SfFileManager.PreventRender(false);
     }
 
-    private void ZipFiles(ClickEventArgs args)
-    {
-        if (SfFileManager == null) return;
+    //private void ZipFiles(ClickEventArgs args)
+    //{
+    //    if (SfFileManager == null) return;
 
-        var fileNames = SfFileManager.GetSelectedFiles().Select(x => x.IsFile ? x.Name : x.Name + "/");
+    //    var fileNames = SfFileManager.GetSelectedFiles().Select(x => x.IsFile ? x.Name : x.Name + "/");
 
-        var filesToZip = new ZipOptionsDTO
-        {
-            ContainerName = "development",
-            Path = FileManagerRoot + SfFileManager.Path,
-            Names = fileNames,
-        };
-        HttpClient.PostAsJsonAsync(Url.AddUrlPath("ZipFiles"), filesToZip);
-    }
+    //    var filesToZip = new ZipOptionsDTO
+    //    {
+    //        ContainerName = "development",
+    //        Path = FileManagerRoot + SfFileManager.Path,
+    //        Names = fileNames,
+    //    };
+    //    HttpClient.PostAsJsonAsync(Url.AddUrlPath("ZipFiles"), filesToZip);
+    //}
 
-    private void UnzipFiles(ClickEventArgs args)
-    {
-        if (SfFileManager == null) return;
+    //private void UnzipFiles(ClickEventArgs args)
+    //{
+    //    if (SfFileManager == null) return;
 
-        var zipFileInfo = new ZipOptionsDTO
-        {
-            ContainerName = "development",
-            Path = FileManagerRoot + SfFileManager.Path,
-            Names = [SfFileManager.SelectedItems.First()],
-        };
-        HttpClient.PostAsJsonAsync(Url.AddUrlPath("UnzipFiles"), zipFileInfo);
-    }
+    //    var zipFileInfo = new ZipOptionsDTO
+    //    {
+    //        ContainerName = "development",
+    //        Path = FileManagerRoot + SfFileManager.Path,
+    //        Names = [SfFileManager.SelectedItems.First()],
+    //    };
+    //    HttpClient.PostAsJsonAsync(Url.AddUrlPath("UnzipFiles"), zipFileInfo);
+    //}
 
     public void OnBeforeImageLoad(BeforeImageLoadEventArgs<FileManagerDirectoryContent> args)
     {
@@ -155,13 +155,13 @@ public partial class FileManager
         }
     }
 
-    private async Task UploadDir()
-    {
-        if (_FileUploader != null)
-        {
-            await _FileUploader.OpenInput(directoryUpload: true);
-        }
-    }
+    //private async Task UploadDir()
+    //{
+    //    if (_FileUploader != null)
+    //    {
+    //        await _FileUploader.OpenInput(directoryUpload: true);
+    //    }
+    //}
 
     private void Refresh()
     {
@@ -178,5 +178,10 @@ public partial class FileManager
         {
             args.Cancel = true;
         }
+    }
+
+    private void OnSearching(SearchEventArgs<FileManagerDirectoryContent> args)
+    {
+        args.Cancel = true;
     }
 }
