@@ -8,7 +8,7 @@
                   DisableToolbar="true"
                   ContainerName="@ContainerName"
                   AccountName="@AccountName"
-                  Prefix="@("FileManager" + SfFileManager?.Path)"
+                  Prefix="@(this.FileManagerRoot + SfFileManager?.Path)"
                   DropAreaSelector="@($"#{FileManagerId}")"
                   HideUI="true"
                   ValuesChanged="Refresh" />
