@@ -2,10 +2,9 @@
 using Microsoft.JSInterop;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
-using ShiftSoftware.ShiftEntity.Model.Dtos;
 using Syncfusion.Blazor.FileManager;
 using Syncfusion.Blazor.Navigations;
-using System.Net.Http.Json;
+using Blazored.LocalStorage;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -14,6 +13,7 @@ public partial class FileExplorer
     [Inject] HttpClient HttpClient { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] SettingManager SettingManager { get; set; } = default!;
+    [Inject] ISyncLocalStorageService SyncLocalStorage { get; set; } = default!;
 
     [Parameter]
     public string? BaseUrl { get; set; }
@@ -23,9 +23,6 @@ public partial class FileExplorer
 
     [Parameter]
     public string? Root { get; set; }
-
-    [Parameter]
-    public string? InitialPath { get; set; }
 
     [Parameter]
     public double MaxUploadSizeInBytes { get; set; } = 128;
@@ -41,6 +38,9 @@ public partial class FileExplorer
 
     [Parameter]
     public string Height { get; set; } = "600px";
+
+    [Parameter]
+    public string? RootAliasName { get; set; }
 
     public List<ToolBarItemModel> Items = new();
 
@@ -187,11 +187,9 @@ public partial class FileExplorer
         args.Cancel = true;
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    private async Task OnRead(ReadEventArgs<FileManagerDirectoryContent> args)
     {
-        if (firstRender && this.SfFileManager is not null)
-            this.SfFileManager.Path = this.InitialPath;
-        
-        base.OnAfterRender(firstRender);
+        if (SfFileManager == null) return;
+        SyncLocalStorage.RemoveItem(SfFileManager.ID);
     }
 }

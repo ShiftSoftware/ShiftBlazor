@@ -20,6 +20,8 @@
                    ShowFileExtension
                    ShowItemCheckBoxes="false"
                    EnableRangeSelection="false"
+                   EnablePersistence="false"
+                   RootAliasName="@RootAliasName"
                    Height="@Height"
                    View="@View"
                    AllowMultiSelection>
@@ -33,6 +35,7 @@
                            FileSelected="OnFileSelected"
                            ItemsUploading="OnItemsUploading"
                            Searching="OnSearching"
+                           OnRead="OnRead"
                            BeforePopupOpen="OnBeforePopupOpen" />
 
         <FileManagerToolbarSettings ToolbarItems="@Items" />
