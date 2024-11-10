@@ -9,12 +9,11 @@ using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public partial class FileManager
+public partial class FileExplorer
 {
     [Inject] HttpClient HttpClient { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] SettingManager SettingManager { get; set; } = default!;
-
 
     [Parameter]
     public string? BaseUrl { get; set; }
@@ -23,7 +22,7 @@ public partial class FileManager
     public string? BaseUrlKey { get; set; }
 
     [Parameter]
-    public string? FileManagerRoot { get; set; }
+    public string? Root { get; set; }
 
     [Parameter]
     public string? InitialPath { get; set; }
@@ -53,15 +52,15 @@ public partial class FileManager
 
     protected override void OnInitialized()
     {
-        FileManagerId = FileManagerRoot + Guid.NewGuid().ToString().Replace("-", string.Empty);
+        FileManagerId = "FileExplorer" + Guid.NewGuid().ToString().Replace("-", string.Empty);
 
         var url = BaseUrl
             ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "")
             ?? SettingManager.Configuration.ApiPath;
 
-        Url = url.AddUrlPath("FileManager");
+        Url = url.AddUrlPath("FileExplorer");
 
-        this.HttpClient.DefaultRequestHeaders.Add("Root-Dir", FileManagerRoot);
+        this.HttpClient.DefaultRequestHeaders.Add("Root-Dir", Root);
 
         Items = new List<ToolBarItemModel>(){
             new ToolBarItemModel() { Name = "NewFolder" },
