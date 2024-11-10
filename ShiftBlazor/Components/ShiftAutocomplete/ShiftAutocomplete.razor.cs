@@ -256,15 +256,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             var valuesToLoad = new List<string>();
 
-            Expression<Func<TEntitySet, bool>>? where = x => 1 == 1;
-
             foreach (var value in values)
             {
                 if (value != null && !string.IsNullOrWhiteSpace(value.Value) && string.IsNullOrWhiteSpace(value.Text))
                 {
                     valuesToLoad.Add(value.Value);
-
-                    where = where.Or(x => x.ID == value.Value);
                 }
             }
 
@@ -281,7 +277,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                     url = OData.CreateNewQuery<TEntitySet>(EntitySet, baseUrl)
                             //.AddQueryOption("$select", $"{_DataValueField},{_DataTextField}")
-                            .WhereQuery(where)
+                            .WhereQuery(x => valuesToLoad.AsEnumerable().Contains(x.ID))
                             //.Take(1)
                             .ToString();
                 }
