@@ -26,6 +26,9 @@ public partial class FileManager
     public string? FileManagerRoot { get; set; }
 
     [Parameter]
+    public string? InitialPath { get; set; }
+
+    [Parameter]
     public double MaxUploadSizeInBytes { get; set; } = 128;
 
     [Parameter]
@@ -183,5 +186,13 @@ public partial class FileManager
     private void OnSearching(SearchEventArgs<FileManagerDirectoryContent> args)
     {
         args.Cancel = true;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && this.SfFileManager is not null)
+            this.SfFileManager.Path = this.InitialPath;
+        
+        base.OnAfterRender(firstRender);
     }
 }
