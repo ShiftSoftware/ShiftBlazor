@@ -249,7 +249,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             item.File = null;
             item.Message = null;
 
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(item.LocalFile.Name);
+            var fileName = Uri.EscapeDataString(item.LocalFile.Name);
             var file = new ShiftFileDTO
             {
                 Blob = string.IsNullOrWhiteSpace(Prefix) ? fileName : Prefix.AddUrlPath(fileName),
