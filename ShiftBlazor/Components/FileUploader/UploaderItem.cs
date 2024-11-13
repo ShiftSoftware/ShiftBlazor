@@ -10,11 +10,13 @@ public class UploaderItem
     public IBrowserFile? LocalFile { get; set; }
     public ShiftFileDTO? File { get; set; }
     public Message? Message { get; set; }
+    public string? RelativePath { get; set; }
     public CancellationTokenSource? CancellationTokenSource { get; set; }
 
-    public UploaderItem(IBrowserFile file)
+    public UploaderItem(IBrowserFile file, string? relativePath = null)
     {
         LocalFile = file;
+        RelativePath = relativePath;
         CancellationTokenSource = new CancellationTokenSource();
     }
 

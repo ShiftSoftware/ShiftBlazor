@@ -104,6 +104,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     internal int ThumbnailSize = 150;
     internal bool _ShowThumbnail;
     private string InputStyle = "position: absolute;top: 0;left: 0;height: 100%;width: 100%;z-index:1000;display: none;opacity: 0;";
+    private InputFile? InputFileRef { get; set; }
+    private bool? IsDirectoryUpload = false;
 
     [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
     [Parameter]
@@ -214,7 +216,15 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         var files = e.GetMultipleFiles(MaxFileCount);
 
-        Items.AddRange(files.Select(x => new UploaderItem(x)).ToList());
+        if (IsDirectoryUpload == true && InputFileRef?.Element != null)
+        {
+            var fileRelativePaths = await JsRuntime.InvokeAsync<string[]>("getFileList", InputFileRef.Element.Value);
+            Items.AddRange(fileRelativePaths.Select((relativePath, index) => new UploaderItem(files[index], relativePath)).ToList());
+        }
+        else
+        {
+            Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile)).ToList());
+        }
 
         var filesToUpload = Items.Where(x => x.IsWaitingForUpload()).ToList();
 
@@ -249,7 +259,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             item.File = null;
             item.Message = null;
 
-            var fileName = Uri.EscapeDataString(item.LocalFile.Name);
+            var fileName = string.Join('/', (item.RelativePath ?? item.LocalFile.Name).Split('/').Select(Uri.EscapeDataString));
+
             var file = new ShiftFileDTO
             {
                 Blob = string.IsNullOrWhiteSpace(Prefix) ? fileName : Prefix.AddUrlPath(fileName),
@@ -383,6 +394,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     internal async Task OpenInput(string? id = null, bool? directoryUpload = false)
     {
+        IsDirectoryUpload = directoryUpload;
         await JsRuntime.InvokeVoidAsync("openInput", id ?? InputId, directoryUpload);
     }
 

@@ -143,6 +143,16 @@ window.openInput = function (id, dirUpload) {
     input?.click();
 }
 
+window.getFileList = (inputFile) => {
+    const fileList = [];
+
+    for (let i = 0; i < inputFile.files.length; i++) {
+        fileList.push(inputFile.files[i].webkitRelativePath);
+    }
+
+    return fileList;
+};
+
 window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     const arrayBuffer = await contentStreamReference.arrayBuffer();
     const blob = new Blob([arrayBuffer]);
