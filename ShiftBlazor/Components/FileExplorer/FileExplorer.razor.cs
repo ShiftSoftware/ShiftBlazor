@@ -60,7 +60,10 @@ public partial class FileExplorer
 
         Url = url.AddUrlPath("FileExplorer");
 
+        if (!this.HttpClient.DefaultRequestHeaders.Contains("Root-Dir"))
+        {
         this.HttpClient.DefaultRequestHeaders.Add("Root-Dir", Root);
+        }
 
         Items = new List<ToolBarItemModel>(){
             new ToolBarItemModel() { Name = "NewFolder" },
