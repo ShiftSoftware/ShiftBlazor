@@ -142,8 +142,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// </summary>
         public async void UpdateModals()
         {
-            var url = await JsRuntime.InvokeAsync<string>("GetUrl");
-            var modals = ParseModalUrl(url);
+            var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
+
+            if (!url.success) return;
+
+            var modals = ParseModalUrl(url.value);
 
             if (modals.Count == 0)
             {
@@ -276,14 +279,16 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         private async void RemoveFrontModalFromUrl()
         {
-            var url = await JsRuntime.InvokeAsync<string>("GetUrl");
+            var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
 
-            var modals = ParseModalUrl(url);
+            if (!url.success) return;
+
+            var modals = ParseModalUrl(url.value);
             if (modals.Count > 0)
             {
                 modals.RemoveAt(modals.Count - 1);
             }
-            var newUrl = CreateModalUrlQuery(modals, url);
+            var newUrl = CreateModalUrlQuery(modals, url.value);
             await JsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
         }
     }
