@@ -90,7 +90,35 @@ namespace ShiftSoftware.ShiftBlazor.Utils
                     {
                         ConstructorInfo attributeCtor = attrData.Constructor;
                         object?[] constructorArgs = attrData.ConstructorArguments.Select(arg => arg.Value).ToArray();
-                        CustomAttributeBuilder attributeBuilder = new(attributeCtor, constructorArgs);
+
+                        var namedProperties = new List<PropertyInfo>();
+                        var propertyValues = new List<object?>();
+                        var namedFields = new List<FieldInfo>();
+                        var fieldValues = new List<object?>();
+
+                        foreach (var namedArg in attrData.NamedArguments)
+                        {
+                            if (namedArg.MemberInfo is PropertyInfo propertyInfo)
+                            {
+                                namedProperties.Add(propertyInfo);
+                                propertyValues.Add(namedArg.TypedValue.Value);
+                            }
+                            else if (namedArg.MemberInfo is FieldInfo fieldInfo)
+                            {
+                                namedFields.Add(fieldInfo);
+                                fieldValues.Add(namedArg.TypedValue.Value);
+                            }
+                        }
+
+                        CustomAttributeBuilder attributeBuilder = new(
+                            attributeCtor,
+                            constructorArgs,
+                            namedProperties.ToArray(),
+                            propertyValues.ToArray(),
+                            namedFields.ToArray(),
+                            fieldValues.ToArray()
+                        );
+
                         propertyBuilder.SetCustomAttribute(attributeBuilder);
                     }
                 }
