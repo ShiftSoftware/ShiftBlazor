@@ -60,11 +60,6 @@ public partial class FileExplorer
 
         Url = url.AddUrlPath("FileExplorer");
 
-        if (!this.HttpClient.DefaultRequestHeaders.Contains("Root-Dir"))
-        {
-        this.HttpClient.DefaultRequestHeaders.Add("Root-Dir", Root);
-        }
-
         Items = new List<ToolBarItemModel>(){
             new ToolBarItemModel() { Name = "NewFolder" },
             //new ToolBarItemModel() { Name = "Cut" },
@@ -167,6 +162,23 @@ public partial class FileExplorer
     //        await _FileUploader.OpenInput(directoryUpload: true);
     //    }
     //}
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var oldRoot = this.HttpClient.DefaultRequestHeaders.FirstOrDefault(x => x.Key == "Root-Dir").Value?.FirstOrDefault();
+
+        this.HttpClient.DefaultRequestHeaders.Remove("Root-Dir");
+
+        if (Root is not null)
+        {
+            this.HttpClient.DefaultRequestHeaders.Add("Root-Dir", Root);
+        }
+
+        if (oldRoot != Root)
+            this.Refresh();
+
+        await base.OnParametersSetAsync();
+    }
 
     private void Refresh()
     {
