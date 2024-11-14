@@ -523,7 +523,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (Key != null && Mode == FormModes.View)
             {
-                DocumentTitle = Loc["ViewingForm", Title, Key];
+                if(Key.GetType() == typeof(string) && !string.IsNullOrWhiteSpace(Key.ToString()))
+                    DocumentTitle = Loc["ViewingForm", Title, Key];
+                else
+                    DocumentTitle = Loc["ViewingForm1", Title];
             }
             else if (Key != null && Mode == FormModes.Edit)
             {
