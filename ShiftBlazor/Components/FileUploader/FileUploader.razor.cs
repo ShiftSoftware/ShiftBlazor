@@ -263,7 +263,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
             var file = new ShiftFileDTO
             {
-                Blob = string.IsNullOrWhiteSpace(Prefix) ? fileName : Prefix.AddUrlPath(fileName),
+                Blob = Prefix.AddUrlPath(fileName),
                 Name = item.LocalFile.Name
             };
 
