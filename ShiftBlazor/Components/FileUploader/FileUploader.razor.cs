@@ -259,11 +259,11 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             item.File = null;
             item.Message = null;
 
-            var fileName = string.Join('/', (item.RelativePath ?? item.LocalFile.Name).Split('/').Select(Uri.EscapeDataString));
+            var fileName = string.Join('/', (item.RelativePath ?? item.LocalFile.Name).Split('/'));
 
             var file = new ShiftFileDTO
             {
-                Blob = Prefix.AddUrlPath(fileName),
+                Blob = Prefix.AddUrlPath(fileName).Trim('/'),
                 Name = item.LocalFile.Name
             };
 
