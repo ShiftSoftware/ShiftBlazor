@@ -5,6 +5,7 @@ using ShiftSoftware.ShiftEntity.Core.Extensions;
 using Syncfusion.Blazor.FileManager;
 using Syncfusion.Blazor.Navigations;
 using Blazored.LocalStorage;
+using ShiftSoftware.ShiftEntity.Model;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -44,7 +45,7 @@ public partial class FileExplorer
 
     public List<ToolBarItemModel> Items = new();
 
-    private SfFileManager<FileManagerDirectoryContent>? SfFileManager { get; set; }
+    private SfFileManager<FileExplorerDirectoryContent>? SfFileManager { get; set; }
     private string? Url;
     private double MaxUploadSize => MaxUploadSizeInBytes * 1024 * 1024;
     private FileUploader? _FileUploader { get; set; }
@@ -81,7 +82,7 @@ public partial class FileExplorer
         };
     }
 
-    public void OnFileSelected(FileSelectEventArgs<FileManagerDirectoryContent> args)
+    public void OnFileSelected(FileSelectEventArgs<FileExplorerDirectoryContent> args)
     {
         if (SfFileManager == null) return;
 
@@ -128,7 +129,7 @@ public partial class FileExplorer
     //    HttpClient.PostAsJsonAsync(Url.AddUrlPath("UnzipFiles"), zipFileInfo);
     //}
 
-    public void OnBeforeImageLoad(BeforeImageLoadEventArgs<FileManagerDirectoryContent> args)
+    public void OnBeforeImageLoad(BeforeImageLoadEventArgs<FileExplorerDirectoryContent> args)
     {
         try
         {
@@ -137,7 +138,7 @@ public partial class FileExplorer
         catch { }
     }
 
-    public async Task OnBeforeDownload(BeforeDownloadEventArgs<FileManagerDirectoryContent> args)
+    public async Task OnBeforeDownload(BeforeDownloadEventArgs<FileExplorerDirectoryContent> args)
     {
         args.Cancel = true;
 
@@ -163,29 +164,12 @@ public partial class FileExplorer
     //    }
     //}
 
-    protected override async Task OnParametersSetAsync()
-    {
-        var oldRoot = this.HttpClient.DefaultRequestHeaders.FirstOrDefault(x => x.Key == "Root-Dir").Value?.FirstOrDefault();
-
-        this.HttpClient.DefaultRequestHeaders.Remove("Root-Dir");
-
-        if (Root is not null)
-        {
-            this.HttpClient.DefaultRequestHeaders.Add("Root-Dir", Root);
-        }
-
-        if (oldRoot != Root)
-            this.Refresh();
-
-        await base.OnParametersSetAsync();
-    }
-
     private void Refresh()
     {
         SfFileManager?.RefreshFilesAsync();
     }
 
-    private void OnItemsUploading(ItemsUploadEventArgs<FileManagerDirectoryContent> args)
+    private void OnItemsUploading(ItemsUploadEventArgs<FileExplorerDirectoryContent> args)
     {
         args.Cancel = true;
     }
@@ -197,14 +181,25 @@ public partial class FileExplorer
         }
     }
 
-    private void OnSearching(SearchEventArgs<FileManagerDirectoryContent> args)
+    private void OnSearching(SearchEventArgs<FileExplorerDirectoryContent> args)
     {
         args.Cancel = true;
     }
 
-    private async Task OnRead(ReadEventArgs<FileManagerDirectoryContent> args)
+    private async Task OnRead(ReadEventArgs<FileExplorerDirectoryContent> args)
     {
         if (SfFileManager == null) return;
         SyncLocalStorage.RemoveItem(SfFileManager.ID);
+    }
+
+    public void OnSend(BeforeSendEventArgs args)
+    {
+        args.CustomData = [];
+
+        if (Root != null)
+        {
+            args.CustomData.Add("RootDir", Root);
+        }
+        
     }
 }

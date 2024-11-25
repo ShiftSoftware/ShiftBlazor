@@ -1,4 +1,5 @@
-﻿@using Syncfusion.Blazor.FileManager
+﻿@using ShiftSoftware.ShiftEntity.Model
+@using Syncfusion.Blazor.FileManager
 @using Syncfusion.Blazor.Navigations
 @using System.Text.Json
 @namespace ShiftSoftware.ShiftBlazor.Components
@@ -13,7 +14,7 @@
                   ValuesChanged="Refresh" />
 
     <SfFileManager @ref="SfFileManager"
-                   TValue="FileManagerDirectoryContent"
+                   TValue="FileExplorerDirectoryContent"
                    ShowThumbnail="true"
                    ShowTooltip
                    ShowFileExtension
@@ -28,13 +29,14 @@
         <FileManagerAjaxSettings HttpClientInstance="HttpClient"
                                  Url="@(Url?.AddUrlPath("FileOperations"))" />
 
-        <FileManagerEvents TValue="FileManagerDirectoryContent"
+        <FileManagerEvents TValue="FileExplorerDirectoryContent"
                            BeforeImageLoad="OnBeforeImageLoad"
                            BeforeDownload="OnBeforeDownload"
                            FileSelected="OnFileSelected"
                            ItemsUploading="OnItemsUploading"
                            Searching="OnSearching"
                            OnRead="OnRead"
+                           OnSend="OnSend"
                            BeforePopupOpen="OnBeforePopupOpen" />
 
         <FileManagerToolbarSettings ToolbarItems="@Items" />
