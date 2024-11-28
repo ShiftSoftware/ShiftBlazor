@@ -5,7 +5,7 @@ using ShiftSoftware.ShiftEntity.Core.Extensions;
 using Syncfusion.Blazor.FileManager;
 using Syncfusion.Blazor.Navigations;
 using Blazored.LocalStorage;
-using ShiftSoftware.ShiftEntity.Model;
+using ShiftSoftware.ShiftEntity.Model.Dtos;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -50,6 +50,8 @@ public partial class FileExplorer
     private double MaxUploadSize => MaxUploadSizeInBytes * 1024 * 1024;
     private FileUploader? _FileUploader { get; set; }
     private string FileManagerId { get; set; }
+    private bool ShowDeleted { get; set; } = false;
+    private string DeletedItemsCss = "";
 
     protected override void OnInitialized()
     {
@@ -75,6 +77,7 @@ public partial class FileExplorer
             new ToolBarItemModel() { Name = "Download" },
             //new ToolBarItemModel() { Name = "Rename" },
             new ToolBarItemModel() { Name = "Selection" },
+            new ToolBarItemModel() { Name = "ViewDeleted", TooltipText="Show Deleted Items", PrefixIcon="e-icons e-trash", Align=ItemAlign.Right, Visible=true, Click=new EventCallback<ClickEventArgs>(null, ViewDeleted)},
             new ToolBarItemModel() { Name = "View" },
             new ToolBarItemModel() { Name = "Details" },
             //new ToolBarItemModel() { Name = "Zip", Text="Zip", TooltipText="Zip Files", PrefixIcon="e-icons e-import", Visible=false, Click=new EventCallback<ClickEventArgs>(null, ZipFiles)},
@@ -156,6 +159,13 @@ public partial class FileExplorer
         }
     }
 
+    private async Task ViewDeleted()
+    {
+        ShowDeleted = !ShowDeleted;
+        SfFileManager.ShowHiddenItems = ShowDeleted;
+        await Refresh();
+    }
+
     //private async Task UploadDir()
     //{
     //    if (_FileUploader != null)
@@ -164,9 +174,10 @@ public partial class FileExplorer
     //    }
     //}
 
-    private void Refresh()
+    private async Task Refresh()
     {
-        SfFileManager?.RefreshFilesAsync();
+        if (SfFileManager != null)
+            await SfFileManager.RefreshFilesAsync();
     }
 
     private void OnItemsUploading(ItemsUploadEventArgs<FileExplorerDirectoryContent> args)
@@ -186,10 +197,18 @@ public partial class FileExplorer
         args.Cancel = true;
     }
 
-    private async Task OnRead(ReadEventArgs<FileExplorerDirectoryContent> args)
+    private void OnRead(ReadEventArgs<FileExplorerDirectoryContent> args)
     {
         if (SfFileManager == null) return;
         SyncLocalStorage.RemoveItem(SfFileManager.ID);
+    }
+
+    private void OnSuccess(SuccessEventArgs<FileExplorerDirectoryContent> args)
+    {
+        DeletedItemsCss = string.Join('\n', args.Result.Files
+            .Where(x => x.IsDeleted)
+            .Select(x => $".e-filemanager .e-list-parent [title='{x.Name}'] {{background-color: #ffc7c7;}}"));
+
     }
 
     public void OnSend(BeforeSendEventArgs args)
@@ -200,6 +219,5 @@ public partial class FileExplorer
         {
             args.CustomData.Add("RootDir", Root);
         }
-        
     }
 }

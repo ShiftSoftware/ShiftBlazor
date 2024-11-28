@@ -1,7 +1,6 @@
 ﻿@using ShiftSoftware.ShiftEntity.Model
 @using Syncfusion.Blazor.FileManager
 @using Syncfusion.Blazor.Navigations
-@using System.Text.Json
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 <div id="@FileManagerId">
@@ -24,6 +23,7 @@
                    RootAliasName="@RootAliasName"
                    Height="@Height"
                    View="@View"
+                   ShowHiddenItems="@ShowDeleted"
                    AllowMultiSelection>
 
         <FileManagerAjaxSettings HttpClientInstance="HttpClient"
@@ -37,12 +37,16 @@
                            Searching="OnSearching"
                            OnRead="OnRead"
                            OnSend="OnSend"
+                           OnSuccess="OnSuccess"
                            BeforePopupOpen="OnBeforePopupOpen" />
 
         <FileManagerToolbarSettings ToolbarItems="@Items" />
         <FileManagerContextMenuSettings Visible="false" />
-
-        <FileManagerUploadSettings MaxFileSize="@MaxUploadSize" AutoUpload="false" DropArea="@Guid.Empty.ToString()" />
-
+        <FileManagerUploadSettings DropArea="null" />
     </SfFileManager>
+
+
+    <style>
+        @DeletedItemsCss
+    </style>
 </div>
