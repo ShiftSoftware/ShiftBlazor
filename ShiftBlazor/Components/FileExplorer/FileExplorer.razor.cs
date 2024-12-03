@@ -22,8 +22,18 @@ public partial class FileExplorer
     [Parameter]
     public string? BaseUrlKey { get; set; }
 
+    private string? _root;
+
     [Parameter]
-    public string? Root { get; set; }
+    public string? Root
+    {
+        get => _root;
+        set
+        {
+            _root = value;
+            _ = Refresh();
+        }
+    }
 
     [Parameter]
     public double MaxUploadSizeInBytes { get; set; } = 128;
@@ -176,6 +186,7 @@ public partial class FileExplorer
 
     private async Task Refresh()
     {
+        await JsRuntime.InvokeVoidAsync("CloseFileExplorerDialogs", FileManagerId);
         if (SfFileManager != null)
             await SfFileManager.RefreshFilesAsync();
     }
@@ -205,9 +216,12 @@ public partial class FileExplorer
 
     private void OnSuccess(SuccessEventArgs<FileExplorerDirectoryContent> args)
     {
-        DeletedItemsCss = string.Join('\n', args.Result.Files
-            .Where(x => x.IsDeleted)
-            .Select(x => $".e-filemanager .e-list-parent [title='{x.Name}'] {{background-color: #ffc7c7;}}"));
+        if (args.Result.Files?.Count > 0)
+        {
+            DeletedItemsCss = string.Join('\n', args.Result.Files
+                .Where(x => x.IsDeleted)
+                .Select(x => $".e-filemanager .e-list-parent [title='{x.Name}'] {{background-color: #ffc7c7;}}"));
+        }
 
     }
 

@@ -17,6 +17,10 @@ window.ClickElementById = function (id) {
     document.getElementById(id)?.click();
 }
 
+window.CloseFileExplorerDialogs = function (id) {
+    document.getElementById(id)?.querySelectorAll(".e-dialog .e-dlg-closeicon-btn").forEach(x => x.click && x.click())
+}
+
 window.handleKeydown = function (e) {
     if (e.altKey || e.code.includes("Alt")) {
         e.preventDefault();
