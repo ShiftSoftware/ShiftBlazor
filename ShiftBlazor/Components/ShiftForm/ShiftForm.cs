@@ -3,6 +3,7 @@ using MudBlazor;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Services;
+using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -12,13 +13,43 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [CascadingParameter] public MudDialogInstance? MudDialog { get; set; }
         [Parameter] public FormModes Mode { get; set; } = FormModes.View;
         [Parameter] public object? Key { get; set; }
-        public FormOnSaveAction FormSetting { get; set; } = FormOnSaveAction.ViewFormOnSave;
-        public T TheItem { get; set; } = new();
+        [Parameter] public FormOnSaveAction FormSetting { get; set; } = FormOnSaveAction.ViewFormOnSave;
+        [Parameter] public T TheItem { get; set; } = new();
         public ShiftEntityForm<T>? FormContainer { get; set; }
 
         public bool ReadOnly => Mode < FormModes.Edit;
         public bool Disabled => Task != FormTasks.None;
         public FormTasks Task { get; set; }
+
+        public override Task SetParametersAsync(ParameterView parameters)
+        {
+            var filteredParameters = new Dictionary<string, object?>();
+
+            foreach (var parameter in parameters)
+            {
+                if (parameter.Name == "TheItem")
+                {
+                    try
+                    {
+                        if (parameter.Value is JsonElement itemValue)
+                        {
+                            TheItem = itemValue.Deserialize<T>() ?? new();
+                        }
+                        else
+                        {
+                            TheItem = (T)parameter.Value;
+                        }
+                    }
+                    catch { }
+                }
+                else if (!parameter.Cascading)
+                {
+                    filteredParameters.Add(parameter.Name, parameter.Value);
+                }
+            }
+
+            return base.SetParametersAsync(ParameterView.FromDictionary(filteredParameters));
+        }
 
         protected override void OnInitialized()
         {

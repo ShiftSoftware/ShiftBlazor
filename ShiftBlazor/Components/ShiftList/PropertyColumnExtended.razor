@@ -23,7 +23,7 @@
     public Enums.ModalOpenMode OpenMode { get; set; } = Enums.ModalOpenMode.Popup;
 
     [Parameter]
-    public Dictionary<string, string>? FormParameters { get; set; }
+    public Dictionary<string, object>? FormParameters { get; set; }
 
     [Parameter]
     public RenderFragment<TProperty?>? ButtonTemplate { get; set; }

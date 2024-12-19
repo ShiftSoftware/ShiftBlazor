@@ -89,7 +89,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// To pass additional parameters to the 'ShiftFormContainer' component.
         /// </summary>
         [Parameter]
-        public Dictionary<string, string>? AddDialogParameters { get; set; }
+        public Dictionary<string, object>? AddDialogParameters { get; set; }
 
         /// <summary>
         /// Enable row selection.
@@ -502,7 +502,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <param name="openMode">Specifies how the dialog window opens.</param>
         /// <param name="parameters">The parameters to be passed to the component.</param>
         /// <returns>A DialogResult object representing the outcome of the dialog.</returns>
-        public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
+        public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null)
         {
             IsModalOpen = true;
             var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);

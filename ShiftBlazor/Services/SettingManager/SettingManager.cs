@@ -159,6 +159,17 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return Settings.Language ?? DefaultAppSetting.Language;
         }
 
+        public void SetFormCloneSetting(bool enableClone)
+        {
+            Settings.EnableFormClone = enableClone;
+            SyncLocalStorage.SetItem(Key, Settings);
+        }
+
+        public bool GetFormCloneSetting()
+        {
+            return Settings.EnableFormClone ?? DefaultAppSetting.EnableFormClone;
+        }
+
         public CultureInfo GetCulture()
         {
             return new CultureInfo(GetLanguage().CultureName)

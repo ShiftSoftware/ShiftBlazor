@@ -15,7 +15,6 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.TypeAuth.Core.Actions;
 using ShiftSoftware.TypeAuth.Core;
-using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 
@@ -114,9 +113,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public EventCallback<T> OnEntityResponse { get; set; }
 
+        [Parameter]
+        public bool AllowClone { get; set; }
+
         internal string? OriginalValue { get; set; }
         internal bool Maximized { get; set; }
 
+        internal bool _RenderCloneButton;
         internal bool _RenderPrintButton;
         internal bool _RenderRevisionButton;
         internal bool _RenderDeleteButton;
@@ -202,12 +205,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             base.OnParametersSet();
 
+            _RenderCloneButton = SettingManager.GetFormCloneSetting() || AllowClone;
             _RenderPrintButton = /*OnPrint.HasDelegate &&*/ ShowPrint && HasReadAccess;
             _RenderRevisionButton = !HideRevisions && HasReadAccess && IsTemporal;
             _RenderEditButton = !HideEdit && HasWriteAccess;
             _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
-            _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton;
+            _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton;
 
             IsFooterToolbarEmpty = FooterToolbarStartTemplate == null
                 && FooterToolbarCenterTemplate == null
@@ -562,6 +566,27 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             var modals = ShiftModal.ParseModalUrl(url);
             await ShiftModal.Open(modals.First().Name, Key, ModalOpenMode.NewTab, modals.First().Parameters);
+        }
+
+        internal async Task CloneAndOpen()
+        {
+            if (!_RenderCloneButton) return;
+
+            var val = JsonSerializer.Serialize(Value);
+            var original = JsonSerializer.Deserialize<T>(val);
+            original!.ID = null;
+
+            var param = new Dictionary<string, object>()
+            {
+                ["TheItem"] = original,
+            };
+
+            var url = await JsRuntime.InvokeAsync<string>("GetUrl");
+
+            var modals = ShiftModal.ParseModalUrl(url);
+            var result = await ShiftModal.Open(modals.First().Name, parameters: param, skipQueryParamUpdate: true);
+
+            MadeChanges = result != null && result.Canceled != true;
         }
 
         internal async Task ViewRevisions()

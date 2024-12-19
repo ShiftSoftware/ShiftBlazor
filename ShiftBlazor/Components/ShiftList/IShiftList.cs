@@ -11,7 +11,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool? ParentReadOnly { get; set; }
         public bool? ParentDisabled { get; set; }
         public Type? ComponentType { get; set; }
-        public Dictionary<string, string>? AddDialogParameters { get; set; }
+        public Dictionary<string, object>? AddDialogParameters { get; set; }
         public bool EnableSelection { get; set; }
         public bool EnableVirtualization { get; set; }
         public string Height { get; set; }
@@ -24,7 +24,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool Outlined { get; set; }
         public bool IsEmbed { get; }
 
-        public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null);
+        public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null);
 
     }
 }

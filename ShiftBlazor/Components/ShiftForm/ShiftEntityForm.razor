@@ -42,6 +42,20 @@
 
                         @ToolbarEndTemplate
 
+                        @if (_RenderCloneButton)
+                        {
+                            <MudTooltip Text="@Loc["Clone"]">
+                                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyC"
+                                                    Variant="Variant.Text"
+                                                    Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                    Style="min-width:40px;"
+                                                    aria-label="@Loc["Clone"]"
+                                                    OnClick="CloneAndOpen">
+                                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy"></MudIcon>
+                                </MudButtonExtended>
+                            </MudTooltip>
+                        }
+
                         @if (_RenderPrintButton)
                         {
                             <MudTooltip Text="@Loc["Print"]">
@@ -156,7 +170,7 @@
                                                     Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                                                     aria-label="@(Maximized != true ? Loc["Maximize"] : Loc["Minimize"])"
                                                     OnClick="ResizeForm">
-                                    <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? @Icons.Material.Filled.CropSquare : Icons.Material.Filled.Minimize)" />
+                                    <MudIcon Size="Size.Medium" Icon="@(Maximized != true ? Icons.Material.Filled.Fullscreen : Icons.Material.Filled.FullscreenExit)" />
                                 </MudButtonExtended>
                             </MudTooltip>
 

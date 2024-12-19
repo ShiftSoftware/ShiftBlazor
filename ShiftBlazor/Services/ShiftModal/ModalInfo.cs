@@ -15,6 +15,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public object? Key { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public Dictionary<string, string>? Parameters { get; set; } = default!;
+        public Dictionary<string, object>? Parameters { get; set; } = default!;
     }
 }

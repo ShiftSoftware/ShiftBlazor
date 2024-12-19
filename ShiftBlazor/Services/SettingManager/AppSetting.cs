@@ -18,6 +18,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public virtual FormOnSaveAction? FormOnSaveAction { get; set; }
         public virtual Dictionary<string, List<ColumnState>>? ColumnStates { get; set; }
         public virtual LanguageInfo? Language { get; set; }
+        public virtual bool? EnableFormClone { get; set; }
     }
 
     public static class DefaultAppSetting
@@ -35,5 +36,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
             Label = "English",
             RTL = false,
         };
+        public static bool EnableFormClone = false;
     }
 }

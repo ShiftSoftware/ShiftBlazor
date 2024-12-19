@@ -315,7 +315,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     var text = firstValue.Text;
                     var data = firstValue.Data;
 
-                    Console.WriteLine("value is: " + firstValue);
+                    //Console.WriteLine("value is: " + firstValue);
 
                     if (string.IsNullOrWhiteSpace(text))
                     {

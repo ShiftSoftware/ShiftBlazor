@@ -50,13 +50,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return;
             }
 
-            Dictionary<string, string>? parameters = null;
+            Dictionary<string, object>? parameters = null;
 
             if (QuickAddParameterName != null)
             {
-                parameters = new Dictionary<string, string>
+                parameters = new()
                 {
-                    {QuickAddParameterName, LastTypedValue }
+                    {QuickAddParameterName, LastTypedValue}
                 };
             }
 

@@ -16,6 +16,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         private readonly NavigationManager NavManager;
         private readonly IDialogService DialogService;
         private readonly SettingManager SettingManager;
+        private readonly MessageService MessageService;
 
         private static readonly string QueryKey = "modal";
         private readonly List<Assembly> Assemblies;
@@ -43,18 +44,18 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <param name="openMode">Popup, Redirect, NewTab</param>
         /// <param name="parameters">Additional component parameters to send with the form</param>
         /// <returns>DialogResult</returns>
-        public async Task<DialogResult?> Open<TComponent>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null) where TComponent : ComponentBase
+        public async Task<DialogResult?> Open<TComponent>(object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null, bool skipQueryParamUpdate = false) where TComponent : ComponentBase
         {
             var ComponentType = typeof(TComponent);
-            return await Open(ComponentType, key, openMode, parameters);
+            return await Open(ComponentType, key, openMode, parameters, skipQueryParamUpdate);
         }
 
-        public async Task<DialogResult?> Open(string ComponentPath, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
+        public async Task<DialogResult?> Open(string ComponentPath, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null, bool skipQueryParamUpdate = false)
         {
             var ComponentType = GetComponentType(ComponentPath);
             if (ComponentType != null)
             {
-                return await Open(ComponentType, key, openMode, parameters);
+                return await Open(ComponentType, key, openMode, parameters, skipQueryParamUpdate);
             }
             else
             {
@@ -62,7 +63,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             }
         }
 
-        public async Task<DialogResult?> Open(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, string>? parameters = null)
+        public async Task<DialogResult?> Open(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null, bool skipQueryParamUpdate = false)
         {
             if (ComponentType.IsAssignableFrom(typeof(ComponentBase)))
             {
@@ -93,7 +94,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
                     if (ComponentType!.FullName!.Contains(assemblyName))
                     {
                         var fullname = ComponentType!.FullName!.Substring(assemblyName.Length + 1);
-                        UpdateModalQueryUrl(fullname, key, parameters);
+                        var queryParams = skipQueryParamUpdate ? null : parameters;
+                        UpdateModalQueryUrl(fullname, key, queryParams);
                     }
                 }
                 
@@ -108,7 +110,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// </summary>
         /// <param name="parameters">A Dictionary of query options</param>
         /// <returns>A query string that start with '?'</returns>
-        public string GenerateQueryString(Dictionary<string, string>? parameters)
+        public string GenerateQueryString(Dictionary<string, object>? parameters)
         {
             if (parameters == null || parameters.Count == 0)
                 return string.Empty;
@@ -172,7 +174,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             UpdateModalQueryUrl(null, key);
         }
 
-        private async void UpdateModalQueryUrl(string? name, object? key, Dictionary<string, string>? parameters = null)
+        private async void UpdateModalQueryUrl(string? name, object? key, Dictionary<string, object>? parameters = null)
         {
             var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
 
@@ -214,7 +216,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return null;
         }
 
-        private async Task<DialogResult> OpenDialog(Type TComponent, object? key = null, Dictionary<string, string>? parameters = null)
+        private async Task<DialogResult> OpenDialog(Type TComponent, object? key = null, Dictionary<string, object>? parameters = null)
         {
             var dParams = new DialogParameters();
 
@@ -245,7 +247,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             if (modalString != null)
             {
-                var decodedString = WebUtility.UrlDecode(modalString);
+                var decodedString = Uri.UnescapeDataString(modalString);
                 try
                 {
                     return JsonSerializer.Deserialize<List<ModalInfo>>(decodedString) ?? new List<ModalInfo>();
@@ -262,15 +264,21 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
             if (modals.Count > 0)
             {
-                var modalString = JsonSerializer.Serialize(modals);
-                var param = new Dictionary<string, object?>
+                try
                 {
-                    //{QueryKey, System.Net.WebUtility.UrlEncode(modalString) },
-                    {QueryKey, modalString },
-                };
+                    var modalString = JsonSerializer.Serialize(modals);
+                    var param = new Dictionary<string, object?>
+                    {
+                        {QueryKey, Uri.EscapeDataString(modalString) },
+                    };
 
-                var queryValues = param.Select(x => x.Key + "=" + x.Value);
-                queryString = "?" + string.Join("&", queryValues);
+                    var queryValues = param.Select(x => x.Key + "=" + x.Value);
+                    queryString = "?" + string.Join("&", queryValues);
+                }
+                catch (Exception e)
+                {
+                    MessageService.Error("Could not create form url", e.Message, e.ToString());
+                }
             }
 
             var uri = NavManager.ToAbsoluteUri(url);
