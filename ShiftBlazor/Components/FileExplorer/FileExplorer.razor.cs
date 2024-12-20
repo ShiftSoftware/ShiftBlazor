@@ -229,6 +229,16 @@ public partial class FileExplorer
     {
         args.CustomData = [];
 
+        if (!string.IsNullOrWhiteSpace(ContainerName))
+        {
+            args.CustomData.Add("ContainerName", ContainerName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(AccountName))
+        {
+            args.CustomData.Add("AccountName", AccountName);
+        }
+
         if (Root != null)
         {
             args.CustomData.Add("RootDir", Root);
