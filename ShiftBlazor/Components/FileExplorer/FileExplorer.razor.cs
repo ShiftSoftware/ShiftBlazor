@@ -15,6 +15,7 @@ public partial class FileExplorer
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] SettingManager SettingManager { get; set; } = default!;
     [Inject] ISyncLocalStorageService SyncLocalStorage { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; }
 
     [Parameter]
     public string? BaseUrl { get; set; }
@@ -22,18 +23,11 @@ public partial class FileExplorer
     [Parameter]
     public string? BaseUrlKey { get; set; }
 
-    private string? _root;
+    [Parameter]
+    public string? Root { get; set; }
 
     [Parameter]
-    public string? Root
-    {
-        get => _root;
-        set
-        {
-            _root = value;
-            _ = Refresh();
-        }
-    }
+    public string? CurrentPath { get; set; }
 
     [Parameter]
     public double MaxUploadSizeInBytes { get; set; } = 128;
@@ -62,6 +56,18 @@ public partial class FileExplorer
     private string FileManagerId { get; set; }
     private bool ShowDeleted { get; set; } = false;
     private string DeletedItemsCss = "";
+
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        var newRoot = parameters.GetValueOrDefault<string>(nameof(Root));
+        var newCurrentPath = parameters.GetValueOrDefault<string>(nameof(CurrentPath));
+        if ((!string.IsNullOrWhiteSpace(Root) && Root != newRoot) || (!string.IsNullOrWhiteSpace(CurrentPath) && CurrentPath != newCurrentPath))
+        {
+            NavigationManager.Refresh();
+        }
+
+        return base.SetParametersAsync(parameters);
+    }
 
     protected override void OnInitialized()
     {
@@ -212,6 +218,19 @@ public partial class FileExplorer
     {
         if (SfFileManager == null) return;
         SyncLocalStorage.RemoveItem(SfFileManager.ID);
+    }
+
+    private async Task OnCreated()
+    {
+        if (!string.IsNullOrWhiteSpace(CurrentPath) && SfFileManager != null)
+        {
+            var paths = CurrentPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            foreach (var path in paths)
+            {
+                await SfFileManager.OpenFileAsync(path);
+            }
+        }
     }
 
     private void OnSuccess(SuccessEventArgs<FileExplorerDirectoryContent> args)
