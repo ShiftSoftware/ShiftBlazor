@@ -17,6 +17,7 @@ using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
 using System.Linq.Expressions;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -981,6 +982,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var idProp = foreignType.GetProperty(nameof(ShiftEntityDTOBase.ID));
                 var textProp = foreignType.GetProperty(foreignTextField);
 
+                PropertyInfo? foriegnEntityProp = null;
+
+                if (column.ForeignEntiyField is not null)
+                {
+                    foriegnEntityProp = entityType.GetProperty(column.ForeignEntiyField);
+                }
+
                 if (idProp == null || textProp == null || foreignData == null || columnProperty == null)
                     return;
 
@@ -988,12 +996,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     var id = columnProperty.GetValue(row);
 
-                    var test = foreignData.FirstOrDefault(x => idProp.GetValue(x)?.ToString() == id?.ToString());
-                    if (test != null)
+                    var foriegnDataMatch = foreignData.FirstOrDefault(x => idProp.GetValue(x)?.ToString() == id?.ToString());
+
+                    if (foriegnDataMatch != null)
                     {
                         lock (lockObject)
                         {
-                            columnProperty.SetValue(row, textProp.GetValue(test));
+                            columnProperty.SetValue(row, textProp.GetValue(foriegnDataMatch));
+
+                            if (foriegnEntityProp is not null)
+                            {
+                                foriegnEntityProp.SetValue(row, foriegnDataMatch);
+                            }
                         }
                     }
                 }
