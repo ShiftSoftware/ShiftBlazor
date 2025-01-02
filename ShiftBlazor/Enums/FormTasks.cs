@@ -15,5 +15,6 @@ namespace ShiftSoftware.ShiftBlazor.Enums
         Fetch,
         Custom,
         FetchRevisions,
+        SaveAsNew,
     }
 }

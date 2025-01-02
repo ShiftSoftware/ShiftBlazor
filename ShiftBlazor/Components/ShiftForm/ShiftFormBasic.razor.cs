@@ -349,9 +349,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await OnValidSubmit.PreventableInvokeAsync(context);
         }
 
-        internal virtual async Task SubmitHandler(EditContext context)
+        internal virtual async Task SubmitHandler(EditContext context, FormTasks formTask = FormTasks.Save)
         {
-            await RunTask(FormTasks.Save, async () =>
+            await RunTask(formTask, async () =>
             {
                 if (await OnSubmit.PreventableInvokeAsync(context)) return;
 
