@@ -13,6 +13,7 @@ using ShiftSoftware.TypeAuth.Core.Actions;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using ShiftSoftware.ShiftBlazor.Localization;
+using Microsoft.JSInterop;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -26,6 +27,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
         [Inject] IWebAssemblyHostEnvironment Env { get; set; } = default!;
+        [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
         [CascadingParameter]
         internal MudDialogInstance? MudDialog { get; set; }
@@ -376,6 +378,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
                 else
                 {
+                    await JsRuntime.InvokeVoidAsync("scrollToFirstError", $"Form-{Id}");
                     await InvalidSubmitHandler(context);
                 }
             });

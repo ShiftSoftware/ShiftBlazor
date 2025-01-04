@@ -26,10 +26,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] private IDialogService DialogService { get; set; } = default!;
         [Inject] private NavigationManager NavManager { get; set; } = default!;
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
-        [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] private SettingManager SettingManager { get; set; } = default!;
         [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
+        [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
         /// <summary>
         ///     The URL endpoint that processes the CRUD operations.

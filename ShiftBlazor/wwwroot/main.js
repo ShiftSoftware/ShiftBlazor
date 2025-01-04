@@ -115,6 +115,12 @@ window.fixAutocompleteIndent = function (inputId) {
     return hiddenTagsWidth / inputWidth;
 }
 
+window.scrollToFirstError = function (id) {
+    var form = document.getElementById(id);
+    var element = form?.getElementsByClassName("mud-input-error")[0];
+    element?.scrollIntoView();
+}
+
 window.setDropZone = function (UploaderId, dropZoneSelector) {
 
     let input = document.querySelector(`${UploaderId} [id^="Input"]`);
