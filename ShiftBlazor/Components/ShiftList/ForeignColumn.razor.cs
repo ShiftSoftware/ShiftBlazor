@@ -41,6 +41,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public string? ForeignTextField { get; set; }
 
+        [Parameter]
+        public string? ForeignEntiyField { get; set; }
+
         public string? Url { get; private set; }
         public string TEntityTextField { get; private set; } = string.Empty;
         public string TEntityValueField { get; private set; } = nameof(ShiftEntityDTOBase.ID);
@@ -132,6 +135,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     if (foreignData != null)
                     {
                         RemoteData = foreignData.ToList();
+
+                        if (ForeignEntiyField is not null)
+                        {
+                            foreach (var item in items)
+                            {
+                                var property = item.GetType().GetProperty(ForeignEntiyField);
+
+                                if (property is not null && property.CanWrite)
+                                {
+                                    var id = Misc.GetValueFromPropertyPath(item, TValueField!)?.ToString();
+
+                                    var thisData = RemoteData.FirstOrDefault(x => x.ID == id);
+
+                                    if (!IsForbiddenStatusCode && thisData is not null)
+                                    {
+                                        property.SetValue(item, foreignData.FirstOrDefault(x => x.ID == id));
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 catch (Exception e)

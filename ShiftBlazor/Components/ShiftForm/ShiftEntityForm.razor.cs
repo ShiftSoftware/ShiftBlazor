@@ -116,6 +116,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool AllowClone { get; set; }
 
+        [Parameter]
+        public bool AllowSaveAsNew { get; set; }
+
         internal string? OriginalValue { get; set; }
         internal bool Maximized { get; set; }
 
@@ -127,21 +130,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool _RenderHeaderControlsDivider;
         internal bool IsTemporal = false;
 
-        internal Guid IdempotencyToken;
-
         internal string ItemUrl
         {
             get
             {
                 var path = SettingManager.Configuration.ApiPath.AddUrlPath(Action);
-                return Mode == FormModes.Create ? path : path.AddUrlPath(Key?.ToString());
+                return IsCreateMode ? path : path.AddUrlPath(Key?.ToString());
             }
         }
 
         internal override string _SubmitText
         {
             get => SubmitText == null
-                ? Mode == FormModes.Create ? Loc["CreateForm"] : Loc["SaveForm"]
+                ? IsCreateMode ? Loc["CreateForm"] : Loc["SaveForm"]
                 : base._SubmitText;
             set => base._SubmitText = value;
         }
@@ -347,9 +348,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             HttpResponseMessage res;
             var message = "";
 
-            if (Mode == FormModes.Create)
+            if (IsCreateMode)
             {
-                var request = Http.CreateIdempotencyRequest(Value, ItemUrl, IdempotencyToken);
+                Value.ID = null;
+
+                var request = Http.CreateIdempotencyRequest(Value, ItemUrl, Guid.NewGuid());
 
                 res = await Http.SendAsync(request);
 
@@ -384,7 +387,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 ShowAlert(message, Severity.Success, 5);
 
-                if (Mode == FormModes.Create)
+                if (IsCreateMode)
                 {
                     await UpdateUrl(value.ID);
                 }
@@ -396,10 +399,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal override async Task SetMode(FormModes mode)
         {
-            if (mode == FormModes.Create)
-            {
-                IdempotencyToken = Guid.NewGuid();
-            }
             await base.SetMode(mode);
             SetTitle();
         }
@@ -536,23 +535,30 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 DocumentTitle = Loc["EditingForm", Title, Key];
             }
-            else if (Mode == FormModes.Create)
+            else if (IsCreateMode)
             {
                 DocumentTitle = Loc["CreatingForm", Title];
             }
         }
+
+        bool IsCreateMode => Mode == FormModes.Create || (Mode == FormModes.Edit && TaskInProgress == FormTasks.SaveAsNew);
 
         internal async Task UpdateUrl(object? key)
         {
             if (key == null || key == default)
                 return;
 
+            var oldKey = Key;
+
             Key = key;
             await KeyChanged.InvokeAsync(key);
 
             if (MudDialog == null)
             {
-                NavManager.NavigateTo(NavManager.Uri.AddUrlPath(key.ToString()));
+                if (TaskInProgress == FormTasks.Save)
+                    NavManager.NavigateTo(NavManager.Uri.AddUrlPath(key.ToString()));
+                else if (TaskInProgress == FormTasks.SaveAsNew)
+                    NavManager.NavigateTo(NavManager.Uri.Replace(oldKey!.ToString()!, key.ToString()));
             }
             else
             {

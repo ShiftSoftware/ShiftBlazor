@@ -218,7 +218,7 @@
 
                 <EditForm EditContext="EditContext"
                           @ref="Form"
-                          OnSubmit="SubmitHandler"
+                          OnSubmit="@(async() => await SubmitHandler(this.EditContext))"
                           style="height: 100%;">
 
                     <FluentValidationValidator DisableAssemblyScanning="Validator != null" Validator="Validator" />
@@ -313,19 +313,27 @@
 
                                 @if (_RenderSubmitButton)
                                 {
-                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
-                                        @if (TaskInProgress == FormTasks.Save)
-                                        {
-                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                        }
-                                        else
-                                        {
-                                            <MudIcon Icon="@Icons.Material.Filled.Save" />
-                                        }
+                                        <MudButtonGroup Color="Color.Primary" Variant="Variant.Text">
+                                            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
+                                                @if (TaskInProgress == FormTasks.Save || TaskInProgress == FormTasks.SaveAsNew)
+                                                {
+                                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                                }
+                                                else
+                                                {
+                                                    <MudIcon Icon="@Icons.Material.Filled.Save" />
+                                                }
 
-                                        <MudText Style="padding:0 10px;">@_SubmitText</MudText>
-                                    </MudButtonExtended>
-                                }
+                                                <MudText Style="padding:0 10px;">@_SubmitText</MudText>
+                                            </MudButtonExtended>
+                                            @if (Mode == FormModes.Edit && AllowSaveAsNew)
+                                            {
+                                                <MudMenu Color="Color.Primary" Disabled="@DisableSubmit" Icon="@Icons.Material.Filled.ArrowDropDown">
+                                                    <MudMenuItem OnClick="async () => await SubmitHandler(this.EditContext, FormTasks.SaveAsNew)" IconColor="Color.Primary" Icon="@Icons.Material.Filled.SaveAs">@Loc["Save as New"]</MudMenuItem>
+                                                </MudMenu>
+                                            }
+                                        </MudButtonGroup>
+                                    }
                             </MudToolBar>
                         }
                     </footer>

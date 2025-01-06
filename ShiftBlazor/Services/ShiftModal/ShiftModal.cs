@@ -185,7 +185,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             if (name == null)
             {
                 var modal = modals.LastOrDefault();
-                if (modal != null && modal.Key == null)
+                if (modal != null && (modal.Key == null || modal.Key != key))
                 {
                     modal.Key = key;
                     modal.Parameters = parameters;
