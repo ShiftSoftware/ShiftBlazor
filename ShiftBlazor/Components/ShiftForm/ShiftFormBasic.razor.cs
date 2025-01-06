@@ -358,19 +358,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (await OnSubmit.PreventableInvokeAsync(context)) return;
 
                 var childContextsValid = ChildContexts.Values.All(x => x.Validate());
-                //var mainContextValid = context.Validate();
-
-                var propertyNames = typeof(T)
-                    .GetProperties()
-                    .Where(x => !ChildContexts.Keys.Contains(x.Name))
-                    .Select(x => x.Name);
-
-                foreach (var names in propertyNames)
-                {
-                    context.NotifyFieldChanged(context.Field(names));
-                }
-
-                var mainContextValid = !context.GetValidationMessages().Any();
+                var mainContextValid = context.Validate();
 
                 if (mainContextValid && childContextsValid)
                 {
