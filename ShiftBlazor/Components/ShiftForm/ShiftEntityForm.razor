@@ -1,10 +1,12 @@
 ﻿@typeparam T where T : ShiftEntityViewAndUpsertDTO, new()
 @inherits ShiftFormBasic<T>
-@using ShiftSoftware.ShiftBlazor.Enums
 @namespace ShiftSoftware.ShiftBlazor.Components
 
+@using ShiftSoftware.ShiftBlazor.Enums
 @using Blazored.FluentValidation
 @using Microsoft.AspNetCore.Components.Forms
+@using ShiftSoftware.ShiftEntity.Core.Flags
+@using ShiftSoftware.TypeAuth.Core
 
 @if (!string.IsNullOrWhiteSpace(DocumentTitle))
 {
@@ -232,41 +234,56 @@
                             <CascadingValue Value="Mode < FormModes.Edit" Name="@FormHelper.ParentReadOnlyName">
                             <CascadingValue Value="TaskInProgress != FormTasks.None" Name="@FormHelper.ParentDisabledName">
                             <CascadingValue Value="Mode" >
-                                @if (TypeAuthAction is null)
+
+                                @if (TypeAuthAction == null
+                                    || TypeAuthService == null
+                                    || (Mode >= FormModes.Edit && TypeAuthService.Can(TypeAuthAction, Access.Write))
+                                    || (Mode <= FormModes.Archive && TypeAuthService.Can(TypeAuthAction, Access.Read)))
                                 {
-                                    <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasBrandSelection T="T" Value="Value" />
+                                    
+                                    @if (Value is IHasBrandSelection<T> dtoWithBrand)
+                                    {
+                                        var fieldId = FieldIdentifier.Create(() => dtoWithBrand.Brand);
+                                        var errorText = EditContext.GetValidationMessages(fieldId).FirstOrDefault();
+                                        <ShiftAutocomplete Label="@Loc["BrandAutocompleteLabel"]"
+                                                           Value="dtoWithBrand.Brand"
+                                                           ValueChanged="(value) => { dtoWithBrand.Brand = value; EditContext.NotifyFieldChanged(fieldId);}"
+                                                           TEntitySet="ShiftSoftware.ShiftIdentity.Core.DTOs.Brand.BrandListDTO"
+                                                           EntitySet="IdentityBrand"
+                                                           BaseUrlKey="ShiftIdentityApi"
+                                                           For="() => dtoWithBrand.Brand"
+                                                           Error="!EditContext.IsValid(fieldId)"
+                                                           ErrorText="@errorText"/>
+
+                                    }
+
                                     @ChildContent
-                                    <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasDraftCheckBox T="T" Value="Value" />
+
+                                    @if (Value is ShiftSoftware.ShiftEntity.Core.Flags.IHasDraftCheckBox<T> dtoWithDraftFlag)
+                                    {
+                                        var fieldId = FieldIdentifier.Create(() => dtoWithDraftFlag.IsDraft);
+                                        var errorText = EditContext.GetValidationMessages(fieldId).FirstOrDefault();
+
+                                        if (Value.ID == default && !dtoWithDraftFlag.IsDraft.HasValue)
+                                            dtoWithDraftFlag.IsDraft = true;
+
+                                        <MudCheckBoxExtended Label="@Loc["DraftVersionCheckboxLabel"]"
+                                                             Value="dtoWithDraftFlag.IsDraft"
+                                                             T="bool?"
+                                                             ValueChanged="(value) => { dtoWithDraftFlag.IsDraft = value; EditContext.NotifyFieldChanged(fieldId);}"
+                                                             For="() => dtoWithDraftFlag.IsDraft"
+                                                             Error="!EditContext.IsValid(fieldId)"
+                                                             ErrorText="@errorText"/>
+                                    }
+
                                 }
                                 else
                                 {
-                                    if (Mode == FormModes.Create || Mode == FormModes.Edit)
-                                    {
-                                        if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write))
-                                        {
-                                            <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasBrandSelection T="T" Value="Value" />
-                                            @ChildContent
-                                            <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasDraftCheckBox T="T" Value="Value" />
-                                        }
-                                        else
-                                        {
-                                            <MudAlert Severity="Severity.Error">@Loc["WriteAccessDenied", Title]</MudAlert>
-                                        }
-                                    }
-                                    else if (Mode == FormModes.View || Mode == FormModes.Archive)
-                                    {
-                                        if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
-                                        {
-                                            <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasBrandSelection T="T" Value="Value" />
-                                            @ChildContent
-                                            <ShiftSoftware.ShiftBlazor.Components.ShiftForm.Flags.HasDraftCheckBox T="T" Value="Value" />
-                                        }
-                                        else
-                                        {
-                                            <MudAlert Severity="Severity.Error">@Loc["ReadAccessDenied", Title]</MudAlert>
-                                        }
-                                    }
+                                    <MudAlert Severity="Severity.Error">
+                                        @(Mode >= FormModes.Edit ? Loc["WriteAccessDenied", Title] : Loc["ReadAccessDenied", Title])
+                                    </MudAlert>
                                 }
+                                
                             </CascadingValue>
                             </CascadingValue>
                             </CascadingValue>
