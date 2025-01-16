@@ -1,0 +1,273 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
+
+@if (!string.IsNullOrWhiteSpace(Title) && !IsEmbed)
+{
+    <PageTitle>@Title</PageTitle>
+}
+
+<MudPaper Elevation="25" Outlined="Outlined" id="@FileExplorerId">
+    <MudToolBar Style="@ToolbarStyle" Dense="@Dense" Class="light-toolbar shift-toolbar-header">
+        <MudIcon Size="@IconSize" Icon="@IconSvg"></MudIcon>
+        <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FileExplorer"])</MudText>
+
+        <MudSpacer></MudSpacer>
+
+        <MudTooltip Text="@Loc["NewFolder"]">
+            <MudIconButtonExtended Icon="@Icons.Material.Filled.CreateNewFolder"
+                                   KeyboardKey="KeyboardKeys.KeyN"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["NewFolder"]"
+                                   OnClick="CreateNewFolder" />
+        </MudTooltip>
+
+        <MudTooltip Text="@Loc["Upload"]">
+            <MudIconButtonExtended Icon="@Icons.Material.Filled.UploadFile"
+                                   KeyboardKey="KeyboardKeys.KeyU"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Upload"]"
+                                   OnClick="Upload" />
+        </MudTooltip>
+
+        <MudTooltip Text="@Loc["Sort"]">
+            <MudIconButtonExtended Icon="@Icons.Material.Filled.Sort"
+                                   KeyboardKey="KeyboardKeys.KeyS"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Sort"]"
+                                   OnClick="Sort" />
+        </MudTooltip>
+
+        <MudTooltip Text="@Loc["Refresh"]">
+            <MudIconButtonExtended Icon="@Icons.Material.Filled.Refresh"
+                                   KeyboardKey="KeyboardKeys.KeyR"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Refresh"]"
+                                   OnClick="() => Refresh(true)" />
+        </MudTooltip>
+
+        <MudTooltip Text="@Loc["Delete"]">
+            <MudIconButtonExtended Icon="@Icons.Material.Filled.Delete"
+                                   KeyboardKey="KeyboardKeys.KeyD"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Delete"]"
+                                   OnClick="Delete" />
+        </MudTooltip>
+
+        <MudTooltip Text="@Loc["Download"]">
+            <MudIconButtonExtended Icon="@Icons.Material.Filled.Download"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Download"]"
+                                   OnClick="() => Download()" />
+        </MudTooltip>
+
+        @if (!DisableQuickAccess)
+        {
+            <MudTooltip Text="@Loc["QuickAccess"]">
+                <MudIconButtonExtended Icon="@Icons.Material.Filled.AddToDrive"
+                                       Size="@IconSize"
+                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                       aria-label="@Loc["QuickAccess"]"
+                                       OnClick="() => AddToQuickAccess()" />
+            </MudTooltip>
+        }
+
+        <MudTooltip Text="@Loc["ToggleDelete"]">
+            <MudIconButtonExtended Icon="@Icons.Material.Filled.RestoreFromTrash"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["ToggleDelete"]"
+                                   OnClick="ViewDeletedFiles" />
+        </MudTooltip>
+
+        @if (LastSelectedFile?.IsDeleted == true)
+        {
+            <MudTooltip Text="@Loc["RestoreFile"]">
+                <MudIconButtonExtended Icon="@Icons.Material.Filled.RestoreFromTrash"
+                                       Size="@IconSize"
+                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                       aria-label="@Loc["RestoreFile"]"
+                                       OnClick="RestoreFile" />
+            </MudTooltip>
+        }
+
+    </MudToolBar>
+
+    <div style="display: flex;">
+        
+        @if (RenderQuickAccess)
+        {
+            <div class="quick-access-items">
+                    @foreach (var item in QuickAccessFiles)
+                    {
+                        <MudChip T="string" Size="Size.Small" OnClick="() => GoToPath(item)" OnClose="() => RemoveQuickAccessItem(item)">
+                            @item.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()
+                        </MudChip>
+                    }
+            </div>
+
+            <MudDivider Vertical="true" FlexItem="true" />
+        }
+
+        <div class="main-window" style="overflow: hidden; height: @Height;">
+            <MudToolBar Dense Class="breadcrumb">
+
+                @* <MudText>@(RootAliasName ?? "Root")</MudText> *@
+
+                @for (var i = 0; i < PathParts.Count - 1; i++)
+                {
+                    var index = i;
+                    var part = PathParts[i];
+                    <MudButton Size="Size.Small" OnClick="() => OnBreadCrumbClick(index)">@part</MudButton>
+                    <MudText>></MudText>
+                }
+
+                <MudButton Size="Size.Small" Disabled>@PathParts.Last()</MudButton>
+            </MudToolBar>
+
+            <MudDivider Style="flex-grow: initial;" />
+
+            <div class="file-listing" @onclick="DeselectAllFiles">
+
+                @if (Files.Count > 0)
+                {
+                    @foreach (var file in Files)
+                    {
+                        <div class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true">
+                            <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};")  />
+                            <MudText title="@file.Name">@file.Name</MudText>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="no-files">
+                        <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Large"/>
+                        <MudText>@Loc["NoFiles"]</MudText>
+                    </div>
+                    @* <MudAlert Severity="Severity.Info">@Loc["NoFiles"]</MudAlert> *@
+                }
+            </div>
+
+            @if (IsLoading) {
+                <div class="loading-indicator">
+                    <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+                </div>
+            }
+        </div>
+    </div>
+
+    <MudDivider/>
+
+    <MudToolBar Dense="true">
+
+        @if (SelectedFiles.Count > 0)
+        {
+            <MudText Typo="Typo.body2">@SelectedFiles.Count of @Files.Count selected</MudText>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" OnClick="DeselectAllFiles"></MudIconButton>
+        } 
+
+    </MudToolBar>
+</MudPaper>
+
+@* @(string.Join("-", SelectedFiles.Select(x => x.Name))) *@
+
+<FileUploader @ref="_FileUploader"
+              ContainerName="@ContainerName"
+              AccountName="@AccountName"
+              Prefix="@(this.Root + CWD?.FilterPath + CWD?.Name)"
+              DropAreaSelector="@($"#{FileExplorerId}")"
+              HideUI="true"
+              ValuesChanged="() => Refresh()" />
+
+<style>
+
+    .main-window {
+        position: relative;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .breadcrumb {
+    }
+
+    .breadcrumb .mud-typography {
+        margin: 0 5px;
+    }
+
+    .breadcrumb .mud-button {
+        min-width: initial;
+    }
+
+    .breadcrumb button:disabled {
+        color: var(--mud-palette-text-primary) !important;
+    }
+
+    .file-listing {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        flex-grow: 1;
+        padding: 20px;
+        overflow: auto;
+        height: 100%;
+    }
+
+    .file-explorer-item {
+        width: 150px;
+        height: 150px;
+        cursor: pointer;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+    }
+
+    .file-explorer-item .mud-icon-root {
+        height: 100px;
+        width: 100px;
+    }
+
+    .file-explorer-item:hover {
+        background-color: #e8eaea;
+    }
+
+    .file-explorer-item.deleted {
+        background-color: #ffc7c7;
+    }
+
+    .file-explorer-item.selected {
+        background-color: #83b6f2;
+    }
+
+    .quick-access-items {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .loading-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .no-files {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        height: 100%;
+    }
+
+    .no-files .mud-icon-root {
+        color: #f1ce69;
+    }
+</style>

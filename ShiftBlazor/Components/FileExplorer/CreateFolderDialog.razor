@@ -1,0 +1,25 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
+
+<MudDialog>
+    <TitleContent>
+        Folder
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="Value"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string Value = "";
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(Value));
+
+    private void Cancel() => MudDialog.Cancel();
+}
