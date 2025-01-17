@@ -30,9 +30,12 @@
                                       Value="@value"
                                       Error="@showErrors"
                                       ErrorText="@errorMessage"
+                                      Lines="Lines"
+                                      MaxLines="MaxLines"
+                                      AutoGrow="AutoGrow"
                                       OnBlur="@onBlur"
                                       ValueChanged="@textChanged"
-                                      Label="@label"/>
+                                      Label="@label" />
             </MudItem>
         }
     </MudGrid>
@@ -69,6 +72,15 @@
     /// </summary>
     [Parameter]
     public bool OnlyValidateIfDirty { get; set; } = true;
+
+    [Parameter]
+    public int Lines { get; set; } = 1;
+
+    [Parameter]
+    public int MaxLines { get; set; } = 1;
+
+    [Parameter]
+    public bool AutoGrow { get; set; } = false;
 
     private ILookup<string, LanguageInfo> LanguageInfo = default!;
 
