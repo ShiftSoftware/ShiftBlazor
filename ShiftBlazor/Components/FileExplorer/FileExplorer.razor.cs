@@ -29,8 +29,11 @@ public partial class FileExplorer
     [Parameter]
     public string? CurrentPath { get; set; }
 
+    //[Parameter]
+    //public double MaxUploadSizeInBytes { get; set; } = 128;
+
     [Parameter]
-    public double MaxUploadSizeInBytes { get; set; } = 128;
+    public int MaxUploadFileCount { get; set; } = 16;
 
     [Parameter]
     public ViewType View { get; set; } = ViewType.LargeIcons;
@@ -51,7 +54,7 @@ public partial class FileExplorer
 
     private SfFileManager<FileExplorerDirectoryContent>? SfFileManager { get; set; }
     private string? Url;
-    private double MaxUploadSize => MaxUploadSizeInBytes * 1024 * 1024;
+    //private double MaxUploadSize => MaxUploadSizeInBytes * 1024 * 1024;
     private FileUploader? _FileUploader { get; set; }
     private string FileManagerId { get; set; }
     private bool ShowDeleted { get; set; } = false;
@@ -243,6 +246,7 @@ public partial class FileExplorer
                 .Select(x => $".e-filemanager .e-list-parent [title='{x.Name}'] {{background-color: #ffc7c7;}}"));
         }
 
+        this._FileUploader?.Items?.Clear();
     }
 
     public void OnSend(BeforeSendEventArgs args)
