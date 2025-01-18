@@ -126,10 +126,10 @@ window.setDropZone = function (UploaderId, dropZoneSelector) {
     let input = document.querySelector(`${UploaderId} [id^="Input"]`);
     let dropZone = document.querySelector(dropZoneSelector ?? UploaderId);
 
-    input.addEventListener("drop", () => input.style.display = "none");
-    input.addEventListener("dragleave", () => input.style.display = "none");
-    input.addEventListener("dragend", () => input.style.display = "none");
-    dropZone.addEventListener("dragenter", () => input.style.display = "block");
+    input.addEventListener("drop", () => endDrop(input, dropZone));
+    input.addEventListener("dragleave", () => endDrop(input, dropZone));
+    input.addEventListener("dragend", () => endDrop(input, dropZone));
+    dropZone.addEventListener("dragenter", () => startDrop(input, dropZone));
 
     if (dropZone.style.position === "static" || dropZone.style.position === "") {
         dropZone.style.position = "relative";
@@ -139,6 +139,16 @@ window.setDropZone = function (UploaderId, dropZoneSelector) {
         dropZone.appendChild(input);
     }
 };
+
+function endDrop(input, dropZone) {
+    input.style.display = "none";
+    dropZone.classList.remove("drop-area-active");
+}
+
+function startDrop(input, dropZone) {
+    input.style.display = "block";
+    dropZone.classList.add("drop-area-active");
+}
 
 window.openInput = function (id, dirUpload) {
     var input = document.getElementById(id);

@@ -180,7 +180,7 @@
               ContainerName="@ContainerName"
               AccountName="@AccountName"
               Prefix="@(this.Root + CWD?.FilterPath + CWD?.Name)"
-              DropAreaSelector="@($"#{FileExplorerId}")"
+              DropAreaSelector="@($"#{FileExplorerId} .file-listing")"
               HideUI="true"
               ValuesChanged="() => Refresh()" />
 

@@ -132,3 +132,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .e-filemanager .e-fe-grid-icon[aria-label^="Directory"] ~ [aria-colindex="4"] {
     color: transparent !important;
 }
+
+.drop-area-active {
+    border: 1px dashed blue;
+}
