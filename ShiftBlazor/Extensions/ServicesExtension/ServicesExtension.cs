@@ -29,6 +29,8 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
                 mudConfig.SnackbarConfiguration.PreventDuplicates = false;
                 mudConfig.SnackbarConfiguration.MaxDisplayedSnackbars = 5;
 
+                mudConfig.PopoverOptions.Mode = PopoverMode.Default;
+
                 options.MudBlazorConfiguration?.Invoke(mudConfig);
             });
 

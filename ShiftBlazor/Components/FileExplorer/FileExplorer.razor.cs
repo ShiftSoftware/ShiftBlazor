@@ -63,7 +63,8 @@ public partial class FileExplorer
         var newCurrentPath = parameters.GetValueOrDefault<string>(nameof(CurrentPath));
         if ((!string.IsNullOrWhiteSpace(Root) && Root != newRoot) || (!string.IsNullOrWhiteSpace(CurrentPath) && CurrentPath != newCurrentPath))
         {
-            NavigationManager.Refresh();
+            _ = Refresh();
+            //NavigationManager.Refresh();
         }
 
         return base.SetParametersAsync(parameters);
