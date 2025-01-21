@@ -80,6 +80,9 @@ public partial class FileExplorerNew : IShortcutComponent
     [Parameter]
     public string? Height { get; set; }
 
+    [Parameter]
+    public bool ShowThumbnails { get; set; }
+
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -99,6 +102,15 @@ public partial class FileExplorerNew : IShortcutComponent
     private FileExplorerDirectoryContent? LastSelectedFile { get; set; }
     private bool RenderQuickAccess => !DisableQuickAccess && QuickAccessFiles.Count > 0;
     private bool ShowDeletedFiles { get; set; }
+    private IEnumerable<string> ImageExtensions = new List<string>
+    {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".png",
+        ".svg",
+        ".webp",
+    };
 
     protected override void OnInitialized()
     {
@@ -134,27 +146,52 @@ public partial class FileExplorerNew : IShortcutComponent
         }
     }
 
+    private FileExplorerDirectoryContent DefaultDirectoryContentObject()
+    {
+        var CustomData = new Dictionary<string, object>();
+
+        if (!string.IsNullOrWhiteSpace(ContainerName))
+        {
+            CustomData.Add("ContainerName", ContainerName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(AccountName))
+        {
+            CustomData.Add("AccountName", AccountName);
+        }
+
+        if (Root != null)
+        {
+            CustomData.Add("RootDir", Root);
+        }
+
+        return new FileExplorerDirectoryContent
+        {
+            CustomData = CustomData,
+        };
+    }
+
     public async Task FetchData(FileExplorerDirectoryContent? data = null)
     {
         IsLoading = true;
 
+        LastSelectedFile = null;
+        SelectedFiles.Clear();
         //await Task.Delay(1000);
 
         try
         {
-            var response = await HttpClient.PostAsJsonAsync(Url, new FileExplorerDirectoryContent()
-            {
-                Action = "read",
-                Path = data == null ? "/" : data.FilterPath + data.Name,
-                Data = data == null ? [] : [data],
-                ShowHiddenItems = ShowDeletedFiles,
-            });
+            var obj = DefaultDirectoryContentObject();
+            obj.Action = "read";
+            obj.Path = GetPath(data);
+            obj.Data = data == null ? [] : [data];
+            obj.ShowHiddenItems = ShowDeletedFiles;
+
+            var response = await HttpClient.PostAsJsonAsync(Url, obj);
 
             if (!response.IsSuccessStatusCode)
             {
-                //ErrorMessage = Loc["DataReadStatusError", (int)response!.StatusCode];
-                //ReadyToRender = true;
-                //return gridData;
+                throw new Exception();
             }
 
             var content = await response.Content.ReadFromJsonAsync<FileExplorerResponse>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -162,26 +199,29 @@ public partial class FileExplorerNew : IShortcutComponent
                 Converters = { new LocalDateTimeOffsetJsonConverter() }
             });
 
-            //if (content == null || content.Count == null)
-            //{
-            //    ErrorMessage = Loc["DataReadEmptyError"];
-            //    ReadyToRender = true;
-            //    return gridData;
-            //}
+            if (content?.Error != null)
+            {
+                throw new Exception(content.Error.Message);
+            }
 
             Files = content?.Files?.ToList() ?? new List<FileExplorerDirectoryContent>();
             CWD = content?.CWD;
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
-
-            IsLoading = false;
-
         }
         catch (Exception e)
         {
-            MessageService.Error("Could not parse server data.", e.Message, e.ToString());
+            var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.ExtraSmall,
+                BackdropClick = true,
+                CloseOnEscapeKey = true,
+            };
+
+            await DialogService.ShowMessageBox("Error", e.Message ?? "Could not parse server data", yesText: "Ok", options: options);
         }
 
+        IsLoading = false;
         StateHasChanged();
     }
 
@@ -194,7 +234,6 @@ public partial class FileExplorerNew : IShortcutComponent
 
         breadcrumb.AddRange(path.Split('/', StringSplitOptions.RemoveEmptyEntries));
 
-        Console.WriteLine(JsonSerializer.Serialize(breadcrumb));
         PathParts = breadcrumb;
     }
     
@@ -209,7 +248,6 @@ public partial class FileExplorerNew : IShortcutComponent
             await FetchData(file);
         }
     }
-
 
     private void OnFileClick(MouseEventArgs args, FileExplorerDirectoryContent file)
     {
@@ -287,23 +325,18 @@ public partial class FileExplorerNew : IShortcutComponent
             MaxWidth = MaxWidth.ExtraSmall,
         };
 
-        var ac = DialogService.Show<CreateFolderDialog>("", options);
-        var avb = await ac.Result;
+        var result = await DialogService.Show<CreateFolderDialog>("", options).Result;
         
-        if (avb.Data is string value)
+        if (result?.Data is string value)
         {
-            Console.WriteLine(value);
-
-            var newFolderData = new FileExplorerDirectoryContent()
-            {
-                Action = "create",
-                Path = CWD?.FilterPath + CWD?.Name,
-                Name = value,
-                Data = [],
-            };
+            var newFolderData = DefaultDirectoryContentObject();
+            newFolderData.Action = "create";
+            newFolderData.Path = GetPath(CWD);
+            newFolderData.Name = value;
+            newFolderData.Data = CWD == null ? [] : [CWD];
 
             var response = await HttpClient.PostAsJsonAsync(Url, newFolderData);
-            await FetchData(CWD);
+            await Refresh();
         }
     }
 
@@ -312,7 +345,6 @@ public partial class FileExplorerNew : IShortcutComponent
         if (_FileUploader != null)
         {
             await _FileUploader.OpenInput(directoryUpload: false);
-            Console.WriteLine($"{this.Root} + {CWD?.FilterPath} + {CWD?.Name}");
         }
     }
 
@@ -327,7 +359,6 @@ public partial class FileExplorerNew : IShortcutComponent
         {
             Files = [];
         }
-
         await FetchData(CWD);
     }
 
@@ -351,15 +382,13 @@ public partial class FileExplorerNew : IShortcutComponent
         if (result == true)
         {
             var files = SelectedFiles.ToArray();
-            var newFolderData = new FileExplorerDirectoryContent()
-            {
-                Action = "delete",
-                Path = SelectedFiles.First().FilterPath,
-                Data = files,
-            };
+            var deleteData = DefaultDirectoryContentObject();
+            deleteData.Action = "delete";
+            deleteData.Path = SelectedFiles.First().FilterPath;
+            deleteData.Data = files;
 
-            var response = await HttpClient.PostAsJsonAsync(Url, newFolderData);
-            await FetchData(CWD);
+            var response = await HttpClient.PostAsJsonAsync(Url, deleteData);
+            await Refresh();
         }
     }
 
@@ -450,6 +479,11 @@ public partial class FileExplorerNew : IShortcutComponent
     private void RestoreFile()
     {
         // restore file
+    }
+
+    private string GetPath(FileExplorerDirectoryContent? data)
+    {
+        return data == null || string.IsNullOrWhiteSpace(data.FilterPath) ? "/" : data.FilterPath + data.Name;
     }
 
     void IDisposable.Dispose()
