@@ -137,7 +137,7 @@
                 {
                     @foreach (var file in Files)
                     {
-                        <div class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true">
+                        <div title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true">
                             @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)))
                             {
                                 <MudImage Height="100" Width="100" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.TargetPath" />
@@ -146,7 +146,7 @@
                             {
                                 <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};")  />
                             }
-                            <MudText title="@file.Name">@file.Name</MudText>
+                            <MudText>@file.Name</MudText>
                         </div>
                     }
                 }
@@ -216,10 +216,9 @@
     }
 
     .file-listing {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 10px;
-        flex-grow: 1;
         padding: 20px;
         overflow: auto;
         height: 100%;
@@ -231,8 +230,14 @@
         height: 150px;
         cursor: pointer;
         overflow: hidden;
-        text-overflow: ellipsis;
         text-align: center;
+        padding: 4px;
+    }
+
+    .file-explorer-item p {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
     }
 
     .file-explorer-item .mud-icon-root {
