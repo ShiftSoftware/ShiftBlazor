@@ -12,23 +12,29 @@
 
         <MudSpacer></MudSpacer>
 
-        <MudTooltip Text="@Loc["NewFolder"]">
-            <MudIconButtonExtended Icon="@Icons.Material.Filled.CreateNewFolder"
-            KeyboardKey="KeyboardKeys.KeyN"
-            Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-            aria-label="@Loc["NewFolder"]"
-            OnClick="CreateNewFolder" />
-        </MudTooltip>
+        @if (DisplayNewFolderButton)
+        {
+            <MudTooltip Text="@Loc["NewFolder"]">
+                <MudIconButtonExtended Icon="@Icons.Material.Filled.CreateNewFolder"
+                KeyboardKey="KeyboardKeys.KeyN"
+                Size="@IconSize"
+                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                aria-label="@Loc["NewFolder"]"
+                OnClick="CreateNewFolder" />
+            </MudTooltip>
+        }
 
-        <MudTooltip Text="@Loc["Upload"]">
-            <MudIconButtonExtended Icon="@Icons.Material.Filled.UploadFile"
-            KeyboardKey="KeyboardKeys.KeyU"
-            Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-            aria-label="@Loc["Upload"]"
-            OnClick="Upload" />
-        </MudTooltip>
+        @if (DisplayUploadButton)
+        {
+            <MudTooltip Text="@Loc["Upload"]">
+                <MudIconButtonExtended Icon="@Icons.Material.Filled.UploadFile"
+                KeyboardKey="KeyboardKeys.KeyU"
+                Size="@IconSize"
+                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                aria-label="@Loc["Upload"]"
+                OnClick="Upload" />
+            </MudTooltip>
+        }
 
         <MudTooltip Text="@Loc["Sort"]">
             <MudIconButtonExtended Icon="@Icons.Material.Filled.Sort"
@@ -48,24 +54,30 @@
             OnClick="() => Refresh(true)" />
         </MudTooltip>
 
-        <MudTooltip Text="@Loc["Delete"]">
-            <MudIconButtonExtended Icon="@Icons.Material.Filled.Delete"
-            KeyboardKey="KeyboardKeys.KeyD"
-            Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-            aria-label="@Loc["Delete"]"
-            OnClick="Delete" />
-        </MudTooltip>
+        @if (DisplayDeleteButton)
+        {
+            <MudTooltip Text="@Loc["Delete"]">
+                <MudIconButtonExtended Icon="@Icons.Material.Filled.Delete"
+                KeyboardKey="KeyboardKeys.KeyD"
+                Size="@IconSize"
+                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                aria-label="@Loc["Delete"]"
+                OnClick="Delete" />
+            </MudTooltip>
+        }
 
-        <MudTooltip Text="@Loc["Download"]">
-            <MudIconButtonExtended Icon="@Icons.Material.Filled.Download"
-            Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-            aria-label="@Loc["Download"]"
-            OnClick="() => Download()" />
-        </MudTooltip>
+        @if (DisplayDownloadButton)
+        {
+            <MudTooltip Text="@Loc["Download"]">
+                <MudIconButtonExtended Icon="@Icons.Material.Filled.Download"
+                Size="@IconSize"
+                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                aria-label="@Loc["Download"]"
+                OnClick="() => Download()" />
+            </MudTooltip>
+            }
 
-        @if (!DisableQuickAccess)
+        @if (DisplayQuickAccessButton)
         {
             <MudTooltip Text="@Loc["QuickAccess"]">
                 <MudIconButtonExtended Icon="@Icons.Material.Filled.AddToDrive"
@@ -75,7 +87,7 @@
                 OnClick="() => AddToQuickAccess()" />
             </MudTooltip>
         }
-
+        
         <MudTooltip Text="@Loc["ToggleDelete"]">
             <MudIconButtonExtended Icon="@Icons.Material.Filled.RestoreFromTrash"
             Size="@IconSize"

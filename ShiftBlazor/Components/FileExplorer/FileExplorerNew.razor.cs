@@ -102,6 +102,13 @@ public partial class FileExplorerNew : IShortcutComponent
     private FileExplorerDirectoryContent? LastSelectedFile { get; set; }
     private bool RenderQuickAccess => !DisableQuickAccess && QuickAccessFiles.Count > 0;
     private bool ShowDeletedFiles { get; set; }
+
+    private bool DisplayDeleteButton { get; set; }
+    private bool DisplayDownloadButton { get; set; }
+    private bool DisplayQuickAccessButton { get; set; }
+    private bool DisplayUploadButton { get; set; } = true;
+    private bool DisplayNewFolderButton { get; set; } = true;
+
     private IEnumerable<string> ImageExtensions = new List<string>
     {
         ".jpg",
@@ -176,7 +183,7 @@ public partial class FileExplorerNew : IShortcutComponent
         IsLoading = true;
 
         LastSelectedFile = null;
-        SelectedFiles.Clear();
+        DeselectAllFiles();
         //await Task.Delay(1000);
 
         try
@@ -289,11 +296,23 @@ public partial class FileExplorerNew : IShortcutComponent
             SelectedFiles = [file];
         }
 
+        UpdateToolbarButtons();
     }
 
-    private void DeselectAllFiles(MouseEventArgs args)
+    private void DeselectAllFiles()
     {
         SelectedFiles.Clear();
+        UpdateToolbarButtons();
+    }
+
+    private void UpdateToolbarButtons()
+    {
+        DisplayDeleteButton = SelectedFiles.Count > 0;
+        DisplayDownloadButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsFile);
+        DisplayQuickAccessButton = !DisableQuickAccess && SelectedFiles.Count > 0 && SelectedFiles.All(x => !x.IsFile);
+        //DisplayNewFolderButton = SelectedFiles.Count == 0;
+        //DisplayUploadButton = SelectedFiles.Count == 0;
+
     }
 
     private async Task OnBreadCrumbClick(int index)
@@ -364,7 +383,7 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private async Task Delete()
     {
-        if (SelectedFiles == null)
+        if (SelectedFiles.Count == 0)
         {
             return;
         }
@@ -394,11 +413,21 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private async Task Download(FileExplorerDirectoryContent? file = null)
     {
-        if (file == null && SelectedFiles.Count > 0)
+        IEnumerable<FileExplorerDirectoryContent> files = [];
+
+        if (file != null)
         {
-            file = SelectedFiles.Last();
+            files = [file];
         }
-        await JsRuntime.InvokeVoidAsync("downloadFileFromUrl", file.Name, file.TargetPath);
+        else if (SelectedFiles.Count > 0)
+        {
+            files = SelectedFiles.Where(x => x.IsFile);
+        }
+
+        foreach (var f in files)
+        {
+            await JsRuntime.InvokeVoidAsync("downloadFileFromUrl", f.Name, f.TargetPath);
+        }
     }
 
     private void GetQuickAccessItems()
