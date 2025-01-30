@@ -83,6 +83,9 @@ public partial class FileExplorerNew : IShortcutComponent
     [Parameter]
     public bool ShowThumbnails { get; set; }
 
+    [Parameter]
+    public FileExplorerView? View { get;set; }
+
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -108,6 +111,8 @@ public partial class FileExplorerNew : IShortcutComponent
     private bool DisplayQuickAccessButton { get; set; }
     private bool DisplayUploadButton { get; set; } = true;
     private bool DisplayNewFolderButton { get; set; } = true;
+    private bool DisplayRestoreButton { get; set; }
+    private FileExplorerView CurrentView { get; set; } = FileExplorerView.LargeIcons;
 
     private IEnumerable<string> ImageExtensions = new List<string>
     {
@@ -136,6 +141,7 @@ public partial class FileExplorerNew : IShortcutComponent
         FileExplorerId = "FileExplorer" + Id.ToString().Replace("-", string.Empty);
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
         IconSize = Dense ? Size.Medium : Size.Large;
+        SetView(View ?? CurrentView);
         SetBreadcrumb();
         GetQuickAccessItems();
     }
@@ -307,9 +313,10 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private void UpdateToolbarButtons()
     {
-        DisplayDeleteButton = SelectedFiles.Count > 0;
+        DisplayDeleteButton = SelectedFiles.Count > 0 && !SelectedFiles.Any(x => x.IsDeleted);
         DisplayDownloadButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsFile);
         DisplayQuickAccessButton = !DisableQuickAccess && SelectedFiles.Count > 0 && SelectedFiles.All(x => !x.IsFile);
+        DisplayRestoreButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsDeleted);
         //DisplayNewFolderButton = SelectedFiles.Count == 0;
         //DisplayUploadButton = SelectedFiles.Count == 0;
 
@@ -400,7 +407,7 @@ public partial class FileExplorerNew : IShortcutComponent
         
         if (result == true)
         {
-            var files = SelectedFiles.ToArray();
+            var files = SelectedFiles.Where(x => !x.IsDeleted).ToArray();
             var deleteData = DefaultDirectoryContentObject();
             deleteData.Action = "delete";
             deleteData.Path = SelectedFiles.First().FilterPath;
@@ -513,6 +520,40 @@ public partial class FileExplorerNew : IShortcutComponent
     private string GetPath(FileExplorerDirectoryContent? data)
     {
         return data == null || string.IsNullOrWhiteSpace(data.FilterPath) ? "/" : data.FilterPath + data.Name;
+    }
+
+    private string GetViewClass(FileExplorerView? view = null)
+    {
+        switch (view ?? CurrentView)
+        {
+            case FileExplorerView.LargeIcons:
+                return "large-icons";
+            case FileExplorerView.Information:
+                return "information";
+            default:
+                return "large-icons";
+        }
+    }
+
+    public void SetView(FileExplorerView? view = null)
+    {
+        if (view == null)
+        {
+            // cycle through views enum
+            var values = Enum.GetValues(typeof(FileExplorerView));
+            var index = Array.IndexOf(values, CurrentView);
+            CurrentView = (FileExplorerView)values.GetValue((index + 1) % values.Length)!;
+        }
+        else
+        {
+            CurrentView = view.Value;
+        }
+    }
+
+    public enum FileExplorerView
+    {
+        LargeIcons,
+        Information,
     }
 
     void IDisposable.Dispose()

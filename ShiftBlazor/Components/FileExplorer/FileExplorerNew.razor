@@ -15,98 +15,126 @@
         @if (DisplayNewFolderButton)
         {
             <MudTooltip Text="@Loc["NewFolder"]">
-                <MudIconButtonExtended Icon="@Icons.Material.Filled.CreateNewFolder"
-                KeyboardKey="KeyboardKeys.KeyN"
-                Size="@IconSize"
-                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                aria-label="@Loc["NewFolder"]"
-                OnClick="CreateNewFolder" />
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.CreateNewFolder"
+                                   KeyboardKey="KeyboardKeys.KeyN"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["NewFolder"]"
+                                   OnClick="CreateNewFolder" >
+                    @Loc["New Folder"]
+                </MudButtonExtended>
             </MudTooltip>
         }
 
         @if (DisplayUploadButton)
         {
             <MudTooltip Text="@Loc["Upload"]">
-                <MudIconButtonExtended Icon="@Icons.Material.Filled.UploadFile"
-                KeyboardKey="KeyboardKeys.KeyU"
-                Size="@IconSize"
-                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                aria-label="@Loc["Upload"]"
-                OnClick="Upload" />
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.UploadFile"
+                                   KeyboardKey="KeyboardKeys.KeyU"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Upload"]"
+                                   OnClick="Upload">
+                    @Loc["Upload"]
+                </MudButtonExtended>
+
             </MudTooltip>
         }
 
         <MudTooltip Text="@Loc["Sort"]">
-            <MudIconButtonExtended Icon="@Icons.Material.Filled.Sort"
-            KeyboardKey="KeyboardKeys.KeyS"
-            Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-            aria-label="@Loc["Sort"]"
-            OnClick="Sort" />
+            <MudButtonExtended StartIcon="@Icons.Material.Filled.Sort"
+                               KeyboardKey="KeyboardKeys.KeyS"
+                               style="text-transform: capitalize;"
+                               Size="@IconSize"
+                               Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                               aria-label="@Loc["Sort"]"
+                               OnClick="Sort">
+                @Loc["Sort"]
+            </MudButtonExtended>
         </MudTooltip>
 
         <MudTooltip Text="@Loc["Refresh"]">
-            <MudIconButtonExtended Icon="@Icons.Material.Filled.Refresh"
-            KeyboardKey="KeyboardKeys.KeyR"
-            Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-            aria-label="@Loc["Refresh"]"
-            OnClick="() => Refresh(true)" />
+            <MudButtonExtended StartIcon="@Icons.Material.Filled.Refresh"
+                               KeyboardKey="KeyboardKeys.KeyR"
+                               style="text-transform: capitalize;"
+                               Size="@IconSize"
+                               Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                               aria-label="@Loc["Refresh"]"
+                               OnClick="() => Refresh(true)">
+                @Loc["Refresh"]
+            </MudButtonExtended>
         </MudTooltip>
 
         @if (DisplayDeleteButton)
         {
             <MudTooltip Text="@Loc["Delete"]">
-                <MudIconButtonExtended Icon="@Icons.Material.Filled.Delete"
-                KeyboardKey="KeyboardKeys.KeyD"
-                Size="@IconSize"
-                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                aria-label="@Loc["Delete"]"
-                OnClick="Delete" />
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.Delete"
+                                   KeyboardKey="KeyboardKeys.KeyD"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Delete"]"
+                                   OnClick="Delete">
+                    @Loc["Delete"]
+                </MudButtonExtended>
             </MudTooltip>
         }
 
         @if (DisplayDownloadButton)
         {
             <MudTooltip Text="@Loc["Download"]">
-                <MudIconButtonExtended Icon="@Icons.Material.Filled.Download"
-                Size="@IconSize"
-                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                aria-label="@Loc["Download"]"
-                OnClick="() => Download()" />
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.Download"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Download"]"
+                                   OnClick="() => Download()">
+                    @Loc["Download"]
+                </MudButtonExtended>
             </MudTooltip>
             }
 
         @if (DisplayQuickAccessButton)
         {
-            <MudTooltip Text="@Loc["QuickAccess"]">
-                <MudIconButtonExtended Icon="@Icons.Material.Filled.AddToDrive"
-                Size="@IconSize"
-                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                aria-label="@Loc["QuickAccess"]"
-                OnClick="() => AddToQuickAccess()" />
-            </MudTooltip>
+@*             <MudTooltip Text="@Loc["QuickAccess"]">
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.Download"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Download"]"
+                                   OnClick="() => Download()">
+                    @Loc["Download"]
+                </MudButtonExtended>
+            </MudTooltip> *@
         }
         
         <MudTooltip Text="@Loc["ToggleDelete"]">
-            <MudIconButtonExtended Icon="@Icons.Material.Filled.RestoreFromTrash"
-            Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-            aria-label="@Loc["ToggleDelete"]"
-            OnClick="ViewDeletedFiles" />
+            <MudButtonExtended StartIcon="@Icons.Material.Filled.RestoreFromTrash"
+                               KeyboardKey="KeyboardKeys.KeyT"
+                               style="text-transform: capitalize;"
+                               Size="@IconSize"
+                               Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                               aria-label="@Loc["ToggleDelete"]"
+                               OnClick="ViewDeletedFiles">
+                @Loc["Toggle Delete"]
+            </MudButtonExtended>
         </MudTooltip>
 
-        @if (LastSelectedFile?.IsDeleted == true)
+        @if (DisplayRestoreButton)
         {
             <MudTooltip Text="@Loc["RestoreFile"]">
-                <MudIconButtonExtended Icon="@Icons.Material.Filled.RestoreFromTrash"
-                Size="@IconSize"
-                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                aria-label="@Loc["RestoreFile"]"
-                OnClick="RestoreFile" />
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.RestoreFromTrash"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["RestoreFile"]"
+                                   OnClick="RestoreFile">
+                    @Loc["Restore File"]
+                </MudButtonExtended>
             </MudTooltip>
         }
-
     </MudToolBar>
 
     <div style="display: flex;">
@@ -143,7 +171,7 @@
 
             <MudDivider Style="flex-grow: initial;" />
 
-            <div class="file-listing" @onclick="DeselectAllFiles">
+            <div class="file-listing @GetViewClass()" @onclick="DeselectAllFiles">
 
                 @if (Files.Count > 0)
                 {
@@ -152,7 +180,7 @@
                         <div title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true">
                             @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)))
                             {
-                                <MudImage Height="100" Width="100" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.TargetPath" />
+                                <MudImage ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.TargetPath" />
                             }
                             else
                             {
@@ -189,11 +217,17 @@
             <MudText Typo="Typo.body2">@SelectedFiles.Count of @Files.Count selected</MudText>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" OnClick="DeselectAllFiles"></MudIconButton>
         } 
+        <MudSpacer/>
 
+        <MudButtonGroup Class="change-view" Variant="Variant.Outlined" Size="Size.Small">
+            <MudButton OnClick="() => SetView()" StartIcon="@Icons.Material.Filled.ViewList">Switch View</MudButton>
+            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
+                <MudMenuItem Icon="@Icons.Material.Filled.ViewModule" @onclick="() => SetView(FileExplorerView.LargeIcons)">@Loc["Large Icons"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileExplorerView.Information)">@Loc["Detailed"]</MudMenuItem>
+            </MudMenu>
+        </MudButtonGroup>
     </MudToolBar>
 </MudPaper>
-
-@* @(string.Join("-", SelectedFiles.Select(x => x.Name))) *@
 
 <FileUploader @ref="_FileUploader"
               ContainerName="@ContainerName"
@@ -228,33 +262,52 @@
     }
 
     .file-listing {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 10px;
         padding: 20px;
         overflow: auto;
         height: 100%;
         min-height: 200px;
     }
 
+    .file-listing.large-icons {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+
     .file-explorer-item {
-        width: 150px;
-        height: 150px;
         cursor: pointer;
         overflow: hidden;
         text-align: center;
         padding: 4px;
     }
 
+    .large-icons .file-explorer-item {
+        width: 150px;
+        height: 150px;
+    }
+
+    .large-icons .file-explorer-item .mud-icon-root,
+    .large-icons .file-explorer-item .mud-image {
+        height: 100px;
+        width: 100px;
+    }
+
+	.information .file-explorer-item {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+	}
+
+    .information .file-explorer-item .mud-icon-root,
+    .information .file-explorer-item .mud-image {
+        height: 25px;
+        width: 25px;
+    }
+
     .file-explorer-item p {
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
-    }
-
-    .file-explorer-item .mud-icon-root {
-        height: 100px;
-        width: 100px;
     }
 
     .file-explorer-item:hover {
@@ -294,9 +347,14 @@
         gap: 10px;
         width: 100%;
         height: 100%;
+        grid-column: 1 / -1;
     }
 
     .no-files .mud-icon-root {
         color: #f1ce69;
+    }
+
+    .change-view .mud-menu .mud-button-root {
+        width: 25px;
     }
 </style>
