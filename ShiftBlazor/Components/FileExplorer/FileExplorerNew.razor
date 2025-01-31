@@ -99,13 +99,13 @@
         @if (DisplayQuickAccessButton)
         {
 @*             <MudTooltip Text="@Loc["QuickAccess"]">
-                <MudButtonExtended StartIcon="@Icons.Material.Filled.Download"
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.AddToDrive"
                                    style="text-transform: capitalize;"
                                    Size="@IconSize"
                                    Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                   aria-label="@Loc["Download"]"
-                                   OnClick="() => Download()">
-                    @Loc["Download"]
+                                   aria-label="@Loc["QuickAccess"]"
+                                   OnClick="() => AddToQuickAccess()">
+                    @Loc["Quick Access"]
                 </MudButtonExtended>
             </MudTooltip> *@
         }
@@ -171,13 +171,13 @@
 
             <MudDivider Style="flex-grow: initial;" />
 
-            <div class="file-listing @GetViewClass()" @onclick="DeselectAllFiles">
+            <div class="file-listing @GetViewClass()" @onclick="DeselectAllFiles" @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
 
                 @if (Files.Count > 0)
                 {
                     @foreach (var file in Files)
                     {
-                        <div title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true">
+                        <div title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true" @oncontextmenu="(e) => OnFileClick(e, file)" >
                             @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)))
                             {
                                 <MudImage ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.TargetPath" />
@@ -228,6 +228,35 @@
         </MudButtonGroup>
     </MudToolBar>
 </MudPaper>
+
+<MudOverlay @bind-Visible="DisplayContextMenu" AutoClose LockScroll="false" OnClosed="CloseContextMenu" @oncontextmenu="CloseContextMenu" >
+    <MudPaper Class="context-menu" Elevation="25" Width="300px" Style="@($"left: {ContextLeft}px; top: {ContextTop}px;")">
+        <MudList T="string" >
+            @if (DisplayNewFolderButton)
+            {
+                <MudListItem Icon="@Icons.Material.Filled.CreateNewFolder" OnClick="CreateNewFolder">@Loc["New Folder"]</MudListItem>
+            }
+            @if (DisplayDownloadButton)
+            {
+                <MudListItem Icon="@Icons.Material.Filled.Download" OnClick="() => Download()">@Loc["Download"]</MudListItem>
+            }
+            @if (DisplayDeleteButton)
+            {
+                <MudListItem Icon="@Icons.Material.Filled.Delete" OnClick="Delete">@Loc["Delete"]</MudListItem>
+            }
+            @if (DisplayQuickAccessButton)
+            {
+                <MudListItem Icon="@Icons.Material.Filled.AddToDrive" OnClick="AddToQuickAccess">@Loc["Add to Quick Access"]</MudListItem>
+            }
+
+            @if (MenuItemsTemplate != null)
+            {
+                <MudDivider />
+                @MenuItemsTemplate
+            }
+        </MudList>
+    </MudPaper>
+</MudOverlay>
 
 <FileUploader @ref="_FileUploader"
               ContainerName="@ContainerName"
@@ -356,5 +385,9 @@
 
     .change-view .mud-menu .mud-button-root {
         width: 25px;
+    }
+
+    .context-menu {
+        position: fixed;
     }
 </style>

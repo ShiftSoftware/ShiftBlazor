@@ -86,9 +86,13 @@ public partial class FileExplorerNew : IShortcutComponent
     [Parameter]
     public FileExplorerView? View { get;set; }
 
+    [Parameter]
+    public RenderFragment? MenuItemsTemplate { get; set; }
+
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+    public List<FileExplorerDirectoryContent> SelectedFiles { get; set; } = [];
 
     private string FileExplorerId { get; set; }
     private string ToolbarStyle = string.Empty;
@@ -99,7 +103,6 @@ public partial class FileExplorerNew : IShortcutComponent
     private bool IsLoading { get; set; } = true;
     private string Url = "";
     private FileUploader? _FileUploader { get; set; }
-    private List<FileExplorerDirectoryContent> SelectedFiles { get; set; } = [];
     private List<string> QuickAccessFiles { get; set; } = [];
     private List<string> PathParts = [];
     private FileExplorerDirectoryContent? LastSelectedFile { get; set; }
@@ -355,6 +358,7 @@ public partial class FileExplorerNew : IShortcutComponent
         
         if (result?.Data is string value)
         {
+            DisplayContextMenu = false;
             var newFolderData = DefaultDirectoryContentObject();
             newFolderData.Action = "create";
             newFolderData.Path = GetPath(CWD);
@@ -385,6 +389,7 @@ public partial class FileExplorerNew : IShortcutComponent
         {
             Files = [];
         }
+        DisplayContextMenu = false;
         await FetchData(CWD);
     }
 
@@ -407,6 +412,7 @@ public partial class FileExplorerNew : IShortcutComponent
         
         if (result == true)
         {
+            DisplayContextMenu = false;
             var files = SelectedFiles.Where(x => !x.IsDeleted).ToArray();
             var deleteData = DefaultDirectoryContentObject();
             deleteData.Action = "delete";
@@ -421,6 +427,7 @@ public partial class FileExplorerNew : IShortcutComponent
     private async Task Download(FileExplorerDirectoryContent? file = null)
     {
         IEnumerable<FileExplorerDirectoryContent> files = [];
+        DisplayContextMenu = false;
 
         if (file != null)
         {
@@ -437,7 +444,23 @@ public partial class FileExplorerNew : IShortcutComponent
         }
     }
 
-    private void GetQuickAccessItems()
+    private bool DisplayContextMenu { get; set; }
+    private double ContextLeft { get; set; }
+    private double ContextTop { get; set; }
+
+    private void ContextMenu(MouseEventArgs args)
+    {
+        DisplayContextMenu = true;
+        ContextLeft = args.ClientX;
+        ContextTop = args.ClientY;
+    }
+
+    public void CloseContextMenu()
+    {
+        DisplayContextMenu = false;
+    }
+
+    public void GetQuickAccessItems()
     {
         var items = SyncLocalStorage.GetItem<List<string>>("QuickAccess");
 
@@ -446,6 +469,7 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private void AddToQuickAccess()
     {
+        DisplayContextMenu = false;
         var file = SelectedFiles.LastOrDefault() ?? CWD;
 
         if (file == null || file.Path == null || file.IsFile) return;
