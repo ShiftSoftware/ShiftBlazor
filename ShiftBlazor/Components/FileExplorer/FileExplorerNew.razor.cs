@@ -116,6 +116,9 @@ public partial class FileExplorerNew : IShortcutComponent
     private bool DisplayNewFolderButton { get; set; } = true;
     private bool DisplayRestoreButton { get; set; }
     private FileExplorerView CurrentView { get; set; } = FileExplorerView.LargeIcons;
+    private bool DisplayContextMenu { get; set; }
+    private double ContextLeft { get; set; }
+    private double ContextTop { get; set; }
 
     private IEnumerable<string> ImageExtensions = new List<string>
     {
@@ -308,7 +311,7 @@ public partial class FileExplorerNew : IShortcutComponent
         UpdateToolbarButtons();
     }
 
-    private void DeselectAllFiles()
+    public void DeselectAllFiles()
     {
         SelectedFiles.Clear();
         UpdateToolbarButtons();
@@ -383,7 +386,7 @@ public partial class FileExplorerNew : IShortcutComponent
         // Logic to sort files
     }
 
-    private async Task Refresh(bool force = false)
+    public async Task Refresh(bool force = false)
     {
         if (force)
         {
@@ -443,10 +446,6 @@ public partial class FileExplorerNew : IShortcutComponent
             await JsRuntime.InvokeVoidAsync("downloadFileFromUrl", f.Name, f.TargetPath);
         }
     }
-
-    private bool DisplayContextMenu { get; set; }
-    private double ContextLeft { get; set; }
-    private double ContextTop { get; set; }
 
     private void ContextMenu(MouseEventArgs args)
     {
