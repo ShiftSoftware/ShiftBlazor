@@ -22,12 +22,12 @@ window.CloseFileExplorerDialogs = function (id) {
 }
 
 window.handleKeydown = function (e) {
-    if (e.altKey || e.code.includes("Alt")) {
+    if (e.altKey || (e.code != null && e.code.includes("Alt"))) {
         e.preventDefault();
         document.body.classList.add("show-keys");
     }
 
-    if ((e.altKey && !e.code.includes("Alt")) || e.code == "Escape") {
+    if ((e.altKey && (e.code != null && !e.code.includes("Alt"))) || e.code == "Escape") {
         DotNet.invokeMethod('ShiftSoftware.ShiftBlazor', 'SendKeys', [e.code]);
     }
 }
