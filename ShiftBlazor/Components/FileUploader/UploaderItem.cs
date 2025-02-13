@@ -11,6 +11,8 @@ public class UploaderItem
     public ShiftFileDTO? File { get; set; }
     public Message? Message { get; set; }
     public string? RelativePath { get; set; }
+    public double Progress { get; set; }
+    public FileUploadState State { get; set; }
     public CancellationTokenSource? CancellationTokenSource { get; set; }
 
     public UploaderItem(IBrowserFile file, string? relativePath = null)
@@ -18,6 +20,7 @@ public class UploaderItem
         LocalFile = file;
         RelativePath = relativePath;
         CancellationTokenSource = new CancellationTokenSource();
+        State = FileUploadState.Waiting;
     }
 
     public UploaderItem(ShiftFileDTO file)
@@ -37,7 +40,14 @@ public class UploaderItem
     }
 
     public string GetFileName() => (File?.Name ?? LocalFile?.Name)!;
+    public bool IsWaitingForUpload => State == FileUploadState.Waiting || State == FileUploadState.Prepared;
+}
 
-    public bool IsNew() => File != null && LocalFile != null;
-    public bool IsWaitingForUpload() => (File == null || File.Url != null) && LocalFile != null && Message == null;
+public enum FileUploadState
+{
+    None,
+    Waiting,
+    Prepared,
+    Uploading,
+    Uploaded,
 }

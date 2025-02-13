@@ -37,7 +37,7 @@
     {
         <div style="position:absolute;top: 0;left: 0;height: 100%;width: 100%;display: flex;align-items: center;justify-content: center;z-index: 10;background-color: #011c2d2e;">
             <MudTooltip Text="@(Item.Message?.Title ?? @Uploader.Loc["UploadFailedDefaultMessage"])">
-                <MudIconButton OnClick="@(() => Uploader.UploadFile(Item))"
+                <MudIconButton OnClick="@(() => Uploader.UploadFileToAzureAsync(Item))"
                                Icon="@Filled.Error"
                                Color="Color.Error"
                                aria-label="@Uploader.Loc["UploadFailedDefaultMessage"]"
@@ -47,7 +47,8 @@
         </div>
     }
 
-    @if (Item.IsImage() && Item.File != null)
+    @* Only display image thumbnails after uploading has finished or when loading from server *@
+    @if (Item.IsImage() && Item.State == FileUploadState.Uploaded)
     {
         <MudImage draggable="false"
                   Src="@($"{Item.File.Url}")"
@@ -62,13 +63,13 @@
         <MudIcon Icon="@(Item.IsImage() ? Filled.Image : Filled.InsertDriveFile)" Style=@($"height: {Height}px;width: {Width}px;")/>
     }
 
-    @if (Item.IsWaitingForUpload())
+    @if (Item.IsWaitingForUpload || Item.State == FileUploadState.Uploading)
     {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        <MudProgressLinear Color="Color.Primary" Indeterminate="Item.IsWaitingForUpload" Value="Item.Progress" Max="1" />
     }
     else if (Item.LocalFile != null)
     {
-        <MudProgressLinear Color="Item.Message == null ? Color.Success : Color.Error" Value="100" />
+        @* <MudProgressLinear Color="Item.Message == null ? Color.Success : Color.Error" Value="100" /> *@
     }
 
 </MudPaper>

@@ -136,3 +136,14 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .drop-area-active {
     border: 1px dashed blue;
 }
+
+.file-uploader-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+}

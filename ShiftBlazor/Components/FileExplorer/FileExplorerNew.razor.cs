@@ -100,6 +100,7 @@ public partial class FileExplorerNew : IShortcutComponent
     private bool DisableSidebar => DisableQuickAccess && DisableRecents;
     private FileExplorerDirectoryContent? CWD { get; set; } = null;
     private List<FileExplorerDirectoryContent> Files { get; set; } = new();
+    private List<FileExplorerDirectoryContent> UploadingFiles { get; set; } = new();
     private bool IsLoading { get; set; } = true;
     private string Url = "";
     private FileUploader? _FileUploader { get; set; }
@@ -223,7 +224,14 @@ public partial class FileExplorerNew : IShortcutComponent
                 throw new Exception(content.Error.Message);
             }
 
-            Files = content?.Files?.ToList() ?? new List<FileExplorerDirectoryContent>();
+            var files = content?.Files?.ToList() ?? new List<FileExplorerDirectoryContent>();
+
+            foreach (var file in files)
+            {
+                file.UploadProgress = 1;
+            }
+
+            Files = files;
             CWD = content?.CWD;
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
@@ -393,6 +401,8 @@ public partial class FileExplorerNew : IShortcutComponent
             Files = [];
         }
         DisplayContextMenu = false;
+        UploadingFiles.Clear();
+        await _FileUploader.ClearAll();
         await FetchData(CWD);
     }
 
@@ -516,8 +526,14 @@ public partial class FileExplorerNew : IShortcutComponent
     {
         if (file.IsFile)
         {
-            switch(Path.GetExtension(file.Path))
+            switch(Path.GetExtension(file.Name))
             {
+                case ".pdf":
+                case ".doc":
+                case ".docx":
+                case ".txt":
+                    return new(@Icons.Material.Filled.TextSnippet, "#ff0000");
+
                 default:
                     return new(Icons.Material.Filled.InsertDriveFile, "#dddddd");
             }
@@ -570,6 +586,28 @@ public partial class FileExplorerNew : IShortcutComponent
         else
         {
             CurrentView = view.Value;
+        }
+    }
+
+    private void HandleUploading(List<UploaderItem> items)
+    {
+
+        UploadingFiles = items.Select(x => new FileExplorerDirectoryContent
+        {
+            Name = x.GetFileName(),
+            Path = x.File.Url,
+            IsFile = true,
+            Size = x.LocalFile?.Size ?? x.File.Size,
+            TargetPath = x.File.Url,
+            UploadProgress = x.Progress,
+        }).ToList();
+    }
+
+    private void UploadHandler(List<ShiftFileDTO> files)
+    {
+        foreach(var file in UploadingFiles)
+        {
+            file.UploadProgress = 1;
         }
     }
 

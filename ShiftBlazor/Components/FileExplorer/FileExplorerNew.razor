@@ -175,10 +175,10 @@
 
                 @if (Files.Count > 0)
                 {
-                    @foreach (var file in Files)
+                    @foreach (var file in UploadingFiles.Concat(Files))
                     {
-                        <div title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true" @oncontextmenu="(e) => OnFileClick(e, file)" >
-                            @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)))
+                        <div @key="file.Path" title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true" @oncontextmenu="(e) => OnFileClick(e, file)" >
+                            @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)) && file.UploadProgress == 1)
                             {
                                 <MudImage ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.TargetPath" />
                             }
@@ -186,6 +186,10 @@
                             {
                                 <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};")  />
                             }
+
+                            @if (file.UploadProgress < 1) {
+                                <MudProgressLinear Color="Color.Primary" Value="file.UploadProgress" Max="1"/>
+                            } 
                             <MudText>@file.Name</MudText>
                         </div>
                     }
@@ -229,7 +233,7 @@
     </MudToolBar>
 </MudPaper>
 
-<MudOverlay @bind-Visible="DisplayContextMenu" AutoClose LockScroll="false" OnClosed="CloseContextMenu" @oncontextmenu="CloseContextMenu" >
+<MudOverlay @bind-Visible="DisplayContextMenu" ZIndex="10000" AutoClose LockScroll="false" OnClosed="CloseContextMenu" @oncontextmenu="CloseContextMenu" >
     <MudPaper Class="context-menu" Elevation="25" Width="300px" Style="@($"left: {ContextLeft}px; top: {ContextTop}px;")">
         <MudList T="string" >
             @if (DisplayNewFolderButton)
@@ -263,8 +267,9 @@
               AccountName="@AccountName"
               Prefix="@(CWD?.Path)"
               DropAreaSelector="@($"#{FileExplorerId} .file-listing")"
-              HideUI="true"
-              ValuesChanged="() => Refresh()" />
+              OnUploadProgress="HandleUploading"
+              MaxFileSizeInMegaBytes="99999999"
+              ValuesChanged="UploadHandler"/>
 
 <style>
 

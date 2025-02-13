@@ -77,6 +77,9 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Parameter]
     public bool? HideUI { get; set; }
 
+    [Parameter]
+    public EventCallback<List<UploaderItem>> OnUploadProgress { get; set; }
+
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftForm { get; set; }
 
@@ -103,7 +106,6 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     internal string ImageTypes = "image/*";
     internal int ThumbnailSize = 150;
     internal bool _ShowThumbnail;
-    private string InputStyle = "position: absolute;top: 0;left: 0;height: 100%;width: 100%;z-index:1000;display: none;opacity: 0;";
     private InputFile? InputFileRef { get; set; }
     private bool? IsDirectoryUpload = false;
 
@@ -126,7 +128,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     internal string Classes {
         get
         {
-            var classNames = "FileUpload relative my-4 z-10";
+            var classNames = "file-uploader relative my-4 z-10";
             if (ReadOnly) classNames += " readonly";
             return classNames;
         }
@@ -155,12 +157,18 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     private FieldIdentifier _FieldIdentifier;
     private string? ErrorText;
+    private System.Timers.Timer? UploadProgressTimer;
+    private bool _uiUpdatePending = false;
 
     protected override void OnInitialized()
     {
         _ShowThumbnail = ShowThumbnail;
 
         OnGridSort += HandleGridSort;
+
+        UploadProgressTimer = new System.Timers.Timer(1000);
+        UploadProgressTimer.Elapsed += (s, e) => ProcessUiUpdate();
+        UploadProgressTimer.AutoReset = true;
 
         if (For != null && ShiftForm?.EditContext != null)
         {
@@ -226,7 +234,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile)).ToList());
         }
 
-        var filesToUpload = Items.Where(x => x.IsWaitingForUpload()).ToList();
+        var filesToUpload = Items.Where(x => x.IsWaitingForUpload).ToList();
 
         await GetSASForFilesAsync(filesToUpload);
 
@@ -237,7 +245,14 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             tasks.Add(Task.Run(async () => await UploadFileToAzureAsync(item)));
         }
 
+        UploadProgressTimer?.Start();
         await Task.WhenAll(tasks);
+
+        if (!Items.Any(x => x.IsWaitingForUpload || x.State == FileUploadState.Uploading))
+        {
+            UploadProgressTimer?.Stop();
+        }
+        ProcessUiUpdate(true);
 
         await SetValue(Items);
     }
@@ -287,7 +302,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
                 filesWithSASTokenReponse.Entity.ForEach((file) =>
                 {
                     var match = items.FirstOrDefault(x => x.LocalFile?.Name == file.Name)!;
-
+                    match.State = FileUploadState.Prepared;
                     match.File = file;
                 });
             }
@@ -315,7 +330,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         try
         {
-            var maxFileSize = MaxFileSizeInMegaBytes * 1024 * 1024;
+            var maxFileSize = (long)MaxFileSizeInMegaBytes * 1024 * 1024;
             var stream = item.LocalFile.OpenReadStream(maxFileSize);
 
             var content = new StreamContent(stream, Convert.ToInt32(stream.Length));
@@ -366,22 +381,31 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             return;
         }
 
+        item.State = FileUploadState.Uploading;
+
         item.Message = null;
 
         try
         {
-            var maxFileSize = MaxFileSizeInMegaBytes * 1024 * 1024;
+            var maxFileSize = (long)MaxFileSizeInMegaBytes * 1024 * 1024;
             var stream = item.LocalFile.OpenReadStream(maxFileSize);
-
             var blobClient = new BlobClient(new Uri(item.File!.Url!));
+            var token = item.CancellationTokenSource?.Token ?? CancellationToken.None;
+            var headers = new BlobHttpHeaders { ContentType = item.LocalFile.ContentType };
 
             item.File.ContentType = item.LocalFile.ContentType;
-
             item.File.Size = item.LocalFile.Size;
 
-            await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = item.LocalFile.ContentType });
+            var prog = new Progress<long>(value =>
+            {
+                item.Progress = (double)value / item.LocalFile.Size;
+                _uiUpdatePending = true;
+            });
+
+            await blobClient.UploadAsync(stream, headers, progressHandler: prog, cancellationToken: token);
 
             item.LocalFile = null;
+            item.State = FileUploadState.Uploaded;
         }
         catch (Exception ex)
         {
@@ -390,6 +414,37 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         }
 
         await InvokeAsync(StateHasChanged);
+    }
+
+    public class UploadProgress : IProgress<long>, IDisposable
+    {
+        private UploaderItem Item;
+        private readonly System.Timers.Timer Timer;
+        private bool CanReport = true;
+        public event EventHandler<UploaderItem>? ProgressChanged;
+
+        public UploadProgress(UploaderItem item)
+        {
+            Item = item;
+            Timer = new System.Timers.Timer(1000);
+            Timer.Elapsed += (sender, e) => CanReport = true;
+            Timer.Start();
+
+        }
+
+        public void Report(long value)
+        {
+            if (CanReport)
+            {
+                Item.Progress = (double)value / Item.LocalFile!.Size;
+                ProgressChanged?.Invoke(this, Item);
+                CanReport = false;
+            }
+        }
+        public void Dispose()
+        {
+            Timer.Dispose();
+        }
     }
 
     internal async Task OpenInput(string? id = null, bool? directoryUpload = false)
@@ -437,7 +492,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     public async Task ClearAll()
     {
-        if (Mode >= FormModes.Edit)
+        if (Mode == null || Mode >= FormModes.Edit)
         {
             foreach (var item in Items.Where(x => x.CancellationTokenSource != null))
             {
@@ -457,6 +512,18 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             );
     }
 
+    private void ProcessUiUpdate(bool force = false)
+    {
+        if (!_uiUpdatePending && !force) return;
+
+        _uiUpdatePending = false; // Reset flag
+        InvokeAsync(() =>
+        {
+            OnUploadProgress.InvokeAsync(Items);
+            StateHasChanged();
+        });
+    }
+
     [JSInvokable]
     public static void ReorderGrid(KeyValuePair<string, List<Guid>> order)
     {
@@ -466,5 +533,6 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     void IDisposable.Dispose()
     {
         OnGridSort -= HandleGridSort;
+        UploadProgressTimer?.Dispose();
     }
 }
