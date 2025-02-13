@@ -75,7 +75,10 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     public string? Prefix { get; set; }
 
     [Parameter]
-    public bool? HideUI { get; set; }
+    public bool HideUI { get; set; }
+
+    [Parameter]
+    public bool EnableUploadDialog { get; set; }
 
     [Parameter]
     public EventCallback<List<UploaderItem>> OnUploadProgress { get; set; }
@@ -108,6 +111,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     internal bool _ShowThumbnail;
     private InputFile? InputFileRef { get; set; }
     private bool? IsDirectoryUpload = false;
+    private bool DisplayUploadDialog { get; set; }
 
     [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
     [Parameter]
@@ -234,6 +238,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile)).ToList());
         }
 
+        OpenUploadDialog();
+
         var filesToUpload = Items.Where(x => x.IsWaitingForUpload).ToList();
 
         await GetSASForFilesAsync(filesToUpload);
@@ -251,6 +257,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         if (!Items.Any(x => x.IsWaitingForUpload || x.State == FileUploadState.Uploading))
         {
             UploadProgressTimer?.Stop();
+            //CloseUploadDialog();
         }
         ProcessUiUpdate(true);
 
@@ -522,6 +529,16 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             OnUploadProgress.InvokeAsync(Items);
             StateHasChanged();
         });
+    }
+
+    public void OpenUploadDialog()
+    {
+        DisplayUploadDialog = true;
+    }
+
+    public void CloseUploadDialog()
+    {
+        DisplayUploadDialog = false;
     }
 
     [JSInvokable]

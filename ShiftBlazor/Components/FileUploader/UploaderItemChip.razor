@@ -31,13 +31,13 @@ else
             
             @if (Item.Message != null)
             {
-            <MudTooltip Text="@(Item.Message?.Title ?? @Uploader.Loc["UploadFailedDefaultMessage"])">
+                <MudTooltip Text="@(Item.Message?.Title ?? @Uploader.Loc["UploadFailedDefaultMessage"])">
                 <MudIconButton OnClick="@(() => Uploader.UploadFileToAzureAsync(Item))" aria-label="@Uploader.Loc["UploadFailedDefaultMessage"]" Icon="@Filled.Error" Color="@Color.Error" Style="padding: 0;" />
                 </MudTooltip>
             }
             else if (Item.IsWaitingForUpload || Item.State == FileUploadState.Uploading)
             {
-            <MudProgressCircular aria-label="@Uploader.Loc["UploadInProgress"]" Indeterminate="Item.IsWaitingForUpload" Color="@Color.Primary" Size="@Size.Small" Value="Item.Progress" Max="1" />
+                <MudProgressCircular aria-label="@Uploader.Loc["UploadInProgress"]" Indeterminate="Item.IsWaitingForUpload" Color="@Color.Primary" Size="@Size.Small" Value="Item.Progress" Max="1" />
             }
             else if (Uploader.ReadOnly || (Item.LocalFile == null && Item.File != null))
             {

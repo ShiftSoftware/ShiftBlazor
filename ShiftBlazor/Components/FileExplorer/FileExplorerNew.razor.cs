@@ -89,6 +89,9 @@ public partial class FileExplorerNew : IShortcutComponent
     [Parameter]
     public RenderFragment? MenuItemsTemplate { get; set; }
 
+    [Parameter]
+    public bool EnableUploadDialog { get; set; }
+
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();

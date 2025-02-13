@@ -11,7 +11,7 @@
               Variant="Variant.Outlined"
               Error="!string.IsNullOrWhiteSpace(ErrorText)"
               ErrorText="@ErrorText"
-              Style="@(HideUI == true ? "display: none;" : "")">
+              Style="@(HideUI ? "display: none;" : "")">
 
         @if (Items.Count > 0 || !ReadOnly)
         {
@@ -79,4 +79,35 @@
             <MudText Typo="Typo.h6">@Loc["NoFilesSelected"]</MudText>
         }
     </MudField>
+}
+
+@if (EnableUploadDialog)
+{
+    <MudOverlay @bind-Visible="DisplayUploadDialog" DarkBackground ZIndex="100000" LockScroll="false" OnClosed="CloseUploadDialog">
+        <MudPaper Class="file-uploader-progress-dialog" Elevation="25">
+
+            <MudToolBar Dense Class="light-toolbar">
+                <MudIcon Icon="@Icons.Material.Filled.Upload"/>
+                <MudText>File Uploader</MudText>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseUploadDialog"/>
+            </MudToolBar>
+
+            <MudStack Spacing="2" Style="padding: 20px;">
+                @foreach (var item in Items.Where(x => x.State != FileUploadState.None))
+                {
+                    <MudStack Row Spacing="2" AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@(item.IsImage() ? Icons.Material.Filled.Image : Icons.Material.Filled.InsertDriveFile)" />
+                        <MudText title="@item.GetFileName()" Style="width: 600px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@item.GetFileName()</MudText>
+                        <MudProgressLinear Color="Color.Primary" Style="max-width: 200px;" Indeterminate="item.IsWaitingForUpload" Value="item.Progress" Max="1" />
+                        <MudSpacer/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" Disabled="item.State == FileUploadState.Uploaded" OnClick="@(() => Remove(item))" />
+                    </MudStack>
+                }
+
+                <MudButton OnClick="() => OpenInput()">Add</MudButton>
+            </MudStack>
+        </MudPaper>
+    </MudOverlay>
+
 }
