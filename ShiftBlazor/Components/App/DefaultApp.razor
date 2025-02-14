@@ -9,10 +9,10 @@
 
 <CascadingValue Value="AppContext" IsFixed="true">
     <Router AppAssembly="@AppAssembly"
-            AdditionalAssemblies="@AdditionalAssemblies"
-            NotFound="@(NotFoundTemplate ?? NotFoundDefault)"
-            Navigating="Navigating"
-            OnNavigateAsync="OnNavigateAsync">
+    AdditionalAssemblies="@AdditionalAssemblies"
+    NotFound="@(NotFoundTemplate ?? NotFoundDefault)"
+    Navigating="Navigating"
+    OnNavigateAsync="OnNavigateAsync">
 
         <Found Context="routeData">
             @if (AuthenticationStateTask == null)
@@ -43,6 +43,7 @@
 @code {
     [Inject] NavigationManager NavManager { get; set; } = default!;
     [Inject] ShiftIdentityService ShiftIdentityService { get; set; } = default!;
+    [Inject] SettingManager SettingManager { get; set; } = default!;
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
@@ -84,7 +85,8 @@
 
     protected override void OnInitialized()
     {
-        AppContext = new AppLayoutContext {
+        AppContext = new AppLayoutContext(SettingManager)
+        {
             Title = AppTitle,
             NavMenuTemplate = NavMenuTemplate,
             HeaderTemplate = HeaderTemplate,

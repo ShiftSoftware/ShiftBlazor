@@ -19,6 +19,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public virtual Dictionary<string, List<ColumnState>>? ColumnStates { get; set; }
         public virtual LanguageInfo? Language { get; set; }
         public virtual bool? EnableFormClone { get; set; }
+        public virtual bool? IsDrawerOpen { get; set; }
     }
 
     public static class DefaultAppSetting
@@ -37,5 +38,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
             RTL = false,
         };
         public static bool EnableFormClone = false;
+        public static bool IsDrawerOpen = false;
     }
 }

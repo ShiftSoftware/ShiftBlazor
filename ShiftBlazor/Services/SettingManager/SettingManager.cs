@@ -208,6 +208,22 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return settings;
         }
 
+        public bool SetDrawerState(bool open)
+        {
+            if (Settings.IsDrawerOpen != open)
+            {
+                Settings.IsDrawerOpen = open;
+                SyncLocalStorage.SetItem(Key, Settings);
+            }
+
+            return GetDrawerState();
+        }
+
+        public bool GetDrawerState()
+        {
+            return Settings.IsDrawerOpen ?? DefaultAppSetting.IsDrawerOpen;
+        }
+
         private async Task<DeviceInfo> GetDeviceInfo()
         {
             return await JsRuntime!.InvokeAsync<DeviceInfo>("getWindowDimensions");
