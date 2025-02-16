@@ -175,7 +175,7 @@
 
                 @if (Files.Count > 0)
                 {
-                    @foreach (var file in UploadingFiles.Concat(Files))
+                    @foreach (var file in Files)
                     {
                         <div @key="file.Path" title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true" @oncontextmenu="(e) => OnFileClick(e, file)" >
                             @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)) && file.UploadProgress == 1)

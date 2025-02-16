@@ -81,7 +81,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     public bool EnableUploadDialog { get; set; }
 
     [Parameter]
-    public EventCallback<List<UploaderItem>> OnUploadProgress { get; set; }
+    public EventCallback<IEnumerable<UploaderItem>> OnUploadProgress { get; set; }
 
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftForm { get; set; }
@@ -521,10 +521,10 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     {
         if (!_uiUpdatePending && !force) return;
 
-        _uiUpdatePending = false; // Reset flag
+        _uiUpdatePending = false;
         InvokeAsync(() =>
         {
-            OnUploadProgress.InvokeAsync(Items);
+            OnUploadProgress.InvokeAsync(Items.Where(x => x.Message == null));
             StateHasChanged();
         });
     }

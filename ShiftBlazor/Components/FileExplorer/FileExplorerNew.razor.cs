@@ -200,7 +200,7 @@ public partial class FileExplorerNew : IShortcutComponent
 
         LastSelectedFile = null;
         DeselectAllFiles();
-        //await Task.Delay(1000);
+        UploadingFiles.Clear();
 
         try
         {
@@ -252,7 +252,6 @@ public partial class FileExplorerNew : IShortcutComponent
         }
 
         IsLoading = false;
-        StateHasChanged();
     }
 
     private void SetBreadcrumb(string path = "")
@@ -404,7 +403,6 @@ public partial class FileExplorerNew : IShortcutComponent
             Files = [];
         }
         DisplayContextMenu = false;
-        UploadingFiles.Clear();
         await _FileUploader.ClearAll();
         await FetchData(CWD);
     }
@@ -592,9 +590,8 @@ public partial class FileExplorerNew : IShortcutComponent
         }
     }
 
-    private void HandleUploading(List<UploaderItem> items)
+    private void HandleUploading(IEnumerable<UploaderItem> items)
     {
-
         UploadingFiles = items.Select(x => new FileExplorerDirectoryContent
         {
             Name = x.GetFileName(),
