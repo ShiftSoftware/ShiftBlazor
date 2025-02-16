@@ -163,6 +163,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     private string? ErrorText;
     private System.Timers.Timer? UploadProgressTimer;
     private bool _uiUpdatePending = false;
+    private CancellationTokenSource UploaderToken = new CancellationTokenSource();
 
     protected override void OnInitialized()
     {
@@ -231,11 +232,11 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         if (IsDirectoryUpload == true && InputFileRef?.Element != null)
         {
             var fileRelativePaths = await JsRuntime.InvokeAsync<string[]>("getFileList", InputFileRef.Element.Value);
-            Items.AddRange(fileRelativePaths.Select((relativePath, index) => new UploaderItem(files[index], relativePath)).ToList());
+            Items.AddRange(fileRelativePaths.Select((relativePath, index) => new UploaderItem(files[index], UploaderToken.Token, relativePath)).ToList());
         }
         else
         {
-            Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile)).ToList());
+            Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile, UploaderToken.Token)).ToList());
         }
 
         OpenUploadDialog();
@@ -537,6 +538,12 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     {
         DisplayUploadDialog = false;
     }
+    public void CancelAllUploads()
+    {
+        UploaderToken?.Cancel();
+        UploaderToken?.Dispose();
+        UploaderToken = new CancellationTokenSource();
+    }
 
     [JSInvokable]
     public static void ReorderGrid(KeyValuePair<string, List<Guid>> order)
@@ -548,5 +555,6 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     {
         OnGridSort -= HandleGridSort;
         UploadProgressTimer?.Dispose();
+        UploaderToken?.Dispose();
     }
 }

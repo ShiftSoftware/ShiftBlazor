@@ -15,11 +15,11 @@ public class UploaderItem
     public FileUploadState State { get; set; }
     public CancellationTokenSource? CancellationTokenSource { get; set; }
 
-    public UploaderItem(IBrowserFile file, string? relativePath = null)
+    public UploaderItem(IBrowserFile file, CancellationToken token, string? relativePath = null)
     {
         LocalFile = file;
         RelativePath = relativePath;
-        CancellationTokenSource = new CancellationTokenSource();
+        CancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
         State = FileUploadState.Waiting;
     }
 

@@ -147,3 +147,13 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     display: none;
     opacity: 0;
 }
+
+.file-uploader-progress-dialog {
+    max-height: 85vh;
+    max-width: 70vw;
+    overflow-y: auto;
+}
+
+.file-uploader-progress-dialog .upload-list {
+    padding: 20px;
+}
