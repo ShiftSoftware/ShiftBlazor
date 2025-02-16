@@ -244,15 +244,13 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         await GetSASForFilesAsync(filesToUpload);
 
-        var tasks = new List<Task>();
-
-        foreach (var item in filesToUpload)
-        {
-            tasks.Add(Task.Run(async () => await UploadFileToAzureAsync(item)));
-        }
-
         UploadProgressTimer?.Start();
-        await Task.WhenAll(tasks);
+
+        await Parallel.ForEachAsync(filesToUpload, new ParallelOptions { MaxDegreeOfParallelism = 5 }, async (file, _) =>
+        {
+            await UploadFileToAzureAsync(file);
+        });
+
 
         if (!Items.Any(x => x.IsWaitingForUpload || x.State == FileUploadState.Uploading))
         {
@@ -298,7 +296,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             files.Add(file);
         }
 
-        var postResponse = await HttpClient.PostAsJsonAsync(url, files);
+        using var postResponse = await HttpClient.PostAsJsonAsync(url, files);
 
         try
         {
@@ -395,11 +393,10 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         try
         {
             var maxFileSize = (long)MaxFileSizeInMegaBytes * 1024 * 1024;
-            var stream = item.LocalFile.OpenReadStream(maxFileSize);
+            using var stream = item.LocalFile.OpenReadStream(maxFileSize);
             var blobClient = new BlobClient(new Uri(item.File!.Url!));
             var token = item.CancellationTokenSource?.Token ?? CancellationToken.None;
             var headers = new BlobHttpHeaders { ContentType = item.LocalFile.ContentType };
-
             item.File.ContentType = item.LocalFile.ContentType;
             item.File.Size = item.LocalFile.Size;
 
