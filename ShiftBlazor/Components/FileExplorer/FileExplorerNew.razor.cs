@@ -130,7 +130,6 @@ public partial class FileExplorerNew : IShortcutComponent
         ".jpeg",
         ".png",
         ".png",
-        ".svg",
         ".webp",
     };
 
@@ -403,7 +402,7 @@ public partial class FileExplorerNew : IShortcutComponent
             Files = [];
         }
         DisplayContextMenu = false;
-        await _FileUploader.ClearAll();
+        //await _FileUploader.ClearAll();
         await FetchData(CWD);
     }
 

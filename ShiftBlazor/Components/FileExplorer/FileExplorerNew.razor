@@ -178,9 +178,10 @@
                     @foreach (var file in Files)
                     {
                         <div @key="file.Path" title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true" @oncontextmenu="(e) => OnFileClick(e, file)" >
-                            @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)) && file.UploadProgress == 1)
+                            @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()) && file.UploadProgress == 1)
                             {
-                                <MudImage ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.TargetPath" />
+                                <MudImage ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.ThumbnailUrl" loading="lazy" onerror="this.style.display='none';" />
+                                <MudIcon Icon="@Icons.Material.Filled.BrokenImage"/>
                             }
                             else
                             {
@@ -283,7 +284,7 @@
               OnUploadProgress="HandleUploading"
               MaxFileSizeInMegaBytes="99999999"
               EnableUploadDialog="EnableUploadDialog"
-              ValuesChanged="UploadHandler"/>
+              ValuesChanged="() => Refresh()" />
 
 <style>
 
@@ -327,11 +328,16 @@
         overflow: hidden;
         text-align: center;
         padding: 4px;
+        position: relative;
     }
 
     .large-icons .file-explorer-item {
         width: 150px;
         height: 150px;
+    }
+
+    .file-explorer-item .mud-image {
+        position: absolute;
     }
 
     .large-icons .file-explorer-item .mud-icon-root,
