@@ -1,0 +1,12 @@
+﻿<MudStack Row>
+	<MudText>@Name</MudText>
+	<MudSelectExtended T="string" Label="Value">
+		<MudSelectItem T="string">True</MudSelectItem>
+		<MudSelectItem T="string">False</MudSelectItem>
+	</MudSelectExtended>
+</MudStack>
+
+@code {
+	[Parameter]
+	public string Name { get; set; }
+}

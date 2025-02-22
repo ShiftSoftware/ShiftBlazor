@@ -1,0 +1,17 @@
+﻿<MudStack Row>
+	<MudText>@Name</MudText>
+	<MudSelectExtended T="ODataOperator" Label="Operator">
+		<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.Contains">Contains</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
+	</MudSelectExtended>
+	<MudTextField T="string" Label="Value" ></MudTextField>
+</MudStack>
+
+@code {
+	[Parameter]
+	public string Name { get; set; }
+}
