@@ -1,5 +1,194 @@
-﻿<h3>DateFilter</h3>
+﻿@inherits FilterInput
+
+<MudField Variant="Variant.Outlined" Label="@Name">
+	<MudStack Row AlignItems="AlignItems.End" Spacing="2">
+
+		<MudSelectExtended @bind-Value="Operator" Label="Operator">
+			<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
+			<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
+			<MudSelectItem Value="ODataOperator.IsEmpty">Is Empty</MudSelectItem>
+			<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Not Empty</MudSelectItem>
+		</MudSelectExtended>
+
+		@if(Operator == ODataOperator.Equal || Operator == ODataOperator.NotEqual)
+		{
+			<MudSelectExtended T="DateOperator" ValueChanged="@((val) => { Operator2 = val; DateChanged(); })" Label="Value">
+				@foreach (var item in Enum.GetValues<DateOperator>())
+				{
+					<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
+				}
+			</MudSelectExtended>
+
+			@if (Operator2 == DateOperator.Last || Operator2 == DateOperator.Next)
+			{
+				<MudNumericField @bind-Value="UnitValue"></MudNumericField>
+				<MudSelectExtended @bind-Value="Operator3">
+					@foreach (var item in Enum.GetValues<DateUnit>())
+					{
+						<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
+					}
+				</MudSelectExtended>
+			}
+			else if (Operator2 == DateOperator.Date || Operator2 == DateOperator.After || Operator2 == DateOperator.Before)
+			{
+				<MudDatePicker @bind-Date="DateTimeValue"/>
+			}
+			else if (Operator2 == DateOperator.Range)
+			{
+				<MudDateRangePicker @bind-DateRange="DateRangeValue"/>
+			}
+		}
+
+	</MudStack>
+</MudField>
 
 @code {
+	public ODataOperator Operator { get; set; }
+	public DateOperator Operator2 { get; set; }
+	public DateUnit Operator3 { get; set; }
+	public DateTime? DateTimeValue { get; set; }
+	public DateRange? DateRangeValue { get; set; }
+	public int UnitValue { get; set; }
 
+	protected override void OnInitialized()
+	{
+
+	}
+
+	public void DateChanged()
+	{
+		var filterStart = new ODataFilter
+		{
+			Field = Name,
+			Operator = ODataOperator.GreaterThanOrEqual,
+		};
+
+		var filterEnd = new ODataFilter
+		{
+			Field = Name,
+			Operator = ODataOperator.LessThan,
+		};
+
+		DateTime valueStart = default;
+		DateTime valueEnd = default;
+
+		if (Operator == ODataOperator.Equal || Operator == ODataOperator.NotEqual)
+		{
+			// var value = Operator2 switch
+			// {
+			// 	DateOperator.Today => DateTime.Now,
+			// 	DateOperator.Torrorrow => DateTime.Now.AddDays(1),
+			// 	DateOperator.Yesterday => DateTime.Now.AddDays(-1),
+			// 	DateOperator.Next7Days => DateTime.Now.AddDays(7),
+			// 	DateOperator.Previous7Days => DateTime.Now.AddDays(-7),
+			// };
+
+
+			switch (Operator2)
+			{
+				case DateOperator.Today:
+					valueStart = DateTime.Today;
+					valueEnd = valueStart.AddDays(1);
+					break;
+				case DateOperator.Torrorrow:
+					valueStart = DateTime.Today.AddDays(1);
+					valueEnd = valueStart.AddDays(1);
+					break;
+				case DateOperator.Yesterday:
+					valueStart = DateTime.Today.AddDays(-1);
+					valueEnd = valueStart.AddDays(1);
+					break;
+				case DateOperator.Next7Days:
+					valueStart = DateTime.Today;
+					valueEnd = valueStart.AddDays(8);
+					break;
+				case DateOperator.Previous7Days:
+					valueStart = DateTime.Today.AddDays(-7);
+					valueEnd = DateTime.Today;
+					break;
+
+
+				// case DateOperator.Next:
+				// 	value = Operator3 switch
+				// 	{
+				// 		DateUnit.Day => DateTime.Now.AddDays(UnitValue),
+				// 		DateUnit.Week => DateTime.Now.AddDays(UnitValue * 7),
+				// 		DateUnit.Month => DateTime.Now.AddMonths(UnitValue),
+				// 		DateUnit.Year => DateTime.Now.AddYears(UnitValue),
+				// 	};
+				// 	break;
+				// case DateOperator.Last:
+				// 	value = Operator3 switch
+				// 	{
+				// 		DateUnit.Day => DateTime.Now.AddDays(-UnitValue),
+				// 		DateUnit.Week => DateTime.Now.AddDays(-UnitValue * 7),
+				// 		DateUnit.Month => DateTime.Now.AddMonths(-UnitValue),
+				// 		DateUnit.Year => DateTime.Now.AddYears(-UnitValue),
+				// 	};
+				// 	break;
+
+				case DateOperator.Date:
+					valueStart = DateTimeValue.Value;
+					valueEnd = valueStart.AddDays(1);
+					break;
+				case DateOperator.Before:
+					valueStart = DateTime.MinValue;
+					valueEnd = DateTimeValue.Value;
+					break;
+				case DateOperator.After:
+					valueStart = DateTimeValue.Value;
+					valueEnd = DateTime.MaxValue;
+					break;
+
+				case DateOperator.Range:
+					valueStart = DateRangeValue.Start.Value;
+					valueEnd = DateRangeValue.End.Value.AddDays(1);
+					break;
+			}
+
+		}
+
+
+		filterStart.Value = valueStart;
+		filterEnd.Value = valueEnd;
+		Value = new ODataFilterGenerator().Add(filterStart).Add(filterEnd);
+		ValueChanged.InvokeAsync(Value);
+	}
+
+
+
+	public enum DateOperator
+	{
+		Today,
+		Yesterday,
+		Torrorrow,
+		Next7Days,
+		Previous7Days,
+		LastWeek,
+		ThisWeek,
+		NextWeek,
+		LastMonth,
+		ThisMonth,
+		NextMonth,
+		LastYear,
+		ThisYear,
+		NextYear,
+
+		Last,
+		Next,
+
+		Date,
+		Before,
+		After,
+
+		Range,
+	}
+	
+	public enum DateUnit
+	{
+		Day,
+		Week,
+		Month,
+		Year,
+	}
 }
