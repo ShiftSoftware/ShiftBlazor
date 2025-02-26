@@ -95,6 +95,15 @@ namespace ShiftSoftware.ShiftBlazor.Resources.Components {
                 return ResourceManager.GetString("ColumnChooserTitle", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to toggle filter panel.
+        /// </summary>
+        internal static string ToggleFilterPanelTitle {
+            get {
+                return ResourceManager.GetString("ToggleFilterPanelTitle", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Close.

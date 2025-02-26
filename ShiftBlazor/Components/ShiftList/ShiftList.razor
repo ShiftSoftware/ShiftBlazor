@@ -12,37 +12,6 @@
         <PageTitle>@Title</PageTitle>
     }
 
-    <MudPaper Elevation="25" Outlined="Outlined">
-        <MudButton OnClick="() => ShowFilterPanel = true">Show Panel</MudButton>
-
-        @if (FilterPanel && ShowFilterPanel)
-        {
-            <MudGrid>
-                @foreach (var column in DataGrid.RenderedColumns)
-                {
-
-                    if (column.GetType().GetGenericTypeDefinition() == typeof(PropertyColumnExtended<,>) && column.GetType().GetProperty("DisableFilterPanel")?.GetValue(column) is bool disableFilterPanel && !disableFilterPanel)
-                    {
-                        <MudItem lg="4" >
-                            @if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsString)
-                            {
-                                <StringFilter Name="@column.PropertyName" />
-                            }
-                            else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsDateTime)
-                            {
-                                <DateFilter Name="@column.PropertyName" />
-                            }
-                            else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsBoolean)
-                            {
-                                <BooleanFilter Name="@column.PropertyName" />
-                            }
-                        </MudItem>
-                    }
-                }
-            </MudGrid>
-        }
-    </MudPaper>
-
     <MudPaper Elevation="25" Outlined="Outlined" id="@($"Grid-{Id}")">
         <CascadingValue Value="this" IsFixed="true">
             <header>
@@ -58,6 +27,17 @@
 
                         @ToolbarEndTemplate
 
+                        @if (FilterPanel)
+                        {
+                            <MudTooltip Text="@Loc["ToggleFilterPanelTitle"]">
+                                <MudIconButtonExtended Size="@IconSize"
+                                                       Icon="@(ShowFilterPanel ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
+                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                       aria-label="@Loc["ToggleFilterPanelTitle"]"
+                                                       OnClick="() => ShowFilterPanel = !ShowFilterPanel" />
+                            </MudTooltip>
+                        }
+
                         @if (!DisableGridEditor)
                         {
                             <MudTooltip Text="@Loc["ColumnChooserTitle"]">
@@ -69,6 +49,8 @@
                                                        OnClick="OpenGridEditor" />
                             </MudTooltip>
                         }
+
+                          
 
                         @if (!DisableDeleteFilter && Values == null)
                         {
@@ -139,9 +121,37 @@
                             </MudTooltip>
                         }
 
+
                     </MudToolBar>
                 }
 
+                    <MudCollapse Expanded="ShowFilterPanel" Style="border:none" Class="light-toolbar">
+                        <MudGrid Spacing="4" Class="pa-4">
+                            @foreach (var column in DataGrid.RenderedColumns)
+                            {
+
+                                if (column.GetType().GetGenericTypeDefinition() == typeof(PropertyColumnExtended<,>) && column.GetType().GetProperty("DisableFilterPanel")?.GetValue(column) is bool disableFilterPanel && !disableFilterPanel)
+                                {
+                                    <MudItem xs="12" sm="6">
+                                        @if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsString)
+                                        {
+                                            <StringFilter Name="@column.PropertyName" />
+                                        }
+                                        else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsDateTime)
+                                        {
+                                            <DateFilter Name="@column.PropertyName" />
+                                        }
+                                        else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsBoolean)
+                                        {
+                                            <BooleanFilter Name="@column.PropertyName" />
+                                        }
+                                    </MudItem>
+                                }
+                            }
+                        </MudGrid>
+                    </MudCollapse >
+
+       
                 @HeaderTemplate
 
                 <MudOverlay Visible="IsGridEditorOpen" LockScroll="false" OnClick="@CloseGridEditor" />
@@ -161,6 +171,7 @@
                                             <MudText Typo="Typo.h6" Style="width: 70px;">@Loc["ColumnEditorStickyToggleHeader"]</MudText>
                                             <MudIconButton Ripple="false" Disabled Icon="@Icons.Material.Filled.DragIndicator" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
                                         </MudStack>
+
                                         @if (EnableSelection)
                                         {
                                             <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px;">
