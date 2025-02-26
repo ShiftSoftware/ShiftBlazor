@@ -13,4 +13,6 @@ public class FilterInput : ComponentBase
 
     [Parameter]
     public EventCallback<ODataFilterGenerator> ValueChanged { get; set; }
+
+    public Guid Id { get; set; } = Guid.NewGuid();
 }
