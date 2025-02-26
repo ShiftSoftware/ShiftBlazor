@@ -126,29 +126,32 @@
                 }
 
                     <MudCollapse Expanded="ShowFilterPanel" Style="border:none" Class="light-toolbar">
-                        <MudGrid Spacing="4" Class="pa-4">
-                            @foreach (var column in DataGrid.RenderedColumns)
-                            {
-
-                                if (column.GetType().GetGenericTypeDefinition() == typeof(PropertyColumnExtended<,>) && column.GetType().GetProperty("DisableFilterPanel")?.GetValue(column) is bool disableFilterPanel && !disableFilterPanel)
+                    <MudForm Class="pa-4">
+                            <MudGrid Spacing="4">
+                                @foreach (var column in DataGrid.RenderedColumns)
                                 {
-                                    <MudItem xs="12" sm="6">
-                                        @if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsString)
-                                        {
+
+                                    if (column.GetType().GetGenericTypeDefinition() == typeof(PropertyColumnExtended<,>) && column.GetType().GetProperty("DisableFilterPanel")?.GetValue(column) is bool disableFilterPanel && !disableFilterPanel)
+                                    {
+                                        <MudItem xs="12" sm="6">
+                                            @if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsString)
+                                            {
                                             <StringFilter Name="@column.PropertyName" />
-                                        }
-                                        else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsDateTime)
-                                        {
+                                            }
+                                            else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsDateTime)
+                                            {
                                             <DateFilter Name="@column.PropertyName" />
-                                        }
-                                        else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsBoolean)
-                                        {
+                                            }
+                                            else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsBoolean)
+                                            {
                                             <BooleanFilter Name="@column.PropertyName" />
-                                        }
-                                    </MudItem>
+                                            }
+                                        </MudItem>
+                                    }
                                 }
-                            }
                         </MudGrid>
+                        <MudButton OnClick="SubmitFilterForm" Color="Color.Primary">Filter</MudButton>
+                    </MudForm>
                     </MudCollapse >
 
        
