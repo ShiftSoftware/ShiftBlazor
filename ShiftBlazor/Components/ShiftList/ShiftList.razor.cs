@@ -379,6 +379,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public bool ExportIsInProgress { get; private set; } = false;
 
+       private void SubmitFilterForm()
+        {
+
+            Console.WriteLine("Submitted");
+            
+        }
+
         protected override void OnInitialized()
         {
             IsEmbed = ParentDisabled != null || ParentReadOnly != null;
