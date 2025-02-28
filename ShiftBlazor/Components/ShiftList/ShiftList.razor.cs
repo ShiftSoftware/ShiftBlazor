@@ -310,6 +310,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool SelectOnRowClick { get; set; } = false;
 
+        [Parameter]
+        public bool FilterPanel { get; set; }
 
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
@@ -373,7 +375,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        private bool ShowFilterPanel { get; set; }
+
         public bool ExportIsInProgress { get; private set; } = false;
+
+       private void SubmitFilterForm()
+        {
+
+            Console.WriteLine("Submitted");
+            
+        }
 
         protected override void OnInitialized()
         {

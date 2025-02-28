@@ -1,0 +1,200 @@
+﻿@using System.Globalization
+@inherits FilterInput
+
+<MudField Variant="Variant.Outlined" Label="@Name">
+	<MudStack Row AlignItems="AlignItems.End" Spacing="2">
+
+		<MudSelectExtended T="Operator" ValueChanged="@((val) => { SelectedOperator = val; DateChanged(); })" Label="Operator">
+			<MudSelectItem Value="Operator.Is">Is</MudSelectItem>
+			<MudSelectItem Value="Operator.IsNot">Is Not</MudSelectItem>
+			<MudSelectItem Value="Operator.IsSet">Is Set</MudSelectItem>
+			<MudSelectItem Value="Operator.IsNotSet">Is Not Set</MudSelectItem>
+		</MudSelectExtended>
+
+		@if (SelectedOperator == Operator.Is || SelectedOperator == Operator.IsNot)
+		{
+			<MudSelectExtended T="DateOperator" ValueChanged="@((val) => { SelectedDateOperator = val; DateChanged(); })" Label="Value">
+				@foreach (var item in Enum.GetValues<DateOperator>())
+				{
+					<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
+				}
+			</MudSelectExtended>
+
+			@if (SelectedDateOperator == DateOperator.Last || SelectedDateOperator == DateOperator.Next)
+			{
+				<MudNumericField T="int" Value="UnitValue" ValueChanged="@((val) => { UnitValue = val; DateChanged(); })" Min="1"></MudNumericField>
+				<MudSelectExtended T="TimeUnit" ValueChanged="@((val) => { SelectedTimeUnit = val; DateChanged(); })">
+					@foreach (var item in Enum.GetValues<TimeUnit>())
+					{
+						<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
+					}
+				</MudSelectExtended>
+			}
+			else if (SelectedDateOperator == DateOperator.Date || SelectedDateOperator == DateOperator.After || SelectedDateOperator == DateOperator.Before)
+			{
+				<MudDatePicker DateChanged="@((val) => { DateTimeValue = val; DateChanged(); })" />
+			}
+			else if (SelectedDateOperator == DateOperator.Range)
+			{
+				<MudDateRangePicker  DateRangeChanged="@((val) => { DateRangeValue = val; DateChanged(); })" />
+			}
+		}
+
+	</MudStack>
+</MudField>
+
+@code {
+	public Operator SelectedOperator { get; set; }
+	public DateOperator SelectedDateOperator { get; set; }
+	public TimeUnit SelectedTimeUnit { get; set; }
+	public DateTime? DateTimeValue { get; set; } = DateTime.Now;
+	public DateRange? DateRangeValue { get; set; }
+	public int UnitValue { get; set; } = 1;
+
+	private void SetDateRange(DateTime start, DateTime end)
+	{
+		var filterStart = new ODataFilter
+		{
+			Field = Name,
+			Operator = ODataOperator.GreaterThanOrEqual,
+			Value = start
+		};
+
+		var filterEnd = new ODataFilter
+		{
+			Field = Name,
+			Operator = ODataOperator.LessThan,
+			Value = end
+		};
+
+		if (SelectedOperator == Operator.IsNot)
+		{
+			filterStart.Value = end;
+			filterEnd.Value = start;
+		}
+
+		Value = new ODataFilterGenerator(true, Id).Add(filterStart).Add(filterEnd);
+		ValueChanged.InvokeAsync(Value);
+	}
+
+	private void IsSet(bool isSetNull)
+	{
+		Value = new ODataFilterGenerator(true, Id).Add(new ODataFilter
+		{
+			Field = Name,
+			Operator = isSetNull ? ODataOperator.IsEmpty : ODataOperator.IsNotEmpty
+		});
+		ValueChanged.InvokeAsync(Value);
+	}
+
+	private (DateTime, DateTime) GetLastOrNextDateRange(int start, int end = 1, TimeUnit unit = TimeUnit.Day)
+	{
+		DateTime valueStart = default;
+		DateTime valueEnd = default;
+
+		switch (unit)
+		{
+			case TimeUnit.Day:
+				valueStart = DateTime.Today.AddDays(start);
+				valueEnd = valueStart.AddDays(end);
+				break;
+			case TimeUnit.Week:
+				var startOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
+				int diff = (7 + (DateTime.Today.DayOfWeek - startOfWeek)) % 7;
+				valueStart = DateTime.Today.AddDays(-1 * diff).AddDays(start * 7);
+				valueEnd = valueStart.AddDays(7 * end);
+				break;
+			case TimeUnit.Month:
+				valueStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(start);
+				valueEnd = valueStart.AddMonths(end);
+				break;
+			case TimeUnit.Year:
+				valueStart = new DateTime(DateTime.Today.Year, 1, 1).AddYears(start);
+				valueEnd = valueStart.AddYears(end);
+				break;
+		}
+
+		return (valueStart, valueEnd);
+	}
+
+	public void DateChanged()
+	{
+		DateTime valueStart = default;
+		DateTime valueEnd = default;
+
+		if (SelectedOperator == Operator.Is || SelectedOperator == Operator.IsNot)
+		{
+			(valueStart, valueEnd) = SelectedDateOperator switch
+			{
+				DateOperator.Today => GetLastOrNextDateRange(0),
+				DateOperator.Torrorrow => GetLastOrNextDateRange(1),
+				DateOperator.Yesterday => GetLastOrNextDateRange(-1),
+				DateOperator.Next7Days => GetLastOrNextDateRange(1, 7),
+				DateOperator.Previous7Days => GetLastOrNextDateRange(-7, 7),
+				DateOperator.LastWeek => GetLastOrNextDateRange(-1, unit: TimeUnit.Week),
+				DateOperator.ThisWeek => GetLastOrNextDateRange(0, unit: TimeUnit.Week),
+				DateOperator.NextWeek => GetLastOrNextDateRange(1, unit: TimeUnit.Week),
+				DateOperator.LastMonth => GetLastOrNextDateRange(-1, unit: TimeUnit.Month),
+				DateOperator.ThisMonth => GetLastOrNextDateRange(0, unit: TimeUnit.Month),
+				DateOperator.NextMonth => GetLastOrNextDateRange(1, unit: TimeUnit.Month),
+				DateOperator.LastYear => GetLastOrNextDateRange(-1, unit: TimeUnit.Year),
+				DateOperator.ThisYear => GetLastOrNextDateRange(0, unit: TimeUnit.Year),
+				DateOperator.NextYear => GetLastOrNextDateRange(1, unit: TimeUnit.Year),
+				DateOperator.Last => GetLastOrNextDateRange(UnitValue * -1, UnitValue, SelectedTimeUnit),
+				DateOperator.Next => GetLastOrNextDateRange(1, UnitValue, SelectedTimeUnit),
+				DateOperator.Date => (DateTimeValue ?? DateTime.Today, (DateTimeValue ?? DateTime.Today).AddDays(1)),
+				DateOperator.Before => (DateTime.MinValue, DateTimeValue ?? DateTime.Today),
+				DateOperator.After => (DateTimeValue ?? DateTime.Today, DateTime.MaxValue),
+				DateOperator.Range => (DateRangeValue?.Start ?? DateTime.Today, (DateRangeValue?.End ?? DateTime.Today).AddDays(1)),
+				_ => (default, default)
+			};
+
+			SetDateRange(valueStart, valueEnd);
+		}
+		else
+		{
+			IsSet(SelectedOperator == Operator.IsNotSet);
+		}
+
+	}
+
+	public enum Operator
+	{
+		Is,
+		IsNot,
+		IsSet,
+		IsNotSet,
+	}
+
+	public enum DateOperator
+	{
+		Today,
+		Yesterday,
+		Torrorrow,
+		Next7Days,
+		Previous7Days,
+		LastWeek,
+		ThisWeek,
+		NextWeek,
+		LastMonth,
+		ThisMonth,
+		NextMonth,
+		LastYear,
+		ThisYear,
+		NextYear,
+		Last,
+		Next,
+		Date,
+		Before,
+		After,
+		Range,
+	}
+	
+	public enum TimeUnit
+	{
+		Day,
+		Week,
+		Month,
+		Year,
+	}
+}

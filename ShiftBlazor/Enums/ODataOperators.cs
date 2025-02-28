@@ -19,5 +19,7 @@ namespace ShiftSoftware.ShiftBlazor.Enums
         StartsWith,
         EndsWith,
         In,
+        IsEmpty,
+        IsNotEmpty,
     }
 }

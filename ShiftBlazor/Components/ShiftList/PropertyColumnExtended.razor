@@ -31,6 +31,9 @@
     [Parameter]
     public string? KeyPropertyName { get; set; }
 
+    [Parameter]
+    public bool DisableFilterPanel { get; set; }
+
     protected Type? FormComponent => ComponentType ?? ShiftList.ComponentType;
 
     protected override void OnParametersSet()

@@ -321,9 +321,11 @@ public class ODataFilterGenerator
             case ODataOperator.In:
                 filterTemplate = "{0} in ({1})";
                 break;
+            case ODataOperator.IsEmpty:
             case FilterOperator.String.Empty:
                 filterTemplate = "{0} eq null";
                 break;
+            case ODataOperator.IsNotEmpty:
             case FilterOperator.String.NotEmpty:
                 filterTemplate = "{0} ne null";
                 break;

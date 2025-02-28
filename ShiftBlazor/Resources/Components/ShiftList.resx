@@ -129,6 +129,9 @@
   <data name="ColumnChooserTitle" xml:space="preserve">
     <value>Edit Columns</value>
   </data>
+  <data name="ToggleFilterPanelTitle" xml:space="preserve">
+    <value>Toggle Filter Panel</value>
+  </data>
   <data name="ColumnEditorCloseMenuButton" xml:space="preserve">
     <value>Close</value>
   </data>
