@@ -178,9 +178,9 @@
                     @foreach (var file in Files)
                     {
                         <div @key="file.Path" title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true" @oncontextmenu="(e) => OnFileClick(e, file)" >
-                            @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()) && file.UploadProgress == 1)
+                            @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
                             {
-                                <MudImage ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.ThumbnailUrl" loading="lazy" onerror="this.style.display='none';" />
+                                <MudImage Height="100" Width="100" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.ThumbnailUrl" loading="lazy" onerror="this.style.display='none';" />
                                 <MudIcon Icon="@Icons.Material.Filled.BrokenImage"/>
                             }
                             else
@@ -223,16 +223,16 @@
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" OnClick="DeselectAllFiles"></MudIconButton>
         }
 
-        @if (SelectedFiles.Count > 0 && UploadingFiles.Count > 0)
+        @if (SelectedFiles.Count > 0 && UploadingFilesCount > 0)
         {
             <MudDivider Style="margin: 0 6px;" Vertical/>
         }
 
-        @if (EnableUploadDialog && UploadingFiles.Count > 0)
+        @if (UploadingFilesCount > 0)
         {
-            var uploadedCount = @UploadingFiles.Where(x => x.UploadProgress == 1).Count();
-            <MudProgressCircular Color="Color.Primary" Size="@Size.Small" Value="@uploadedCount" Max="@UploadingFiles.Count" />
-            <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@uploadedCount of @UploadingFiles.Count Uploaded</MudText>
+            var uploadedCount = UploadingFilesCount - UploadingFilesInProgressCount;
+            <MudProgressCircular Style="margin-inline-end: 4px;" Color="Color.Primary" Size="@Size.Small" Value="@uploadedCount" Max="@UploadingFilesCount" />
+            <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@uploadedCount of @UploadingFilesCount Uploaded</MudText>
         }
         <MudSpacer/>
 
@@ -283,7 +283,7 @@
               DropAreaSelector="@($"#{FileExplorerId} .file-listing")"
               OnUploadProgress="HandleUploading"
               MaxFileSizeInMegaBytes="99999999"
-              EnableUploadDialog="EnableUploadDialog"
+              OpenDialogOnUpload="OpenDialogOnUpload"
               ValuesChanged="() => Refresh()" />
 
 <style>

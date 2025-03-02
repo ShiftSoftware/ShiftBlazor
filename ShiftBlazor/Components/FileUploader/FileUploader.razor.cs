@@ -78,7 +78,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     public bool HideUI { get; set; }
 
     [Parameter]
-    public bool EnableUploadDialog { get; set; }
+    public bool OpenDialogOnUpload { get; set; }
 
     [Parameter]
     public EventCallback<IEnumerable<UploaderItem>> OnUploadProgress { get; set; }
@@ -239,13 +239,12 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile, UploaderToken.Token)).ToList());
         }
 
-        OpenUploadDialog();
+        if (OpenDialogOnUpload) OpenUploadDialog();
+        UploadProgressTimer?.Start();
 
         var filesToUpload = Items.Where(x => x.IsWaitingForUpload).ToList();
 
         await GetSASForFilesAsync(filesToUpload);
-
-        UploadProgressTimer?.Start();
 
         await Parallel.ForEachAsync(filesToUpload, new ParallelOptions { MaxDegreeOfParallelism = 5 }, async (file, _) =>
         {
@@ -543,11 +542,17 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     {
         DisplayUploadDialog = false;
     }
+
     public void CancelAllUploads()
     {
         UploaderToken?.Cancel();
         UploaderToken?.Dispose();
         UploaderToken = new CancellationTokenSource();
+    }
+
+    private void OpenErrorDialog(Message message)
+    {
+        DialogService.ShowMessageBox(message.Title, message.Body);
     }
 
     [JSInvokable]

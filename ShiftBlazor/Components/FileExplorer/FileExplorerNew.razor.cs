@@ -88,9 +88,9 @@ public partial class FileExplorerNew : IShortcutComponent
 
     [Parameter]
     public RenderFragment? MenuItemsTemplate { get; set; }
-
+    
     [Parameter]
-    public bool EnableUploadDialog { get; set; }
+    public bool OpenDialogOnUpload { get; set; }
 
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
@@ -103,7 +103,8 @@ public partial class FileExplorerNew : IShortcutComponent
     private bool DisableSidebar => DisableQuickAccess && DisableRecents;
     private FileExplorerDirectoryContent? CWD { get; set; } = null;
     private List<FileExplorerDirectoryContent> Files { get; set; } = new();
-    private List<FileExplorerDirectoryContent> UploadingFiles { get; set; } = new();
+    private int UploadingFilesInProgressCount { get; set; }
+    private int UploadingFilesCount { get; set; }
     private bool IsLoading { get; set; } = true;
     private string Url = "";
     private FileUploader? _FileUploader { get; set; }
@@ -199,7 +200,8 @@ public partial class FileExplorerNew : IShortcutComponent
 
         LastSelectedFile = null;
         DeselectAllFiles();
-        UploadingFiles.Clear();
+        UploadingFilesInProgressCount = 0;
+        UploadingFilesCount = 0;
 
         try
         {
@@ -591,23 +593,8 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private void HandleUploading(IEnumerable<UploaderItem> items)
     {
-        UploadingFiles = items.Select(x => new FileExplorerDirectoryContent
-        {
-            Name = x.GetFileName(),
-            Path = x.File.Url,
-            IsFile = true,
-            Size = x.LocalFile?.Size ?? x.File.Size,
-            TargetPath = x.File.Url,
-            UploadProgress = x.Progress,
-        }).ToList();
-    }
-
-    private void UploadHandler(List<ShiftFileDTO> files)
-    {
-        foreach(var file in UploadingFiles)
-        {
-            file.UploadProgress = 1;
-        }
+        UploadingFilesInProgressCount = items.Where(x => x.Progress < 1).Count();
+        UploadingFilesCount = items.Count();
     }
 
     public enum FileExplorerView
