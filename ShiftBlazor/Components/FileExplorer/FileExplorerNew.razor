@@ -180,8 +180,14 @@
                         <div @key="file.Path" title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true" @oncontextmenu="(e) => OnFileClick(e, file)" >
                             @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
                             {
-                                <MudImage Height="100" Width="100" ObjectFit="ObjectFit.Cover" ObjectPosition="ObjectPosition.Center" Src="@file.ThumbnailUrl" loading="lazy" onerror="this.style.display='none';" />
-                                <MudIcon Icon="@Icons.Material.Filled.BrokenImage"/>
+                                <MudImage Height="100"
+                                          Width="100"
+                                          ObjectFit="ObjectFit.Cover"
+                                          ObjectPosition="ObjectPosition.Center"
+                                          Src="@file.ThumbnailUrl"
+                                          data-src="@file.TargetPath"
+                                          loading="lazy"
+                                          onerror="if (this.src !== this.dataset.src) this.src = this.dataset.src" />
                             }
                             else
                             {
@@ -334,10 +340,6 @@
     .large-icons .file-explorer-item {
         width: 150px;
         height: 150px;
-    }
-
-    .file-explorer-item .mud-image {
-        position: absolute;
     }
 
     .large-icons .file-explorer-item .mud-icon-root,
