@@ -407,7 +407,12 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
                 _uiUpdatePending = true;
             });
 
-            await blobClient.UploadAsync(stream, headers, progressHandler: prog, cancellationToken: token);
+            var metadata = new Dictionary<string, string>
+            {
+                { "name", item.LocalFile.Name },
+            };
+
+            await blobClient.UploadAsync(stream, headers, metadata, progressHandler: prog, cancellationToken: token);
 
             item.LocalFile = null;
             item.State = FileUploadState.Uploaded;
