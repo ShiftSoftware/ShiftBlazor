@@ -399,6 +399,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             var headers = new BlobHttpHeaders { ContentType = item.LocalFile.ContentType };
             item.File.ContentType = item.LocalFile.ContentType;
             item.File.Size = item.LocalFile.Size;
+            var thumbnailSizes = SettingManager.Configuration.ThumbnailSizes.Select((x) => $"{x.Item1}x{x.Item2}");
 
             var prog = new Progress<long>(value =>
             {
@@ -409,6 +410,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             var metadata = new Dictionary<string, string>
             {
                 { "name", item.LocalFile.Name },
+                { "sizes", string.Join("|", thumbnailSizes)}
             };
 
             await blobClient.UploadAsync(stream, headers, metadata, progressHandler: prog, cancellationToken: token);
