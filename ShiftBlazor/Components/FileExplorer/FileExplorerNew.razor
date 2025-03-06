@@ -229,16 +229,15 @@
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" OnClick="DeselectAllFiles"></MudIconButton>
         }
 
-        @if (SelectedFiles.Count > 0 && UploadingFilesCount > 0)
+        @if (SelectedFiles.Count > 0 && UploadingFiles?.Count > 0)
         {
             <MudDivider Style="margin: 0 6px;" Vertical/>
         }
 
-        @if (UploadingFilesCount > 0)
+        @if (UploadingFiles?.Count > 0)
         {
-            var uploadedCount = UploadingFilesCount - UploadingFilesInProgressCount;
-            <MudProgressCircular Style="margin-inline-end: 4px;" Color="Color.Primary" Size="@Size.Small" Value="@uploadedCount" Max="@UploadingFilesCount" />
-            <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@uploadedCount of @UploadingFilesCount Uploaded</MudText>
+            <MudProgressCircular Style="margin-inline-end: 4px;" Color="Color.Primary" Size="@Size.Small" Value="@UploadingFiles.Completed" Max="@UploadingFiles.Count" />
+            <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@UploadingFiles.Completed of @UploadingFiles.Count Uploaded</MudText>
         }
         <MudSpacer/>
 
@@ -287,7 +286,8 @@
               Prefix="@(CWD?.Path)"
               HideUI
               DropAreaSelector="@($"#{FileExplorerId} .file-listing")"
-              OnUploadProgress="HandleUploading"
+              OnBatchUploadStarted="HandleUploading"
+              OnUploadFinished="HandleUploading"
               MaxFileSizeInMegaBytes="99999999"
               OpenDialogOnUpload="OpenDialogOnUpload"
               ValuesChanged="() => Refresh()" />

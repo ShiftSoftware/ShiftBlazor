@@ -103,8 +103,7 @@ public partial class FileExplorerNew : IShortcutComponent
     private bool DisableSidebar => DisableQuickAccess && DisableRecents;
     private FileExplorerDirectoryContent? CWD { get; set; } = null;
     private List<FileExplorerDirectoryContent> Files { get; set; } = new();
-    private int UploadingFilesInProgressCount { get; set; }
-    private int UploadingFilesCount { get; set; }
+    private UploadEventArgs? UploadingFiles { get; set; }
     private bool IsLoading { get; set; } = true;
     private string Url = "";
     private FileUploader? _FileUploader { get; set; }
@@ -200,8 +199,6 @@ public partial class FileExplorerNew : IShortcutComponent
 
         LastSelectedFile = null;
         DeselectAllFiles();
-        UploadingFilesInProgressCount = 0;
-        UploadingFilesCount = 0;
 
         try
         {
@@ -591,10 +588,9 @@ public partial class FileExplorerNew : IShortcutComponent
         }
     }
 
-    private void HandleUploading(IEnumerable<UploaderItem> items)
+    private void HandleUploading(UploadEventArgs args)
     {
-        UploadingFilesInProgressCount = items.Where(x => x.Progress < 1).Count();
-        UploadingFilesCount = items.Count();
+        UploadingFiles = args;
     }
 
     public enum FileExplorerView

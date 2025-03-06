@@ -123,8 +123,12 @@
                     </MudStack>
                 }
 
-                <MudButton OnClick="() => OpenInput()">Add</MudButton>
-                <MudButton OnClick="CancelAllUploads">Cancel</MudButton>
+				<MudToolBar Dense>
+					<MudButton Color="Color.Error" OnClick="CancelAllUploads">Cancel All</MudButton>
+                    <MudSpacer/>
+                    <MudButton OnClick="ClearUploaded">Clear Completed</MudButton>
+					<MudButton OnClick="() => OpenInput()">Upload</MudButton>
+                </MudToolBar>
             </MudStack>
         </MudPaper>
     </MudOverlay>
