@@ -24,7 +24,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool Outlined { get; set; }
         public bool IsEmbed { get; }
 
-        public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null);
+        public ODataFilterGenerator Filters { get; }
 
+        public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null);
+        public void Reload();
     }
 }

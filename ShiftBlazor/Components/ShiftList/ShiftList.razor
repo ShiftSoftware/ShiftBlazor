@@ -140,7 +140,7 @@
                                             }
                                             else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsDateTime)
                                             {
-                                            <DateFilter Name="@column.PropertyName" />
+                                            <DateFilter Name="@column.PropertyName.Replace(".DateTime", "")"  />
                                             }
                                             else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsBoolean)
                                             {

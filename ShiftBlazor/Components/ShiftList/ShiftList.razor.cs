@@ -334,7 +334,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle = string.Empty;
         internal SortMode SortMode = SortMode.Multiple;
-        private ODataFilterGenerator Filters = new ODataFilterGenerator(true);
+        public ODataFilterGenerator Filters { get; private set; } = new ODataFilterGenerator(true);
         private string PreviousFilters = string.Empty;
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
@@ -1182,6 +1182,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 SelectState.Clear();
             }
             await OnSelectStateChanged.InvokeAsync(SelectState);
+        }
+
+        public void Reload()
+        {
+            DataGrid?.ReloadServerData();
         }
 
         private readonly MudBlazor.Converter<bool, bool?> _oppositeBoolConverter = new()

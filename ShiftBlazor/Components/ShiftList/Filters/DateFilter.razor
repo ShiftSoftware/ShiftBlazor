@@ -2,50 +2,59 @@
 @inherits FilterInput
 
 <MudField Variant="Variant.Outlined" Label="@Name">
-	<MudStack Row AlignItems="AlignItems.End" Spacing="2">
 
-		<MudSelectExtended T="Operator" ValueChanged="@((val) => { SelectedOperator = val; DateChanged(); })" Label="Operator">
-			<MudSelectItem Value="Operator.Is">Is</MudSelectItem>
-			<MudSelectItem Value="Operator.IsNot">Is Not</MudSelectItem>
-			<MudSelectItem Value="Operator.IsSet">Is Set</MudSelectItem>
-			<MudSelectItem Value="Operator.IsNotSet">Is Not Set</MudSelectItem>
-		</MudSelectExtended>
+	@if (ShiftList == null)
+	{
+		<MudAlert>Filter Could not be loaded</MudAlert>
+	}
+	else
+	{
+		<MudStack Row AlignItems="AlignItems.End" Spacing="2">
 
-		@if (SelectedOperator == Operator.Is || SelectedOperator == Operator.IsNot)
-		{
-			<MudSelectExtended T="DateOperator" ValueChanged="@((val) => { SelectedDateOperator = val; DateChanged(); })" Label="Value">
-				@foreach (var item in Enum.GetValues<DateOperator>())
-				{
-					<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
-				}
+			<MudSelectExtended T="Operator" ValueChanged="OnOperatorChanged" Label="Operator">
+				<MudSelectItem Value="Operator.Is">Is</MudSelectItem>
+				<MudSelectItem Value="Operator.IsNot">Is Not</MudSelectItem>
+				<MudSelectItem Value="Operator.IsSet">Is Set</MudSelectItem>
+				<MudSelectItem Value="Operator.IsNotSet">Is Not Set</MudSelectItem>
 			</MudSelectExtended>
 
-			@if (SelectedDateOperator == DateOperator.Last || SelectedDateOperator == DateOperator.Next)
+			@if (SelectedOperator == Operator.Is || SelectedOperator == Operator.IsNot)
 			{
-				<MudNumericField T="int" Value="UnitValue" ValueChanged="@((val) => { UnitValue = val; DateChanged(); })" Min="1"></MudNumericField>
-				<MudSelectExtended T="TimeUnit" ValueChanged="@((val) => { SelectedTimeUnit = val; DateChanged(); })">
-					@foreach (var item in Enum.GetValues<TimeUnit>())
+				<MudSelectExtended T="DateOperator?" Clearable ValueChanged="OnDateOperatorChanged" Label="Value">
+					@foreach (var item in Enum.GetValues<DateOperator>())
 					{
-						<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
+						<MudSelectItem T="DateOperator?" Value="item">@item.ToString()</MudSelectItem>
 					}
 				</MudSelectExtended>
-			}
-			else if (SelectedDateOperator == DateOperator.Date || SelectedDateOperator == DateOperator.After || SelectedDateOperator == DateOperator.Before)
-			{
-				<MudDatePicker DateChanged="@((val) => { DateTimeValue = val; DateChanged(); })" />
-			}
-			else if (SelectedDateOperator == DateOperator.Range)
-			{
-				<MudDateRangePicker  DateRangeChanged="@((val) => { DateRangeValue = val; DateChanged(); })" />
-			}
-		}
 
-	</MudStack>
+				@if (SelectedDateOperator == DateOperator.Last || SelectedDateOperator == DateOperator.Next)
+				{
+					<MudNumericField T="int" Value="UnitValue" ValueChanged="OnTimeUnitValueChanged" Min="1"></MudNumericField>
+					<MudSelectExtended T="TimeUnit" ValueChanged="OnTimeUnitChanged">
+						@foreach (var item in Enum.GetValues<TimeUnit>())
+						{
+							<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
+						}
+					</MudSelectExtended>
+				}
+				else if (SelectedDateOperator == DateOperator.Date || SelectedDateOperator == DateOperator.After || SelectedDateOperator == DateOperator.Before)
+				{
+					<MudDatePicker DateChanged="OnDateTimeValueChanged" />
+				}
+				else if (SelectedDateOperator == DateOperator.Range)
+				{
+					<MudDateRangePicker DateRangeChanged="OnDateRangeValueChanged" />
+				}
+			}
+
+		</MudStack>
+	}
+
 </MudField>
 
 @code {
 	public Operator SelectedOperator { get; set; }
-	public DateOperator SelectedDateOperator { get; set; }
+	public DateOperator? SelectedDateOperator { get; set; }
 	public TimeUnit SelectedTimeUnit { get; set; }
 	public DateTime? DateTimeValue { get; set; } = DateTime.Now;
 	public DateRange? DateRangeValue { get; set; }
@@ -73,18 +82,19 @@
 			filterEnd.Value = start;
 		}
 
-		Value = new ODataFilterGenerator(true, Id).Add(filterStart).Add(filterEnd);
-		ValueChanged.InvokeAsync(Value);
+		SetFilter(filterStart, filterEnd);
 	}
 
 	private void IsSet(bool isSetNull)
 	{
-		Value = new ODataFilterGenerator(true, Id).Add(new ODataFilter
+		SelectedDateOperator = null;
+		var filter = new ODataFilter
 		{
 			Field = Name,
 			Operator = isSetNull ? ODataOperator.IsEmpty : ODataOperator.IsNotEmpty
-		});
-		ValueChanged.InvokeAsync(Value);
+		};
+
+		SetFilter(filter);
 	}
 
 	private (DateTime, DateTime) GetLastOrNextDateRange(int start, int end = 1, TimeUnit unit = TimeUnit.Day)
@@ -143,13 +153,16 @@
 				DateOperator.Last => GetLastOrNextDateRange(UnitValue * -1, UnitValue, SelectedTimeUnit),
 				DateOperator.Next => GetLastOrNextDateRange(1, UnitValue, SelectedTimeUnit),
 				DateOperator.Date => (DateTimeValue ?? DateTime.Today, (DateTimeValue ?? DateTime.Today).AddDays(1)),
-				DateOperator.Before => (DateTime.MinValue, DateTimeValue ?? DateTime.Today),
-				DateOperator.After => (DateTimeValue ?? DateTime.Today, DateTime.MaxValue),
+				DateOperator.Before => (DateTime.MinValue.ToUniversalTime(), DateTimeValue ?? DateTime.Today),
+				DateOperator.After => (DateTimeValue ?? DateTime.Today, DateTime.MaxValue.ToUniversalTime()),
 				DateOperator.Range => (DateRangeValue?.Start ?? DateTime.Today, (DateRangeValue?.End ?? DateTime.Today).AddDays(1)),
 				_ => (default, default)
 			};
 
-			SetDateRange(valueStart, valueEnd);
+			if (valueStart != default || valueEnd != default)
+			{
+				SetDateRange(valueStart, valueEnd);
+			}
 		}
 		else
 		{
@@ -157,6 +170,44 @@
 		}
 
 	}
+
+	#region Operator Changed
+	private void OnOperatorChanged(Operator value)
+	{
+		SelectedOperator = value;
+		DateChanged();
+	}
+
+	private void OnDateOperatorChanged(DateOperator? value)
+	{
+		SelectedDateOperator = value;
+		DateChanged();
+	}
+
+	private void OnTimeUnitChanged(TimeUnit value)
+	{
+		SelectedTimeUnit = value;
+		DateChanged();
+	}
+
+	private void OnTimeUnitValueChanged(int value)
+	{
+		UnitValue = value;
+		DateChanged();
+	}
+
+	private void OnDateTimeValueChanged(DateTime? value)
+	{
+		DateTimeValue = value;
+		DateChanged();
+	}
+
+	private void OnDateRangeValueChanged(DateRange value)
+	{
+		DateRangeValue = value;
+		DateChanged();
+	}
+	#endregion
 
 	public enum Operator
 	{
