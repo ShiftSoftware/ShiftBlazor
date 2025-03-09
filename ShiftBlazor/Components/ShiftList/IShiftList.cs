@@ -23,8 +23,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public int? PageSize { get; set; }
         public bool Outlined { get; set; }
         public bool IsEmbed { get; }
+        public string? EntitySet { get; set; }
+
+        public ODataFilterGenerator Filters { get; }
 
         public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null);
-
+        public void Reload();
     }
 }

@@ -310,6 +310,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool SelectOnRowClick { get; set; } = false;
 
+        [Parameter]
+        public bool FilterPanel { get; set; }
 
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
@@ -332,7 +334,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle = string.Empty;
         internal SortMode SortMode = SortMode.Multiple;
-        private ODataFilterGenerator Filters = new ODataFilterGenerator(true);
+        public ODataFilterGenerator Filters { get; private set; } = new ODataFilterGenerator(true);
         private string PreviousFilters = string.Empty;
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
@@ -373,7 +375,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
+        private bool ShowFilterPanel { get; set; }
+
         public bool ExportIsInProgress { get; private set; } = false;
+
+       private void SubmitFilterForm()
+        {
+
+            Console.WriteLine("Submitted");
+            
+        }
 
         protected override void OnInitialized()
         {
@@ -1171,6 +1182,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 SelectState.Clear();
             }
             await OnSelectStateChanged.InvokeAsync(SelectState);
+        }
+
+        public void Reload()
+        {
+            DataGrid?.ReloadServerData();
         }
 
         private readonly MudBlazor.Converter<bool, bool?> _oppositeBoolConverter = new()

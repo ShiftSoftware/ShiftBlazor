@@ -1,0 +1,22 @@
+﻿@inherits FilterInput
+
+<MudField Variant="Variant.Outlined" Label="@Name">
+	<MudSelectExtended T="bool" Label="Value" ValueChanged="ValueChanged">
+		<MudSelectItem T="bool" Value="true">True</MudSelectItem>
+		<MudSelectItem T="bool" Value="false">False</MudSelectItem>
+	</MudSelectExtended>
+</MudField>
+
+@code {
+
+	private void ValueChanged(bool value)
+	{
+		var filter = new ODataFilter
+		{
+			Field = Name,
+			Operator = ODataOperator.Equal,
+			Value = value.ToString()
+		};
+		SetFilter(filter);
+	}
+}
