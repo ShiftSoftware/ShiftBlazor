@@ -1,0 +1,32 @@
+﻿@inherits FilterInput
+
+<MudField Variant="Variant.Outlined" Label="@Name">
+
+	@if (ShiftList == null)
+	{
+		<MudAlert>Filter could not be loaded</MudAlert>
+	}
+	else
+	{
+		<MudStack Row AlignItems="AlignItems.End" Spacing="2">
+			<MudSelectExtended T="ODataOperator" Label="Operator">
+				<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
+			</MudSelectExtended>
+
+			<MudSelectExtended T="object" Label="Value">
+				@foreach (var item in Enum.GetValues(EnumType))
+				{
+					<MudSelectItem Value="@item">@item</MudSelectItem>
+				}
+			</MudSelectExtended>
+
+		</MudStack>
+	}
+
+</MudField>
+
+@code {
+	[Parameter]
+	public Type? EnumType { get; set; }
+}

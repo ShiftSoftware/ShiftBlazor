@@ -1,5 +1,4 @@
-﻿@using ShiftSoftware.ShiftEntity.Model
-@inherits FilterInput
+﻿@inherits FilterInput
 
 <MudField Variant="Variant.Outlined" Label="@Name">
 
@@ -19,49 +18,18 @@
 				<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
 			</MudSelectExtended>
 
-			@if (AutoCompleteType == null || AutoCompleteParameters == null)
-			{
-				<MudTextField T="string" Label="Value" ValueChanged="ValueChanged"></MudTextField>
-			}
-			else
-			{
-				<DynamicComponent Type="AutoCompleteType" Parameters="AutoCompleteParameters" />
-			}
-
+			<MudNumericField T="int" Label="Value" ValueChanged="ValueChanged"></MudNumericField>
 		</MudStack>
 	}
 
 </MudField>
 
+@code {
 
-@code
-{
-	[Parameter]
-	public Type? DtoType { get; set; }
-
-	private string? Value { get; set; }
+	private int Value { get; set; }
 	private ODataOperator SelectedOperator { get; set; }
 
-	private Type? AutoCompleteType;
-	private Dictionary<string, object>? AutoCompleteParameters;
-
-	protected override void OnInitialized()
-	{
-		if (DtoType != null
-			&& Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(DtoType) != null
-			&& !string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
-		{
-			AutoCompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(DtoType);
-			AutoCompleteParameters = new()
-			{
-				["EntitySet"] = ShiftList.EntitySet,
-				["DataTextField"] = Name,
-			};
-
-		}
-	}
-
-	private void ValueChanged(string value)
+	private void ValueChanged(int value)
 	{
 		Value = value;
 		SetODataFilter();
@@ -73,7 +41,7 @@
 		{
 			Field = Name,
 			Operator = SelectedOperator,
-			Value = Value ?? string.Empty
+			Value = Value,
 		};
 
 		SetFilter(filter);
