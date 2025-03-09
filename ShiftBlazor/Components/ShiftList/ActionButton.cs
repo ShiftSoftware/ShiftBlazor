@@ -40,6 +40,13 @@ public class ActionButton<T> : MudButtonExtended
     public Type? ComponentType { get; set; }
 
     /// <summary>
+    /// Executes before the default confirmation dialog is shown.
+    /// </summary>
+    [Parameter]
+    public Func<SelectState<T>, ValueTask<bool>>? OnDefaultDiaogOpen { get; set; }
+
+
+    /// <summary>
     /// A replacement for OnClick that has a SelectState object as an argument.
     /// </summary>
     [Parameter]
@@ -298,6 +305,20 @@ public class ActionButton<T> : MudButtonExtended
                         { "ConfirmText",  confirmText},
                         { "CancelText",  cancelText },
                     };
+
+                    if (this.OnDefaultDiaogOpen is not null && ShiftListGeneric is not null)
+                    {
+                        var continueWithShowingTheDialog = await this.OnDefaultDiaogOpen.Invoke(ShiftListGeneric.SelectState);
+
+                        if (!continueWithShowingTheDialog)
+                        {
+                            ChildContent = originalChildContent;
+
+                            StateHasChanged();
+
+                            return;
+                        }
+                    }
 
                     var result = await DialogService.Show<PopupMessage>("", parameters, new DialogOptions
                     {
