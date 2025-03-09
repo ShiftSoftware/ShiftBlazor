@@ -125,44 +125,44 @@
                     </MudToolBar>
                 }
 
-                    <MudCollapse Expanded="ShowFilterPanel" Style="border:none" Class="light-toolbar">
+                <MudCollapse Expanded="ShowFilterPanel" Style="border:none" Class="light-toolbar">
                     <MudForm Class="pa-4">
-                            <MudGrid Spacing="4">
-                                @foreach (var column in DataGrid.RenderedColumns)
-                                {
+                        <MudGrid Spacing="4">
+                            @foreach (var column in DataGrid.RenderedColumns)
+                            {
 
-                                    if (column.GetType().GetGenericTypeDefinition() == typeof(PropertyColumnExtended<,>) && column.GetType().GetProperty("DisableFilterPanel")?.GetValue(column) is bool disableFilterPanel && !disableFilterPanel)
-                                    {
-                                        var colArgs = column.GetType().GetGenericArguments();
-									    var fieldType = FieldType.Identify(colArgs[1]);
-                                        <MudItem xs="12" sm="6">
-                                            @if (fieldType.IsString || fieldType.IsGuid)
-                                            {
+                                if (column.GetType().GetGenericTypeDefinition() == typeof(PropertyColumnExtended<,>) && column.GetType().GetProperty("DisableFilterPanel")?.GetValue(column) is bool disableFilterPanel && !disableFilterPanel)
+                                {
+                                    var colArgs = column.GetType().GetGenericArguments();
+									var fieldType = FieldType.Identify(colArgs[1]);
+                                    <MudItem xs="12" sm="6">
+                                        @if (fieldType.IsString || fieldType.IsGuid)
+                                        {
                                             <StringFilter Name="@column.PropertyName" DtoType="colArgs[0]" />
-                                            }
-                                            else if (fieldType.IsDateTime)
-                                            {
+                                        }
+                                        else if (fieldType.IsDateTime)
+                                        {
                                             <DateFilter Name="@column.PropertyName.Replace(".DateTime", "")"  />
-                                            }
-                                            else if (fieldType.IsBoolean)
-                                            {
+                                        }
+                                        else if (fieldType.IsBoolean)
+                                        {
                                             <BooleanFilter Name="@column.PropertyName" />
-                                            }
-                                            else if (fieldType.IsEnum)
-                                            {
-                                                <EnumFilter Name="@column.PropertyName" EnumType="colArgs[0]"/>
-                                            }
-                                            else if (fieldType.IsNumber)
-                                            {
-                                                <NumericFilter Name="@column.PropertyName" />
-                                            }
-                                        </MudItem>
-                                    }
+                                        }
+                                        else if (fieldType.IsEnum)
+                                        {
+                                            <EnumFilter Name="@column.PropertyName" EnumType="colArgs[1]"/>
+                                        }
+                                        else if (fieldType.IsNumber)
+                                        {
+                                            <NumericFilter Name="@column.PropertyName" />
+                                        }
+                                    </MudItem>
                                 }
+                            }
                         </MudGrid>
                         <MudButton OnClick="SubmitFilterForm" Color="Color.Primary">Filter</MudButton>
                     </MudForm>
-                    </MudCollapse>
+                </MudCollapse>
 
        
                 @HeaderTemplate

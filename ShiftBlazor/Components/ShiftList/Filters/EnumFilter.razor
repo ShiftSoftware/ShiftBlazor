@@ -1,21 +1,22 @@
-﻿@inherits FilterInput
+﻿@using System.Text.Json
+@inherits FilterInput
 
 <MudField Variant="Variant.Outlined" Label="@Name">
 
-	@if (ShiftList == null)
+	@if (ShiftList == null || EnumTypeToUse == null)
 	{
 		<MudAlert>Filter could not be loaded</MudAlert>
 	}
 	else
 	{
 		<MudStack Row AlignItems="AlignItems.End" Spacing="2">
-			<MudSelectExtended T="ODataOperator" Label="Operator">
+			<MudSelectExtended T="ODataOperator" Label="Operator" ValueChanged="OnOperatorChanged">
 				<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
 				<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
 			</MudSelectExtended>
 
-			<MudSelectExtended T="object" Label="Value">
-				@foreach (var item in Enum.GetValues(EnumType))
+			<MudSelectExtended T="object" Label="Value" ValueChanged="OnValueChanged">
+				@foreach (var item in Enum.GetValues(EnumTypeToUse))
 				{
 					<MudSelectItem Value="@item">@item</MudSelectItem>
 				}
@@ -29,4 +30,40 @@
 @code {
 	[Parameter]
 	public Type? EnumType { get; set; }
+
+	private Type? EnumTypeToUse;
+	private object? Value { get; set; }
+	private ODataOperator SelectedOperator { get; set; }
+
+	protected override void OnInitialized()
+	{
+		if (EnumType != null)
+		{
+			EnumTypeToUse = EnumType.IsEnum ? EnumType : Nullable.GetUnderlyingType(EnumType);
+		}
+	}
+
+	private void OnOperatorChanged(ODataOperator value)
+	{
+		SelectedOperator = value;
+		SetODataFilter();
+	}
+
+	private void SetODataFilter()
+	{
+		var filter = new ODataFilter
+		{
+			Field = Name,
+			Operator = SelectedOperator,
+			Value = Value
+		};
+
+		SetFilter(filter);
+	}
+
+	private void OnValueChanged(object value)
+	{
+		Value = value;
+		SetODataFilter();
+	}
 }
