@@ -23,6 +23,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public int? PageSize { get; set; }
         public bool Outlined { get; set; }
         public bool IsEmbed { get; }
+        public string? EntitySet { get; set; }
 
         public ODataFilterGenerator Filters { get; }
 

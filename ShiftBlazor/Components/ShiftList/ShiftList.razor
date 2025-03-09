@@ -133,16 +133,17 @@
 
                                     if (column.GetType().GetGenericTypeDefinition() == typeof(PropertyColumnExtended<,>) && column.GetType().GetProperty("DisableFilterPanel")?.GetValue(column) is bool disableFilterPanel && !disableFilterPanel)
                                     {
+                                        var colArgs = column.GetType().GetGenericArguments();
                                         <MudItem xs="12" sm="6">
-                                            @if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsString)
+                                            @if (FieldType.Identify(colArgs[1]).IsString)
                                             {
-                                            <StringFilter Name="@column.PropertyName" />
+                                            <StringFilter Name="@column.PropertyName" DtoType="colArgs[0]" />
                                             }
-                                            else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsDateTime)
+                                            else if (FieldType.Identify(colArgs[1]).IsDateTime)
                                             {
                                             <DateFilter Name="@column.PropertyName.Replace(".DateTime", "")"  />
                                             }
-                                            else if (FieldType.Identify(column.GetType().GetGenericArguments()[1]).IsBoolean)
+                                            else if (FieldType.Identify(colArgs[1]).IsBoolean)
                                             {
                                             <BooleanFilter Name="@column.PropertyName" />
                                             }

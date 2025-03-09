@@ -1,12 +1,22 @@
-﻿<MudStack Row>
-	<MudText>@Name</MudText>
-	<MudSelectExtended T="string" Label="Value">
-		<MudSelectItem T="string">True</MudSelectItem>
-		<MudSelectItem T="string">False</MudSelectItem>
+﻿@inherits FilterInput
+
+<MudField Variant="Variant.Outlined" Label="@Name">
+	<MudSelectExtended T="bool" Label="Value" ValueChanged="ValueChanged">
+		<MudSelectItem T="bool" Value="true">True</MudSelectItem>
+		<MudSelectItem T="bool" Value="false">False</MudSelectItem>
 	</MudSelectExtended>
-</MudStack>
+</MudField>
 
 @code {
-	[Parameter]
-	public string Name { get; set; }
+
+	private void ValueChanged(bool value)
+	{
+		var filter = new ODataFilter
+		{
+			Field = Name,
+			Operator = ODataOperator.Equal,
+			Value = value.ToString()
+		};
+		SetFilter(filter);
+	}
 }
