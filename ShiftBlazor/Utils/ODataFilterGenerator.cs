@@ -308,7 +308,7 @@ public class ODataFilterGenerator
                 break;
             case ODataOperator.NotContains:
             case FilterOperator.String.NotContains:
-                filterTemplate = "not contains({0},{1})";
+                filterTemplate = "contains({0},{1}) ne true";
                 break;
             case ODataOperator.StartsWith:
             case FilterOperator.String.StartsWith:
