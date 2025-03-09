@@ -1,8 +1,10 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using ShiftSoftware.ShiftBlazor.Events
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @typeparam T where T : ShiftEntityDTOBase, new()
 @inherits EventComponentBase
 @implements IODataComponent
+@inject IWebAssemblyHostEnvironment Env
 
 @if (TypeAuthAction == null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
 {
@@ -26,6 +28,16 @@
                         <MudSpacer></MudSpacer>
 
                         @ToolbarEndTemplate
+
+                        @if (Env.IsDevelopment())
+                        {
+                            <MudTooltip Text="Refresh">
+                                <MudIconButtonExtended Size="@IconSize"
+                                                       Icon="@Icons.Material.Outlined.Refresh"
+                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                       OnClick="() => DataGrid!.ReloadServerData()" />
+                            </MudTooltip>
+                        }
 
                         @if (!DisableGridEditor)
                         {
