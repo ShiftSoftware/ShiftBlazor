@@ -164,6 +164,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public RenderFragment? ToolbarControlsTemplate { get; set; }
 
+        [Parameter]
+        public RenderFragment? FilterPanelStartTemplate { get; set; }
+
+        [Parameter]
+        public RenderFragment? FilterPanelEndTemplate { get; set; }
+
         /// <summary>
         /// When true, the header toolbar will not be rendered.
         /// </summary>

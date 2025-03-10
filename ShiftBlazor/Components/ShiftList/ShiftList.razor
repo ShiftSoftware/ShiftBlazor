@@ -136,6 +136,8 @@
                                     var colArgs = column.GetType().GetGenericArguments();
 									var fieldType = FieldType.Identify(colArgs[1]);
                                     <MudItem xs="12" sm="6">
+                                        @FilterPanelStartTemplate
+
                                         @if (fieldType.IsString || fieldType.IsGuid)
                                         {
                                             <StringFilter Name="@column.PropertyName" DtoType="colArgs[0]" />
@@ -156,6 +158,8 @@
                                         {
                                             <NumericFilter Name="@column.PropertyName" />
                                         }
+
+                                        @FilterPanelEndTemplate
                                     </MudItem>
                                 }
                             }
