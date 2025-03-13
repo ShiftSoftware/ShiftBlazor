@@ -1,3 +1,7 @@
+function capitalizeFirstLetter(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 function createODataQuery(filterType, filterValues, selectFields) {
   const quotedIds = filterValues.map((v) => `'${v}'`).join(",")
 
@@ -15,17 +19,16 @@ function createODataQuery(filterType, filterValues, selectFields) {
 self.onmessage = async (event) => {
   const { payload, headers } = event.data
 
-  const { url, Values, FileName, foreignColumns, columns } = payload
-
-  console.log(payload)
+  const { urlValue, values, columns, fileName, language, foreignColumns } =
+    payload
 
   try {
     let rows
 
-    if (!!Values && !!Values.length) {
-      rows = Values
+    if (!!values && !!values.length) {
+      rows = values
     } else {
-      const tableResponse = await fetch(url, {
+      const tableResponse = await fetch(urlValue, {
         headers,
         method: "GET",
       })
@@ -35,14 +38,16 @@ self.onmessage = async (event) => {
 
     if (!rows || !rows.length) throw new Error("No Items found")
 
-    const foreignColumnsMaapper = {}
+    const foreignColumnsMapper = {}
 
     const foreignKeys = []
 
     foreignColumns.forEach((c) => {
+      if (!columns.some((x) => x.key === c.propertyName)) return
+
       foreignKeys.push(c.propertyName)
 
-      foreignColumnsMaapper[c.propertyName] = {
+      foreignColumnsMapper[c.propertyName] = {
         url: c.url + "/" + c.entitySet,
         entries: {},
         filterValues: [],
@@ -52,19 +57,20 @@ self.onmessage = async (event) => {
       }
     })
 
-    rows.forEach((row) => {
-      foreignKeys.forEach((key) => {
-        if (
-          row[key] &&
-          !!`${row[key]}`.length &&
-          !foreignColumnsMaapper[key].filterValues.includes(row[key])
-        )
-          foreignColumnsMaapper[key].filterValues.push(row[key])
+    if (!!foreignKeys.length)
+      rows.forEach((row) => {
+        foreignKeys.forEach((key) => {
+          if (
+            row[key] &&
+            !!`${row[key]}`.length &&
+            !foreignColumnsMapper[key].filterValues.includes(row[key])
+          )
+            foreignColumnsMapper[key].filterValues.push(row[key])
+        })
       })
-    })
 
     const fetchPromises = foreignKeys.map((key) => {
-      const foreignColumn = foreignColumnsMaapper[key]
+      const foreignColumn = foreignColumnsMapper[key]
       if (!foreignColumn.filterValues.length) return null
 
       const url =
@@ -97,41 +103,83 @@ self.onmessage = async (event) => {
 
     const viableForeignColumnKeys = foreignKeys.filter(
       (key) =>
-        !!foreignColumnsMaapper[key].filterValues.length &&
-        !!Object.keys(foreignColumnsMaapper[key].entries).length
+        !!foreignColumnsMapper[key].filterValues.length &&
+        !!Object.keys(foreignColumnsMapper[key].entries).length
     )
 
-    const columnKeys = columns.map((c) => c.key)
+    const languageKey = language.slice(0, 2)
 
-    const columnTitles = columns.map((c) => c.title)
+    const localizedColumns = []
 
-    console.log(columnKeys)
+    const csvRows = []
 
-    console.log(columnTitles)
+    csvRows.push(columns.map((c) => c.title).join(",")) // Header
 
-    const refinedRows = rows.map((row) => {
-      viableForeignColumnKeys.forEach((key) => {
-        const foreignColumn = foreignColumnsMaapper[key]
-        if (row[key] && foreignColumn.entries[row[key]])
-          row[key] = foreignColumn.entries[row[key]]
+    rows.forEach((row, rowIndex) => {
+      let csvRowData = []
+
+      columns.forEach((c) => {
+        let value = row[c.key]
+
+        if (viableForeignColumnKeys.includes(c.key)) {
+          const foreignColumn = foreignColumnsMapper[c.key]
+          if (value && foreignColumn.entries[value])
+            value = foreignColumn.entries[value]
+        }
+
+        if (rowIndex === 0) {
+          try {
+            const localizedObject = JSON.parse(value)
+
+            if (localizedObject[languageKey]) localizedColumns.push(c.title)
+          } catch (error) {}
+        }
+
+        if (localizedColumns.includes(c.title)) {
+          try {
+            const localizedObject = JSON.parse(value)
+
+            value = localizedObject[languageKey]
+          } catch (error) {}
+        }
+
+        if (value instanceof Date)
+          value = value.toISOString().replace("T", " ").split(".")[0]
+        // Format as 'yyyy-MM-dd HH:mm:ss'
+        else if (typeof value === "boolean")
+          value = capitalizeFirstLetter(JSON.stringify(value))
+
+        // Special strings
+
+        if (
+          typeof value === "string" &&
+          (value.includes(",") || value.includes("\n") || value.includes('"'))
+        ) {
+          value = `"${value.replace(/"/g, '""')}"` // Escape double quotes
+        }
+
+        csvRowData.push(value)
       })
 
-      return row
+      csvRows.push(csvRowData.join(","))
     })
 
-    console.log(refinedRows)
+    const csvContent = csvRows.join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv" })
+    const csvURL = URL.createObjectURL(blob)
 
     self.postMessage({
+      csvURL,
+      fileName,
+      message: "",
       isSuccess: true,
-      message: "doneeeee",
-      items: [rows[0], rows[1]],
     })
   } catch (error) {
     console.log(error)
     self.postMessage({
       isSuccess: false,
       message: error?.message || "Please try again later.",
-      items: [],
     })
   }
 }
