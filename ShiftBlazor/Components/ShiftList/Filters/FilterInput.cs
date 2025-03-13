@@ -14,6 +14,7 @@ public class FilterInput : ComponentBase
     public Guid Id { get; set; } = Guid.NewGuid();
 
     private bool Immediate { get; set; } = true;
+    public string ClassName => $"filter-input {this.GetType().Name.ToLower().Replace("filter", "")}-filter";
 
     public void SetFilter(params ODataFilter[] filters)
     {
@@ -24,6 +25,23 @@ public class FilterInput : ComponentBase
             filter.Add(f);
         }
 
+        ApplyFilter(filter);
+    }
+
+    public void SetFilter(params string[] filters)
+    {
+        var filter = new ODataFilterGenerator(true, Id);
+
+        foreach (var f in filters)
+        {
+            filter.Add(f);
+        }
+
+        ApplyFilter(filter);
+    }
+
+    private void ApplyFilter(ODataFilterGenerator filter)
+    {
         ShiftList?.Filters.Add(filter);
         if (Immediate) ShiftList?.Reload();
     }

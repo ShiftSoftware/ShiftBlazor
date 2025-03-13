@@ -132,3 +132,13 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .e-filemanager .e-fe-grid-icon[aria-label^="Directory"] ~ [aria-colindex="4"] {
     color: transparent !important;
 }
+
+
+.filter-input .percent-input {
+    flex-grow: 0;
+    width: 80px;
+}
+
+.filter-input .percent-input input {
+    text-align: end;
+}
