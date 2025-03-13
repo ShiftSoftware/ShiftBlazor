@@ -1,4 +1,5 @@
-﻿using CsvHelper;
+﻿using Azure;
+using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -338,6 +339,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsModalOpen = false;
         private bool IsGridEditorOpen = false;
         private bool IsDeleteColumnHidden = true;
+        private DotNetObjectReference<ShiftList<T>> dotNetRef;
         private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
 
         private List<Column<T>> DraggableColumns
@@ -377,6 +379,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
+            dotNetRef = DotNetObjectReference.Create(this);
+
             IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
             if (!IsEmbed)
@@ -957,7 +961,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     .Where(x => x.Class?.Contains("foreign-column") == true)
                     .Select(x => x as IForeignColumn);
 
-
             var entityType = typeof(T);
 
             var lockObject = new object();
@@ -1017,33 +1020,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         }
 
         #region Export
-        private async Task<Stream> GetStream(string url)
-        {
-            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url,
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new LocalDateTimeOffsetJsonConverter() }
-                });
-
-            try
-            {
-                if (res?.Value == null || !res.Value.Any())
-                    throw new InvalidOperationException("No Items found");
-
-                await ProcessForeignColumns(res.Value);
-            }
-            catch (Exception e)
-            {
-                MessageService.Error(Loc["ShiftListForeignColumnError"], Loc["ShiftListForeignColumnError"], e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
-            }
-
-            return GetStream(res?.Value);
-        }
 
         private Stream GetStream(List<T>? items)
         {
             var stream = new MemoryStream();
-
             var config = new CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture);
 
             if (items != null && items.Count > 0)
@@ -1057,6 +1037,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                         .Where(x => !x.Hidden)
                         .Where(x => x.GetType().GetProperty("Property") != null);
 
+                    JsRuntime.InvokeVoidAsync("console.log", "Foreign Columns:", columns); 
                     // Write headers
                     foreach (var column in columns)
                     {
@@ -1112,7 +1093,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal async Task ExportList()
         {
             this.ExportIsInProgress = true;
-
             var name = Title != null && ExportTitleRegex().IsMatch(Title)
                 ? Title
                 : EntitySet ?? typeof(T).Name;
@@ -1121,25 +1101,78 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var date = DateTime.Now.ToString("yyyy-MM-dd");
             var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}_{date}.csv";
 
-            Stream stream;
+            var urlValue = CurrentUri == null ? "" : ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
+            var values = CurrentUri == null ? Values : new List<T>();
 
-            if (CurrentUri == null)
-            {
-                stream = GetStream(Values);
-            }
-            else
-            {
-                var url = ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
-                stream = await GetStream(url);
-            }
+            var foreignColumns = DataGrid!
+                    .RenderedColumns
+                    .Where(x => x.Class?.Contains("foreign-column") == true)
+                    .Select(x => x as IForeignColumn);
 
-            if (stream.Length > 0)
+            var columns = DataGrid!
+                    .RenderedColumns
+                    .Where(x => !x.Hidden)
+                    .Where(x => x.GetType().GetProperty("Property") != null)
+                    .Select(x => new
+                        {
+                            title = x.Title,
+                            key = x.PropertyName,
+                        });
+
+            var payload = new
             {
-                using var streamRef = new DotNetStreamReference(stream: stream);
-                await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+                columns,
+                foreignColumns,
+                url = urlValue,
+                Values = values,
+                FileName = fileName,
+            };
+
+            await JsRuntime.InvokeVoidAsync("tableExport", payload, dotNetRef);
+
+
+            //if (stream.Length > 0)
+            //{
+            //    using var streamRef = new DotNetStreamReference(stream: stream);
+            //    await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+            //}
+
+            
+        }
+
+        [JSInvokable]
+        public async void OnExportProcessed(bool IsSuccess, string Message, List<T> items)
+        {
+            
+            try
+            {
+
+                Stream stream;
+
+                if (!IsSuccess) {
+                    Console.WriteLine($"My debug output. 999999: {IsSuccess}, {Message}, kodo");
+                    throw new InvalidOperationException(Message);
+                }
+                else
+                {
+                   await ProcessForeignColumns(items);
+
+                   stream = await Task.Run(() => GetStream(items as List<T>));
+
+                    using var streamRef = new DotNetStreamReference(stream: stream);
+                    await JsRuntime.InvokeVoidAsync("downloadFileFromStream", "kodo.csv", streamRef);
+                }
+
+            }
+            catch (Exception e) {
+                MessageService.Error(Loc["ShiftListForeignColumnError"], Loc["ShiftListForeignColumnError"], e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
 
             this.ExportIsInProgress = false;
+
+            StateHasChanged();
+
+
         }
 
         #endregion

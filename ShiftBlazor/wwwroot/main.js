@@ -1,4 +1,28 @@
-﻿window.GetUrl = function () {
+﻿
+ 
+window.tableExport = (payload, dotNetObjectRef) => {
+    const worker = new Worker('_content/ShiftSoftware.ShiftBlazor/workers/table-export.js');
+
+    worker.onmessage = (e) => {
+        const { isSuccess, message, items } = e.data
+        console.log(items);
+        dotNetObjectRef.invokeMethodAsync('OnExportProcessed', isSuccess, message, items);
+
+        worker.terminate();
+    };
+
+    const headers = {
+        cookie: document.cookie,
+        'Content-Type': 'application/json',
+        authorization: "Bearer " + JSON.parse(localStorage.token).Token
+    }
+
+
+    worker.postMessage({ payload, headers });
+};
+
+
+window.GetUrl = function () {
     return window.location.href;
 };
 
