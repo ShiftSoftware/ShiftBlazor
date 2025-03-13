@@ -9,16 +9,42 @@
 	else
 	{
 		<MudStack Row AlignItems="AlignItems.End" Spacing="2">
-			<MudSelectExtended T="ODataOperator" ValueChanged="OnOperatorChanged" Label="Operator">
-				<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.Contains">Contains</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
+			<MudSelectExtended T="Operator" ValueChanged="OnOperatorChanged" Label="Operator">
+				<MudSelectItem Value="Operator.Is">Is</MudSelectItem>
+				<MudSelectItem Value="Operator.IsNot">IsNot</MudSelectItem>
+				<MudSelectItem Value="Operator.IsSet">IsSet</MudSelectItem>
+				<MudSelectItem Value="Operator.IsNotSet">IsNotSet</MudSelectItem>
 			</MudSelectExtended>
 
-			<MudNumericField T="int" Label="Value" ValueChanged="ValueChanged"></MudNumericField>
+			<MudSelectExtended T="NumOperator" ValueChanged="OnNumOperatorChanged">
+				<MudSelectItem Value="NumOperator.Positive">Positive</MudSelectItem>
+				<MudSelectItem Value="NumOperator.Negative">Negative</MudSelectItem>
+				@if (!IsDouble)
+				{
+					<MudSelectItem Value="NumOperator.Even">Even</MudSelectItem>
+					<MudSelectItem Value="NumOperator.Odd">Odd</MudSelectItem>
+				}
+				<MudSelectItem Value="NumOperator.WholeNumbers">WholeNumbers</MudSelectItem>
+				<MudSelectItem Value="NumOperator.Equal">Equal</MudSelectItem>
+				<MudSelectItem Value="NumOperator.NotEqual">NotEqual</MudSelectItem>
+				<MudSelectItem Value="NumOperator.GreaterThan">GreaterThan</MudSelectItem>
+				<MudSelectItem Value="NumOperator.GreaterThanOrEqual">GreaterThanOrEqual</MudSelectItem>
+				<MudSelectItem Value="NumOperator.LessThan">LessThan</MudSelectItem>
+				<MudSelectItem Value="NumOperator.LessThanOrEqual">LessThanOrEqual</MudSelectItem>
+				<MudSelectItem Value="NumOperator.Between">Between</MudSelectItem>
+				@if (!IsDouble)
+				{
+					<MudSelectItem Value="NumOperator.MultipleOf">MultipleOf</MudSelectItem>
+					<MudSelectItem Value="NumOperator.StartsWith">StartsWith</MudSelectItem>
+					<MudSelectItem Value="NumOperator.EndsWith">EndsWith</MudSelectItem>
+				}
+				<MudSelectItem Value="NumOperator.PercentageOf">PercentageOf</MudSelectItem>
+
+
+			</MudSelectExtended>
+
+			<MudNumericField T="double" Label="Value" ValueChanged="ValueChanged"></MudNumericField>
+			<MudNumericField T="double" Label="Value2" ValueChanged="Value2Changed"></MudNumericField>
 		</MudStack>
 	}
 
@@ -26,30 +52,151 @@
 
 @code {
 
-	private int Value { get; set; }
-	private ODataOperator SelectedOperator { get; set; }
+	[Parameter]
+	public Type? NumType { get; set; }
 
-	private void ValueChanged(int value)
+	private double Value { get; set; }
+	private double Value2 { get; set; }
+	private Operator SelectedOperator { get; set; }
+	private NumOperator SelectedNumOperator { get; set; }
+
+	// Even and Odd don't really work for floating numbers
+	private bool IsDouble => NumType == typeof(double) || Nullable.GetUnderlyingType(NumType) == typeof(double);
+
+	private void ValueChanged(double value)
 	{
 		Value = value;
 		SetODataFilter();
 	}
 
-	private void SetODataFilter()
+	private void Value2Changed(double value)
 	{
-		var filter = new ODataFilter
-		{
-			Field = Name,
-			Operator = SelectedOperator,
-			Value = Value,
-		};
-
-		SetFilter(filter);
+		Value2 = value;
+		SetODataFilter();
 	}
 
-	private void OnOperatorChanged(ODataOperator value)
+	private void SetODataFilter()
+	{
+		// var filter = new ODataFilter
+		// {
+		// 	Field = Name,
+		// 	Operator = ODataOperator.Equal,
+		// 	Value = Value,
+		// };
+		var value = string.Empty;
+
+		if (SelectedOperator == Operator.Is || SelectedOperator == Operator.IsNot)
+		{
+			if (SelectedNumOperator == NumOperator.Positive)
+			{
+				value = $"{Name} gt 0";
+			}
+			else if (SelectedNumOperator == NumOperator.Negative)
+			{
+				value = $"{Name} lt 0";
+			}
+			else if (SelectedNumOperator == NumOperator.Even)
+			{
+				value = $"{Name} mod 2 eq 0";
+			}
+			else if (SelectedNumOperator == NumOperator.Odd)
+			{
+				value = $"{Name} mod 2 eq 1";
+			}
+			else if (SelectedNumOperator == NumOperator.WholeNumbers)
+			{
+				value = $"floor({Name}) eq {Name}";
+			}
+			else if (SelectedNumOperator == NumOperator.Equal)
+			{
+				value = $"{Name} eq {Value}";
+			}
+			else if (SelectedNumOperator == NumOperator.NotEqual)
+			{
+				value = $"{Name} ne {Value}";
+			}
+			else if (SelectedNumOperator == NumOperator.GreaterThan)
+			{
+				value = $"{Name} gt {Value}";
+			}
+			else if (SelectedNumOperator == NumOperator.GreaterThanOrEqual)
+			{
+				value = $"{Name} ge {Value}";
+			}
+			else if (SelectedNumOperator == NumOperator.LessThan)
+			{
+				value = $"{Name} lt {Value}";
+			}
+			else if (SelectedNumOperator == NumOperator.LessThanOrEqual)
+			{
+				value = $"{Name} le {Value}";
+			}
+			else if (SelectedNumOperator == NumOperator.Between)
+			{
+				value = $"{Name} gt {Value} and {Name} lt {Value2}";
+			}
+			else if (SelectedNumOperator == NumOperator.MultipleOf)
+			{
+				value = $"cast({Name}, Edm.Decimal) mod {Value} eq 0";
+			}
+			else if (SelectedNumOperator == NumOperator.StartsWith)
+			{
+				value = $"startswith(cast({Name}, Edm.String), '{Value}')";
+			}
+			else if (SelectedNumOperator == NumOperator.EndsWith)
+			{
+				value = $"endswith(cast({Name}, Edm.String), '{Value}')";
+			}
+			else if (SelectedNumOperator == NumOperator.PercentageOf)
+			{
+				value = $"{Name} mul {Value / 100} lt {Value2}";
+			}
+		}
+
+		var filter = new ODataFilterGenerator(true, Id);
+		filter.Add(value);
+		ShiftList?.Filters.Add(filter);
+		ShiftList?.Reload();
+	}
+
+	private void OnOperatorChanged(Operator value)
 	{
 		SelectedOperator = value;
 		SetODataFilter();
+	}
+
+	private void OnNumOperatorChanged(NumOperator value)
+	{
+		SelectedNumOperator = value;
+		SetODataFilter();
+	}
+
+
+	public enum Operator
+	{
+		Is,
+		IsNot,
+		IsSet,
+		IsNotSet,
+	}
+
+	public enum NumOperator
+	{
+		Positive,
+		Negative,
+		Even,
+		Odd,
+		WholeNumbers,
+		Equal,
+		NotEqual,
+		GreaterThan,
+		LessThan,
+		GreaterThanOrEqual,
+		LessThanOrEqual,
+		Between,
+		MultipleOf,
+		EndsWith,
+		StartsWith,
+		PercentageOf,
 	}
 }
