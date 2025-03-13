@@ -385,11 +385,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public bool ExportIsInProgress { get; private set; } = false;
 
-       private void SubmitFilterForm()
+        private void SubmitFilterForm()
         {
-
             Console.WriteLine("Submitted");
-            
         }
 
         protected override void OnInitialized()
@@ -441,6 +439,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
+
+            ShowFilterPanel = SettingManager?.SetFilterPanelState() ?? false;
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -1188,6 +1188,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 SelectState.Clear();
             }
             await OnSelectStateChanged.InvokeAsync(SelectState);
+        }
+
+        public void ToggleFilterPanel()
+        {
+            ShowFilterPanel = SettingManager?.SetFilterPanelState(!ShowFilterPanel) ?? !ShowFilterPanel;
         }
 
         public void Reload()
