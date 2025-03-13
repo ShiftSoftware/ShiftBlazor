@@ -188,10 +188,10 @@ public class ODataFilterGenerator
         {
             if (!string.IsNullOrWhiteSpace(filter.Field))
             {
+                var field =  string.IsNullOrWhiteSpace(filter.CastToType) ? filter.Field : $"cast({filter.Field}, '{filter.CastToType}')";
                 var template = CreateFilterTemplate(filter.Operator);
                 var type = FieldType.Identify(filter.Value?.GetType());
-                var value = GetValueString(filter.Value, type);
-                filters.Add(string.Format(template, filter.Field, value));
+                filters.Add(string.Format(template, field, value));
             }
         }
 
