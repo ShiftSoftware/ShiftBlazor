@@ -31,6 +31,9 @@
     [Parameter]
     public string? KeyPropertyName { get; set; }
 
+    [Parameter]
+    public bool DisableFormatting { get; set; }
+
     protected Type? FormComponent => ComponentType ?? ShiftList.ComponentType;
 
     protected override void OnParametersSet()
@@ -41,6 +44,34 @@
         {
             base.CellTemplate = Template;
         }
+        else
+        {
+            base.CellTemplate ??= (context) =>
+            {
+                return @<text>@FormatContent(base.CellContent(context.Item))</text>;
+            };
+        }
+    }
+
+    private object? FormatContent(object? content)
+    {
+        if (DisableFormatting)
+        {
+			return content;
+        }
+
+		if (content is Enum _enum)
+		{
+			return _enum.Describe();
+		}
+        else if (content is DateTimeOffset datetime)
+        {
+            return datetime.DateTime;
+        }
+		else
+		{
+			return content;
+		}
     }
 
     protected string? GetKey(T item)
@@ -74,15 +105,19 @@
 
     public RenderFragment<CellContext<T>> Template => (context) =>
     @<a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
+        
+        @{
+            var content = FormatContent(base.CellContent(context.Item));
+        }
         @if (ButtonTemplate == null)
         {
             <span class="button-column-button">
-                @base.CellContent(context.Item)
+                @content
             </span>
         }
         else
         {
-            @ButtonTemplate((TProperty?)base.CellContent(context.Item))
+            @ButtonTemplate((TProperty?)content)
         }
     </a>;
 
