@@ -96,6 +96,22 @@ function capitalizeFirstLetter(str) {
     return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
+function formatDateColumns(date) {
+    date.setUTCHours(date.getUTCHours() + 3);
+
+    // Format the date as "YYYY-MM-DD HH:MM:SS" using UTC getters
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+
+    const formatted = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+    return formatted;
+}
+
 function generateCSVContent(rows, columns, language, viableForeignKeys, mapper) {
     const languageKey = language.slice(0, 2)
     const localizedColumns = new Set()
@@ -141,7 +157,7 @@ function generateCSVContent(rows, columns, language, viableForeignKeys, mapper) 
             }
 
             if (value instanceof Date) {
-                value = value.toISOString().replace("T", " ").split(".")[0]; // Format as 'yyyy-MM-dd HH:mm:ss'
+                value = formatDateColumns(value)
             } else if (typeof value === "boolean") {
                 value = capitalizeFirstLetter(String(value))
             }
