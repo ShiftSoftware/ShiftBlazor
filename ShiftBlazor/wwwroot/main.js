@@ -1,4 +1,10 @@
-﻿window.tableExport = (payload, dotNetObjectRef) => {
+﻿const getHeaders = () => ({
+    cookie: document.cookie,
+    "Content-Type": "application/json",
+    authorization: "Bearer " + JSON.parse(localStorage.token).Token,
+});
+   
+window.tableExport = (payload, dotNetObjectRef) => {
     const worker = new Worker(
         "_content/ShiftSoftware.ShiftBlazor/workers/table-export.js"
     )
@@ -16,13 +22,7 @@
         worker.terminate()
     }
 
-    const headers = {
-        cookie: document.cookie,
-        "Content-Type": "application/json",
-        authorization: "Bearer " + JSON.parse(localStorage.token).Token,
-    }
-
-    worker.postMessage({ payload, headers })
+    worker.postMessage({ payload, headers: getHeaders() })
 }
 
 window.GetUrl = function () {
