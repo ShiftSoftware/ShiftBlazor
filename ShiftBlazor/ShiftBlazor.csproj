@@ -47,6 +47,7 @@
 
 	<ItemGroup>
 		<None Include="Images\icon.png" Pack="true" PackagePath="\" />
+		<None Include="wwwroot\workers\table-export.js" />
 		<Folder Include="Images\" />
 	</ItemGroup>
 
@@ -170,7 +171,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj" Condition="Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
-		<ProjectReference Include="..\..\ShiftFrameworkLocalization\ShiftSoftwareLocalization\ShiftSoftwareLocalization.csproj" Condition="Exists('..\..\ShiftFrameworkLocalization\ShiftSoftwareLocalization\ShiftSoftwareLocalization.csproj')"  /><ProjectReference Include="..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj" Condition="Exists('..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj')" />
+		<ProjectReference Include="..\..\ShiftFrameworkLocalization\ShiftSoftwareLocalization\ShiftSoftwareLocalization.csproj" Condition="Exists('..\..\ShiftFrameworkLocalization\ShiftSoftwareLocalization\ShiftSoftwareLocalization.csproj')" /><ProjectReference Include="..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj" Condition="Exists('..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj')" />
 		<ProjectReference Include="..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj" Condition="Exists('..\..\TypeAuth\TypeAuth.Blazor\TypeAuth.Blazor.csproj')" />
 	</ItemGroup>
 
