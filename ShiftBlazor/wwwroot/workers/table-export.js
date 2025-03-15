@@ -73,7 +73,15 @@ function fetchForeignEntries(foreignKeys, mapper, headers) {
                 if (!response.ok) {
                     throw new Error(`Failed to fetch ${url}: ${response.statusText}`)
                 }
-                const items = (await response.json()).Value
+
+                let items;
+
+                try {
+                    items = (await response.json()).Value ;
+                } catch (err) {
+                    items = [];
+                }
+
                 // create entry mapper as id : value, for example "u23" : "toyota"
                 items.forEach((item) => {
                     foreignColumn.entries[item[foreignColumn.idKey]] = item[foreignColumn.valueKey]
