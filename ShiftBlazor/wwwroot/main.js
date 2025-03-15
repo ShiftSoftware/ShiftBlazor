@@ -22,7 +22,8 @@ window.tableExport = (payload, dotNetObjectRef) => {
         worker.terminate()
     }
 
-    worker.postMessage({ payload, headers: getHeaders() })
+    worker.postMessage({
+        payload, headers: getHeaders(), origin: `${window.location.origin}/api` })
 }
 
 window.GetUrl = function () {

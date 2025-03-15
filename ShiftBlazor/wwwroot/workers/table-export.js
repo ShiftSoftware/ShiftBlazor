@@ -4,7 +4,7 @@ async function fetchRows(url, headers) {
     return data?.Value || []
 }
 
-function buildForeignColumnsMapper(columns, foreignColumns) {
+function buildForeignColumnsMapper(columns, foreignColumns, origin) {
     const mapper = {}
     const foreignKeys = []
 
@@ -18,9 +18,9 @@ function buildForeignColumnsMapper(columns, foreignColumns) {
             entries: {},
             filterValues: [],
             rowKey: col.propertyName,
-            idKey: col.tEntityValueField,
+            idKey: col.tEntityValueField, 
             valueKey: col.tEntityTextField,
-            url: `${col.url}/${col.entitySet}`,
+            url: `${col.url || origin}/${col.entitySet}`,
         }
     })
 
@@ -108,6 +108,14 @@ function generateCSVContent(rows, columns, language, viableForeignKeys, mapper) 
         const csvRowData = columns.map((col) => {
             let value = row[col.key]
 
+            if (col.key.includes('.')) {
+                const [columnKey, columnType] = col.key.split('.');
+
+                value = row[columnKey]
+
+                if (columnType === "DateTime") value = new Date(value)
+            }
+
             // If the column is foreign and it has coresponding value then replace it
             if (viableForeignKeys.includes(col.key)) {
                 const foreignColumn = mapper[col.key]
@@ -157,7 +165,7 @@ function generateCSVContent(rows, columns, language, viableForeignKeys, mapper) 
 }
 
 self.onmessage = async (event) => {
-    const { payload, headers } = event.data;
+    const { payload, headers, origin } = event.data;
     const { urlValue, values, columns, fileName, language, foreignColumns } = payload;
 
     try {
@@ -165,7 +173,7 @@ self.onmessage = async (event) => {
 
         if (!rows.length) throw new Error("No Items found");
 
-        const { foreignColumnsMapper, foreignKeys } = buildForeignColumnsMapper(columns, foreignColumns)
+        const { foreignColumnsMapper, foreignKeys } = buildForeignColumnsMapper(columns, foreignColumns, origin)
 
         // Populate unique filter values for foreign keys
         populateForeignFilterValues(rows, foreignKeys, foreignColumnsMapper)
