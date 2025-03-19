@@ -1,0 +1,28 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters
+
+<CascadingValue Value="this" IsFixed>
+    @foreach (var (id, comp) in FilterComponents)
+    {
+        <MudStack Row>
+            <DynamicComponent Type="comp.Key" Parameters="comp.Value" />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@(() => RemoveFilterComponent(id))"/>
+        </MudStack>
+    }
+</CascadingValue>
+
+
+@if (DTO != null)
+{
+    <MudMenu>
+        <ActivatorContent>
+            <MudButton>Add</MudButton>
+        </ActivatorContent>
+        <ChildContent>
+
+            @foreach (var field in Fields)
+            {
+                <MudMenuItem OnClick="() => AddFilterComponent(field)">@field.Name</MudMenuItem>
+            }
+        </ChildContent>
+    </MudMenu>
+}

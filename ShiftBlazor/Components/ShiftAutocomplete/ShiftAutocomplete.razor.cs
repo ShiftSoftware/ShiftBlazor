@@ -87,7 +87,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private const string MultiSelectClassName = "multi-select";
         internal string _DataValueField = string.Empty;
         internal string _DataTextField = string.Empty;
-        private ODataFilterGenerator Filters = new ODataFilterGenerator(true);
+        public bool FilterImmediate { get; set; }
+        public ODataFilterGenerator Filters { get; private set; } = new ODataFilterGenerator(true);
         private string? PreviousFilters;
         private int DropdownItemCount = 0;
         private bool ShrinkTags = false;
@@ -132,6 +133,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             Converter = ValueConverter;
             SearchFunc = Search;
+            FilterImmediate = Immediate;
             _ = UpdateInitialValue();
 
             base.OnInitialized();

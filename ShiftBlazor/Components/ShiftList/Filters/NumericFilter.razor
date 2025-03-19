@@ -2,7 +2,7 @@
 
 <MudField Variant="Variant.Outlined" Label="@Name" Class="@ClassName">
 
-	@if (ShiftList == null)
+	@if (FilterPanel == null)
 	{
 		<MudAlert>Filter could not be loaded</MudAlert>
 	}
@@ -61,10 +61,6 @@
 </MudField>
 
 @code {
-
-	[Parameter]
-	public Type? NumType { get; set; }
-
 	private double Value { get; set; }
 	private double Value2 { get; set; }
 	private double PercentValue { get; set; }
@@ -72,7 +68,7 @@
 	private NumOperator? SelectedNumOperator { get; set; }
 
 	// Even and Odd don't really work for floating numbers
-	private bool IsDouble => NumType == typeof(double) || Nullable.GetUnderlyingType(NumType) == typeof(double);
+	private bool IsDouble => FieldType == typeof(double) || Nullable.GetUnderlyingType(FieldType) == typeof(double);
 
 	private void PercentValueChanged(double value)
 	{

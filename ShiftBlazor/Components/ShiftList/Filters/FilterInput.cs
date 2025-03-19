@@ -11,12 +11,15 @@ public class FilterInput : ComponentBase
     [Parameter]
     public bool Immediate { get; set; }
 
-    [CascadingParameter]
-    public IShiftList? ShiftList { get; set; }
+    [Parameter]
+    public Type? FieldType { get; set; }
 
+    [Parameter]
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    private bool ImmediateUpdate => Immediate || ShiftList?.FilterImmediate == true;
+    [CascadingParameter]
+    public FilterPanel? FilterPanel { get; set; }
+
     public string ClassName => $"filter-input {this.GetType().Name.ToLower().Replace("filter", "")}-filter";
 
     public void SetFilter(params ODataFilter[] filters)
@@ -28,7 +31,7 @@ public class FilterInput : ComponentBase
             filter.Add(f);
         }
 
-        ApplyFilter(filter);
+        FilterPanel?.ApplyFilter(filter, Immediate);
     }
 
     public void SetFilter(params string[] filters)
@@ -40,18 +43,8 @@ public class FilterInput : ComponentBase
             filter.Add(f);
         }
 
-        ApplyFilter(filter);
+        FilterPanel?.ApplyFilter(filter, Immediate);
     }
 
-    private void ApplyFilter(ODataFilterGenerator filter)
-    {
-        ShiftList?.Filters.Add(filter);
-        if (ImmediateUpdate) ShiftList?.Reload();
-    }
-
-    public void ClearFilter()
-    {
-        ShiftList?.Filters.Remove(Id);
-        if (ImmediateUpdate) ShiftList?.Reload();
-    }
+    public void ClearFilter() => FilterPanel?.ClearFilter(Id, Immediate);
 }

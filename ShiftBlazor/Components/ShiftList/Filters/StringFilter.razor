@@ -3,7 +3,7 @@
 
 <MudField Variant="Variant.Outlined" Label="@Name">
 
-	@if (ShiftList == null)
+	@if (FilterPanel == null)
 	{
 		<MudAlert>Filter could not be loaded</MudAlert>
 	}
@@ -37,6 +37,9 @@
 {
 	[Parameter]
 	public Type? DtoType { get; set; }
+
+	[CascadingParameter]
+	public IShiftList? ShiftList { get; set; }
 
 	private string? Value { get; set; }
 	private ODataOperator SelectedOperator { get; set; }
