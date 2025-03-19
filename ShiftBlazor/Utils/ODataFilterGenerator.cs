@@ -51,12 +51,7 @@ public class ODataFilterGenerator
 
     public ODataFilterGenerator Add(ODataFilterGenerator generator)
     {
-        var found = ChildFilters.FirstOrDefault(x => generator.Id != null && x.Id == generator.Id);
-
-        if (found != null)
-        {
-            ChildFilters.Remove(found);
-        }
+        Remove(generator.Id);
 
         ChildFilters.Add(generator);
         return this;
@@ -64,12 +59,7 @@ public class ODataFilterGenerator
 
     public ODataFilterGenerator Add(ODataFilter filter)
     {
-        var found = Filters.FirstOrDefault(x => filter.Id != null && x.Id == filter.Id);
-
-        if (found != null)
-        {
-            Filters.Remove(found);
-        }
+        Remove(filter.Id);
 
         Filters.Add(filter);
         return this;
@@ -101,12 +91,7 @@ public class ODataFilterGenerator
 
     public ODataFilterGenerator And(Action<ODataFilterGenerator> filterConfig, Guid? id = null)
     {
-        var found = ChildFilters.FirstOrDefault(x => id != null && x.Id == id);
-
-        if (found != null)
-        {
-            ChildFilters.Remove(found);
-        }
+        Remove(id);
 
         var generator = new ODataFilterGenerator(true);
         filterConfig.Invoke(generator);
@@ -116,12 +101,7 @@ public class ODataFilterGenerator
 
     public ODataFilterGenerator Or(Action<ODataFilterGenerator> filterConfig, Guid? id = null)
     {
-        var found = ChildFilters.FirstOrDefault(x => id != null && x.Id == id);
-
-        if (found != null)
-        {
-            ChildFilters.Remove(found);
-        }
+        Remove(id);
 
         var generator = new ODataFilterGenerator(false);
         filterConfig.Invoke(generator);
@@ -170,6 +150,22 @@ public class ODataFilterGenerator
             return Or(filterConfig);
 
         return this;
+    }
+
+    public void Remove(Guid? id)
+    {
+        var found = Filters.FirstOrDefault(x => id != null && x.Id == id);
+        var found2 = ChildFilters.FirstOrDefault(x => id != null && x.Id == id);
+
+        if (found != null)
+        {
+            Filters.Remove(found);
+        }
+        if (found2 != null)
+        {
+            ChildFilters.Remove(found2);
+        }
+
     }
 
     public override string ToString()

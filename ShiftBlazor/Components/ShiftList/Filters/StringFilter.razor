@@ -33,7 +33,6 @@
 
 </MudField>
 
-
 @code
 {
 	[Parameter]
@@ -56,9 +55,13 @@
 			{
 				["EntitySet"] = ShiftList.EntitySet,
 				["DataTextField"] = Name,
+				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged)
 			};
-
 		}
+	}
+
+	private void AutocompleteChanged(ShiftEntitySelectDTO? dto) {
+		ValueChanged(dto?.Text);
 	}
 
 	private void ValueChanged(string value)
@@ -69,14 +72,21 @@
 
 	private void SetODataFilter()
 	{
+		if (Value == null)
+		{
+			ClearFilter();
+		}
+		else
+		{
 		var filter = new ODataFilter
 		{
 			Field = Name,
 			Operator = SelectedOperator,
-			Value = Value ?? string.Empty
+				Value = Value
 		};
 
 		SetFilter(filter);
+	}
 	}
 
 	private void OnOperatorChanged(ODataOperator value)

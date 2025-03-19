@@ -27,7 +27,7 @@
 
                         @ToolbarEndTemplate
 
-                        @if (FilterPanel)
+                        @if (EnableFilterPanel)
                         {
                             <MudTooltip Text="@Loc["ToggleFilterPanelTitle"]">
                                 <MudIconButtonExtended Size="@IconSize"
@@ -135,28 +135,29 @@
                                 {
                                     var colArgs = column.GetType().GetGenericArguments();
 									var fieldType = FieldType.Identify(colArgs[1]);
+									var immediate = column.GetType().GetProperty("FilterImmediate")?.GetValue(column) as bool? ?? false;
                                     <MudItem xs="12" sm="6">
                                         @FilterPanelStartTemplate
 
                                         @if (fieldType.IsString || fieldType.IsGuid)
                                         {
-                                            <StringFilter Name="@column.PropertyName" DtoType="colArgs[0]" />
+                                            <StringFilter  Immediate="immediate" Name="@column.PropertyName" DtoType="colArgs[0]" />
                                         }
                                         else if (fieldType.IsDateTime)
                                         {
-                                            <DateFilter Name="@column.PropertyName.Replace(".DateTime", "")"  />
+                                            <DateFilter Immediate="immediate" Name="@column.PropertyName.Replace(".DateTime", "")" />
                                         }
                                         else if (fieldType.IsBoolean)
                                         {
-                                            <BooleanFilter Name="@column.PropertyName" />
+                                            <BooleanFilter Immediate="immediate" Name="@column.PropertyName" />
                                         }
                                         else if (fieldType.IsEnum)
                                         {
-                                            <EnumFilter Name="@column.PropertyName" EnumType="colArgs[1]"/>
+                                            <EnumFilter Immediate="immediate" Name="@column.PropertyName" EnumType="colArgs[1]" />
                                         }
                                         else if (fieldType.IsNumber)
                                         {
-                                            <NumericFilter Name="@column.PropertyName" NumType="colArgs[1]" />
+                                            <NumericFilter Immediate="immediate" Name="@column.PropertyName" NumType="colArgs[1]" />
                                         }
 
                                         @FilterPanelEndTemplate

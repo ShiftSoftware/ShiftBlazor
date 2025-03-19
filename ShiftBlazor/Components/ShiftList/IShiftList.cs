@@ -24,6 +24,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool Outlined { get; set; }
         public bool IsEmbed { get; }
         public string? EntitySet { get; set; }
+        public bool FilterImmediate { get; set; }
 
         public ODataFilterGenerator Filters { get; }
 

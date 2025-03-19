@@ -134,6 +134,12 @@
 
 		if (SelectedOperator == Operator.Is || SelectedOperator == Operator.IsNot)
 		{
+			if (SelectedDateOperator == null)
+			{
+				ClearFilter();
+				return;
+			}
+
 			(valueStart, valueEnd) = SelectedDateOperator switch
 			{
 				DateOperator.Today => GetLastOrNextDateRange(0),

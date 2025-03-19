@@ -317,7 +317,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool SelectOnRowClick { get; set; } = false;
 
         [Parameter]
-        public bool FilterPanel { get; set; }
+        public bool EnableFilterPanel { get; set; }
+
+        [Parameter]
+        public bool FilterImmediate { get; set; }
 
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
@@ -387,7 +390,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private void SubmitFilterForm()
         {
-            Console.WriteLine("Submitted");
+            Reload();
         }
 
         protected override void OnInitialized()
