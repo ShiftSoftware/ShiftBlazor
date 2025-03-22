@@ -1,54 +1,64 @@
 ﻿@using ShiftSoftware.ShiftEntity.Model
 @inherits FilterInput
 
-<MudField Variant="Variant.Outlined" Label="@Name">
+@if (!IsHidden)
+{
+	<MudField Variant="Variant.Outlined" Label="@Name" Disabled="Disabled">
 
-	@if (FilterPanel == null)
-	{
-		<MudAlert>Filter could not be loaded</MudAlert>
-	}
-	else
-	{
-		<MudStack Row AlignItems="AlignItems.End" Spacing="2">
-			<MudSelectExtended T="ODataOperator" ValueChanged="OnOperatorChanged" Label="Operator">
-				<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.Contains">Contains</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
-			</MudSelectExtended>
+		@if (FilterPanel == null)
+		{
+			<MudAlert>Filter could not be loaded</MudAlert>
+		}
+		else
+		{
+			<CascadingValue Name="@FormHelper.ParentDisabledName" Value="Disabled">
+				<MudStack Row AlignItems="AlignItems.End" Spacing="2">
+					<MudSelectExtended T="ODataOperator" Value="SelectedOperator" ValueChanged="OnOperatorChanged" Label="Operator" >
+						<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
+						<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
+						<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
+						<MudSelectItem Value="ODataOperator.Contains">Contains</MudSelectItem>
+						<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
+						<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
+					</MudSelectExtended>
 
-			@if (AutoCompleteType == null || AutoCompleteParameters == null)
-			{
-				<MudTextField T="string" Label="Value" ValueChanged="ValueChanged"></MudTextField>
-			}
-			else
-			{
-				<DynamicComponent Type="AutoCompleteType" Parameters="AutoCompleteParameters" />
-			}
+					@if (AutoCompleteType == null || AutoCompleteParameters == null)
+					{
+						<MudTextField T="string" Label="Value" Value="Value" ValueChanged="ValueChanged" />
+					}
+					else
+					{
+						<DynamicComponent Type="AutoCompleteType" Parameters="AutoCompleteParameters" />
+					}
 
-		</MudStack>
-	}
+				</MudStack>
+			</CascadingValue>
+		}
 
-</MudField>
+	</MudField>
+}
 
 @code
 {
 	[Parameter]
 	public Type? DtoType { get; set; }
 
+	[Parameter]
+	public string? Value { get; set; }
+
+	[Parameter]
+	public ODataOperator SelectedOperator { get; set; }
+
 	[CascadingParameter]
 	public IShiftList? ShiftList { get; set; }
-
-	private string? Value { get; set; }
-	private ODataOperator SelectedOperator { get; set; }
 
 	private Type? AutoCompleteType;
 	private Dictionary<string, object>? AutoCompleteParameters;
 
 	protected override void OnInitialized()
 	{
+		base.OnInitialized();
+
 		if (DtoType != null
 			&& Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(DtoType) != null
 			&& !string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
@@ -73,7 +83,7 @@
 		SetODataFilter();
 	}
 
-	private void SetODataFilter()
+	public override void SetODataFilter()
 	{
 		if (Value == null)
 		{
@@ -81,15 +91,15 @@
 		}
 		else
 		{
-		var filter = new ODataFilter
-		{
-			Field = Name,
-			Operator = SelectedOperator,
+			var filter = new ODataFilter
+			{
+				Field = Name,
+				Operator = SelectedOperator,
 				Value = Value
-		};
+			};
 
-		SetFilter(filter);
-	}
+			SetFilter(filter);
+		}
 	}
 
 	private void OnOperatorChanged(ODataOperator value)

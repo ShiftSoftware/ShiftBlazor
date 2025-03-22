@@ -1,71 +1,89 @@
 ﻿@inherits FilterInput
 
-<MudField Variant="Variant.Outlined" Label="@Name" Class="@ClassName">
+@if (!IsHidden)
+{
 
-	@if (FilterPanel == null)
-	{
-		<MudAlert>Filter could not be loaded</MudAlert>
-	}
-	else
-	{
-		<MudStack Row AlignItems="AlignItems.End" Spacing="2">
-			<MudSelectExtended T="Operator" ValueChanged="OnOperatorChanged" Label="Operator">
-				<MudSelectItem Value="Operator.Is">Is</MudSelectItem>
-				<MudSelectItem Value="Operator.IsNot">IsNot</MudSelectItem>
-				<MudSelectItem Value="Operator.IsSet">IsSet</MudSelectItem>
-				<MudSelectItem Value="Operator.IsNotSet">IsNotSet</MudSelectItem>
-			</MudSelectExtended>
+	<MudField Variant="Variant.Outlined" Label="@Name" Class="@ClassName" Disabled="Disabled">
 
-			<MudSelectExtended T="NumOperator?" ValueChanged="OnNumOperatorChanged">
-				<MudSelectItem T="NumOperator?" Value="NumOperator.Positive">Positive</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.Negative">Negative</MudSelectItem>
-				@if (!IsDouble)
-				{
-					<MudSelectItem T="NumOperator?" Value="NumOperator.Even">Even</MudSelectItem>
-					<MudSelectItem T="NumOperator?" Value="NumOperator.Odd">Odd</MudSelectItem>
-				}
-				<MudSelectItem T="NumOperator?" Value="NumOperator.WholeNumbers">WholeNumbers</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.Equal">Equal</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.NotEqual">NotEqual</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.GreaterThan">GreaterThan</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.GreaterThanOrEqual">GreaterThanOrEqual</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.LessThan">LessThan</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.LessThanOrEqual">LessThanOrEqual</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.Between">Between</MudSelectItem>
-				@if (!IsDouble)
-				{
-					<MudSelectItem T="NumOperator?" Value="NumOperator.MultipleOf">MultipleOf</MudSelectItem>
-				}
-				<MudSelectItem T="NumOperator?" Value="NumOperator.StartsWith">StartsWith</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.EndsWith">EndsWith</MudSelectItem>
-				<MudSelectItem T="NumOperator?" Value="NumOperator.PercentageOf">PercentageOf</MudSelectItem>
+		@if (FilterPanel == null)
+		{
+			<MudAlert>Filter could not be loaded</MudAlert>
+		}
+		else
+		{
+			<CascadingValue Name="@FormHelper.ParentDisabledName" Value="Disabled">
+				<MudStack Row AlignItems="AlignItems.End" Spacing="2">
+					<MudSelectExtended T="ODataOperator" Value="SelectedOperator" ValueChanged="OnOperatorChanged" Label="Operator">
+						<MudSelectItem Value="ODataOperator.Equal">Is</MudSelectItem>
+						<MudSelectItem Value="ODataOperator.IsNotEmpty">IsSet</MudSelectItem>
+						<MudSelectItem Value="ODataOperator.IsEmpty">IsNotSet</MudSelectItem>
+					</MudSelectExtended>
 
+					<MudSelectExtended T="NumOperator?" Value="SelectedNumOperator" ValueChanged="OnNumOperatorChanged">
+						<MudSelectItem T="NumOperator?" Value="NumOperator.Positive">Positive</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.Negative">Negative</MudSelectItem>
+						@if (!IsDouble)
+						{
+							<MudSelectItem T="NumOperator?" Value="NumOperator.Even">Even</MudSelectItem>
+							<MudSelectItem T="NumOperator?" Value="NumOperator.Odd">Odd</MudSelectItem>
+						}
+						<MudSelectItem T="NumOperator?" Value="NumOperator.WholeNumbers">WholeNumbers</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.Equal">Equal</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.NotEqual">NotEqual</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.GreaterThan">GreaterThan</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.GreaterThanOrEqual">GreaterThanOrEqual</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.LessThan">LessThan</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.LessThanOrEqual">LessThanOrEqual</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.Between">Between</MudSelectItem>
+						@if (!IsDouble)
+						{
+							<MudSelectItem T="NumOperator?" Value="NumOperator.MultipleOf">MultipleOf</MudSelectItem>
+						}
+						<MudSelectItem T="NumOperator?" Value="NumOperator.StartsWith">StartsWith</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.EndsWith">EndsWith</MudSelectItem>
+						<MudSelectItem T="NumOperator?" Value="NumOperator.PercentageOf">PercentageOf</MudSelectItem>
+					</MudSelectExtended>
 
-			</MudSelectExtended>
-
-			@if (SelectedNumOperator == NumOperator.PercentageOf)
-			{
-				<MudNumericField T="double" Label="Percentage" Class="percent-input" MaxLength="3" Max="100" Min="0" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Percent" ValueChanged="PercentValueChanged"/>
-			}
-			@if (SelectedNumOperator >= NumOperator.Equal)
-			{
-				<MudNumericField T="double" Label="Value" ValueChanged="ValueChanged"></MudNumericField>
-			}
-			@if (SelectedNumOperator == NumOperator.Between)
-			{
-				<MudNumericField T="double" Label="Value" ValueChanged="Value2Changed"></MudNumericField>
-			}
-		</MudStack>
-	}
-
-</MudField>
+					@if (SelectedNumOperator == NumOperator.PercentageOf)
+					{
+						<MudNumericField
+							T="double"
+							Label="Percentage"
+							Class="percent-input"
+							MaxLength="3"
+							Max="100"
+							Min="0"
+							Adornment="Adornment.End"
+							AdornmentIcon="@Icons.Material.Filled.Percent"
+							Value="PercentValue"
+							ValueChanged="PercentValueChanged"/>
+					}
+					@if (SelectedNumOperator >= NumOperator.Equal)
+					{
+						<MudNumericField T="double" Label="Value" Value="Value" ValueChanged="ValueChanged"/>
+					}
+					@if (SelectedNumOperator == NumOperator.Between)
+					{
+						<MudNumericField T="double" Label="Value" Value="Value2" ValueChanged="Value2Changed"/>
+					}
+				</MudStack>
+			</CascadingValue>
+		}
+	</MudField>
+}
 
 @code {
-	private double Value { get; set; }
-	private double Value2 { get; set; }
-	private double PercentValue { get; set; }
-	private Operator SelectedOperator { get; set; }
-	private NumOperator? SelectedNumOperator { get; set; }
+
+	[Parameter]
+	public double Value { get; set; }
+	[Parameter]
+	public double Value2 { get; set; }
+	[Parameter]
+	public double PercentValue { get; set; }
+	[Parameter]
+	public ODataOperator SelectedOperator { get; set; }
+	[Parameter]
+	public NumOperator? SelectedNumOperator { get; set; }
 
 	// Even and Odd don't really work for floating numbers
 	private bool IsDouble => FieldType == typeof(double) || Nullable.GetUnderlyingType(FieldType) == typeof(double);
@@ -88,14 +106,14 @@
 		SetODataFilter();
 	}
 
-	private void SetODataFilter()
+	public override void SetODataFilter()
 	{
 		var op = ODataOperator.Equal;
 		object value = 0;
 		var castType = string.Empty;
 		var stringFilter = string.Empty;
 
-		if (SelectedOperator == Operator.Is || SelectedOperator == Operator.IsNot)
+		if (SelectedOperator == ODataOperator.Equal)
 		{
 			if (SelectedNumOperator == NumOperator.Positive)
 			{
@@ -189,7 +207,7 @@
 		}
 	}
 
-	private void OnOperatorChanged(Operator value)
+	private void OnOperatorChanged(ODataOperator value)
 	{
 		SelectedOperator = value;
 		SetODataFilter();
@@ -199,15 +217,6 @@
 	{
 		SelectedNumOperator = value;
 		SetODataFilter();
-	}
-
-
-	public enum Operator
-	{
-		Is,
-		IsNot,
-		IsSet,
-		IsNotSet,
 	}
 
 	public enum NumOperator

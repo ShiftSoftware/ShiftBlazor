@@ -322,6 +322,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool FilterImmediate { get; set; }
 
+        [Parameter]
+        public RenderFragment? FilterTemplate {  get; set; }
+
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();

@@ -93,6 +93,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private int DropdownItemCount = 0;
         private bool ShrinkTags = false;
         public Guid Id { get; private set; } = Guid.NewGuid();
+        public RenderFragment? FilterTemplate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public override Task SetParametersAsync(ParameterView parameters)
         {

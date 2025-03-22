@@ -128,7 +128,7 @@
                 {
                     <MudCollapse Expanded="ShowFilterPanel" Style="border:none" Class="light-toolbar">
                         <MudForm Class="pa-4">
-                            <FilterPanel DTO="typeof(T)"/>
+                            <FilterPanel DTO="typeof(T)" FilterTempalte="FilterTemplate"/>
                             @if (!FilterImmediate) {
                                 <MudButton OnClick="SubmitFilterForm" Color="Color.Primary">Filter</MudButton>
                             }

@@ -16,6 +16,9 @@ public partial class FilterPanel: ComponentBase
     [Parameter]
     public Type? DTO { get; set; }
 
+    [Parameter]
+    public RenderFragment? FilterTempalte { get; set; }
+
     [CascadingParameter]
     public IFilterableComponent? Parent { get; set; }
 
@@ -42,8 +45,7 @@ public partial class FilterPanel: ComponentBase
 
         // only get fields that have the filterable attribute
         // unless the dto itself has the filterable attribute
-        // then get every field that doesn't have the filterable attribute
-        // unless it has the filterable attribute and is disabled
+        // then get every field that isn't disabled using filterable attribute
         if (attr == null)
         {
             Fields = fields.Where(x => x.GetCustomAttribute<FilterableAttribute>()?.Disabled == false);

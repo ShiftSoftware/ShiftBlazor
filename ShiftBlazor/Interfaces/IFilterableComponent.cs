@@ -11,6 +11,8 @@ public interface IFilterableComponent
 {
     public bool FilterImmediate { get; set; }
     public ODataFilterGenerator Filters { get; }
+
+    public RenderFragment? FilterTemplate { get; set; }
     public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null);
 
 }

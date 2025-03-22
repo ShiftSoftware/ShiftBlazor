@@ -1,21 +1,44 @@
 ﻿@inherits FilterInput
 
-<MudField Variant="Variant.Outlined" Label="@Name">
-	<MudSelectExtended T="bool" Label="Value" ValueChanged="ValueChanged">
-		<MudSelectItem T="bool" Value="true">True</MudSelectItem>
-		<MudSelectItem T="bool" Value="false">False</MudSelectItem>
-	</MudSelectExtended>
-</MudField>
+@if (IsHidden)
+{
+	<MudField Variant="Variant.Outlined" Label="@Name" Disabled="Disabled">
+
+		@if (FilterPanel == null)
+		{
+			<MudAlert>Filter could not be loaded</MudAlert>
+		}
+		else
+		{
+			<CascadingValue Name="@FormHelper.ParentDisabledName" Value="Disabled">
+				<MudField Variant="Variant.Outlined" Label="@Name">
+					<MudSelectExtended T="bool" Label="Value" ValueChanged="ValueChanged">
+						<MudSelectItem T="bool" Value="true">True</MudSelectItem>
+						<MudSelectItem T="bool" Value="false">False</MudSelectItem>
+					</MudSelectExtended>
+				</MudField>
+			</CascadingValue>
+		}
+	</MudField>
+}
 
 @code {
+	[Parameter]
+	public bool Value { get; set; }
 
 	private void ValueChanged(bool value)
+	{
+		Value = value;
+		SetODataFilter();
+	}
+
+	public override void SetODataFilter()
 	{
 		var filter = new ODataFilter
 		{
 			Field = Name,
 			Operator = ODataOperator.Equal,
-			Value = value
+			Value = Value
 		};
 		SetFilter(filter);
 	}
