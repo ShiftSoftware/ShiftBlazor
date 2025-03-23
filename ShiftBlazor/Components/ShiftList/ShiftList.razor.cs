@@ -983,7 +983,35 @@ namespace ShiftSoftware.ShiftBlazor.Components
                         {
                             title = x.Title,
                             key = x.PropertyName,
-                        });
+                            format = x.Title == "Price" ? "#,0.00": null,
+                            customColumn = x.Title == "Custom ID" ? new List<object>()
+                                {
+                                    new
+                                    {
+                                        type = "property",
+                                        value = "ID",
+
+                                    },
+                                    new {
+                                        type = "string",
+                                        value = "-",
+                                    },
+                                    new {
+                                        type = "property",
+                                        value = "CityID"
+                                    },
+                                    new {
+                                        type = "string",
+                                        value = "-",
+                                    },
+                                    new {
+                                        type= "property",
+                                        value = "City.Name"
+                                    }
+
+                                } : null
+
+                    });
 
             var language = SettingManager.GetLanguage().CultureName;
 

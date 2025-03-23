@@ -184,6 +184,9 @@ self.onmessage = async (event) => {
     const { payload, headers, origin } = event.data;
     const { urlValue, values, columns, fileName, language, foreignColumns } = payload;
 
+    console.log(columns)
+
+    return
     try {
         const rows = Array.isArray(values) && values.length ? values : await fetchRows(urlValue, headers);
 
