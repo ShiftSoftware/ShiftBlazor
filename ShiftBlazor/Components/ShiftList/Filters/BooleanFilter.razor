@@ -1,6 +1,6 @@
 ﻿@inherits FilterInput
 
-@if (IsHidden)
+@if (!IsHidden)
 {
 	<MudField Variant="Variant.Outlined" Label="@Name" Disabled="Disabled">
 
@@ -11,12 +11,10 @@
 		else
 		{
 			<CascadingValue Name="@FormHelper.ParentDisabledName" Value="Disabled">
-				<MudField Variant="Variant.Outlined" Label="@Name">
-					<MudSelectExtended T="bool" Label="Value" ValueChanged="ValueChanged">
-						<MudSelectItem T="bool" Value="true">True</MudSelectItem>
-						<MudSelectItem T="bool" Value="false">False</MudSelectItem>
-					</MudSelectExtended>
-				</MudField>
+				<MudSelectExtended T="bool" Label="Value" ValueChanged="ValueChanged">
+					<MudSelectItem T="bool" Value="true">True</MudSelectItem>
+					<MudSelectItem T="bool" Value="false">False</MudSelectItem>
+				</MudSelectExtended>
 			</CascadingValue>
 		}
 	</MudField>

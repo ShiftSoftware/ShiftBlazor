@@ -1,7 +1,7 @@
 ﻿@using System.Text.Json
 @inherits FilterInput
 
-@if (IsHidden)
+@if (!IsHidden)
 {
 	<MudField Variant="Variant.Outlined" Label="@Name" Disabled="Disabled">
 
