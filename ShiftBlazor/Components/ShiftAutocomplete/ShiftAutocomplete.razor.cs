@@ -443,6 +443,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return ShiftItemTemplate(Items.FirstOrDefault(x => x.ID == id));
         }
 
+        public void AddFilter<TProperty>(Guid id, object property, Dictionary<string, object>? parameters = null)
+        {
+            throw new NotImplementedException();
+        }
+
         private readonly Converter<ShiftEntitySelectDTO> ValueConverter = new()
         {
             SetFunc = value => value?.Text,

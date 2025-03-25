@@ -24,10 +24,12 @@ public partial class FilterPanel: ComponentBase
 
     public ODataFilterGenerator? Filter { get; private set; }
 
+    public Dictionary<Guid, KeyValuePair<Type, Dictionary<string, object>>> FilterComponents { get; set; } = [];
+
     private IEnumerable<PropertyInfo> Fields = [];
-    private readonly Dictionary<Guid, KeyValuePair<Type, Dictionary<string, object>>> FilterComponents = [];
     private bool IsAnd = true;
     private bool Immediate;
+    internal record FilterItem(Guid Id, Type Type, Dictionary<string, object> Parameters);
 
     protected override void OnInitialized()
     {
@@ -56,10 +58,17 @@ public partial class FilterPanel: ComponentBase
         }
     }
 
-    private void AddFilterComponent(PropertyInfo field)
+    private void AddFilter(PropertyInfo field)
+    {
+        var filter = CreateFilter(field, dto: DTO);
+        if (filter != null)
+            FilterComponents.TryAdd(filter.Id, new (filter.Type, filter.Parameters));
+    }
+
+    internal static FilterItem? CreateFilter(PropertyInfo field, Dictionary<string, object>? parameters = null, Type? dto = null)
     {
         var compType = default(Type);
-        var parameters = new Dictionary<string, object>();
+        parameters ??= new Dictionary<string, object>();
 
         var fieldType = FieldType.Identify(field.PropertyType);
         var immediate = field.GetCustomAttribute<FilterableAttribute>()?.Immediate ?? false;
@@ -71,8 +80,10 @@ public partial class FilterPanel: ComponentBase
         if (fieldType.IsString || fieldType.IsGuid)
         {
             compType = typeof(StringFilter);
-            parameters.Add(nameof(StringFilter.DtoType), DTO!);
-
+            if (dto != null)
+            {
+                parameters.Add(nameof(StringFilter.DtoType), dto);
+            }
         }
         else if (IsDateTime(field.PropertyType))
         {
@@ -96,8 +107,10 @@ public partial class FilterPanel: ComponentBase
 
         if (compType != null)
         {
-            FilterComponents.TryAdd(id, new KeyValuePair<Type, Dictionary<string, object>>(compType, parameters));
+            return new(id, compType, parameters);
         }
+
+        return null;
     }
 
     internal void ApplyFilter(ODataFilterGenerator filter, bool immediate)
@@ -121,6 +134,11 @@ public partial class FilterPanel: ComponentBase
     private void ReloadList(bool immediate)
     {
         if (Parent is IShiftList list && (Parent?.FilterImmediate == true || immediate || Immediate)) list.Reload();
+    }
+
+    public void StateChange()
+    {
+        StateHasChanged();
     }
 
     // Mud's FieldType.Identify doesn't work with DateTimeOffset

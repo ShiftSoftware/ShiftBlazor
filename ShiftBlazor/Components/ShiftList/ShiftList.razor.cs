@@ -353,6 +353,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsGridEditorOpen = false;
         private bool IsDeleteColumnHidden = true;
         private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
+        private FilterPanel? _FilterPanel { get; set; }
 
         private List<Column<T>> DraggableColumns
         {
@@ -390,11 +391,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool ShowFilterPanel { get; set; }
 
         public bool ExportIsInProgress { get; private set; } = false;
-
-        private void SubmitFilterForm()
-        {
-            Reload();
-        }
 
         protected override void OnInitialized()
         {
@@ -569,9 +565,51 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <param name="field">The field to apply the filter on.</param>
         /// <param name="op">The comparison operator for the filter (e.g., Equal, GreaterThan).</param>
         /// <param name="value">The value to compare against for the filter.</param>
-        public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null)
+        public void AddFilter(Guid id, string field, ODataOperator op, object? value = null)
         {
             Filters.Add(field, op, value, id);
+        }
+
+        private readonly Dictionary<Guid, KeyValuePair<Type, Dictionary<string, object>>> FilterComponents = [];
+
+
+        public void AddFilter<TProperty>(Guid id, object field, Dictionary<string, object>? parameters = null)
+        {
+            Console.WriteLine(field.GetType().FullName);
+            if (field is Expression<Func<T, TProperty>> property)
+            {
+                AddFilter(id, property);
+            }
+        }
+
+        public void AddFilter<TProperty>(Guid id, Expression<Func<T, TProperty>> property, Dictionary<string, object>? parameters = null)
+        {
+            var memberExpression = property?.Body as MemberExpression;
+            var field = memberExpression?.Member;
+
+            if (field is PropertyInfo propertyInfo)
+            {
+                AddFilter(id, propertyInfo);
+            }
+        }
+
+        public void AddFilter(Guid id, string field, Dictionary<string, object>? parameters = null)
+        {
+            var _field = typeof(T).GetProperties().First(x => x.Name == field);
+            AddFilter(id, _field);
+        }
+
+        private void AddFilter(Guid id, PropertyInfo field, Dictionary<string, object>? parameters = null)
+        {
+            if (_FilterPanel != null && field.CanWrite)
+            {
+                var filter = FilterPanel.CreateFilter(field, parameters, typeof(T));
+                if (filter != null)
+                {
+                    _FilterPanel.FilterComponents.TryAdd(filter.Id, new(filter.Type, filter.Parameters));
+                    _FilterPanel.StateChange();
+                }
+            }
         }
 
         public void GridStateHasChanged()

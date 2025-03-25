@@ -23,7 +23,7 @@
 
             @foreach (var field in Fields)
             {
-                <MudMenuItem OnClick="() => AddFilterComponent(field)">@field.Name</MudMenuItem>
+                <MudMenuItem OnClick="() => AddFilter(field)">@field.Name</MudMenuItem>
             }
         </ChildContent>
     </MudMenu>

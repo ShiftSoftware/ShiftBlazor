@@ -47,6 +47,10 @@
         {
             base.CellTemplate = Template;
         }
+
+        base.HeaderTemplate = _HeaderTemplate;
+        this.Filterable = false;
+        this.Sortable = false;
     }
 
     protected string? GetKey(T item)
@@ -77,6 +81,24 @@
 
         await ShiftList.OpenDialog(FormComponent, id, OpenMode, FormParameters);
     }
+
+    private void AddFilter()
+    {
+        ShiftList.AddFilter<TProperty>(Guid.NewGuid(), Property);
+        StateHasChanged();
+    }
+
+    public RenderFragment<HeaderContext<T>> _HeaderTemplate => context =>
+    @<text>
+
+        <MudText Class="column-header">@Title</MudText>
+
+        @if (true)
+        {
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Outlined.FilterAlt" OnClick="@AddFilter" Size="@Size.Small" />
+        }
+    </text>;
 
     public RenderFragment<CellContext<T>> Template => (context) =>
     @<a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
