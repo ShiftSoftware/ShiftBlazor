@@ -29,8 +29,8 @@ public partial class FileExplorer
     [Parameter]
     public string? CurrentPath { get; set; }
 
-    //[Parameter]
-    //public double MaxUploadSizeInBytes { get; set; } = 128;
+    [Parameter]
+    public int MaxFileSizeInMegaBytes { get; set; } = 32;
 
     [Parameter]
     public int MaxUploadFileCount { get; set; } = 16;
@@ -54,7 +54,6 @@ public partial class FileExplorer
 
     private SfFileManager<FileExplorerDirectoryContent>? SfFileManager { get; set; }
     private string? Url;
-    //private double MaxUploadSize => MaxUploadSizeInBytes * 1024 * 1024;
     private FileUploader? _FileUploader { get; set; }
     private string FileManagerId { get; set; }
     private bool ShowDeleted { get; set; } = false;

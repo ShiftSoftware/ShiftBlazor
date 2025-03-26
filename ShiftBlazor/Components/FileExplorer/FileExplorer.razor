@@ -10,6 +10,7 @@
                   Prefix="@(this.Root + SfFileManager?.Path)"
                   DropAreaSelector="@($"#{FileManagerId}")"
                   HideUI="true"
+                  MaxFileSizeInMegaBytes="this.MaxFileSizeInMegaBytes"
                   MaxFileCount="this.MaxUploadFileCount"
                   ValuesChanged="Refresh" />
 
