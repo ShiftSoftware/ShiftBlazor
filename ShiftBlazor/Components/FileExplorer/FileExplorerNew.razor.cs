@@ -1,5 +1,6 @@
 ﻿using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -10,8 +11,10 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using ShiftSoftware.ShiftEntity.Model.Enums;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Web;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -24,7 +27,7 @@ public partial class FileExplorerNew : IShortcutComponent
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] ISyncLocalStorageService SyncLocalStorage { get;set; } = default!;
-
+    [Inject] NavigationManager NavManager { get; set; } = default!;
 
     [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
     public bool? ParentReadOnly { get; set; }
@@ -112,7 +115,7 @@ public partial class FileExplorerNew : IShortcutComponent
     private FileExplorerDirectoryContent? LastSelectedFile { get; set; }
     private bool RenderQuickAccess => !DisableQuickAccess && QuickAccessFiles.Count > 0;
     private bool ShowDeletedFiles { get; set; }
-
+    private ShiftSortDirection SortType;
     private bool DisplayDeleteButton { get; set; }
     private bool DisplayDownloadButton { get; set; }
     private bool DisplayQuickAccessButton { get; set; }
@@ -133,8 +136,15 @@ public partial class FileExplorerNew : IShortcutComponent
         ".webp",
     };
 
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= OnLocationChanged;
+    }
     protected override void OnInitialized()
     {
+        NavManager.LocationChanged += OnLocationChanged;
+        SyncFromUrl(null, null); 
+
         IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
         if (!IsEmbed)
@@ -153,6 +163,12 @@ public partial class FileExplorerNew : IShortcutComponent
         SetView(View ?? CurrentView);
         SetBreadcrumb();
         GetQuickAccessItems();
+    }
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs? args)
+    {
+        SyncFromUrl(sender, args); 
+        await FetchData();    
+        StateHasChanged();    
     }
 
     protected override async Task OnInitializedAsync()
@@ -203,10 +219,12 @@ public partial class FileExplorerNew : IShortcutComponent
         try
         {
             var obj = DefaultDirectoryContentObject();
+            if (data != null) data.SortType = SortType.ToString().ToLower();
             obj.Action = "read";
             obj.Path = GetPath(data);
             obj.Data = data == null ? [] : [data];
             obj.ShowHiddenItems = ShowDeletedFiles;
+            obj.SortType = SortType.ToString().ToLower();
 
             var response = await HttpClient.PostAsJsonAsync(Url, obj);
 
@@ -391,7 +409,52 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private void Sort()
     {
-        // Logic to sort files
+        SortType = SortType switch
+        {
+            ShiftSortDirection.None => ShiftSortDirection.Asc,
+            ShiftSortDirection.Asc => ShiftSortDirection.Desc,
+            ShiftSortDirection.Desc => ShiftSortDirection.None,
+            _ => ShiftSortDirection.None
+        };
+
+        updateURL();
+    }
+
+    private void updateURL()
+    {
+        var uri = new Uri(NavManager.Uri);
+        var baseUri = uri.GetLeftPart(UriPartial.Path);
+        var query = HttpUtility.ParseQueryString(uri.Query);
+        query.Set("sort", SortType.ToString().ToLower());
+
+        var updatedUri = $"{baseUri}?{query}";
+        NavManager.NavigateTo(updatedUri, forceLoad: false);
+    }
+
+    private string GetSortIcon()
+    {
+        return SortType switch
+        {
+            ShiftSortDirection.None => Icons.Material.Filled.UnfoldMore,
+            ShiftSortDirection.Asc => Icons.Material.Filled.ArrowUpward,
+            ShiftSortDirection.Desc => Icons.Material.Filled.ArrowDownward,
+            _ => Icons.Material.Filled.UnfoldMore
+        };
+    }
+
+    private void SyncFromUrl(object? sender, LocationChangedEventArgs? args)
+    {
+        var uri = new Uri(NavManager.Uri);
+        var query = HttpUtility.ParseQueryString(uri.Query);
+
+
+        var sortParam = query.Get("sort");
+
+        if (Enum.TryParse<ShiftSortDirection>(sortParam, true, out var parsed))
+        {
+            SortType = parsed;
+        }
+
     }
 
     public async Task Refresh(bool force = false)
