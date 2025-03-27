@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Components;
-using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 
 namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters;
 
-abstract public class FilterInput : ComponentBase
+public class FilterInput : ComponentBase
 {
-    [EditorRequired]
     [Parameter]
-    public string Name { get; set; }
+    [EditorRequired]
+    public FilterBase Filter { get; set; }
 
     [Parameter]
     public bool Immediate { get; set; }
@@ -21,47 +22,39 @@ abstract public class FilterInput : ComponentBase
     [Parameter]
     public bool Disabled { get; set; }
 
-    [Parameter]
-    public Guid Id { get; set; } = Guid.NewGuid();
-
     [CascadingParameter]
-    public FilterPanel? FilterPanel { get; set; }
+    public IFilterableComponent? Parent { get; set; }
 
     public string ClassName => $"filter-input {this.GetType().Name.ToLower().Replace("filter", "")}-filter";
-
-    abstract public void SetODataFilter();
+    public Guid Id => Filter.Id;
 
     protected override void OnInitialized()
     {
-        var immediate = Immediate;
-        Immediate = false;
-        SetODataFilter();
-        Immediate = immediate;
-    }
-
-    public void SetFilter(params ODataFilter[] filters)
-    {
-        var filter = new ODataFilterGenerator(true, Id);
-
-        foreach (var f in filters)
+        if (Filter == null)
         {
-            filter.Add(f);
+            throw new ArgumentNullException(nameof(Filter));
         }
-
-        FilterPanel?.ApplyFilter(filter, Immediate);
     }
 
-    public void SetFilter(params string[] filters)
+    protected void ValueChanged<T>(T value)
     {
-        var filter = new ODataFilterGenerator(true, Id);
-
-        foreach (var f in filters)
-        {
-            filter.Add(f);
-        }
-
-        FilterPanel?.ApplyFilter(filter, Immediate);
+        Filter!.Value = value;
+        UpdateFilter();
     }
 
-    public void ClearFilter() => FilterPanel?.ClearFilter(Id, Immediate);
+    protected void OperatorChanged(ODataOperator oDataOperator)
+    {
+        Filter!.Operator = oDataOperator;
+        UpdateFilter();
+    }
+
+    protected void UpdateFilter()
+    {
+        if (Parent != null)
+        {
+            Parent.Filters.Remove(Id);
+            Parent.Filters.TryAdd(Id, Filter!);
+            StateHasChanged();
+        }
+    }
 }

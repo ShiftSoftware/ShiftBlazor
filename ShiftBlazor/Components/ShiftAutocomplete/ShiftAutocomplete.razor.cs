@@ -13,6 +13,7 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using Microsoft.JSInterop;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
+using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -94,6 +95,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool ShrinkTags = false;
         public Guid Id { get; private set; } = Guid.NewGuid();
         public RenderFragment? FilterTemplate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public ODataFilterGenerator ODataFilters => throw new NotImplementedException();
+
+        Dictionary<Guid, FilterBase> IFilterableComponent.Filters { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public override Task SetParametersAsync(ParameterView parameters)
         {

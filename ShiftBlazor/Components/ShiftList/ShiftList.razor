@@ -128,7 +128,10 @@
                 {
                     <MudCollapse Expanded="ShowFilterPanel" Style="border:none" Class="light-toolbar">
                         <MudForm Class="pa-4">
-                            <FilterPanel @ref="_FilterPanel" DTO="typeof(T)" FilterTempalte="FilterTemplate" />
+
+                            <CascadingValue Value="Filters">
+                                <FilterPanel DTO="typeof(T)" FilterTempalte="FilterTemplate" />
+                            </CascadingValue>
 
                             @if (!FilterImmediate) {
                                 <MudButton OnClick="Reload" Color="Color.Primary">Filter</MudButton>

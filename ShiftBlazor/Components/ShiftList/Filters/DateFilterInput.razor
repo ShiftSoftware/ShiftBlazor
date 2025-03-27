@@ -1,0 +1,124 @@
+﻿@using System.Globalization
+@inherits FilterInput
+
+@if (Filter is _DateFilter dateFilter)
+{
+	<MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged" Label="Operator">
+		<MudSelectItem Value="ODataOperator.Equal">Is</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.NotEqual">Is Not</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
+	</MudSelectExtended>
+
+	@if (Filter.Operator == ODataOperator.Equal || Filter.Operator == ODataOperator.NotEqual)
+	{
+		<MudSelectExtended T="DateFilterOption?" Clearable Value="dateFilter.SelectedDateOperator" ValueChanged="OnDateOperatorChanged" Label="Value">
+			@foreach (var item in Enum.GetValues<DateFilterOption>())
+			{
+				<MudSelectItem T="DateFilterOption?" Value="item">@item.ToString()</MudSelectItem>
+			}
+		</MudSelectExtended>
+
+		@if (dateFilter.SelectedDateOperator == DateFilterOption.Last || dateFilter.SelectedDateOperator == DateFilterOption.Next)
+		{
+			<MudNumericField T="int" Value="dateFilter.UnitValue" ValueChanged="OnTimeUnitValueChanged" Min="1"></MudNumericField>
+			<MudSelectExtended T="TimeUnit" Value="dateFilter.SelectedTimeUnit" ValueChanged="OnTimeUnitChanged">
+				@foreach (var item in Enum.GetValues<TimeUnit>())
+				{
+					<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
+				}
+			</MudSelectExtended>
+		}
+		else if (dateFilter.SelectedDateOperator == DateFilterOption.Date || dateFilter.SelectedDateOperator == DateFilterOption.After || dateFilter.SelectedDateOperator == DateFilterOption.Before)
+		{
+			<MudDatePicker Date="dateFilter.DateTimeValue" DateChanged="OnDateTimeValueChanged" />
+		}
+		else if (dateFilter.SelectedDateOperator == DateFilterOption.Range)
+		{
+			<MudDateRangePicker DateRange="dateFilter.DateRangeValue" DateRangeChanged="OnDateRangeValueChanged" />
+		}
+	}
+}
+
+@code {
+
+	#region Operator Changed
+
+	private void OnDateOperatorChanged(DateFilterOption? value)
+	{
+		if (Filter is _DateFilter dateFilter)
+		{
+			dateFilter.SelectedDateOperator = value;
+			UpdateFilter();
+		}
+	}
+
+	private void OnTimeUnitChanged(TimeUnit value)
+	{
+		if (Filter is _DateFilter dateFilter)
+		{
+			dateFilter.SelectedTimeUnit = value;
+			UpdateFilter();
+		}
+	}
+
+	private void OnTimeUnitValueChanged(int value)
+	{
+		if (Filter is _DateFilter dateFilter)
+		{
+			dateFilter.UnitValue = value;
+			UpdateFilter();
+		}
+	}
+
+	private void OnDateTimeValueChanged(DateTime? value)
+	{
+		if (Filter is _DateFilter dateFilter)
+		{
+			dateFilter.DateTimeValue = value;
+			UpdateFilter();
+		}
+	}
+
+	private void OnDateRangeValueChanged(DateRange value)
+	{
+		if (Filter is _DateFilter dateFilter)
+		{
+			dateFilter.DateRangeValue = value;
+			UpdateFilter();
+		}
+	}
+	#endregion
+
+	public enum DateFilterOption
+	{
+		Today,
+		Yesterday,
+		Torrorrow,
+		Next7Days,
+		Previous7Days,
+		LastWeek,
+		ThisWeek,
+		NextWeek,
+		LastMonth,
+		ThisMonth,
+		NextMonth,
+		LastYear,
+		ThisYear,
+		NextYear,
+		Last,
+		Next,
+		Date,
+		Before,
+		After,
+		Range,
+	}
+	
+	public enum TimeUnit
+	{
+		Day,
+		Week,
+		Month,
+		Year,
+	}
+}

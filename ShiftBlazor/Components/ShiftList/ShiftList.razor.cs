@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
@@ -346,7 +347,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle = string.Empty;
         internal SortMode SortMode = SortMode.Multiple;
-        public ODataFilterGenerator Filters { get; private set; } = new ODataFilterGenerator(true);
+        public ODataFilterGenerator ODataFilters { get; private set; } = new ODataFilterGenerator(true);
         private string PreviousFilters = string.Empty;
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
@@ -354,6 +355,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsDeleteColumnHidden = true;
         private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
         private FilterPanel? _FilterPanel { get; set; }
+        public Dictionary<Guid, FilterBase> Filters { get; set; } = [];
 
         private List<Column<T>> DraggableColumns
         {
@@ -472,7 +474,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var filter = new ODataFilterGenerator(true, Id);
                 Filter.Invoke(filter);
-                Filters.Add(filter);
+                ODataFilters.Add(filter);
             }
 
             if (Filters.ToString() != PreviousFilters)
@@ -567,15 +569,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <param name="value">The value to compare against for the filter.</param>
         public void AddFilter(Guid id, string field, ODataOperator op, object? value = null)
         {
-            Filters.Add(field, op, value, id);
+            ODataFilters.Add(field, op, value, id);
         }
-
-        private readonly Dictionary<Guid, KeyValuePair<Type, Dictionary<string, object>>> FilterComponents = [];
-
 
         public void AddFilter<TProperty>(Guid id, object field, Dictionary<string, object>? parameters = null)
         {
-            Console.WriteLine(field.GetType().FullName);
             if (field is Expression<Func<T, TProperty>> property)
             {
                 AddFilter(id, property);
@@ -601,16 +599,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private void AddFilter(Guid id, PropertyInfo field, Dictionary<string, object>? parameters = null)
         {
-            if (_FilterPanel != null && field.CanWrite)
-            {
-                var filter = FilterPanel.CreateFilter(field, parameters, typeof(T));
-                if (filter != null)
-                {
-                    _FilterPanel.FilterComponents.TryAdd(filter.Id, new(filter.Type, filter.Parameters));
-                    _FilterPanel.StateChange();
                 }
-            }
-        }
 
         public void GridStateHasChanged()
         {
@@ -663,14 +652,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             try
             {
+                var filterPanel = Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x));
+
                 // Convert MudBlazor's FilterDefinitions to OData query
                 var userFilters = state.FilterDefinitions.ToODataFilter().Select(x => string.Join(" or ", x));
 
                 var filterList = new List<string>();
                 filterList.AddRange(userFilters);
+                filterList.AddRange(filterPanel);
 
-                if (Filters.Count > 0)
-                    filterList.Add(Filters.ToString());
+                if (ODataFilters.Count > 0)
+                    filterList.Add(ODataFilters.ToString());
 
                 if (filterList.Any())
                 {

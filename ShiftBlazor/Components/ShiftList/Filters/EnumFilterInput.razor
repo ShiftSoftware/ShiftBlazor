@@ -1,0 +1,35 @@
+﻿@using System.Text.Json
+@inherits FilterInput
+
+
+<MudSelectExtended T="ODataOperator" Label="Operator" Value="Filter.Operator" ValueChanged="OperatorChanged">
+	<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
+	<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
+</MudSelectExtended>
+
+<MudSelectExtended T="object" Label="Value" Value="Filter.Value" ValueChanged="ValueChanged">
+	@if (EnumTypeToUse != null)
+	{
+		@foreach (var item in Enum.GetValues(EnumTypeToUse))
+		{
+			<MudSelectItem Value="@item">@(item is Enum _enum ? _enum.Describe() : item)</MudSelectItem>
+		}
+	}
+</MudSelectExtended>
+
+
+@code {
+	[Parameter]
+	[EditorRequired]
+	public Type? EnumType { get;set; }
+
+	private Type? EnumTypeToUse;
+
+	protected override void OnInitialized()
+	{
+		if (EnumType == null)
+			throw new ArgumentNullException(nameof(EnumType));
+
+		EnumTypeToUse = EnumType.IsEnum ? EnumType : Nullable.GetUnderlyingType(EnumType);
+	}
+}

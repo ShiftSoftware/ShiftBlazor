@@ -1,0 +1,116 @@
+﻿@inherits FilterInput
+
+@if (Filter is _NumericFilter numericFilter)
+{
+	<MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged" Label="Operator">
+		<MudSelectItem Value="ODataOperator.Equal">Is</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.IsNotEmpty">IsSet</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.IsEmpty">IsNotSet</MudSelectItem>
+	</MudSelectExtended>
+
+	@if (Filter.Operator == ODataOperator.Equal)
+	{
+		<MudSelectExtended T="NumericFilterOption?" Value="numericFilter.SelectedNumOperator" ValueChanged="OnNumOperatorChanged">
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.Positive">Positive</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.Negative">Negative</MudSelectItem>
+			@if (!IsDouble)
+			{
+				<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.Even">Even</MudSelectItem>
+				<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.Odd">Odd</MudSelectItem>
+			}
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.WholeNumbers">WholeNumbers</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.Equal">Equal</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.NotEqual">NotEqual</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.GreaterThan">GreaterThan</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.GreaterThanOrEqual">GreaterThanOrEqual</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.LessThan">LessThan</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.LessThanOrEqual">LessThanOrEqual</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.Between">Between</MudSelectItem>
+			@if (!IsDouble)
+			{
+				<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.MultipleOf">MultipleOf</MudSelectItem>
+			}
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.StartsWith">StartsWith</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.EndsWith">EndsWith</MudSelectItem>
+			<MudSelectItem T="NumericFilterOption?" Value="NumericFilterOption.PercentageOf">PercentageOf</MudSelectItem>
+		</MudSelectExtended>
+
+		@if (numericFilter.SelectedNumOperator == NumericFilterOption.PercentageOf)
+		{
+			<MudNumericField T="double"
+							 Label="Percentage"
+							 Class="percent-input"
+							 MaxLength="3"
+							 Max="100"
+							 Min="0"
+							 Adornment="Adornment.End"
+							 AdornmentIcon="@Icons.Material.Filled.Percent"
+							 Value="numericFilter.PercentValue"
+							 ValueChanged="PercentValueChanged" />
+		}
+		@if (numericFilter.SelectedNumOperator >= NumericFilterOption.Equal)
+		{
+			<MudNumericField T="double" Label="Value" Value="Value" ValueChanged="ValueChanged"/>
+		}
+		@if (numericFilter.SelectedNumOperator == NumericFilterOption.Between)
+		{
+			<MudNumericField T="double" Label="Value" Value="numericFilter.Value2" ValueChanged="Value2Changed" />
+		}
+	}
+
+}
+
+@code {
+
+	private double Value => (double)(Filter.Value ?? 0d);
+
+	// Even and Odd don't really work for floating numbers
+	private bool IsDouble => FieldType == null || FieldType == typeof(double) || Nullable.GetUnderlyingType(FieldType) == typeof(double);
+
+	private void PercentValueChanged(double value)
+	{
+		if (Filter is _NumericFilter numericFilter)
+		{
+			numericFilter.PercentValue = value;
+			UpdateFilter();
+		}
+	}
+
+	private void Value2Changed(double value)
+	{
+		if (Filter is _NumericFilter numericFilter)
+		{
+			numericFilter.Value2 = value;
+			UpdateFilter();
+		}
+	}
+
+	private void OnNumOperatorChanged(NumericFilterOption? value)
+	{
+		if (Filter is _NumericFilter numericFilter)
+		{
+			numericFilter.SelectedNumOperator = value;
+			UpdateFilter();
+		}
+	}
+
+	public enum NumericFilterOption
+	{
+		Positive,
+		Negative,
+		Even,
+		Odd,
+		WholeNumbers,
+		Equal,
+		NotEqual,
+		GreaterThan,
+		LessThan,
+		GreaterThanOrEqual,
+		LessThanOrEqual,
+		Between,
+		MultipleOf,
+		EndsWith,
+		StartsWith,
+		PercentageOf,
+	}
+}

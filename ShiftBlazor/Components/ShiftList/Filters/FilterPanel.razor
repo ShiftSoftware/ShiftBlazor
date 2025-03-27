@@ -1,17 +1,50 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters
 
-<CascadingValue Value="this" IsFixed>
-    @foreach (var (id, comp) in FilterComponents)
+@if (Parent?.Filters != null)
+{
+    @foreach (var (id, filter) in Parent.Filters)
     {
-        <MudStack Row>
-            <DynamicComponent Type="comp.Key" Parameters="comp.Value" />
-            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@(() => RemoveFilterComponent(id))"/>
+        <MudStack Row @key="id">
+
+            @if (!filter.IsHidden)
+            {
+                <MudField Variant="Variant.Outlined" Label="@filter.Field" Disabled="filter.IsReadOnly">
+                    <CascadingValue Name="@FormHelper.ParentDisabledName" Value="filter.IsReadOnly">
+                        <MudStack Row AlignItems="AlignItems.End" Spacing="2">
+
+                            @if (filter is _BooleanFilter booleanFilter)
+                            {
+                                <BooleanFilterInput Filter="filter" />
+                            }
+                            else if (filter is _StringFilter stringFilter)
+                            {
+                                <StringFilterInput Filter="filter" />
+                            }
+                            else if (filter is _EnumFilter enumFilter && enumFilter.EnumTypeToUse != null)
+                            {
+                                <EnumFilterInput Filter="filter" EnumType="enumFilter.EnumType" />
+                            }
+                            else if (filter is _DateFilter dateFilter)
+                            {
+                                <DateFilterInput Filter="filter" />
+                            }
+                            else if (filter is _NumericFilter)
+                            {
+                                <NumericFilterInput Filter="filter" />
+                            }
+
+                        </MudStack>
+                    </CascadingValue>
+                </MudField>
+            }
+
+            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@(() => RemoveFilterComponent(id))" />
         </MudStack>
     }
 
-    @FilterTempalte
-</CascadingValue>
+}
 
+@FilterTempalte
 
 @if (DTO != null)
 {

@@ -1,0 +1,58 @@
+﻿@using ShiftSoftware.ShiftEntity.Model
+@inherits FilterInput
+
+
+<MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged" Label="Operator" >
+	<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
+	<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
+	<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
+	<MudSelectItem Value="ODataOperator.Contains">Contains</MudSelectItem>
+	<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
+	<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
+</MudSelectExtended>
+
+@if (AutoCompleteType == null || AutoCompleteParameters == null)
+{
+	<MudTextField T="string" Label="Value" Value="Value" ValueChanged="ValueChanged" />
+}
+else
+{
+	<DynamicComponent Type="AutoCompleteType" Parameters="AutoCompleteParameters" />
+}
+
+
+
+@code
+{
+	private string Value => (string?)Filter.Value ?? string.Empty;
+
+	[CascadingParameter]
+	public IShiftList? ShiftList { get; set; }
+
+	private Type? AutoCompleteType;
+	private Dictionary<string, object>? AutoCompleteParameters;
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+
+		if (Filter is _StringFilter stringFilter
+			&& stringFilter.DtoType != null
+			&& Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(stringFilter.DtoType) != null
+			&& !string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
+		{
+			AutoCompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(stringFilter.DtoType);
+			AutoCompleteParameters = new()
+			{
+				["EntitySet"] = ShiftList.EntitySet,
+				["DataTextField"] = stringFilter.Field,
+				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged)
+			};
+		}
+	}
+
+	private void AutocompleteChanged(ShiftEntitySelectDTO? dto) {
+		ValueChanged(dto?.Text);
+	}
+
+}

@@ -51,9 +51,11 @@ public class ODataFilterGenerator
 
     public ODataFilterGenerator Add(ODataFilterGenerator generator)
     {
-        Remove(generator.Id);
-
-        ChildFilters.Add(generator);
+        if (generator.Count > 0)
+        {
+            Remove(generator.Id);
+            ChildFilters.Add(generator);
+        }
         return this;
     }
 
@@ -62,6 +64,16 @@ public class ODataFilterGenerator
         Remove(filter.Id);
 
         Filters.Add(filter);
+        return this;
+    }
+
+    public ODataFilterGenerator Add(IEnumerable<ODataFilter> filters)
+    {
+        foreach (var filter in filters)
+        {
+            Add(filter);
+        }
+
         return this;
     }
 
@@ -91,22 +103,17 @@ public class ODataFilterGenerator
 
     public ODataFilterGenerator And(Action<ODataFilterGenerator> filterConfig, Guid? id = null)
     {
-        Remove(id);
-
-        var generator = new ODataFilterGenerator(true);
+        var generator = new ODataFilterGenerator(true, id);
         filterConfig.Invoke(generator);
-        ChildFilters.Add(generator);
-        return this;
+        return Add(generator);
     }
 
     public ODataFilterGenerator Or(Action<ODataFilterGenerator> filterConfig, Guid? id = null)
     {
-        Remove(id);
 
-        var generator = new ODataFilterGenerator(false);
+        var generator = new ODataFilterGenerator(false, id);
         filterConfig.Invoke(generator);
-        ChildFilters.Add(generator);
-        return this;
+        return Add(generator);
     }
 
     public ODataFilterGenerator AddIf(bool condition, ODataFilter filter)
@@ -191,7 +198,9 @@ public class ODataFilterGenerator
             }
         }
 
-        foreach (var childGenerator in generator.ChildFilters)
+
+
+        foreach (var childGenerator in generator.ChildFilters.Where(x => x.Count > 0))
         {
             var childFilters = BuildQueryString(childGenerator);
             if (!string.IsNullOrWhiteSpace(childFilters))
