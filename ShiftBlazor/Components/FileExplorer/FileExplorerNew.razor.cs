@@ -95,6 +95,13 @@ public partial class FileExplorerNew : IShortcutComponent
     [Parameter]
     public bool OpenDialogOnUpload { get; set; }
 
+    [Parameter]
+    public bool DisableUrlSync { get; set; }
+    [Parameter]
+    public bool DisableSortUrlSync { get; set; }
+    [Parameter]
+    public bool DisablePathUrlSync { get; set; }
+
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -126,6 +133,7 @@ public partial class FileExplorerNew : IShortcutComponent
     private bool DisplayContextMenu { get; set; }
     private double ContextLeft { get; set; }
     private double ContextTop { get; set; }
+    private bool SuppressLocationChange = false;
 
     private IEnumerable<string> ImageExtensions = new List<string>
     {
@@ -142,8 +150,11 @@ public partial class FileExplorerNew : IShortcutComponent
     }
     protected override void OnInitialized()
     {
-        NavManager.LocationChanged += OnLocationChanged;
-        SyncFromUrl(null, null); 
+        if (!DisableUrlSync)
+        {
+            NavManager.LocationChanged += OnLocationChanged;
+            SyncFromUrl(null, null);
+        }
 
         IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
@@ -166,14 +177,21 @@ public partial class FileExplorerNew : IShortcutComponent
     }
     private async void OnLocationChanged(object? sender, LocationChangedEventArgs? args)
     {
+        if (SuppressLocationChange)
+        {
+            SuppressLocationChange = false;
+            return;
+        }
+
         SyncFromUrl(sender, args); 
-        await FetchData();    
+        await Refresh();    
         StateHasChanged();    
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await FetchData();
+        if (!string.IsNullOrWhiteSpace(CurrentPath)) await GoToPath(CurrentPath);
+        else await FetchData();
     }
 
     public async ValueTask HandleShortcut(KeyboardKeys key)
@@ -212,7 +230,6 @@ public partial class FileExplorerNew : IShortcutComponent
     public async Task FetchData(FileExplorerDirectoryContent? data = null)
     {
         IsLoading = true;
-
         LastSelectedFile = null;
         DeselectAllFiles();
 
@@ -254,6 +271,8 @@ public partial class FileExplorerNew : IShortcutComponent
             CWD = content?.CWD;
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
+            SuppressLocationChange = true;
+            updateURL();
         }
         catch (Exception e)
         {
@@ -356,23 +375,9 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private async Task OnBreadCrumbClick(int index)
     {
-        FileExplorerDirectoryContent? data = null;
+        var path = string.Join("/", PathParts.GetRange(1, index));
 
-        if (index > 0)
-        {
-            var path = string.Join("/", PathParts.GetRange(1, index));
-            var filterPath = string.Join("/", PathParts.GetRange(1, index - 1));
-            var name = PathParts[index];
-            data = new FileExplorerDirectoryContent()
-            {
-                Path = path,
-                Name = name,
-                FilterPath = filterPath + "/",
-                Type = "Directory",
-            };
-
-        }
-        await FetchData(data);
+        await GoToPath("/" + path);
     }
 
     private async Task CreateNewFolder()
@@ -422,10 +427,15 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private void updateURL()
     {
+        if (DisableUrlSync) return;
+             
         var uri = new Uri(NavManager.Uri);
         var baseUri = uri.GetLeftPart(UriPartial.Path);
         var query = HttpUtility.ParseQueryString(uri.Query);
-        query.Set("sort", SortType.ToString().ToLower());
+
+        if(!DisableSortUrlSync) query.Set("sort", SortType.ToString().ToLower());
+
+        if (!DisablePathUrlSync)  query.Set("path", CWD != null && CWD.FilterPath == "" ? "" : CWD.FilterPath + CWD.Name);
 
         var updatedUri = $"{baseUri}?{query}";
         NavManager.NavigateTo(updatedUri, forceLoad: false);
@@ -448,11 +458,16 @@ public partial class FileExplorerNew : IShortcutComponent
         var query = HttpUtility.ParseQueryString(uri.Query);
 
 
-        var sortParam = query.Get("sort");
-
-        if (Enum.TryParse<ShiftSortDirection>(sortParam, true, out var parsed))
+        if (!DisableSortUrlSync)
         {
-            SortType = parsed;
+            var sortParam = query.Get("sort");
+            if (Enum.TryParse<ShiftSortDirection>(sortParam, true, out var parsedSort))  SortType = parsedSort;
+        }
+
+        if (!DisablePathUrlSync)
+        {
+            var pathParam = query.Get("path");
+            if(!string.IsNullOrWhiteSpace(pathParam))  CurrentPath = pathParam.Trim();
         }
 
     }
