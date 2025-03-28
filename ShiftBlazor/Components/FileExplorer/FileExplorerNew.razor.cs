@@ -101,6 +101,8 @@ public partial class FileExplorerNew : IShortcutComponent
     public bool DisableSortUrlSync { get; set; }
     [Parameter]
     public bool DisablePathUrlSync { get; set; }
+    [Parameter]
+    public bool DisableViewUrlSync { get; set; }
 
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
@@ -171,7 +173,7 @@ public partial class FileExplorerNew : IShortcutComponent
         FileExplorerId = "FileExplorer" + Id.ToString().Replace("-", string.Empty);
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
         IconSize = Dense ? Size.Medium : Size.Large;
-        SetView(View ?? CurrentView);
+        SetView(View ?? CurrentView, false);
         SetBreadcrumb();
         GetQuickAccessItems();
     }
@@ -272,7 +274,7 @@ public partial class FileExplorerNew : IShortcutComponent
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
             SuppressLocationChange = true;
-            updateURL();
+            UpdateURL();
         }
         catch (Exception e)
         {
@@ -422,10 +424,10 @@ public partial class FileExplorerNew : IShortcutComponent
             _ => ShiftSortDirection.None
         };
 
-        updateURL();
+        UpdateURL();
     }
 
-    private void updateURL()
+    private void UpdateURL()
     {
         if (DisableUrlSync) return;
              
@@ -434,6 +436,8 @@ public partial class FileExplorerNew : IShortcutComponent
         var query = HttpUtility.ParseQueryString(uri.Query);
 
         if(!DisableSortUrlSync) query.Set("sort", SortType.ToString().ToLower());
+
+        if(!DisableViewUrlSync) query.Set("view", CurrentView.ToString().ToLower());
 
         if (!DisablePathUrlSync)  query.Set("path", CWD != null && CWD.FilterPath == "" ? "" : CWD.FilterPath + CWD.Name);
 
@@ -468,6 +472,12 @@ public partial class FileExplorerNew : IShortcutComponent
         {
             var pathParam = query.Get("path");
             if(!string.IsNullOrWhiteSpace(pathParam))  CurrentPath = pathParam.Trim();
+        }
+
+        if (!DisableViewUrlSync)
+        {
+            var viewParam = query.Get("view");
+            if (Enum.TryParse<FileExplorerView>(viewParam, true, out var parsedView)) CurrentView = parsedView;
         }
 
     }
@@ -651,7 +661,7 @@ public partial class FileExplorerNew : IShortcutComponent
         }
     }
 
-    public void SetView(FileExplorerView? view = null)
+    private void SetView(FileExplorerView? view = null,bool? triggerUrlUpdate = true)
     {
         if (view == null)
         {
@@ -664,6 +674,13 @@ public partial class FileExplorerNew : IShortcutComponent
         {
             CurrentView = view.Value;
         }
+
+        if (triggerUrlUpdate == true)
+        {
+            SuppressLocationChange = true;
+            UpdateURL();
+        }
+
     }
 
     private void HandleUploading(UploadEventArgs args)
