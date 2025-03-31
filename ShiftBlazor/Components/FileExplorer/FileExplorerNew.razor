@@ -5,7 +5,7 @@
     <PageTitle>@Title</PageTitle>
 }
 
-<MudPaper Elevation="25" Outlined="Outlined" id="@FileExplorerId">
+<MudPaper Class="file-explorer" Elevation="25" Outlined="Outlined" id="@FileExplorerId">
     <MudToolBar Style="@ToolbarStyle" Dense="@Dense" Class="light-toolbar shift-toolbar-header">
         <MudIcon Size="@IconSize" Icon="@IconSvg"></MudIcon>
         <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FileExplorer"])</MudText>
@@ -164,7 +164,7 @@
             <MudDivider Vertical="true" FlexItem="true" />
         }
 
-        <div class="main-window" style="overflow: hidden; height: @Height;">
+        <div class="main-window" style="overflow: hidden; height: @(Settings.View == FileView.LargeIcons ? Height : "auto");">
             <MudToolBar Dense Class="breadcrumb">
 
                 @* <MudText>@(RootAliasName ?? "Root")</MudText> *@
@@ -182,34 +182,78 @@
 
             <MudDivider Style="flex-grow: initial;" />
 
-            <div class="file-listing @GetViewClass()" @onclick="DeselectAllFiles" @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
+            <div class="file-listing @GetViewClass()" @onclick="() => {if (Settings.View == FileView.LargeIcons) DeselectAllFiles();} " @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
 
                 @if (Files.Count > 0)
                 {
-                    @foreach (var file in Files)
+                    if (Settings.View == FileView.Information)
                     {
-                        <div @key="file.Path" title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true" @oncontextmenu="(e) => OnFileClick(e, file)" >
-                            @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
-                            {
-                                <MudImage Height="100"
-                                          Width="100"
-                                          ObjectFit="ObjectFit.Cover"
-                                          ObjectPosition="ObjectPosition.Center"
-                                          Src="@file.ThumbnailUrl"
-                                          data-src="@file.TargetPath"
-                                          loading="lazy"
-                                          onerror="if (this.src !== this.dataset.src) this.src = this.dataset.src" />
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};")  />
-                            }
+                        <MudDataGrid Items="Files"
+                                     Dense
+                                     Filterable="false"
+                                     SortMode="SortMode.None"
+                                     Virtualize
+                                     Height="@Height"
+                                     Hover
+                                     Striped
+                                     Elevation="0"
+                                     SelectOnRowClick="false"
+                                     RowClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
+                                     RowContextMenuClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
+                                     T="FileExplorerDirectoryContent"
+                                     RowClassFunc="@((item, index) => SelectedFiles.Any(x => x.Path == item.Path) ? "selected" : "")"
+                                     ShowColumnOptions="false">
+                            <Columns>
 
-                            @if (file.UploadProgress < 1) {
-                                <MudProgressLinear Color="Color.Primary" Value="file.UploadProgress" Max="1"/>
-                            } 
-                            <MudText>@file.Name</MudText>
-                        </div>
+                                <PropertyColumn Property="x => x.Name" Title="Name">
+                                    <CellTemplate>
+                                        <MudIcon Icon="@GetFileIcon(context.Item).Key" Style=@($"color: {@GetFileIcon(context.Item).Value};") />
+                                        <span>@context.Item.Name</span>
+                                    </CellTemplate>
+                                </PropertyColumn>
+                                <PropertyColumn Property="x => x.DateModified" Title="Date modified" />
+                                <PropertyColumn Property="x => x.Size" Title="Size" />
+                            </Columns>
+                        </MudDataGrid>
+                    }
+                    else if (Settings.View == FileView.LargeIcons)
+                    {
+                        @foreach (var file in Files)
+                        {
+                            <div @key="file.Path"
+                                 title="@file.Name"
+                                 class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")"
+                                 @ondblclick="() => HandleOpen(file)"
+                                 @onclick="(e) => OnFileClick(e, file)"
+                                 @onclick:stopPropagation="true"
+                                 @oncontextmenu="(e) => OnFileClick(e, file)">
+                                @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
+                                {
+                                    <MudImage Height="100"
+                                              Width="100"
+                                              ObjectFit="ObjectFit.Cover"
+                                              ObjectPosition="ObjectPosition.Center"
+                                              Src="@file.ThumbnailUrl"
+                                              data-src="@file.TargetPath"
+                                              loading="lazy"
+                                              onerror="if (this.src !== this.dataset.src) this.src = this.dataset.src" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};") />
+                                }
+
+                                @if (file.UploadProgress < 1)
+                                {
+                                    <MudProgressLinear Color="Color.Primary" Value="file.UploadProgress" Max="1" />
+                                }
+                                <MudText>@file.Name</MudText>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <MudText>Unknown View</MudText>
                     }
                 }
                 else if (!IsLoading)
@@ -328,9 +372,7 @@
     }
 
     .file-listing {
-        padding: 20px;
         overflow: auto;
-        height: 100%;
         min-height: 200px;
     }
 
@@ -338,6 +380,8 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 10px;
+        padding: 20px;
+        height: 100%;
     }
 
     .file-explorer-item {
@@ -365,10 +409,12 @@
 		gap: 5px;
 	}
 
-    .information .file-explorer-item .mud-icon-root,
-    .information .file-explorer-item .mud-image {
+    .mud-table tbody td:first-child .mud-icon-root,
+    .mud-table tbody td:first-child .mud-image
+    {
         height: 25px;
         width: 25px;
+        vertical-align: middle;
     }
 
     .file-explorer-item p {
@@ -385,8 +431,9 @@
         background-color: #ffc7c7;
     }
 
-    .file-explorer-item.selected {
-        background-color: #83b6f2;
+    .file-explorer-item.selected,
+    .mud-table-row.selected {
+        background-color: #83b6f2 !important;
     }
 
     .file-explorer-item img {
@@ -427,5 +474,18 @@
 
     .context-menu {
         position: fixed;
+    }
+
+    .file-explorer .mud-table thead th:first-child {
+        width: 100%;
+    }
+
+    .file-explorer .mud-table thead th:not(:first-child),
+    .file-explorer .mud-table tbody td:not(:first-child) {
+		white-space: nowrap;
+    }
+
+    .file-explorer .mud-table .mud-table-container {
+        padding: 0 !important;
     }
 </style>
