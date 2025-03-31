@@ -44,15 +44,26 @@
         }
 
         <MudTooltip Text="@Loc["Sort"]">
-            <MudButtonExtended StartIcon="@Icons.Material.Filled.Sort"
-            KeyboardKey="KeyboardKeys.KeyS"
-            style="text-transform: capitalize;"
-            Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-            aria-label="@Loc["Sort"]"
-            OnClick="Sort">
-                @Loc["Sort"]
-            </MudButtonExtended>
+            <MudMenu ActivationEvent="MouseEvent.MouseOver" AnchorOrigin="Origin.BottomLeft">
+                <ActivatorContent>
+                    <MudButtonExtended StartIcon="@Icons.Material.Filled.Sort"
+                                       KeyboardKey="KeyboardKeys.KeyS"
+                                       style="text-transform: capitalize;"
+                                       Size="@IconSize"
+                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                       aria-label="@Loc["Sort"]"
+                                       OnClick="Sort">
+                        @Loc["Sort"]
+                    </MudButtonExtended>
+                </ActivatorContent>
+
+                <ChildContent>
+					<MudMenuItem @onclick="() => SortBy(FileSort.Name)">@Loc["Name"]</MudMenuItem>
+					<MudMenuItem @onclick="() => SortBy(FileSort.Date)">@Loc["Date"]</MudMenuItem>
+					<MudMenuItem @onclick="() => SortBy(FileSort.Size)">@Loc["Size"]</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+            
         </MudTooltip>
 
         <MudTooltip Text="@Loc["Refresh"]">

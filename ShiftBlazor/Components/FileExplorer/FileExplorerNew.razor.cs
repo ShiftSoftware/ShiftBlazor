@@ -10,6 +10,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using Syncfusion.Blazor.Data;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -236,6 +237,7 @@ public partial class FileExplorerNew : IShortcutComponent
             CWD = content?.CWD;
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
+            SetSort();
         }
         catch (Exception e)
         {
@@ -597,6 +599,42 @@ public partial class FileExplorerNew : IShortcutComponent
     {
         LargeIcons,
         Information,
+    }
+
+    public enum FileSort
+    {
+        Name,
+        Date,
+        Size,
+    }
+
+    public FileSort CurrentSort { get; set; } = FileSort.Date;
+    public bool IsSortDescending { get; set; } = true;
+
+    public void SortBy(FileSort sort, bool? isDescending = null)
+    {
+        IsSortDescending = isDescending != null ? isDescending.Value : CurrentSort == sort && !IsSortDescending;
+        CurrentSort = sort;
+
+        SetSort();
+    }
+
+    private void SetSort()
+    {
+        var direction = IsSortDescending ? SortDirection.Descending : SortDirection.Ascending;
+
+        switch (CurrentSort)
+        {
+            case FileSort.Name:
+                Files = Files.OrderByDirection(direction, x => x.Name).ToList();
+                break;
+            case FileSort.Date:
+                Files = Files.OrderByDirection(direction, x => x.DateModified).ToList();
+                break;
+            case FileSort.Size:
+                Files = Files.OrderByDirection(direction, x => x.Size).ToList();
+                break;
+        }
     }
 
     void IDisposable.Dispose()
