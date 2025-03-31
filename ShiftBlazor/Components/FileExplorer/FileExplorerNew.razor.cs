@@ -533,14 +533,26 @@ public partial class FileExplorerNew : IShortcutComponent
     {
         if (file.IsFile)
         {
-            switch(Path.GetExtension(file.Name))
+            var extension = Path.GetExtension(file.Name)?.ToLower();
+            
+            if (ImageExtensions.Contains(extension))
+                return new(@Icons.Material.Filled.Image, "#dddddd");
+
+            switch (extension)
             {
                 case ".pdf":
                 case ".doc":
                 case ".docx":
                 case ".txt":
-                    return new(@Icons.Material.Filled.TextSnippet, "#ff0000");
-
+                    return new(@Icons.Material.Filled.TextSnippet, "#dddddd");
+                case ".xls":
+                case ".xlsx":
+                case ".csv":
+                    return new(@Icons.Material.Filled.ListAlt, "#dddddd");
+                case ".zip":
+                case ".rar":
+                case ".7z":
+                    return new(@Icons.Material.Filled.Archive, "#dddddd");
                 default:
                     return new(Icons.Material.Filled.InsertDriveFile, "#dddddd");
             }
