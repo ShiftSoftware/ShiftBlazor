@@ -201,7 +201,7 @@
                                      RowClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
                                      RowContextMenuClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
                                      T="FileExplorerDirectoryContent"
-                                     RowClassFunc="@((item, index) => SelectedFiles.Any(x => x.Path == item.Path) ? "selected" : "")"
+                                     RowClassFunc="@((file, index) => SpecialItemClasses(file))"
                                      ShowColumnOptions="false">
                             <Columns>
 
@@ -211,8 +211,8 @@
                                         <span>@context.Item.Name</span>
                                     </CellTemplate>
                                 </PropertyColumn>
-                                <PropertyColumn Property="x => x.DateModified" Title="Date modified" />
-                                <PropertyColumn Property="x => x.Size" Title="Size" />
+                                <PropertyColumn HideSmall Property="x => x.DateModified" Title="Date modified" />
+                                <PropertyColumn HideSmall Property="x => x.Size" Title="Size" />
                             </Columns>
                         </MudDataGrid>
                     }
@@ -222,7 +222,7 @@
                         {
                             <div @key="file.Path"
                                  title="@file.Name"
-                                 class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")"
+                                 class="file-explorer-item @SpecialItemClasses(file)"
                                  @ondblclick="() => HandleOpen(file)"
                                  @onclick="(e) => OnFileClick(e, file)"
                                  @onclick:stopPropagation="true"
@@ -427,8 +427,9 @@
         background-color: #e8eaea;
     }
 
-    .file-explorer-item.deleted {
-        background-color: #ffc7c7;
+    .file-explorer-item.deleted,
+    .mud-table-row.deleted {
+        background-color: #ffc7c7 !important;
     }
 
     .file-explorer-item.selected,

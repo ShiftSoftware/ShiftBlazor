@@ -133,6 +133,21 @@ public partial class FileExplorerNew : IShortcutComponent
         ".webp",
     };
 
+    private string SpecialItemClasses(FileExplorerDirectoryContent file)
+    {
+        var classes = new List<string>();
+        if (SelectedFiles.Any(x => x.Path == file.Path))
+        {
+            classes.Add("selected");
+        }
+
+        if (file.IsDeleted)
+        {
+            classes.Add("deleted");
+        }
+        return string.Join(" ",classes);
+    }
+
     private string SettingKey => $"FileExplorer_{AccountName}_{ContainerName}_{Root}";
     public FileExplorerSettings Settings = DefaultAppSetting.FileExplorerSettings;
     private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
