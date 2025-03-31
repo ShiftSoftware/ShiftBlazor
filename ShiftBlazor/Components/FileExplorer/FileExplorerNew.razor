@@ -255,8 +255,8 @@
         <MudButtonGroup Class="change-view" Variant="Variant.Outlined" Size="Size.Small">
             <MudButton OnClick="() => SetView()" StartIcon="@Icons.Material.Filled.ViewList">Switch View</MudButton>
             <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
-                <MudMenuItem Icon="@Icons.Material.Filled.ViewModule" @onclick="() => SetView(FileExplorerView.LargeIcons)">@Loc["Large Icons"]</MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileExplorerView.Information)">@Loc["Detailed"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.ViewModule" @onclick="() => SetView(FileView.LargeIcons)">@Loc["Large Icons"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Information)">@Loc["Detailed"]</MudMenuItem>
             </MudMenu>
         </MudButtonGroup>
     </MudToolBar>

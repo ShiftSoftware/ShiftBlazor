@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static ShiftSoftware.ShiftBlazor.Components.FileExplorerNew;
 
 namespace ShiftSoftware.ShiftBlazor.Services
 {
@@ -19,6 +20,8 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public virtual Dictionary<string, List<ColumnState>>? ColumnStates { get; set; }
         public virtual LanguageInfo? Language { get; set; }
         public virtual bool? EnableFormClone { get; set; }
+        public virtual Dictionary<string, FileExplorerSettings>? FileExplorerSettings { get; set; }
+
     }
 
     public static class DefaultAppSetting
@@ -37,5 +40,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
             RTL = false,
         };
         public static bool EnableFormClone = false;
+        public static FileExplorerSettings FileExplorerSettings = new FileExplorerSettings
+        {
+            View = FileView.LargeIcons,
+            Sort = FileSort.Date,
+            SortDescending = true,
+        };
     }
 }

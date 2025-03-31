@@ -85,7 +85,7 @@ public partial class FileExplorerNew : IShortcutComponent
     public bool ShowThumbnails { get; set; }
 
     [Parameter]
-    public FileExplorerView? View { get;set; }
+    public FileView? View { get;set; }
 
     [Parameter]
     public RenderFragment? MenuItemsTemplate { get; set; }
@@ -120,7 +120,6 @@ public partial class FileExplorerNew : IShortcutComponent
     private bool DisplayUploadButton { get; set; } = true;
     private bool DisplayNewFolderButton { get; set; } = true;
     private bool DisplayRestoreButton { get; set; }
-    private FileExplorerView CurrentView { get; set; } = FileExplorerView.LargeIcons;
     private bool DisplayContextMenu { get; set; }
     private double ContextLeft { get; set; }
     private double ContextTop { get; set; }
@@ -133,6 +132,10 @@ public partial class FileExplorerNew : IShortcutComponent
         ".png",
         ".webp",
     };
+
+    private string SettingKey => $"FileExplorer_{AccountName}_{ContainerName}_{Root}";
+    public FileExplorerSettings Settings = DefaultAppSetting.FileExplorerSettings;
+    private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
 
     protected override void OnInitialized()
     {
@@ -151,9 +154,12 @@ public partial class FileExplorerNew : IShortcutComponent
         FileExplorerId = "FileExplorer" + Id.ToString().Replace("-", string.Empty);
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
         IconSize = Dense ? Size.Medium : Size.Large;
-        SetView(View ?? CurrentView);
         SetBreadcrumb();
         GetQuickAccessItems();
+
+        var userSettings = SettingManager.GetFileExplorerSetting(SettingKey);
+        SetView(userSettings?.View ?? View ?? DefaultSettings.View);
+        Settings = userSettings ?? DefaultSettings;
     }
 
     protected override async Task OnInitializedAsync()
@@ -562,32 +568,34 @@ public partial class FileExplorerNew : IShortcutComponent
         return data == null || string.IsNullOrWhiteSpace(data.FilterPath) ? "/" : data.FilterPath + data.Name;
     }
 
-    private string GetViewClass(FileExplorerView? view = null)
+    private string GetViewClass(FileView? view = null)
     {
-        switch (view ?? CurrentView)
+        switch (view ?? Settings.View)
         {
-            case FileExplorerView.LargeIcons:
+            case FileView.LargeIcons:
                 return "large-icons";
-            case FileExplorerView.Information:
+            case FileView.Information:
                 return "information";
             default:
                 return "large-icons";
         }
     }
 
-    public void SetView(FileExplorerView? view = null)
+    public void SetView(FileView? view = null)
     {
         if (view == null)
         {
             // cycle through views enum
-            var values = Enum.GetValues(typeof(FileExplorerView));
-            var index = Array.IndexOf(values, CurrentView);
-            CurrentView = (FileExplorerView)values.GetValue((index + 1) % values.Length)!;
+            var values = Enum.GetValues(typeof(FileView));
+            var index = Array.IndexOf(values, Settings.View);
+            Settings.View = (FileView)values.GetValue((index + 1) % values.Length)!;
         }
         else
         {
-            CurrentView = view.Value;
+            Settings.View = view.Value;
         }
+
+        SettingManager.SetFileExplorerSetting(SettingKey, Settings);
     }
 
     private void HandleUploading(UploadEventArgs args)
@@ -595,7 +603,7 @@ public partial class FileExplorerNew : IShortcutComponent
         UploadingFiles = args;
     }
 
-    public enum FileExplorerView
+    public enum FileView
     {
         LargeIcons,
         Information,
@@ -608,22 +616,22 @@ public partial class FileExplorerNew : IShortcutComponent
         Size,
     }
 
-    public FileSort CurrentSort { get; set; } = FileSort.Date;
-    public bool IsSortDescending { get; set; } = true;
-
     public void SortBy(FileSort sort, bool? isDescending = null)
     {
-        IsSortDescending = isDescending != null ? isDescending.Value : CurrentSort == sort && !IsSortDescending;
-        CurrentSort = sort;
+        Settings.SortDescending = isDescending != null
+            ? isDescending.Value
+            : Settings.Sort == sort && !Settings.SortDescending;
 
+        Settings.Sort = sort;
+        SettingManager.SetFileExplorerSetting(SettingKey, Settings);
         SetSort();
     }
 
     private void SetSort()
     {
-        var direction = IsSortDescending ? SortDirection.Descending : SortDirection.Ascending;
+        var direction = Settings.SortDescending ? SortDirection.Descending : SortDirection.Ascending;
 
-        switch (CurrentSort)
+        switch (Settings.Sort)
         {
             case FileSort.Name:
                 Files = Files.OrderByDirection(direction, x => x.Name).ToList();

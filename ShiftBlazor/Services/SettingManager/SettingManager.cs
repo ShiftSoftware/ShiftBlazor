@@ -170,6 +170,20 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return Settings.EnableFormClone ?? DefaultAppSetting.EnableFormClone;
         }
 
+        public void SetFileExplorerSetting(string id, FileExplorerSettings setting)
+        {
+            Settings.FileExplorerSettings ??= [];
+
+            Settings.FileExplorerSettings.Remove(id);
+            Settings.FileExplorerSettings.Add(id, setting);
+            SyncLocalStorage.SetItem(Key, Settings);
+        }
+
+        public FileExplorerSettings? GetFileExplorerSetting(string id)
+        {
+            return Settings.FileExplorerSettings?.GetValueOrDefault(id);
+        }
+
         public CultureInfo GetCulture()
         {
             return new CultureInfo(GetLanguage().CultureName)
