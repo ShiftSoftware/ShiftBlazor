@@ -11,7 +11,7 @@ public class AppConfiguration
     public Dictionary<string, string?> ExternalAddresses = new();
     public string? UserListEndpoint { get; set; }
 
-    private string _ApiPath = "/api";
+    internal string _ApiPath = "/api";
     //private string _ODataPath = "/odata";
     public string ApiPath
     {
