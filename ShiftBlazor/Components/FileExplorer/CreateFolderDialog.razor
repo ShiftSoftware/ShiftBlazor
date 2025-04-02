@@ -5,7 +5,7 @@
         Folder
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="Value"/>
+        <MudTextField Error="ErrorText != null" ErrorText="@ErrorText" Immediate TextChanged="OnInputChanged" @bind-Value="Value" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -14,12 +14,28 @@
 </MudDialog>
 
 @code {
-    private string Value = "";
+    private string Value = string.Empty;
+    private string? ErrorText { get; set; }
 
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = default!;
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(Value));
+    private void OnInputChanged()
+    {
+        ErrorText = null;
+    }
+
+    private void Submit()
+    {
+        if (string.IsNullOrWhiteSpace(Value))
+        {
+			ErrorText = "Folder name cannot be empty";
+        }
+        else
+        {
+            MudDialog.Close(DialogResult.Ok(Value));
+        }
+    }
 
     private void Cancel() => MudDialog.Cancel();
 }
