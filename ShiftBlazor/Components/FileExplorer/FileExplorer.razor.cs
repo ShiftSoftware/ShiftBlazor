@@ -711,7 +711,7 @@ public partial class FileExplorer : IShortcutComponent
         await DialogService.ShowMessageBox("Error", message ?? "Could not parse server data", yesText: "Ok", options: options);
     }
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         IShortcutComponent.Remove(Id);
     }
