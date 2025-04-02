@@ -20,11 +20,6 @@
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = default!;
 
-    private void OnInputChanged()
-    {
-        ErrorText = null;
-    }
-
     private void Submit()
     {
         if (string.IsNullOrWhiteSpace(Value))
@@ -38,4 +33,5 @@
     }
 
     private void Cancel() => MudDialog.Cancel();
+    private void OnInputChanged() => ErrorText = null;
 }

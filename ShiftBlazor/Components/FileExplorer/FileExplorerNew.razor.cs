@@ -262,14 +262,7 @@ public partial class FileExplorerNew : IShortcutComponent
         }
         catch (Exception e)
         {
-            var options = new DialogOptions
-            {
-                MaxWidth = MaxWidth.ExtraSmall,
-                BackdropClick = true,
-                CloseOnEscapeKey = true,
-            };
-
-            await DialogService.ShowMessageBox("Error", e.Message ?? "Could not parse server data", yesText: "Ok", options: options);
+            await DisplayError(e.Message);
         }
 
         IsLoading = false;
@@ -389,18 +382,36 @@ public partial class FileExplorerNew : IShortcutComponent
         };
 
         var result = await DialogService.Show<CreateFolderDialog>("", options).Result;
-        
-        if (result?.Data is string value)
-        {
-            DisplayContextMenu = false;
-            var newFolderData = DefaultDirectoryContentObject();
-            newFolderData.Action = "create";
-            newFolderData.Path = GetPath(CWD);
-            newFolderData.Name = value;
-            newFolderData.Data = CWD == null ? [] : [CWD];
 
-            var response = await HttpClient.PostAsJsonAsync(Url, newFolderData);
-            await Refresh();
+        try
+        {
+            if (result?.Data is string value)
+            {
+                DisplayContextMenu = false;
+                var newFolderData = DefaultDirectoryContentObject();
+                newFolderData.Action = "create";
+                newFolderData.Path = GetPath(CWD);
+                newFolderData.Name = value;
+                newFolderData.Data = CWD == null ? [] : [CWD];
+
+                var response = await HttpClient.PostAsJsonAsync(Url, newFolderData);
+
+                var content = await response.Content.ReadFromJsonAsync<FileExplorerResponse>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    Converters = { new LocalDateTimeOffsetJsonConverter() }
+                });
+
+                if (content?.Error != null)
+                {
+                    throw new Exception(content.Error.Message);
+                }
+
+                await Refresh();
+            }
+        }
+        catch (Exception e)
+        {
+            await DisplayError(e.Message);
         }
     }
 
@@ -670,6 +681,18 @@ public partial class FileExplorerNew : IShortcutComponent
                 Files = Files.OrderByDirection(direction, x => x.Size).ToList();
                 break;
         }
+    }
+
+    private async Task DisplayError(string message)
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            BackdropClick = true,
+            CloseOnEscapeKey = true,
+        };
+
+        await DialogService.ShowMessageBox("Error", message ?? "Could not parse server data", yesText: "Ok", options: options);
     }
 
     void IDisposable.Dispose()
