@@ -670,19 +670,6 @@ public partial class FileExplorer : IShortcutComponent
         UploadingFiles = args;
     }
 
-    public enum FileView
-    {
-        LargeIcons,
-        Information,
-    }
-
-    public enum FileSort
-    {
-        Name,
-        Date,
-        Size,
-    }
-
     public void SortBy(FileSort sort, bool? isDescending = null)
     {
         Settings.SortDescending = isDescending != null
