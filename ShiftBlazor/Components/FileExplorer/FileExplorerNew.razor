@@ -5,7 +5,7 @@
     <PageTitle>@Title</PageTitle>
 }
 
-<MudPaper Elevation="25" Outlined="Outlined" id="@FileExplorerId">
+<MudPaper Class="file-explorer" Elevation="25" Outlined="Outlined" id="@FileExplorerId">
     <MudToolBar Style="@ToolbarStyle" Dense="@Dense" Class="light-toolbar shift-toolbar-header">
         <MudIcon Size="@IconSize" Icon="@IconSvg"></MudIcon>
         <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FileExplorer"])</MudText>
@@ -44,15 +44,26 @@
         }
 
         <MudTooltip Text="@Loc["Sort"]">
-            <MudButtonExtended StartIcon="@Icons.Material.Filled.Sort"
-            KeyboardKey="KeyboardKeys.KeyS"
-            style="text-transform: capitalize;"
-            Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-            aria-label="@Loc["Sort"]"
-            OnClick="Sort">
-                @Loc["Sort"]
-            </MudButtonExtended>
+            <MudMenu ActivationEvent="MouseEvent.MouseOver" AnchorOrigin="Origin.BottomLeft">
+                <ActivatorContent>
+                    <MudButtonExtended StartIcon="@Icons.Material.Filled.Sort"
+                                       KeyboardKey="KeyboardKeys.KeyS"
+                                       style="text-transform: capitalize;"
+                                       Size="@IconSize"
+                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                       aria-label="@Loc["Sort"]"
+                                       OnClick="Sort">
+                        @Loc["Sort"]
+                    </MudButtonExtended>
+                </ActivatorContent>
+
+                <ChildContent>
+					<MudMenuItem @onclick="() => SortBy(FileSort.Name)">@Loc["Name"]</MudMenuItem>
+					<MudMenuItem @onclick="() => SortBy(FileSort.Date)">@Loc["Date"]</MudMenuItem>
+					<MudMenuItem @onclick="() => SortBy(FileSort.Size)">@Loc["Size"]</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+            
         </MudTooltip>
 
         <MudTooltip Text="@Loc["Refresh"]">
@@ -153,7 +164,7 @@
             <MudDivider Vertical="true" FlexItem="true" />
         }
 
-        <div class="main-window" style="overflow: hidden; height: @Height;">
+        <div class="main-window" style="overflow: hidden; height: @(Settings.View == FileView.LargeIcons ? Height : "auto");">
             <MudToolBar Dense Class="breadcrumb">
 
                 @* <MudText>@(RootAliasName ?? "Root")</MudText> *@
@@ -171,34 +182,78 @@
 
             <MudDivider Style="flex-grow: initial;" />
 
-            <div class="file-listing @GetViewClass()" @onclick="DeselectAllFiles" @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
+            <div class="file-listing @GetViewClass()" @onclick="() => {if (Settings.View == FileView.LargeIcons) DeselectAllFiles();} " @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
 
                 @if (Files.Count > 0)
                 {
-                    @foreach (var file in Files)
+                    if (Settings.View == FileView.Information)
                     {
-                        <div @key="file.Path" title="@file.Name" class="file-explorer-item @(SelectedFiles.Any(x => x.Path == file.Path) ? "selected" : "") @(file.IsDeleted ? "deleted" : "")" @ondblclick="() => HandleOpen(file)" @onclick="(e) => OnFileClick(e, file)" @onclick:stopPropagation="true" @oncontextmenu="(e) => OnFileClick(e, file)" >
-                            @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
-                            {
-                                <MudImage Height="100"
-                                          Width="100"
-                                          ObjectFit="ObjectFit.Cover"
-                                          ObjectPosition="ObjectPosition.Center"
-                                          Src="@file.ThumbnailUrl"
-                                          data-src="@file.TargetPath"
-                                          loading="lazy"
-                                          onerror="if (this.src !== this.dataset.src) this.src = this.dataset.src" />
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};")  />
-                            }
+                        <MudDataGrid Items="Files"
+                                     Dense
+                                     Filterable="false"
+                                     SortMode="SortMode.None"
+                                     Virtualize
+                                     Height="@Height"
+                                     Hover
+                                     Striped
+                                     Elevation="0"
+                                     SelectOnRowClick="false"
+                                     RowClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
+                                     RowContextMenuClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
+                                     T="FileExplorerDirectoryContent"
+                                     RowClassFunc="@((file, index) => SpecialItemClasses(file))"
+                                     ShowColumnOptions="false">
+                            <Columns>
 
-                            @if (file.UploadProgress < 1) {
-                                <MudProgressLinear Color="Color.Primary" Value="file.UploadProgress" Max="1"/>
-                            } 
-                            <MudText>@file.Name</MudText>
-                        </div>
+                                <PropertyColumn Property="x => x.Name" Title="Name">
+                                    <CellTemplate>
+                                        <MudIcon Icon="@GetFileIcon(context.Item).Key" Style=@($"color: {@GetFileIcon(context.Item).Value};") />
+                                        <span>@context.Item.Name</span>
+                                    </CellTemplate>
+                                </PropertyColumn>
+                                <PropertyColumn HideSmall Property="x => x.DateModified" Title="Date modified" />
+                                <PropertyColumn HideSmall Property="x => x.Size" Title="Size" />
+                            </Columns>
+                        </MudDataGrid>
+                    }
+                    else if (Settings.View == FileView.LargeIcons)
+                    {
+                        @foreach (var file in Files)
+                        {
+                            <div @key="file.Path"
+                                 title="@file.Name"
+                                 class="file-explorer-item @SpecialItemClasses(file)"
+                                 @ondblclick="() => HandleOpen(file)"
+                                 @onclick="(e) => OnFileClick(e, file)"
+                                 @onclick:stopPropagation="true"
+                                 @oncontextmenu="(e) => OnFileClick(e, file)">
+                                @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
+                                {
+                                    <MudImage Height="100"
+                                              Width="100"
+                                              ObjectFit="ObjectFit.Cover"
+                                              ObjectPosition="ObjectPosition.Center"
+                                              Src="@file.ThumbnailUrl"
+                                              data-src="@file.TargetPath"
+                                              loading="lazy"
+                                              onerror="if (this.src !== this.dataset.src) this.src = this.dataset.src" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};") />
+                                }
+
+                                @if (file.UploadProgress < 1)
+                                {
+                                    <MudProgressLinear Color="Color.Primary" Value="file.UploadProgress" Max="1" />
+                                }
+                                <MudText>@file.Name</MudText>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <MudText>Unknown View</MudText>
                     }
                 }
                 else if (!IsLoading)
@@ -244,8 +299,8 @@
         <MudButtonGroup Class="change-view" Variant="Variant.Outlined" Size="Size.Small">
             <MudButton OnClick="() => SetView()" StartIcon="@Icons.Material.Filled.ViewList">Switch View</MudButton>
             <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
-                <MudMenuItem Icon="@Icons.Material.Filled.ViewModule" @onclick="() => SetView(FileExplorerView.LargeIcons)">@Loc["Large Icons"]</MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileExplorerView.Information)">@Loc["Detailed"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.ViewModule" @onclick="() => SetView(FileView.LargeIcons)">@Loc["Large Icons"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Information)">@Loc["Detailed"]</MudMenuItem>
             </MudMenu>
         </MudButtonGroup>
     </MudToolBar>
@@ -317,9 +372,7 @@
     }
 
     .file-listing {
-        padding: 20px;
         overflow: auto;
-        height: 100%;
         min-height: 200px;
     }
 
@@ -327,6 +380,8 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 10px;
+        padding: 20px;
+        height: 100%;
     }
 
     .file-explorer-item {
@@ -354,10 +409,12 @@
 		gap: 5px;
 	}
 
-    .information .file-explorer-item .mud-icon-root,
-    .information .file-explorer-item .mud-image {
+    .mud-table tbody td:first-child .mud-icon-root,
+    .mud-table tbody td:first-child .mud-image
+    {
         height: 25px;
         width: 25px;
+        vertical-align: middle;
     }
 
     .file-explorer-item p {
@@ -370,12 +427,14 @@
         background-color: #e8eaea;
     }
 
-    .file-explorer-item.deleted {
-        background-color: #ffc7c7;
+    .file-explorer-item.deleted,
+    .mud-table-row.deleted {
+        background-color: #ffc7c7 !important;
     }
 
-    .file-explorer-item.selected {
-        background-color: #83b6f2;
+    .file-explorer-item.selected,
+    .mud-table-row.selected {
+        background-color: #83b6f2 !important;
     }
 
     .file-explorer-item img {
@@ -416,5 +475,18 @@
 
     .context-menu {
         position: fixed;
+    }
+
+    .file-explorer .mud-table thead th:first-child {
+        width: 100%;
+    }
+
+    .file-explorer .mud-table thead th:not(:first-child),
+    .file-explorer .mud-table tbody td:not(:first-child) {
+		white-space: nowrap;
+    }
+
+    .file-explorer .mud-table .mud-table-container {
+        padding: 0 !important;
     }
 </style>
