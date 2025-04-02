@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static ShiftSoftware.ShiftBlazor.Components.FileExplorerNew;
+using static ShiftSoftware.ShiftBlazor.Components.FileExplorer;
 
 namespace ShiftSoftware.ShiftBlazor.Services;
 

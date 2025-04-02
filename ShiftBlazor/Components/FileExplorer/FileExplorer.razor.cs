@@ -1,21 +1,42 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
-using Syncfusion.Blazor.FileManager;
-using Syncfusion.Blazor.Navigations;
-using Blazored.LocalStorage;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public partial class FileExplorer
+public partial class FileExplorer : IShortcutComponent
 {
-    [Inject] HttpClient HttpClient { get; set; } = default!;
-    [Inject] IJSRuntime JsRuntime { get; set; } = default!;
+    [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
     [Inject] SettingManager SettingManager { get; set; } = default!;
-    [Inject] ISyncLocalStorageService SyncLocalStorage { get; set; } = default!;
-    [Inject] NavigationManager NavigationManager { get; set; }
+    [Inject] HttpClient HttpClient { get; set; } = default!;
+    [Inject] MessageService MessageService { get; set; } = default!;
+    [Inject] IDialogService DialogService { get; set; } = default!;
+    [Inject] IJSRuntime JsRuntime { get; set; } = default!;
+    [Inject] ISyncLocalStorageService SyncLocalStorage { get;set; } = default!;
+
+
+    [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
+    public bool? ParentReadOnly { get; set; }
+
+    [CascadingParameter(Name = FormHelper.ParentDisabledName)]
+    public bool? ParentDisabled { get; set; }
+
+    [Parameter]
+    public string? Root {  get; set; }
+
+    [Parameter]
+    public string? CurrentPath { get; set; }
 
     [Parameter]
     public string? BaseUrl { get; set; }
@@ -24,150 +45,380 @@ public partial class FileExplorer
     public string? BaseUrlKey { get; set; }
 
     [Parameter]
-    public string? Root { get; set; }
-
-    [Parameter]
-    public string? CurrentPath { get; set; }
-
-    [Parameter]
-    public double MaxUploadSizeInBytes { get; set; } = 128;
-
-    [Parameter]
-    public ViewType View { get; set; } = ViewType.LargeIcons;
-
-    [Parameter]
     public string? AccountName { get; set; }
 
     [Parameter]
     public string? ContainerName { get; set; }
 
     [Parameter]
-    public string Height { get; set; } = "600px";
+    public string? NavColor { get; set; }
+
+    [Parameter]
+    public bool NavIconFlatColor { get; set; }
+
+    [Parameter]
+    public bool Outlined { get; set; }
+
+    [Parameter]
+    public bool Dense { get; set; }
+
+    [Parameter]
+    public string IconSvg { get; set; } = @Icons.Material.Filled.List;
+
+    [Parameter]
+    public string? Title { get; set; }
 
     [Parameter]
     public string? RootAliasName { get; set; }
 
-    public List<ToolBarItemModel> Items = new();
+    [Parameter]
+    public bool DisableQuickAccess { get; set; }
 
-    private SfFileManager<FileExplorerDirectoryContent>? SfFileManager { get; set; }
-    private string? Url;
-    private double MaxUploadSize => MaxUploadSizeInBytes * 1024 * 1024;
+    [Parameter]
+    public bool DisableRecents{ get; set; }
+
+    [Parameter]
+    public string? Height { get; set; }
+
+    [Parameter]
+    public bool ShowThumbnails { get; set; }
+
+    [Parameter]
+    public FileView? View { get;set; }
+
+    [Parameter]
+    public RenderFragment? MenuItemsTemplate { get; set; }
+    
+    [Parameter]
+    public bool OpenDialogOnUpload { get; set; }
+
+    [Parameter]
+    public int MaxFileSizeInMegaBytes { get; set; } = 128;
+
+    public bool IsEmbed { get; private set; } = false;
+    public Guid Id { get; private set; } = Guid.NewGuid();
+    public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+    public List<FileExplorerDirectoryContent> SelectedFiles { get; set; } = [];
+
+    private string FileExplorerId { get; set; }
+    private string ToolbarStyle = string.Empty;
+    private Size IconSize = Size.Medium;
+    private bool DisableSidebar => DisableQuickAccess && DisableRecents;
+    private FileExplorerDirectoryContent? CWD { get; set; } = null;
+    private List<FileExplorerDirectoryContent> Files { get; set; } = new();
+    private UploadEventArgs? UploadingFiles { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private string Url = "";
     private FileUploader? _FileUploader { get; set; }
-    private string FileManagerId { get; set; }
-    private bool ShowDeleted { get; set; } = false;
-    private string DeletedItemsCss = "";
+    private List<string> QuickAccessFiles { get; set; } = [];
+    private List<string> PathParts = [];
+    private FileExplorerDirectoryContent? LastSelectedFile { get; set; }
+    private bool RenderQuickAccess => !DisableQuickAccess && QuickAccessFiles.Count > 0;
+    private bool ShowDeletedFiles { get; set; }
 
-    public override Task SetParametersAsync(ParameterView parameters)
+    private bool DisplayDeleteButton { get; set; }
+    private bool DisplayDownloadButton { get; set; }
+    private bool DisplayQuickAccessButton { get; set; }
+    private bool DisplayUploadButton { get; set; } = true;
+    private bool DisplayNewFolderButton { get; set; } = true;
+    private bool DisplayRestoreButton { get; set; }
+    private bool DisplayContextMenu { get; set; }
+    private double ContextLeft { get; set; }
+    private double ContextTop { get; set; }
+
+    private IEnumerable<string> ImageExtensions = new List<string>
     {
-        var newRoot = parameters.GetValueOrDefault<string>(nameof(Root));
-        var newCurrentPath = parameters.GetValueOrDefault<string>(nameof(CurrentPath));
-        if ((!string.IsNullOrWhiteSpace(Root) && Root != newRoot) || (!string.IsNullOrWhiteSpace(CurrentPath) && CurrentPath != newCurrentPath))
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".png",
+        ".webp",
+    };
+
+    private string SpecialItemClasses(FileExplorerDirectoryContent file)
+    {
+        var classes = new List<string>();
+        if (SelectedFiles.Any(x => x.Path == file.Path))
         {
-            NavigationManager.Refresh();
+            classes.Add("selected");
         }
 
-        return base.SetParametersAsync(parameters);
+        if (file.IsDeleted)
+        {
+            classes.Add("deleted");
+        }
+        return string.Join(" ",classes);
     }
+
+    private string SettingKey => $"FileExplorer_{AccountName}_{ContainerName}_{Root}";
+    public FileExplorerSettings Settings = DefaultAppSetting.FileExplorerSettings;
+    private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
 
     protected override void OnInitialized()
     {
-        FileManagerId = "FileExplorer" + Guid.NewGuid().ToString().Replace("-", string.Empty);
+        IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
-        var url = BaseUrl
+        if (!IsEmbed)
+        {
+            IShortcutComponent.Register(this);
+        }
+
+        var apiUrl = BaseUrl
             ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "")
             ?? SettingManager.Configuration.ApiPath;
 
-        Url = url.AddUrlPath("FileExplorer");
+        Url = apiUrl.AddUrlPath("FileExplorer", "FileOperations");
 
-        Items = new List<ToolBarItemModel>(){
-            new ToolBarItemModel() { Name = "NewFolder" },
-            //new ToolBarItemModel() { Name = "Cut" },
-            //new ToolBarItemModel() { Name = "Copy" },
-            //new ToolBarItemModel() { Name = "Paste" },
-            new ToolBarItemModel() { Name = "Upload"},
-            new ToolBarItemModel() { Name = "DirectAzureUpload", Text="Upload Files", TooltipText="Upload Files", PrefixIcon="e-icons e-import", Visible=true, Click=new EventCallback<ClickEventArgs>(null, UploadFiles)},
-            //new ToolBarItemModel() { Name = "DirectAzureDirUpload", Text="Upload Folders", TooltipText="Upload Folders", PrefixIcon="e-icons e-import", Visible=true, Click=new EventCallback<ClickEventArgs>(null, UploadDir)},
-            new ToolBarItemModel() { Name = "SortBy" },
-            new ToolBarItemModel() { Name = "Refresh" },
-            new ToolBarItemModel() { Name = "Delete" },
-            new ToolBarItemModel() { Name = "Download" },
-            //new ToolBarItemModel() { Name = "Rename" },
-            new ToolBarItemModel() { Name = "Selection" },
-            new ToolBarItemModel() { Name = "ViewDeleted", TooltipText="Show Deleted Items", PrefixIcon="e-icons e-trash", Align=ItemAlign.Right, Visible=true, Click=new EventCallback<ClickEventArgs>(null, ViewDeleted)},
-            new ToolBarItemModel() { Name = "View" },
-            new ToolBarItemModel() { Name = "Details" },
-            //new ToolBarItemModel() { Name = "Zip", Text="Zip", TooltipText="Zip Files", PrefixIcon="e-icons e-import", Visible=false, Click=new EventCallback<ClickEventArgs>(null, ZipFiles)},
-            //new ToolBarItemModel() { Name = "Unzip", Text="Unzip", TooltipText="Unzip Files", PrefixIcon="e-icons e-export", Visible=false, Click=new EventCallback<ClickEventArgs>(null, UnzipFiles)},
+        FileExplorerId = "FileExplorer" + Id.ToString().Replace("-", string.Empty);
+        ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
+        IconSize = Dense ? Size.Medium : Size.Large;
+        SetBreadcrumb();
+        GetQuickAccessItems();
+
+        var userSettings = SettingManager.GetFileExplorerSetting(SettingKey);
+        SetView(userSettings?.View ?? View ?? DefaultSettings.View);
+        Settings = userSettings ?? DefaultSettings;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchData();
+    }
+
+    public async ValueTask HandleShortcut(KeyboardKeys key)
+    {
+        switch (key)
+        {
+
+        }
+    }
+
+    private FileExplorerDirectoryContent DefaultDirectoryContentObject()
+    {
+        var CustomData = new Dictionary<string, object>();
+
+        if (!string.IsNullOrWhiteSpace(ContainerName))
+        {
+            CustomData.Add("ContainerName", ContainerName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(AccountName))
+        {
+            CustomData.Add("AccountName", AccountName);
+        }
+
+        if (Root != null)
+        {
+            CustomData.Add("RootDir", Root);
+        }
+
+        return new FileExplorerDirectoryContent
+        {
+            CustomData = CustomData,
         };
     }
 
-    public void OnFileSelected(FileSelectEventArgs<FileExplorerDirectoryContent> args)
+    public async Task FetchData(FileExplorerDirectoryContent? data = null)
     {
-        if (SfFileManager == null) return;
+        IsLoading = true;
 
-        SfFileManager.PreventRender();
+        LastSelectedFile = null;
+        DeselectAllFiles();
 
-        var isMoreThanOneFileSelected = SfFileManager.SelectedItems.Length > 1;
-        var isOneFileSelected = SfFileManager.SelectedItems.Length == 1;
-        var isDirSelected = SfFileManager.GetSelectedFiles().Any(x => !x.IsFile);
-        var isZipFile = SfFileManager.GetSelectedFiles().Any(x => x.IsFile && x.Name.EndsWith(".zip"));
-
-        //Items.First(x => x.Name.Equals("Zip")).Visible = isMoreThanOneFileSelected || isOneFileSelected && isDirSelected;
-        //Items.First(x => x.Name.Equals("Unzip")).Visible = isOneFileSelected && isZipFile;
-        //Items.First(x => x.Name.Equals("DirectAzureUpload")).Visible = SfFileManager.SelectedItems.Length == 0;
-
-
-        SfFileManager.PreventRender(false);
-    }
-
-    //private void ZipFiles(ClickEventArgs args)
-    //{
-    //    if (SfFileManager == null) return;
-
-    //    var fileNames = SfFileManager.GetSelectedFiles().Select(x => x.IsFile ? x.Name : x.Name + "/");
-
-    //    var filesToZip = new ZipOptionsDTO
-    //    {
-    //        ContainerName = "development",
-    //        Path = FileManagerRoot + SfFileManager.Path,
-    //        Names = fileNames,
-    //    };
-    //    HttpClient.PostAsJsonAsync(Url.AddUrlPath("ZipFiles"), filesToZip);
-    //}
-
-    //private void UnzipFiles(ClickEventArgs args)
-    //{
-    //    if (SfFileManager == null) return;
-
-    //    var zipFileInfo = new ZipOptionsDTO
-    //    {
-    //        ContainerName = "development",
-    //        Path = FileManagerRoot + SfFileManager.Path,
-    //        Names = [SfFileManager.SelectedItems.First()],
-    //    };
-    //    HttpClient.PostAsJsonAsync(Url.AddUrlPath("UnzipFiles"), zipFileInfo);
-    //}
-
-    public void OnBeforeImageLoad(BeforeImageLoadEventArgs<FileExplorerDirectoryContent> args)
-    {
         try
         {
-            args.ImageUrl = args.FileDetails.TargetPath;
+            var obj = DefaultDirectoryContentObject();
+            obj.Action = "read";
+            obj.Path = GetPath(data);
+            obj.Data = data == null ? [] : [data];
+            obj.ShowHiddenItems = ShowDeletedFiles;
+
+            var response = await HttpClient.PostAsJsonAsync(Url, obj);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception();
+            }
+
+            var content = await response.Content.ReadFromJsonAsync<FileExplorerResponse>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            {
+                Converters = { new LocalDateTimeOffsetJsonConverter() }
+            });
+
+            if (content?.Error != null)
+            {
+                throw new Exception(content.Error.Message);
+            }
+
+            var files = content?.Files?.ToList() ?? new List<FileExplorerDirectoryContent>();
+
+            foreach (var file in files)
+            {
+                file.UploadProgress = 1;
+            }
+
+            Files = files;
+            CWD = content?.CWD;
+            var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
+            SetBreadcrumb(crumbPath);
+            SetSort();
         }
-        catch { }
-    }
-
-    public async Task OnBeforeDownload(BeforeDownloadEventArgs<FileExplorerDirectoryContent> args)
-    {
-        args.Cancel = true;
-
-        foreach (var file in args.DownloadData.DownloadFileDetails)
+        catch (Exception e)
         {
-            await JsRuntime.InvokeVoidAsync("downloadFileFromUrl", file.Name, file.TargetPath);
+            await DisplayError(e.Message);
+        }
+
+        IsLoading = false;
+    }
+
+    private void SetBreadcrumb(string path = "")
+    {
+        var breadcrumb = new List<string>
+        {
+            RootAliasName ?? "Root",
+        };
+
+        breadcrumb.AddRange(path.Split('/', StringSplitOptions.RemoveEmptyEntries));
+
+        PathParts = breadcrumb;
+    }
+    
+    private async Task HandleOpen(FileExplorerDirectoryContent file)
+    {
+        if (file.IsFile)
+        {
+            Download(file);
+        }
+        else
+        {
+            await FetchData(file);
         }
     }
 
-    private async Task UploadFiles()
+    private void OnFileClick(MouseEventArgs args, FileExplorerDirectoryContent file)
+    {
+        if (args.ShiftKey)
+        {
+            var lastFileIndex = Files.IndexOf(LastSelectedFile ?? Files.First());
+            var clickedIndex = Files.IndexOf(file);
+            var i = lastFileIndex < clickedIndex ? lastFileIndex : clickedIndex;
+            var count = Math.Abs(lastFileIndex - clickedIndex) + 1;
+
+            var filesToSelect = Files.GetRange(i, count);
+            if (!args.CtrlKey)
+            {
+                SelectedFiles.Clear();
+            }
+            else
+            {
+                filesToSelect = filesToSelect.Where(f => !SelectedFiles.Contains(f)).ToList();
+            }
+
+            SelectedFiles.AddRange(filesToSelect);
+        }
+        else if (args.CtrlKey)
+        {
+            if (!SelectedFiles.Contains(file))
+            {
+                SelectedFiles.Add(file);
+            }
+            else
+            {
+                SelectedFiles.Remove(file);
+            }
+
+            LastSelectedFile = file;
+        }
+        else
+        {
+            LastSelectedFile = file;
+            SelectedFiles = [file];
+        }
+
+        UpdateToolbarButtons();
+    }
+
+    public void DeselectAllFiles()
+    {
+        SelectedFiles.Clear();
+        UpdateToolbarButtons();
+    }
+
+    private void UpdateToolbarButtons()
+    {
+        DisplayDeleteButton = SelectedFiles.Count > 0 && !SelectedFiles.Any(x => x.IsDeleted);
+        DisplayDownloadButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsFile);
+        DisplayQuickAccessButton = !DisableQuickAccess && SelectedFiles.Count > 0 && SelectedFiles.All(x => !x.IsFile);
+        DisplayRestoreButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsDeleted);
+        //DisplayNewFolderButton = SelectedFiles.Count == 0;
+        //DisplayUploadButton = SelectedFiles.Count == 0;
+
+    }
+
+    private async Task OnBreadCrumbClick(int index)
+    {
+        FileExplorerDirectoryContent? data = null;
+
+        if (index > 0)
+        {
+            var path = string.Join("/", PathParts.GetRange(1, index));
+            var filterPath = string.Join("/", PathParts.GetRange(1, index - 1));
+            var name = PathParts[index];
+            data = new FileExplorerDirectoryContent()
+            {
+                Path = path,
+                Name = name,
+                FilterPath = filterPath + "/",
+                Type = "Directory",
+            };
+
+        }
+        await FetchData(data);
+    }
+
+    private async Task CreateNewFolder()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+        };
+
+        var result = await DialogService.Show<CreateFolderDialog>("", options).Result;
+
+        try
+        {
+            if (result?.Data is string value)
+            {
+                DisplayContextMenu = false;
+                var newFolderData = DefaultDirectoryContentObject();
+                newFolderData.Action = "create";
+                newFolderData.Path = GetPath(CWD);
+                newFolderData.Name = value;
+                newFolderData.Data = CWD == null ? [] : [CWD];
+
+                var response = await HttpClient.PostAsJsonAsync(Url, newFolderData);
+
+                var content = await response.Content.ReadFromJsonAsync<FileExplorerResponse>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    Converters = { new LocalDateTimeOffsetJsonConverter() }
+                });
+
+                if (content?.Error != null)
+                {
+                    throw new Exception(content.Error.Message);
+                }
+
+                await Refresh();
+            }
+        }
+        catch (Exception e)
+        {
+            await DisplayError(e.Message);
+        }
+    }
+
+    private async Task Upload()
     {
         if (_FileUploader != null)
         {
@@ -175,92 +426,306 @@ public partial class FileExplorer
         }
     }
 
-    private async Task ViewDeleted()
+    private void Sort()
     {
-        ShowDeleted = !ShowDeleted;
-        SfFileManager.ShowHiddenItems = ShowDeleted;
+        // Logic to sort files
+    }
+
+    public async Task Refresh(bool force = false)
+    {
+        if (force)
+        {
+            Files = [];
+        }
+        DisplayContextMenu = false;
+        //await _FileUploader.ClearAll();
+        await FetchData(CWD);
+    }
+
+    private async Task Delete()
+    {
+        if (SelectedFiles.Count == 0)
+        {
+            return;
+        }
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+        };
+
+        bool? result = await DialogService.ShowMessageBox(
+            "Delete File",
+            "Are you sure you want to delete this file?",
+            yesText: "Delete", cancelText: "Cancel", options: options);
+        
+        if (result == true)
+        {
+            DisplayContextMenu = false;
+            var files = SelectedFiles.Where(x => !x.IsDeleted).ToArray();
+            var deleteData = DefaultDirectoryContentObject();
+            deleteData.Action = "delete";
+            deleteData.Path = SelectedFiles.First().FilterPath;
+            deleteData.Data = files;
+
+            var response = await HttpClient.PostAsJsonAsync(Url, deleteData);
+            await Refresh();
+        }
+    }
+
+    private async Task Download(FileExplorerDirectoryContent? file = null)
+    {
+        IEnumerable<FileExplorerDirectoryContent> files = [];
+        DisplayContextMenu = false;
+
+        if (file != null)
+        {
+            files = [file];
+        }
+        else if (SelectedFiles.Count > 0)
+        {
+            files = SelectedFiles.Where(x => x.IsFile);
+        }
+
+        foreach (var f in files)
+        {
+            await JsRuntime.InvokeVoidAsync("downloadFileFromUrl", f.Name, f.TargetPath);
+        }
+    }
+
+    private void ContextMenu(MouseEventArgs args)
+    {
+        DisplayContextMenu = true;
+        ContextLeft = args.ClientX;
+        ContextTop = args.ClientY;
+    }
+
+    public void CloseContextMenu()
+    {
+        DisplayContextMenu = false;
+    }
+
+    public void GetQuickAccessItems()
+    {
+        var items = SyncLocalStorage.GetItem<List<string>>("QuickAccess");
+
+        QuickAccessFiles = items ?? [];
+    }
+
+    private void AddToQuickAccess()
+    {
+        DisplayContextMenu = false;
+        var file = SelectedFiles.LastOrDefault() ?? CWD;
+
+        if (file == null || file.Path == null || file.IsFile) return;
+
+        var items = SyncLocalStorage.GetItem<List<string>>("QuickAccess");
+
+        items ??= [];
+
+        items.Add(file.Path);
+
+        SyncLocalStorage.SetItem("QuickAccess", items);
+
+        GetQuickAccessItems();
+    }
+
+    private void RemoveQuickAccessItem(string item)
+    {
+        var items = SyncLocalStorage.GetItem<List<string>>("QuickAccess");
+
+        if (items?.Contains(item) == true)
+        {
+            items.Remove(item);
+            SyncLocalStorage.SetItem("QuickAccess", items);
+            QuickAccessFiles = items;
+        }
+    }
+
+    private async Task GoToPath(string path)
+    {
+        var i = path.LastIndexOf('/');
+        var filterPath = path.Substring(0, i + 1);
+        var name = path.Substring(i + 1);
+
+        var data = new FileExplorerDirectoryContent
+        {
+            FilterPath = filterPath,
+            Name = name,
+            Path = path,
+        };
+
+        await FetchData(data);
+    }
+
+    private KeyValuePair<string, string> GetFileIcon(FileExplorerDirectoryContent file)
+    {
+        if (file.IsFile)
+        {
+            var extension = Path.GetExtension(file.Name)?.ToLower();
+            
+            if (ImageExtensions.Contains(extension))
+                return new(@Icons.Material.Filled.Image, "#dddddd");
+
+            switch (extension)
+            {
+                case ".pdf":
+                case ".doc":
+                case ".docx":
+                case ".txt":
+                    return new(@Icons.Material.Filled.TextSnippet, "#dddddd");
+                case ".xls":
+                case ".xlsx":
+                case ".csv":
+                    return new(@Icons.Material.Filled.ListAlt, "#dddddd");
+                case ".zip":
+                case ".rar":
+                case ".7z":
+                    return new(@Icons.Material.Filled.Archive, "#dddddd");
+                default:
+                    return new(Icons.Material.Filled.InsertDriveFile, "#dddddd");
+            }
+        }
+        else
+        {
+            return new (Icons.Material.Filled.Folder, "#f1ce69");
+        }
+
+    }
+
+    private async Task ViewDeletedFiles()
+    {
+        ShowDeletedFiles = !ShowDeletedFiles;
         await Refresh();
     }
 
-    //private async Task UploadDir()
-    //{
-    //    if (_FileUploader != null)
-    //    {
-    //        await _FileUploader.OpenInput(directoryUpload: true);
-    //    }
-    //}
-
-    private async Task Refresh()
+    private async Task RestoreFile()
     {
-        await JsRuntime.InvokeVoidAsync("CloseFileExplorerDialogs", FileManagerId);
-        if (SfFileManager != null)
-            await SfFileManager.RefreshFilesAsync();
-    }
-
-    private void OnItemsUploading(ItemsUploadEventArgs<FileExplorerDirectoryContent> args)
-    {
-        args.Cancel = true;
-    }
-    private void OnBeforePopupOpen(BeforePopupOpenCloseEventArgs args)
-    {
-        if (args.PopupName == "Upload")
+        if (SelectedFiles.Count == 0)
         {
-            args.Cancel = true;
+            return;
+        }
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+        };
+
+        bool? result = await DialogService.ShowMessageBox(
+            "Restore File",
+            "Are you sure you want to undelete this file?",
+            yesText: "Restore", cancelText: "Cancel", options: options);
+
+        if (result == true)
+        {
+            DisplayContextMenu = false;
+            var files = SelectedFiles.Where(x => x.IsDeleted).ToArray();
+            var restoreData = DefaultDirectoryContentObject();
+            restoreData.Action = "restore";
+            restoreData.Path = SelectedFiles.First().FilterPath;
+            restoreData.Data = files;
+
+            var response = await HttpClient.PostAsJsonAsync(Url, restoreData);
+            await Refresh();
         }
     }
 
-    private void OnSearching(SearchEventArgs<FileExplorerDirectoryContent> args)
+    private string GetPath(FileExplorerDirectoryContent? data)
     {
-        args.Cancel = true;
+        return data == null || string.IsNullOrWhiteSpace(data.FilterPath) ? "/" : data.FilterPath + data.Name;
     }
 
-    private void OnRead(ReadEventArgs<FileExplorerDirectoryContent> args)
+    private string GetViewClass(FileView? view = null)
     {
-        if (SfFileManager == null) return;
-        SyncLocalStorage.RemoveItem(SfFileManager.ID);
-    }
-
-    private async Task OnCreated()
-    {
-        if (!string.IsNullOrWhiteSpace(CurrentPath) && SfFileManager != null)
+        switch (view ?? Settings.View)
         {
-            var paths = CurrentPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-            foreach (var path in paths)
-            {
-                await SfFileManager.OpenFileAsync(path);
-            }
+            case FileView.LargeIcons:
+                return "large-icons";
+            case FileView.Information:
+                return "information";
+            default:
+                return "large-icons";
         }
     }
 
-    private void OnSuccess(SuccessEventArgs<FileExplorerDirectoryContent> args)
+    public void SetView(FileView? view = null)
     {
-        if (args.Result.Files?.Count > 0)
+        if (view == null)
         {
-            DeletedItemsCss = string.Join('\n', args.Result.Files
-                .Where(x => x.IsDeleted)
-                .Select(x => $".e-filemanager .e-list-parent [title='{x.Name}'] {{background-color: #ffc7c7;}}"));
+            // cycle through views enum
+            var values = Enum.GetValues(typeof(FileView));
+            var index = Array.IndexOf(values, Settings.View);
+            Settings.View = (FileView)values.GetValue((index + 1) % values.Length)!;
+        }
+        else
+        {
+            Settings.View = view.Value;
         }
 
+        SettingManager.SetFileExplorerSetting(SettingKey, Settings);
     }
 
-    public void OnSend(BeforeSendEventArgs args)
+    private void HandleUploading(UploadEventArgs args)
     {
-        args.CustomData = [];
+        UploadingFiles = args;
+    }
 
-        if (!string.IsNullOrWhiteSpace(ContainerName))
-        {
-            args.CustomData.Add("ContainerName", ContainerName);
-        }
+    public enum FileView
+    {
+        LargeIcons,
+        Information,
+    }
 
-        if (!string.IsNullOrWhiteSpace(AccountName))
-        {
-            args.CustomData.Add("AccountName", AccountName);
-        }
+    public enum FileSort
+    {
+        Name,
+        Date,
+        Size,
+    }
 
-        if (Root != null)
+    public void SortBy(FileSort sort, bool? isDescending = null)
+    {
+        Settings.SortDescending = isDescending != null
+            ? isDescending.Value
+            : Settings.Sort == sort && !Settings.SortDescending;
+
+        Settings.Sort = sort;
+        SettingManager.SetFileExplorerSetting(SettingKey, Settings);
+        SetSort();
+    }
+
+    private void SetSort()
+    {
+        var direction = Settings.SortDescending ? SortDirection.Descending : SortDirection.Ascending;
+
+        switch (Settings.Sort)
         {
-            args.CustomData.Add("RootDir", Root);
+            case FileSort.Name:
+                Files = Files.OrderByDirection(direction, x => x.Name).ToList();
+                break;
+            case FileSort.Date:
+                Files = Files.OrderByDirection(direction, x => x.DateModified).ToList();
+                break;
+            case FileSort.Size:
+                Files = Files.OrderByDirection(direction, x => x.Size).ToList();
+                break;
         }
+    }
+
+    private async Task DisplayError(string message)
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            BackdropClick = true,
+            CloseOnEscapeKey = true,
+        };
+
+        await DialogService.ShowMessageBox("Error", message ?? "Could not parse server data", yesText: "Ok", options: options);
+    }
+
+    void IDisposable.Dispose()
+    {
+        IShortcutComponent.Remove(Id);
     }
 }
