@@ -46,7 +46,7 @@
         <MudTooltip Text="@Loc["Sort"]">
             <MudMenu ActivationEvent="MouseEvent.MouseOver" AnchorOrigin="Origin.BottomLeft">
                 <ActivatorContent>
-                    <MudButtonExtended StartIcon="@Icons.Material.Filled.Sort"
+                    <MudButtonExtended StartIcon="@(Settings.SortDescending ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward)"
                                        KeyboardKey="KeyboardKeys.KeyS"
                                        style="text-transform: capitalize;"
                                        Size="@IconSize"
@@ -58,9 +58,9 @@
                 </ActivatorContent>
 
                 <ChildContent>
-					<MudMenuItem @onclick="() => SortBy(FileSort.Name)">@Loc["Name"]</MudMenuItem>
-					<MudMenuItem @onclick="() => SortBy(FileSort.Date)">@Loc["Date"]</MudMenuItem>
-					<MudMenuItem @onclick="() => SortBy(FileSort.Size)">@Loc["Size"]</MudMenuItem>
+                    <MudMenuItem class="@(Settings.Sort == FileSort.Name ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Name)">@Loc["Name"]</MudMenuItem>
+                    <MudMenuItem class="@(Settings.Sort == FileSort.Date ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Date)">@Loc["Date"]</MudMenuItem>
+                    <MudMenuItem class="@(Settings.Sort == FileSort.Size ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Size)">@Loc["Size"]</MudMenuItem>
                 </ChildContent>
             </MudMenu>
             
