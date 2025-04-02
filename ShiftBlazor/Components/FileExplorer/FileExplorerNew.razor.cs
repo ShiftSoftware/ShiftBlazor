@@ -596,9 +596,35 @@ public partial class FileExplorerNew : IShortcutComponent
         await Refresh();
     }
 
-    private void RestoreFile()
+    private async Task RestoreFile()
     {
-        // restore file
+        if (SelectedFiles.Count == 0)
+        {
+            return;
+        }
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+        };
+
+        bool? result = await DialogService.ShowMessageBox(
+            "Restore File",
+            "Are you sure you want to undelete this file?",
+            yesText: "Restore", cancelText: "Cancel", options: options);
+
+        if (result == true)
+        {
+            DisplayContextMenu = false;
+            var files = SelectedFiles.Where(x => x.IsDeleted).ToArray();
+            var restoreData = DefaultDirectoryContentObject();
+            restoreData.Action = "restore";
+            restoreData.Path = SelectedFiles.First().FilterPath;
+            restoreData.Data = files;
+
+            var response = await HttpClient.PostAsJsonAsync(Url, restoreData);
+            await Refresh();
+        }
     }
 
     private string GetPath(FileExplorerDirectoryContent? data)
