@@ -160,6 +160,10 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 
 /* ============== File Explorer ============== */
 
+.file-explorer .selected-sort-item * {
+    font-weight: 500 !important;
+}
+
 .file-explorer .main-window {
     position: relative;
     flex-grow: 1;
