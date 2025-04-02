@@ -304,36 +304,36 @@
             </MudMenu>
         </MudButtonGroup>
     </MudToolBar>
+
+    <MudOverlay @bind-Visible="DisplayContextMenu" ZIndex="10000" AutoClose LockScroll="false" OnClosed="CloseContextMenu" @oncontextmenu="CloseContextMenu">
+        <MudPaper Class="context-menu" Elevation="25" Width="300px" Style="@($"left: {ContextLeft}px; top: {ContextTop}px;")">
+            <MudList T="string">
+                @if (DisplayNewFolderButton)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.CreateNewFolder" OnClick="CreateNewFolder">@Loc["New Folder"]</MudListItem>
+                }
+                @if (DisplayDownloadButton)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.Download" OnClick="() => Download()">@Loc["Download"]</MudListItem>
+                }
+                @if (DisplayDeleteButton)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.Delete" OnClick="Delete">@Loc["Delete"]</MudListItem>
+                }
+                @if (DisplayQuickAccessButton)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.AddToDrive" OnClick="AddToQuickAccess">@Loc["Add to Quick Access"]</MudListItem>
+                }
+
+                @if (MenuItemsTemplate != null)
+                {
+                    <MudDivider />
+                    @MenuItemsTemplate
+                }
+            </MudList>
+        </MudPaper>
+    </MudOverlay>
 </MudPaper>
-
-<MudOverlay @bind-Visible="DisplayContextMenu" ZIndex="10000" AutoClose LockScroll="false" OnClosed="CloseContextMenu" @oncontextmenu="CloseContextMenu" >
-    <MudPaper Class="context-menu" Elevation="25" Width="300px" Style="@($"left: {ContextLeft}px; top: {ContextTop}px;")">
-        <MudList T="string" >
-            @if (DisplayNewFolderButton)
-            {
-                <MudListItem Icon="@Icons.Material.Filled.CreateNewFolder" OnClick="CreateNewFolder">@Loc["New Folder"]</MudListItem>
-            }
-            @if (DisplayDownloadButton)
-            {
-                <MudListItem Icon="@Icons.Material.Filled.Download" OnClick="() => Download()">@Loc["Download"]</MudListItem>
-            }
-            @if (DisplayDeleteButton)
-            {
-                <MudListItem Icon="@Icons.Material.Filled.Delete" OnClick="Delete">@Loc["Delete"]</MudListItem>
-            }
-            @if (DisplayQuickAccessButton)
-            {
-                <MudListItem Icon="@Icons.Material.Filled.AddToDrive" OnClick="AddToQuickAccess">@Loc["Add to Quick Access"]</MudListItem>
-            }
-
-            @if (MenuItemsTemplate != null)
-            {
-                <MudDivider />
-                @MenuItemsTemplate
-            }
-        </MudList>
-    </MudPaper>
-</MudOverlay>
 
 <FileUploader @ref="_FileUploader"
               ContainerName="@ContainerName"
