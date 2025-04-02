@@ -1,6 +1,5 @@
 ﻿using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -11,10 +10,8 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using ShiftSoftware.ShiftEntity.Model.Enums;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Web;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -27,7 +24,7 @@ public partial class FileExplorerNew : IShortcutComponent
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] ISyncLocalStorageService SyncLocalStorage { get;set; } = default!;
-    [Inject] NavigationManager NavManager { get; set; } = default!;
+
 
     [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
     public bool? ParentReadOnly { get; set; }
@@ -95,15 +92,6 @@ public partial class FileExplorerNew : IShortcutComponent
     [Parameter]
     public bool OpenDialogOnUpload { get; set; }
 
-    [Parameter]
-    public bool DisableUrlSync { get; set; }
-    [Parameter]
-    public bool DisableSortUrlSync { get; set; }
-    [Parameter]
-    public bool DisablePathUrlSync { get; set; }
-    [Parameter]
-    public bool DisableViewUrlSync { get; set; }
-
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -124,7 +112,7 @@ public partial class FileExplorerNew : IShortcutComponent
     private FileExplorerDirectoryContent? LastSelectedFile { get; set; }
     private bool RenderQuickAccess => !DisableQuickAccess && QuickAccessFiles.Count > 0;
     private bool ShowDeletedFiles { get; set; }
-    private ShiftSortDirection SortType;
+
     private bool DisplayDeleteButton { get; set; }
     private bool DisplayDownloadButton { get; set; }
     private bool DisplayQuickAccessButton { get; set; }
@@ -135,7 +123,6 @@ public partial class FileExplorerNew : IShortcutComponent
     private bool DisplayContextMenu { get; set; }
     private double ContextLeft { get; set; }
     private double ContextTop { get; set; }
-    private bool SuppressLocationChange = false;
 
     private IEnumerable<string> ImageExtensions = new List<string>
     {
@@ -146,18 +133,8 @@ public partial class FileExplorerNew : IShortcutComponent
         ".webp",
     };
 
-    public void Dispose()
-    {
-        NavManager.LocationChanged -= OnLocationChanged;
-    }
     protected override void OnInitialized()
     {
-        if (!DisableUrlSync)
-        {
-            NavManager.LocationChanged += OnLocationChanged;
-            SyncFromUrl(null, null);
-        }
-
         IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
         if (!IsEmbed)
@@ -173,27 +150,14 @@ public partial class FileExplorerNew : IShortcutComponent
         FileExplorerId = "FileExplorer" + Id.ToString().Replace("-", string.Empty);
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
         IconSize = Dense ? Size.Medium : Size.Large;
-        SetView(View ?? CurrentView, false);
+        SetView(View ?? CurrentView);
         SetBreadcrumb();
         GetQuickAccessItems();
-    }
-    private async void OnLocationChanged(object? sender, LocationChangedEventArgs? args)
-    {
-        if (SuppressLocationChange)
-        {
-            SuppressLocationChange = false;
-            return;
-        }
-
-        SyncFromUrl(sender, args); 
-        await Refresh();    
-        StateHasChanged();    
     }
 
     protected override async Task OnInitializedAsync()
     {
-        if (!string.IsNullOrWhiteSpace(CurrentPath)) await GoToPath(CurrentPath);
-        else await FetchData();
+        await FetchData();
     }
 
     public async ValueTask HandleShortcut(KeyboardKeys key)
@@ -232,18 +196,17 @@ public partial class FileExplorerNew : IShortcutComponent
     public async Task FetchData(FileExplorerDirectoryContent? data = null)
     {
         IsLoading = true;
+
         LastSelectedFile = null;
         DeselectAllFiles();
 
         try
         {
             var obj = DefaultDirectoryContentObject();
-            if (data != null) data.SortType = SortType.ToString().ToLower();
             obj.Action = "read";
             obj.Path = GetPath(data);
             obj.Data = data == null ? [] : [data];
             obj.ShowHiddenItems = ShowDeletedFiles;
-            obj.SortType = SortType.ToString().ToLower();
 
             var response = await HttpClient.PostAsJsonAsync(Url, obj);
 
@@ -273,8 +236,6 @@ public partial class FileExplorerNew : IShortcutComponent
             CWD = content?.CWD;
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
-            SuppressLocationChange = true;
-            UpdateURL();
         }
         catch (Exception e)
         {
@@ -377,9 +338,23 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private async Task OnBreadCrumbClick(int index)
     {
-        var path = string.Join("/", PathParts.GetRange(1, index));
+        FileExplorerDirectoryContent? data = null;
 
-        await GoToPath("/" + path);
+        if (index > 0)
+        {
+            var path = string.Join("/", PathParts.GetRange(1, index));
+            var filterPath = string.Join("/", PathParts.GetRange(1, index - 1));
+            var name = PathParts[index];
+            data = new FileExplorerDirectoryContent()
+            {
+                Path = path,
+                Name = name,
+                FilterPath = filterPath + "/",
+                Type = "Directory",
+            };
+
+        }
+        await FetchData(data);
     }
 
     private async Task CreateNewFolder()
@@ -416,70 +391,7 @@ public partial class FileExplorerNew : IShortcutComponent
 
     private void Sort()
     {
-        SortType = SortType switch
-        {
-            ShiftSortDirection.None => ShiftSortDirection.Asc,
-            ShiftSortDirection.Asc => ShiftSortDirection.Desc,
-            ShiftSortDirection.Desc => ShiftSortDirection.None,
-            _ => ShiftSortDirection.None
-        };
-
-        UpdateURL();
-    }
-
-    private void UpdateURL()
-    {
-        if (DisableUrlSync) return;
-             
-        var uri = new Uri(NavManager.Uri);
-        var baseUri = uri.GetLeftPart(UriPartial.Path);
-        var query = HttpUtility.ParseQueryString(uri.Query);
-
-        if(!DisableSortUrlSync) query.Set("sort", SortType.ToString().ToLower());
-
-        if(!DisableViewUrlSync) query.Set("view", CurrentView.ToString().ToLower());
-
-        if (!DisablePathUrlSync)  query.Set("path", CWD != null && CWD.FilterPath == "" ? "" : CWD.FilterPath + CWD.Name);
-
-        var updatedUri = $"{baseUri}?{query}";
-        NavManager.NavigateTo(updatedUri, forceLoad: false);
-    }
-
-    private string GetSortIcon()
-    {
-        return SortType switch
-        {
-            ShiftSortDirection.None => Icons.Material.Filled.UnfoldMore,
-            ShiftSortDirection.Asc => Icons.Material.Filled.ArrowUpward,
-            ShiftSortDirection.Desc => Icons.Material.Filled.ArrowDownward,
-            _ => Icons.Material.Filled.UnfoldMore
-        };
-    }
-
-    private void SyncFromUrl(object? sender, LocationChangedEventArgs? args)
-    {
-        var uri = new Uri(NavManager.Uri);
-        var query = HttpUtility.ParseQueryString(uri.Query);
-
-
-        if (!DisableSortUrlSync)
-        {
-            var sortParam = query.Get("sort");
-            if (Enum.TryParse<ShiftSortDirection>(sortParam, true, out var parsedSort))  SortType = parsedSort;
-        }
-
-        if (!DisablePathUrlSync)
-        {
-            var pathParam = query.Get("path");
-            if(!string.IsNullOrWhiteSpace(pathParam))  CurrentPath = pathParam.Trim();
-        }
-
-        if (!DisableViewUrlSync)
-        {
-            var viewParam = query.Get("view");
-            if (Enum.TryParse<FileExplorerView>(viewParam, true, out var parsedView)) CurrentView = parsedView;
-        }
-
+        // Logic to sort files
     }
 
     public async Task Refresh(bool force = false)
@@ -661,7 +573,7 @@ public partial class FileExplorerNew : IShortcutComponent
         }
     }
 
-    private void SetView(FileExplorerView? view = null,bool? triggerUrlUpdate = true)
+    public void SetView(FileExplorerView? view = null)
     {
         if (view == null)
         {
@@ -674,13 +586,6 @@ public partial class FileExplorerNew : IShortcutComponent
         {
             CurrentView = view.Value;
         }
-
-        if (triggerUrlUpdate == true)
-        {
-            SuppressLocationChange = true;
-            UpdateURL();
-        }
-
     }
 
     private void HandleUploading(UploadEventArgs args)
