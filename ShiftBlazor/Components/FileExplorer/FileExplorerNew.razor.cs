@@ -93,6 +93,9 @@ public partial class FileExplorerNew : IShortcutComponent
     [Parameter]
     public bool OpenDialogOnUpload { get; set; }
 
+    [Parameter]
+    public int MaxFileSizeInMegaBytes { get; set; } = 128;
+
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
