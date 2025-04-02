@@ -205,14 +205,46 @@
                                      ShowColumnOptions="false">
                             <Columns>
 
-                                <PropertyColumn Property="x => x.Name" Title="Name">
+                                @* On small screens, MudDataGrid will display Title instead of HeaderTemplate *@
+                                <TemplateColumn Title="Name">
+                                    <HeaderTemplate>
+                                        <div class="header-text" @onclick="() => SortBy(FileSort.Name)">
+										    @Loc["Name"]
+                                        </div>
+                                    </HeaderTemplate>
                                     <CellTemplate>
                                         <MudIcon Icon="@GetFileIcon(context.Item).Key" Style=@($"color: {@GetFileIcon(context.Item).Value};") />
                                         <span>@context.Item.Name</span>
                                     </CellTemplate>
-                                </PropertyColumn>
-                                <PropertyColumn HideSmall Property="x => x.DateModified" Title="Date modified" />
-                                <PropertyColumn HideSmall Property="x => x.Size" Title="Size" />
+                                </TemplateColumn>
+
+                                <TemplateColumn HideSmall>
+                                    <HeaderTemplate>
+                                        <div class="header-text" @onclick="() => SortBy(FileSort.Date)">
+                                            @Loc["Date modified"]
+                                        </div>
+                                    </HeaderTemplate>
+                                    <CellTemplate>
+                                        @if (context.Item.IsFile)
+                                        {
+                                            <span>@context.Item.DateModified</span>
+                                        }
+                                    </CellTemplate>
+                                </TemplateColumn>
+
+                                <TemplateColumn HideSmall>
+                                    <HeaderTemplate>
+                                        <div class="header-text" @onclick="() => SortBy(FileSort.Size)">
+                                            @Loc["Size"]
+                                        </div>
+                                    </HeaderTemplate>
+                                    <CellTemplate>
+                                        @if (context.Item.IsFile)
+                                        {
+                                            <span>@context.Item.Size</span>
+                                        }
+                                    </CellTemplate>
+                                </TemplateColumn>
                             </Columns>
                         </MudDataGrid>
                     }
@@ -227,6 +259,7 @@
                                  @onclick="(e) => OnFileClick(e, file)"
                                  @onclick:stopPropagation="true"
                                  @oncontextmenu="(e) => OnFileClick(e, file)">
+
                                 @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
                                 {
                                     <MudImage Height="100"

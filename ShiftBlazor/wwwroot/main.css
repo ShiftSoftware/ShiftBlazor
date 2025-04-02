@@ -158,7 +158,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     padding: 20px;
 }
 
-/* File Explorer */
+/* ============== File Explorer ============== */
 
 .file-explorer .main-window {
     position: relative;
@@ -300,4 +300,9 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     padding: 0 !important;
 }
 
-/* File Explorer end */
+.file-explorer .column-header .header-text {
+    cursor: pointer;
+    flex-grow: 1;
+}
+
+/* ============== File Explorer end ============== */
