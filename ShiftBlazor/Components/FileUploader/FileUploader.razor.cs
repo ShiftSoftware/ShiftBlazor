@@ -15,6 +15,7 @@ using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Linq.Expressions;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Web;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -379,7 +380,14 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
             item.File.Size = item.LocalFile.Size;
 
-            await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = item.LocalFile.ContentType });
+            await blobClient.UploadAsync(
+                stream,
+                new BlobHttpHeaders { ContentType = item.LocalFile.ContentType },
+                metadata: new Dictionary<string, string>
+                {
+                    ["name"] = HttpUtility.UrlEncode(item.LocalFile.Name) //Metadata name/value pairs are valid HTTP headers and should adhere to all restrictions governing HTTP headers
+                }
+            );
 
             item.LocalFile = null;
         }
