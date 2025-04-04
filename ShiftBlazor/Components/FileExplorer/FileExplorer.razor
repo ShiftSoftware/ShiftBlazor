@@ -153,7 +153,7 @@
         @if (RenderQuickAccess)
         {
             <div class="quick-access-items">
-                @foreach (var item in QuickAccessFiles)
+                @foreach (var item in Settings.QuickAccessItems)
                 {
                     <MudChip T="string" Size="Size.Small" OnClick="() => GoToPath(item)" OnClose="() => RemoveQuickAccessItem(item)">
                         @item.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()

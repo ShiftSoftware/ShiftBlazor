@@ -113,10 +113,9 @@ public partial class FileExplorer : IShortcutComponent
     private bool IsLoading { get; set; } = true;
     private string Url = "";
     private FileUploader? _FileUploader { get; set; }
-    private List<string> QuickAccessFiles { get; set; } = [];
     private List<string> PathParts = [];
     private FileExplorerDirectoryContent? LastSelectedFile { get; set; }
-    private bool RenderQuickAccess => !DisableQuickAccess && QuickAccessFiles.Count > 0;
+    private bool RenderQuickAccess => !DisableQuickAccess && Settings.QuickAccessItems.Count > 0;
     private string SortIcon => Settings.SortDescending ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward;
     private bool ShowDeletedFiles { get; set; }
     private bool DisplayDeleteButton { get; set; }
@@ -177,7 +176,6 @@ public partial class FileExplorer : IShortcutComponent
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
         IconSize = Dense ? Size.Medium : Size.Large;
         SetBreadcrumb();
-        GetQuickAccessItems();
 
         var userSettings = SettingManager.GetFileExplorerSetting(SettingKey);
         SetView(userSettings?.View ?? View ?? DefaultSettings.View);
@@ -528,13 +526,6 @@ public partial class FileExplorer : IShortcutComponent
         DisplayContextMenu = false;
     }
 
-    public void GetQuickAccessItems()
-    {
-        var items = SyncLocalStorage.GetItem<List<string>>("QuickAccess");
-
-        QuickAccessFiles = items ?? [];
-    }
-
     private void AddToQuickAccess()
     {
         DisplayContextMenu = false;
@@ -542,26 +533,16 @@ public partial class FileExplorer : IShortcutComponent
 
         if (file == null || file.Path == null || file.IsFile) return;
 
-        var items = SyncLocalStorage.GetItem<List<string>>("QuickAccess");
+        Settings.QuickAccessItems.Add(file.Path);
 
-        items ??= [];
-
-        items.Add(file.Path);
-
-        SyncLocalStorage.SetItem("QuickAccess", items);
-
-        GetQuickAccessItems();
+        SettingManager.SetFileExplorerSetting(SettingKey, Settings);
     }
 
     private void RemoveQuickAccessItem(string item)
     {
-        var items = SyncLocalStorage.GetItem<List<string>>("QuickAccess");
-
-        if (items?.Contains(item) == true)
+        if (Settings.QuickAccessItems.Remove(item))
         {
-            items.Remove(item);
-            SyncLocalStorage.SetItem("QuickAccess", items);
-            QuickAccessFiles = items;
+            SettingManager.SetFileExplorerSetting(SettingKey, Settings);
         }
     }
 
