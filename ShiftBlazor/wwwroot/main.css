@@ -307,6 +307,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .file-explorer .column-header .header-text {
     cursor: pointer;
     flex-grow: 1;
+    display: flex;
 }
 
 /* ============== File Explorer end ============== */

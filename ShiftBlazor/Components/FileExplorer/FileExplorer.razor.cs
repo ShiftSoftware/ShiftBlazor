@@ -114,8 +114,8 @@ public partial class FileExplorer : IShortcutComponent
     private List<string> PathParts = [];
     private FileExplorerDirectoryContent? LastSelectedFile { get; set; }
     private bool RenderQuickAccess => !DisableQuickAccess && QuickAccessFiles.Count > 0;
+    private string SortIcon => Settings.SortDescending ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward;
     private bool ShowDeletedFiles { get; set; }
-
     private bool DisplayDeleteButton { get; set; }
     private bool DisplayDownloadButton { get; set; }
     private bool DisplayQuickAccessButton { get; set; }

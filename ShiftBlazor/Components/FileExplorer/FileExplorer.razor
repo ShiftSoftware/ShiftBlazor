@@ -46,7 +46,7 @@
         <MudTooltip Text="@Loc["Sort"]">
             <MudMenu ActivationEvent="MouseEvent.MouseOver" AnchorOrigin="Origin.BottomLeft">
                 <ActivatorContent>
-                    <MudButtonExtended StartIcon="@(Settings.SortDescending ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward)"
+                    <MudButtonExtended StartIcon="@SortIcon"
                                        KeyboardKey="KeyboardKeys.KeyS"
                                        style="text-transform: capitalize;"
                                        Size="@IconSize"
@@ -210,6 +210,11 @@
                                     <HeaderTemplate>
                                         <div class="header-text" @onclick="() => SortBy(FileSort.Name)">
 										    @Loc["Name"]
+                                            <MudSpacer/>
+                                            @if (Settings.Sort == FileSort.Name)
+                                            {
+                                                <MudIcon Size="Size.Small" Icon="@SortIcon" />
+                                            }
                                         </div>
                                     </HeaderTemplate>
                                     <CellTemplate>
@@ -222,6 +227,11 @@
                                     <HeaderTemplate>
                                         <div class="header-text" @onclick="() => SortBy(FileSort.Date)">
                                             @Loc["Date modified"]
+                                            <MudSpacer />
+                                            @if (Settings.Sort == FileSort.Date)
+                                            {
+                                                <MudIcon Size="Size.Small" Icon="@SortIcon" />
+                                            }
                                         </div>
                                     </HeaderTemplate>
                                     <CellTemplate>
@@ -236,6 +246,11 @@
                                     <HeaderTemplate>
                                         <div class="header-text" @onclick="() => SortBy(FileSort.Size)">
                                             @Loc["Size"]
+                                            <MudSpacer />
+                                            @if (Settings.Sort == FileSort.Size)
+                                            {
+                                                <MudIcon Size="Size.Small" Icon="@SortIcon" />
+                                            }
                                         </div>
                                     </HeaderTemplate>
                                     <CellTemplate>
