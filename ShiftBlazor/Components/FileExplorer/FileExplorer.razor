@@ -126,7 +126,7 @@
             KeyboardKey="KeyboardKeys.KeyT"
             style="text-transform: capitalize;"
             Size="@IconSize"
-            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+            Color="ShowDeletedFiles? Color.Error : (NavIconFlatColor ? Color.Inherit : Color.Default)"
             aria-label="@Loc["ToggleDelete"]"
             OnClick="ViewDeletedFiles">
                 @Loc["Toggle Delete"]

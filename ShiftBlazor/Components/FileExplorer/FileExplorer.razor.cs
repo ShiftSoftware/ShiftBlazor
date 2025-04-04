@@ -189,8 +189,27 @@ public partial class FileExplorer : IShortcutComponent
     {
         switch (key)
         {
-
+            case KeyboardKeys.KeyN:
+                await CreateNewFolder();
+                break;
+            case KeyboardKeys.KeyU:
+                await Upload();
+                break;
+            case KeyboardKeys.KeyS:
+                Sort();
+                break;
+            case KeyboardKeys.KeyR:
+                await Refresh(true);
+                break;
+            case KeyboardKeys.KeyD:
+                await Delete();
+                break;
+            case KeyboardKeys.KeyT:
+                await ViewDeletedFiles();
+                break;
         }
+
+        StateHasChanged();
     }
 
     private FileExplorerDirectoryContent DefaultDirectoryContentObject()
@@ -424,11 +443,6 @@ public partial class FileExplorer : IShortcutComponent
         {
             await _FileUploader.OpenInput(directoryUpload: false);
         }
-    }
-
-    private void Sort()
-    {
-        // Logic to sort files
     }
 
     public async Task Refresh(bool force = false)
@@ -668,6 +682,12 @@ public partial class FileExplorer : IShortcutComponent
     private void HandleUploading(UploadEventArgs args)
     {
         UploadingFiles = args;
+    }
+
+    private void Sort()
+    {
+        SortBy(Settings.Sort);
+        StateHasChanged();
     }
 
     public void SortBy(FileSort sort, bool? isDescending = null)
