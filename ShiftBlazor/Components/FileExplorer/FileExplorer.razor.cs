@@ -25,9 +25,8 @@ public partial class FileExplorer : IShortcutComponent
     [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
-    [Inject] ISyncLocalStorageService SyncLocalStorage { get;set; } = default!;
+    [Inject] ISyncLocalStorageService SyncLocalStorage { get; set; } = default!;
     [Inject] IIdentityStore? TokenStore { get; set; }
-
 
     [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
     public bool? ParentReadOnly { get; set; }
@@ -36,7 +35,7 @@ public partial class FileExplorer : IShortcutComponent
     public bool? ParentDisabled { get; set; }
 
     [Parameter]
-    public string? Root {  get; set; }
+    public string? Root { get; set; }
 
     [Parameter]
     public string? CurrentPath { get; set; }
@@ -78,7 +77,7 @@ public partial class FileExplorer : IShortcutComponent
     public bool DisableQuickAccess { get; set; }
 
     [Parameter]
-    public bool DisableRecents{ get; set; }
+    public bool DisableRecents { get; set; }
 
     [Parameter]
     public string? Height { get; set; }
@@ -87,11 +86,11 @@ public partial class FileExplorer : IShortcutComponent
     public bool ShowThumbnails { get; set; }
 
     [Parameter]
-    public FileView? View { get;set; }
+    public FileView? View { get; set; }
 
     [Parameter]
     public RenderFragment? MenuItemsTemplate { get; set; }
-    
+
     [Parameter]
     public bool OpenDialogOnUpload { get; set; }
 
@@ -127,7 +126,8 @@ public partial class FileExplorer : IShortcutComponent
     private bool DisplayContextMenu { get; set; }
     private double ContextLeft { get; set; }
     private double ContextTop { get; set; }
-
+    private DotNetObjectReference<FileExplorer>? objRef;
+    private readonly string URLPathKey = "path";
     private IEnumerable<string> ImageExtensions = new List<string>
     {
         ".jpg",
@@ -141,9 +141,9 @@ public partial class FileExplorer : IShortcutComponent
     public FileExplorerSettings Settings = DefaultAppSetting.FileExplorerSettings;
     private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
     TokenUserDataDTO? LoggedInUser;
-
+   
     protected override void OnInitialized()
-    {
+    {   
         IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
         if (!IsEmbed)
@@ -167,14 +167,52 @@ public partial class FileExplorer : IShortcutComponent
         Settings = userSettings ?? DefaultSettings;
     }
 
+    [JSInvokable]
+    public async Task OnUrlChanged(string newUrl)
+    {
+        string urlPath = await JsRuntime.InvokeAsync<string>("getQueryParam", URLPathKey);
+
+        if (CWD == null) return;
+
+        string currentPath = CWD == null ? "" : (CWD.FilterPath == "" ? "" : CWD.FilterPath + CWD.Name);
+
+        if (urlPath != currentPath) await GoToPath(urlPath);
+
+        StateHasChanged();
+
+    }
+
+    public async Task updateUrlAsync()
+    {
+        string urlPath = await JsRuntime.InvokeAsync<string>("getQueryParam", URLPathKey);
+
+        if (CWD == null) return;
+
+        string currentPath = CWD == null ? "" : (CWD.FilterPath == "" ? "" : CWD.FilterPath + CWD.Name);
+
+        if(currentPath != urlPath) 
+            await JsRuntime.InvokeVoidAsync("updateQueryParams",
+                new Dictionary<string, object>
+                {
+                    [URLPathKey] = currentPath
+                }
+            );
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        objRef = DotNetObjectReference.Create(this);
+        await JsRuntime.InvokeVoidAsync("addCustomUrlChangeListener", objRef, Id);
+
         if (TokenStore != null)
         {
             LoggedInUser = (await TokenStore.GetTokenAsync())?.UserData;
         }
 
-        await FetchData();
+        string urlPath = await JsRuntime.InvokeAsync<string>("getQueryParam", URLPathKey);
+
+        if (String.IsNullOrWhiteSpace(urlPath)) await FetchData();
+        else await GoToPath(urlPath);
     }
 
     public async ValueTask HandleShortcut(KeyboardKeys key)
@@ -248,6 +286,7 @@ public partial class FileExplorer : IShortcutComponent
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
             SetSort();
+            await updateUrlAsync();
         }
         catch (Exception e)
         {
@@ -717,5 +756,7 @@ public partial class FileExplorer : IShortcutComponent
     public void Dispose()
     {
         IShortcutComponent.Remove(Id);
+        JsRuntime.InvokeVoidAsync("removeCustomUrlChangeListener", Id);
+        if (objRef is not null) objRef.Dispose();   
     }
 }

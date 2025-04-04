@@ -2,6 +2,58 @@
     return window.location.href;
 };
 
+window.getQueryParam = function(key) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(key);
+}
+
+window.updateQueryParams= function (newParams) {
+    const url = new URL(window.location);
+    Object.entries(newParams).forEach(([key, value]) => {
+        url.searchParams.set(key, value);
+    });
+    history.pushState({}, '', url);
+}
+
+function dispatchUrlChange() {
+    window.dispatchEvent(new CustomEvent('urlchange', { detail: window.location }));
+}
+
+// Overwrite pushState and ReplaceState to be included in urlchange event
+const originalPushState = history.pushState;
+history.pushState = function (...args) {
+    originalPushState.apply(history, args);
+    dispatchUrlChange();
+};
+
+const originalReplaceState = history.replaceState;
+history.replaceState = function (...args) {
+    originalReplaceState.apply(history, args);
+    dispatchUrlChange();
+};
+
+window.addEventListener('popstate', dispatchUrlChange);
+
+const customListeners = {};
+
+window.addCustomUrlChangeListener = function (dotNetRef, listenerId) {
+    const listener = (e) => {
+        dotNetRef.invokeMethodAsync("OnUrlChanged", e.detail.href);
+    };
+
+    customListeners[listenerId] = listener;
+    window.addEventListener("urlchange", listener);
+};
+
+window.removeCustomUrlChangeListener = function (listenerId) {
+    const listener = customListeners[listenerId];
+    if (listener) {
+        window.removeEventListener("urlchange", listener);
+        delete customListeners[listenerId];
+    }
+};
+
+
 window.getWindowDimensions = function () {
     return {
         width: window.innerWidth,
