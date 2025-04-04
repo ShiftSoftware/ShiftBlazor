@@ -291,10 +291,6 @@
                                     <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};") />
                                 }
 
-                                @if (file.UploadProgress < 1)
-                                {
-                                    <MudProgressLinear Color="Color.Primary" Value="file.UploadProgress" Max="1" />
-                                }
                                 <MudText>@file.Name</MudText>
                             </div>
                         }

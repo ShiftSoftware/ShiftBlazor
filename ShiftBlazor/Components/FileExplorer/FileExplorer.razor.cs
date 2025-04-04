@@ -138,21 +138,6 @@ public partial class FileExplorer : IShortcutComponent
     };
 
     private string SettingKey => $"FileExplorer_{LoggedInUser?.ID}_{AccountName}_{ContainerName}_{Root}";
-    {
-        var classes = new List<string>();
-        if (SelectedFiles.Any(x => x.Path == file.Path))
-        {
-            classes.Add("selected");
-        }
-
-        if (file.IsDeleted)
-        {
-            classes.Add("deleted");
-        }
-        return string.Join(" ",classes);
-    }
-
-    private string SettingKey => $"FileExplorer_{AccountName}_{ContainerName}_{Root}";
     public FileExplorerSettings Settings = DefaultAppSetting.FileExplorerSettings;
     private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
     TokenUserDataDTO? LoggedInUser;
@@ -219,31 +204,6 @@ public partial class FileExplorer : IShortcutComponent
         StateHasChanged();
     }
 
-    private FileExplorerDirectoryContent DefaultDirectoryContentObject()
-    {
-        var CustomData = new Dictionary<string, object>();
-
-        if (!string.IsNullOrWhiteSpace(ContainerName))
-        {
-            CustomData.Add("ContainerName", ContainerName);
-        }
-
-        if (!string.IsNullOrWhiteSpace(AccountName))
-        {
-            CustomData.Add("AccountName", AccountName);
-        }
-
-        if (Root != null)
-        {
-            CustomData.Add("RootDir", Root);
-        }
-
-        return new FileExplorerDirectoryContent
-        {
-            CustomData = CustomData,
-        };
-    }
-
     public async Task FetchData(FileExplorerDirectoryContent? data = null)
     {
         IsLoading = true;
@@ -276,15 +236,15 @@ public partial class FileExplorer : IShortcutComponent
                 throw new Exception(content.Error.Message);
             }
 
-            var files = content?.Files?.ToList() ?? new List<FileExplorerDirectoryContent>();
-
-            foreach (var file in files)
+            if (content == null || content.CWD == null)
             {
-                file.UploadProgress = 1;
+                throw new Exception("Could not parse server data");
             }
 
+            var files = content.Files?.ToList() ?? [];
+
             Files = files;
-            CWD = content?.CWD;
+            CWD = content.CWD;
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
             SetSort();
@@ -313,7 +273,7 @@ public partial class FileExplorer : IShortcutComponent
     {
         if (file.IsFile)
         {
-            Download(file);
+            await Download(file);
         }
         else
         {
@@ -344,13 +304,9 @@ public partial class FileExplorer : IShortcutComponent
         }
         else if (args.CtrlKey)
         {
-            if (!SelectedFiles.Contains(file))
+            if (!SelectedFiles.Remove(file))
             {
                 SelectedFiles.Add(file);
-            }
-            else
-            {
-                SelectedFiles.Remove(file);
             }
 
             LastSelectedFile = file;
@@ -641,15 +597,12 @@ public partial class FileExplorer : IShortcutComponent
 
     private string GetViewClass(FileView? view = null)
     {
-        switch (view ?? Settings.View)
+        return (view ?? Settings.View) switch
         {
-            case FileView.LargeIcons:
-                return "large-icons";
-            case FileView.Information:
-                return "information";
-            default:
-                return "large-icons";
-        }
+            FileView.LargeIcons => "large-icons",
+            FileView.Information => "information",
+            _ => "large-icons",
+        };
     }
 
     public void SetView(FileView? view = null)
@@ -707,6 +660,46 @@ public partial class FileExplorer : IShortcutComponent
                 Files = Files.OrderByDirection(direction, x => x.Size).ToList();
                 break;
         }
+    }
+
+    private FileExplorerDirectoryContent DefaultDirectoryContentObject()
+    {
+        var CustomData = new Dictionary<string, object>();
+
+        if (!string.IsNullOrWhiteSpace(ContainerName))
+        {
+            CustomData.Add("ContainerName", ContainerName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(AccountName))
+        {
+            CustomData.Add("AccountName", AccountName);
+        }
+
+        if (Root != null)
+        {
+            CustomData.Add("RootDir", Root);
+        }
+
+        return new FileExplorerDirectoryContent
+        {
+            CustomData = CustomData,
+        };
+    }
+
+    private string SpecialItemClasses(FileExplorerDirectoryContent file)
+    {
+        var classes = new List<string>();
+        if (SelectedFiles.Any(x => x.Path == file.Path))
+        {
+            classes.Add("selected");
+        }
+
+        if (file.IsDeleted)
+        {
+            classes.Add("deleted");
+        }
+        return string.Join(" ", classes);
     }
 
     private async Task DisplayError(string message)
