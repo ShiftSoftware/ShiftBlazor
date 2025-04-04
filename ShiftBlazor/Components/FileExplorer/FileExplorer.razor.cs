@@ -10,6 +10,8 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using ShiftSoftware.ShiftIdentity.Blazor;
+using ShiftSoftware.ShiftIdentity.Core.DTOs;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -24,6 +26,7 @@ public partial class FileExplorer : IShortcutComponent
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] ISyncLocalStorageService SyncLocalStorage { get;set; } = default!;
+    [Inject] IIdentityStore? TokenStore { get; set; }
 
 
     [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
@@ -135,7 +138,7 @@ public partial class FileExplorer : IShortcutComponent
         ".webp",
     };
 
-    private string SpecialItemClasses(FileExplorerDirectoryContent file)
+    private string SettingKey => $"FileExplorer_{LoggedInUser?.ID}_{AccountName}_{ContainerName}_{Root}";
     {
         var classes = new List<string>();
         if (SelectedFiles.Any(x => x.Path == file.Path))
@@ -153,6 +156,7 @@ public partial class FileExplorer : IShortcutComponent
     private string SettingKey => $"FileExplorer_{AccountName}_{ContainerName}_{Root}";
     public FileExplorerSettings Settings = DefaultAppSetting.FileExplorerSettings;
     private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
+    TokenUserDataDTO? LoggedInUser;
 
     protected override void OnInitialized()
     {
@@ -182,6 +186,11 @@ public partial class FileExplorer : IShortcutComponent
 
     protected override async Task OnInitializedAsync()
     {
+        if (TokenStore != null)
+        {
+            LoggedInUser = (await TokenStore.GetTokenAsync())?.UserData;
+        }
+
         await FetchData();
     }
 
