@@ -284,6 +284,7 @@ public partial class FileExplorer : IShortcutComponent
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
             SetSort();
+            UpdateToolbarButtons();
             await UpdateUrlAsync();
         }
         catch (Exception e)
@@ -375,8 +376,8 @@ public partial class FileExplorer : IShortcutComponent
         DisplayDownloadButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsFile);
         DisplayQuickAccessButton = !DisableQuickAccess && SelectedFiles.Count > 0 && SelectedFiles.All(x => !x.IsFile);
         DisplayRestoreButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsDeleted);
-        //DisplayNewFolderButton = SelectedFiles.Count == 0;
-        //DisplayUploadButton = SelectedFiles.Count == 0;
+        DisplayNewFolderButton = CWD != null;
+        DisplayUploadButton = CWD != null;
 
     }
 
