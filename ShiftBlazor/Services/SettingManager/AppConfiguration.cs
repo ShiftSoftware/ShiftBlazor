@@ -25,6 +25,12 @@ public class AppConfiguration
     //    set => _ODataPath = value;
     //}
 
+    /// <summary>
+    /// A list of thumbnail sizes to generate when a new image is uploaded.
+    /// Width x Height format.
+    /// </summary>
+    public List<ValueTuple<int, int>> ThumbnailSizes = [(250, 250), (500, 500), (1000, 1000)];
+
     public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
 
     public List<LanguageInfo> Languages = new();

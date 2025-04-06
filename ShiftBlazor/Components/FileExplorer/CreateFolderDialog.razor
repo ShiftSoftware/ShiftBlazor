@@ -1,0 +1,37 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
+
+<MudDialog>
+    <TitleContent>
+        Folder
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Error="ErrorText != null" ErrorText="@ErrorText" Immediate TextChanged="OnInputChanged" @bind-Value="Value" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string Value = string.Empty;
+    private string? ErrorText { get; set; }
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    private void Submit()
+    {
+        if (string.IsNullOrWhiteSpace(Value))
+        {
+			ErrorText = "Folder name cannot be empty";
+        }
+        else
+        {
+            MudDialog.Close(DialogResult.Ok(Value));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+    private void OnInputChanged() => ErrorText = null;
+}
