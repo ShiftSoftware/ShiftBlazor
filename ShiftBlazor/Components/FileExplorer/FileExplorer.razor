@@ -270,7 +270,6 @@
                             <div @key="file.Path"
                                  title="@file.Name"
                                  class="file-explorer-item @SpecialItemClasses(file)"
-                                 @ondblclick="() => HandleOpen(file)"
                                  @onclick="(e) => OnFileClick(e, file)"
                                  @onclick:stopPropagation="true"
                                  @oncontextmenu="(e) => OnFileClick(e, file)">

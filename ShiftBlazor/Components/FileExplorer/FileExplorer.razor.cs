@@ -25,7 +25,6 @@ public partial class FileExplorer : IShortcutComponent
     [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
-    [Inject] ISyncLocalStorageService SyncLocalStorage { get; set; } = default!;
     [Inject] IIdentityStore? TokenStore { get; set; }
 
     [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
@@ -170,24 +169,23 @@ public partial class FileExplorer : IShortcutComponent
     [JSInvokable]
     public async Task OnUrlChanged(string newUrl)
     {
-        string urlPath = await JsRuntime.InvokeAsync<string>("getQueryParam", URLPathKey);
-
         if (CWD == null) return;
 
+        string urlPath = await JsRuntime.InvokeAsync<string>("getQueryParam", URLPathKey);
         string currentPath = CWD == null ? "" : (CWD.FilterPath == "" ? "" : CWD.FilterPath + CWD.Name);
 
-        if (urlPath != currentPath) await GoToPath(urlPath);
-
-        StateHasChanged();
-
+        if (urlPath != currentPath)
+        {
+            await GoToPath(urlPath);
+            StateHasChanged();
+        }
     }
 
-    public async Task updateUrlAsync()
+    public async Task UpdateUrlAsync()
     {
-        string urlPath = await JsRuntime.InvokeAsync<string>("getQueryParam", URLPathKey);
-
         if (CWD == null) return;
 
+        string urlPath = await JsRuntime.InvokeAsync<string>("getQueryParam", URLPathKey);
         string currentPath = CWD == null ? "" : (CWD.FilterPath == "" ? "" : CWD.FilterPath + CWD.Name);
 
         if(currentPath != urlPath) 
@@ -286,7 +284,7 @@ public partial class FileExplorer : IShortcutComponent
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
             SetBreadcrumb(crumbPath);
             SetSort();
-            await updateUrlAsync();
+            await UpdateUrlAsync();
         }
         catch (Exception e)
         {
@@ -320,9 +318,15 @@ public partial class FileExplorer : IShortcutComponent
         }
     }
 
-    private void OnFileClick(MouseEventArgs args, FileExplorerDirectoryContent file)
+    private async Task OnFileClick(MouseEventArgs args, FileExplorerDirectoryContent file)
     {
-        if (args.ShiftKey)
+        var isDoubleClick = args.Detail > 1;
+
+        if (isDoubleClick)
+        {
+            await HandleOpen(file);
+        }
+        else if (args.ShiftKey)
         {
             var lastFileIndex = Files.IndexOf(LastSelectedFile ?? Files.First());
             var clickedIndex = Files.IndexOf(file);
@@ -757,6 +761,6 @@ public partial class FileExplorer : IShortcutComponent
     {
         IShortcutComponent.Remove(Id);
         JsRuntime.InvokeVoidAsync("removeCustomUrlChangeListener", Id);
-        if (objRef is not null) objRef.Dispose();   
+        objRef?.Dispose();   
     }
 }

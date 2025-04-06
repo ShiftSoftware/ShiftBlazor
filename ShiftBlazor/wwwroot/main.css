@@ -310,4 +310,8 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     display: flex;
 }
 
+.file-explorer .mud-table-row {
+    cursor: pointer;
+}
+
 /* ============== File Explorer end ============== */
