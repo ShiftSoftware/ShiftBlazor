@@ -119,6 +119,12 @@
                     <MudSpacer/>
                     <MudIconButton Icon="@Icons.Material.Filled.Close" Disabled="item.State == FileUploadState.Uploaded" OnClick="@(() => Remove(item))" />
                 </MudStack>
+                if (item.Message != null)
+                {
+                    <MudText Style="font-size: 12px; margin-inline-start: 30px;">
+						@item.Message.Title
+                    </MudText>
+                }
             }
 
 			<MudToolBar Dense>
