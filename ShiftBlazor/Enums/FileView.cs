@@ -3,6 +3,9 @@ namespace ShiftSoftware.ShiftBlazor.Enums;
 
 public enum FileView
 {
-    LargeIcons,
-    Information,
+    Detailed,
+    Small,
+    Medium,
+    Large,
+    ExtraLarge,
 }

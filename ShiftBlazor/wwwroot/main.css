@@ -164,6 +164,11 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     font-weight: 500 !important;
 }
 
+.file-explorer {
+    --file-box-size: 150px;
+    --file-icon-size: 100px;
+}
+
 .file-explorer .main-window {
     position: relative;
     flex-grow: 1;
@@ -191,12 +196,27 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     min-height: 200px;
 }
 
-    .file-explorer .file-listing.large-icons {
+    .file-explorer .file-listing.icons {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(var(--file-box-size), 1fr));
         gap: 10px;
         padding: 20px;
         height: 100%;
+    }
+
+    .file-explorer .file-listing.small {
+        --file-box-size: 400px;
+        --file-icon-size: 25px;
+    }
+
+    .file-explorer .file-listing.medium {
+        --file-box-size: 100px;
+        --file-icon-size: 70px;
+    }
+
+    .file-explorer .file-listing.extra-large {
+        --file-box-size: 200px;
+        --file-icon-size: 150px;
     }
 
 .file-explorer-item {
@@ -207,22 +227,23 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     position: relative;
 }
 
-.large-icons .file-explorer-item {
-    width: 150px;
-    height: 150px;
+.file-listing.icons .file-explorer-item {
+    width: var(--file-box-size);
+    height: var(--file-box-size);
 }
 
-    .large-icons .file-explorer-item .mud-icon-root,
-    .large-icons .file-explorer-item .mud-image {
-        height: 100px;
-        width: 100px;
-    }
-
-.information .file-explorer-item {
+.file-listing.icons.small .file-explorer-item {
     display: flex;
     align-items: center;
-    gap: 5px;
+    height: auto;
+    gap: 6px;
 }
+
+    .file-listing.icons .file-explorer-item .mud-icon-root,
+    .file-listing.icons .file-explorer-item .mud-image {
+        height: var(--file-icon-size);
+        width: var(--file-icon-size);
+    }
 
 .file-explorer .mud-table tbody td:first-child .mud-icon-root,
 .file-explorer .mud-table tbody td:first-child .mud-image {

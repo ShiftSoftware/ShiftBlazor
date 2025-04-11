@@ -163,7 +163,7 @@
             <MudDivider Vertical="true" FlexItem="true" />
         }
 
-        <div class="main-window" style="overflow: hidden; height: @(Settings.View == FileView.LargeIcons ? Height : "auto");">
+        <div class="main-window" style="overflow: hidden; height: @(IsIconsView ? Height : "auto");">
             <MudToolBar Dense Class="breadcrumb">
 
                 @* <MudText>@(RootAliasName ?? "Root")</MudText> *@
@@ -181,11 +181,11 @@
 
             <MudDivider Style="flex-grow: initial;" />
 
-            <div class="file-listing @GetViewClass()" @onclick="() => {if (Settings.View == FileView.LargeIcons) DeselectAllFiles();} " @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
+            <div class="file-listing @GetViewClass()" @onclick="() => {if (IsIconsView) DeselectAllFiles();} " @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
 
                 @if (Files.Count > 0)
                 {
-                    if (Settings.View == FileView.Information)
+                    if (Settings.View == FileView.Detailed)
                     {
                         <MudDataGrid Items="Files"
                                      Dense
@@ -262,7 +262,7 @@
                             </Columns>
                         </MudDataGrid>
                     }
-                    else if (Settings.View == FileView.LargeIcons)
+                    else if (IsIconsView)
                     {
                         @foreach (var file in Files)
                         {
@@ -275,8 +275,8 @@
 
                                 @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
                                 {
-                                    <MudImage Height="100"
-                                              Width="100"
+                                    <MudImage Height="@GetImageSize()"
+                                              Width="@GetImageSize()"
                                               ObjectFit="ObjectFit.Cover"
                                               ObjectPosition="ObjectPosition.Center"
                                               Src="@file.ThumbnailUrl"
@@ -341,8 +341,11 @@
         <MudButtonGroup Class="change-view" Variant="Variant.Outlined" Size="Size.Small">
             <MudButton OnClick="() => SetView()" StartIcon="@Icons.Material.Filled.ViewList">Switch View</MudButton>
             <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
-                <MudMenuItem Icon="@Icons.Material.Filled.ViewModule" @onclick="() => SetView(FileView.LargeIcons)">@Loc["Large Icons"]</MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Information)">@Loc["Detailed"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.ViewModule" @onclick="() => SetView(FileView.Detailed)">@Loc["Detailed"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Small)">@Loc["Small"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Medium)">@Loc["Medium"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Large)">@Loc["Large"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.ExtraLarge)">@Loc["ExtraLarge"]</MudMenuItem>
             </MudMenu>
         </MudButtonGroup>
     </MudToolBar>

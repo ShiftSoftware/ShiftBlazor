@@ -1,5 +1,4 @@
-﻿using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -136,13 +135,14 @@ public partial class FileExplorer : IShortcutComponent
         ".webp",
     };
 
+    private bool IsIconsView => Settings.View >= FileView.Small && Settings.View <= FileView.ExtraLarge;
     private string SettingKey => $"FileExplorer_{LoggedInUser?.ID}_{AccountName}_{ContainerName}_{Root}";
     public FileExplorerSettings Settings = DefaultAppSetting.FileExplorerSettings;
     private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
     TokenUserDataDTO? LoggedInUser;
-   
+
     protected override void OnInitialized()
-    {   
+    {
         IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
         if (!IsEmbed)
@@ -643,9 +643,23 @@ public partial class FileExplorer : IShortcutComponent
     {
         return (view ?? Settings.View) switch
         {
-            FileView.LargeIcons => "large-icons",
-            FileView.Information => "information",
-            _ => "large-icons",
+            FileView.Small => "icons small",
+            FileView.Medium => "icons medium",
+            FileView.Large => "icons large",
+            FileView.ExtraLarge => "icons extra-large",
+            _ => ""
+        };
+    }
+
+    private int GetImageSize(FileView? view = null)
+    {
+        return (view ?? Settings.View) switch
+        {
+            FileView.Small => 25,
+            FileView.Medium => 70,
+            FileView.Large => 100,
+            FileView.ExtraLarge => 150,
+            _ => 100
         };
     }
 
