@@ -574,18 +574,21 @@ public partial class FileExplorer : IShortcutComponent
             switch (extension)
             {
                 case ".pdf":
+                    return new(@Icons.Material.Filled.TextSnippet, "#de2429");
                 case ".doc":
                 case ".docx":
+                    return new(@Icons.Material.Filled.TextSnippet, "#295294");
                 case ".txt":
                     return new(@Icons.Material.Filled.TextSnippet, "#dddddd");
                 case ".xls":
                 case ".xlsx":
+                    return new(@Icons.Material.Filled.ListAlt, "#3b885a");
                 case ".csv":
-                    return new(@Icons.Material.Filled.ListAlt, "#dddddd");
+                    return new(@Icons.Material.Filled.Archive, "#dddddd");
                 case ".zip":
                 case ".rar":
                 case ".7z":
-                    return new(@Icons.Material.Filled.Archive, "#dddddd");
+                    return new(@Icons.Material.Filled.Archive, "#f9ca40");
                 default:
                     return new(Icons.Material.Filled.InsertDriveFile, "#dddddd");
             }
