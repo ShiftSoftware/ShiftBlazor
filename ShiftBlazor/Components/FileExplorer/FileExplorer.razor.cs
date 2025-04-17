@@ -140,6 +140,7 @@ public partial class FileExplorer : IShortcutComponent
     public FileExplorerSettings Settings = DefaultAppSetting.FileExplorerSettings;
     private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
     TokenUserDataDTO? LoggedInUser;
+    private Dictionary<string, string> Usernames = [];
 
     protected override void OnInitialized()
     {
@@ -282,6 +283,24 @@ public partial class FileExplorer : IShortcutComponent
             Files = files;
             CWD = content.CWD;
             var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
+
+            var userIds = files
+                .Where(x => !string.IsNullOrWhiteSpace(x.CreatedBy))
+                .Select(x => x.CreatedBy)
+                .Distinct()
+                .ToList();
+
+            var users = await GetUsers(userIds);
+
+            foreach (var file in files.Where(x => !string.IsNullOrWhiteSpace(x.CreatedBy)))
+            {
+                var user = users.FirstOrDefault(x => x.ID == file.CreatedBy);
+                if (user?.ID != null)
+                {
+                    Usernames.TryAdd(user.ID, user.Name);
+                }
+            }
+
             SetBreadcrumb(crumbPath);
             SetSort();
             UpdateToolbarButtons();
@@ -640,6 +659,17 @@ public partial class FileExplorer : IShortcutComponent
     private string GetPath(FileExplorerDirectoryContent? data)
     {
         return data == null || string.IsNullOrWhiteSpace(data.FilterPath) ? "/" : data.FilterPath + data.Name;
+    }
+
+    private async Task<List<UserDetails>> GetUsers(List<string> userIds)
+    {
+        var filter = new ODataFilterGenerator()
+            .Add(nameof(UserDetails.ID), ODataOperator.In, userIds)
+            .ToString();
+        var url = SettingManager.Configuration.UserListEndpoint + "?$filter=" + filter;
+
+        var users = await HttpClient.GetFromJsonAsync<ODataDTO<UserDetails>>(url);
+        return users?.Value ?? [];
     }
 
     private string GetViewClass(FileView? view = null)

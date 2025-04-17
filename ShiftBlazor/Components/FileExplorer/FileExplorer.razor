@@ -266,31 +266,41 @@
                     {
                         @foreach (var file in Files)
                         {
-                            <div @key="file.Path"
-                                 title="@file.Name"
-                                 class="file-explorer-item @SpecialItemClasses(file)"
-                                 @onclick="(e) => OnFileClick(e, file)"
-                                 @onclick:stopPropagation="true"
-                                 @oncontextmenu="(e) => OnFileClick(e, file)">
+                            <MudTooltip>
+                                <TooltipContent>
+                                    <div>Filename: @file.Name</div>
+                                @if (file.IsFile && !string.IsNullOrWhiteSpace(file.CreatedBy))
+                                    {
+                                        <div>Created By: @Usernames.GetValueOrDefault(file.CreatedBy)</div>
+                                    }
+                                </TooltipContent>
+                                <ChildContent>
+                                    <div @key="file.Path"
+                                         class="file-explorer-item @SpecialItemClasses(file)"
+                                         @onclick="(e) => OnFileClick(e, file)"
+                                         @onclick:stopPropagation="true"
+                                         @oncontextmenu="(e) => OnFileClick(e, file)">
 
-                                @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
-                                {
-                                    <MudImage Height="@GetImageSize()"
-                                              Width="@GetImageSize()"
-                                              ObjectFit="ObjectFit.Cover"
-                                              ObjectPosition="ObjectPosition.Center"
-                                              Src="@file.ThumbnailUrl"
-                                              data-src="@file.TargetPath"
-                                              loading="lazy"
-                                              onerror="if (this.src !== this.dataset.src) this.src = this.dataset.src" />
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};") />
-                                }
+                                        @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
+                                        {
+                                            <MudImage Height="@GetImageSize()"
+                                                      Width="@GetImageSize()"
+                                                      ObjectFit="ObjectFit.Cover"
+                                                      ObjectPosition="ObjectPosition.Center"
+                                                      Src="@file.ThumbnailUrl"
+                                                      data-src="@file.TargetPath"
+                                                      loading="lazy"
+                                                      onerror="if (this.src !== this.dataset.src) this.src = this.dataset.src" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};") />
+                                        }
 
-                                <MudText>@file.Name</MudText>
-                            </div>
+                                        <MudText>@file.Name</MudText>
+                                    </div>
+                                </ChildContent>
+                            </MudTooltip>
                         }
                     }
                     else

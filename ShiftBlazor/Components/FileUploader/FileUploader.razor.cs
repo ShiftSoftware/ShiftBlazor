@@ -9,9 +9,11 @@ using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using ShiftSoftware.ShiftIdentity.Blazor;
 using System.Linq.Expressions;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -27,6 +29,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] internal ShiftBlazorLocalizer Loc { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
+    [Inject] IIdentityStore? TokenStore { get; set; }
 
     [Parameter]
     public List<ShiftFileDTO>? Values { get; set; }
@@ -408,9 +411,18 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             //Metadata name/value pairs are valid HTTP headers and should adhere to all restrictions governing HTTP headers
             var metadata = new Dictionary<string, string>
             {
-                { "name", HttpUtility.UrlEncode(item.LocalFile.Name) },
-                { "sizes", string.Join("|", thumbnailSizes)}
+                { Constants.FileExplorerNameMetadataKey, HttpUtility.UrlEncode(item.LocalFile.Name) },
+                { Constants.FileExplorerSizesMetadataKey, string.Join("|", thumbnailSizes)},
             };
+
+            if (TokenStore != null)
+            {
+                var loggedInUser = (await TokenStore.GetTokenAsync())?.UserData;
+                if (loggedInUser != null)
+                {
+                    metadata.Add(Constants.FileExplorerCreatedByMetadataKey, loggedInUser.ID);
+                }
+            }
 
             await blobClient.UploadAsync(stream, headers, metadata, progressHandler: prog, cancellationToken: token);
 
