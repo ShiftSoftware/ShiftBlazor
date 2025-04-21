@@ -439,37 +439,6 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    public class UploadProgress : IProgress<long>, IDisposable
-    {
-        private UploaderItem Item;
-        private readonly System.Timers.Timer Timer;
-        private bool CanReport = true;
-        public event EventHandler<UploaderItem>? ProgressChanged;
-
-        public UploadProgress(UploaderItem item)
-        {
-            Item = item;
-            Timer = new System.Timers.Timer(1000);
-            Timer.Elapsed += (sender, e) => CanReport = true;
-            Timer.Start();
-
-        }
-
-        public void Report(long value)
-        {
-            if (CanReport)
-            {
-                Item.Progress = (double)value / Item.LocalFile!.Size;
-                ProgressChanged?.Invoke(this, Item);
-                CanReport = false;
-            }
-        }
-        public void Dispose()
-        {
-            Timer.Dispose();
-        }
-    }
-
     internal async Task OpenInput(string? id = null, bool? directoryUpload = false)
     {
         IsDirectoryUpload = directoryUpload;
