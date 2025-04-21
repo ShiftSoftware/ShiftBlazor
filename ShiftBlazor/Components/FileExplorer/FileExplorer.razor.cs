@@ -495,9 +495,9 @@ public partial class FileExplorer : IShortcutComponent
         };
 
         bool? result = await DialogService.ShowMessageBox(
-            "Delete File",
-            "Are you sure you want to delete this file?",
-            yesText: "Delete", cancelText: "Cancel", options: options);
+            Loc["Delete File"],
+            Loc["Are you sure you want to delete this file?"],
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"], options: options);
         
         if (result == true)
         {
@@ -638,9 +638,9 @@ public partial class FileExplorer : IShortcutComponent
         };
 
         bool? result = await DialogService.ShowMessageBox(
-            "Restore File",
-            "Are you sure you want to undelete this file?",
-            yesText: "Restore", cancelText: "Cancel", options: options);
+            Loc["Restore File"],
+            Loc["Are you sure you want to undelete this file?"],
+            yesText: Loc["Restore"], cancelText: Loc["Cancel"], options: options);
 
         if (result == true)
         {

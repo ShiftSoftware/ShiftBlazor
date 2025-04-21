@@ -205,7 +205,7 @@
                             <Columns>
 
                                 @* On small screens, MudDataGrid will display Title instead of HeaderTemplate *@
-                                <TemplateColumn Title="Name">
+                                <TemplateColumn Title="@Loc["Name"]">
                                     <HeaderTemplate>
                                         <div class="header-text" @onclick="() => SortBy(FileSort.Name)">
 										    @Loc["Name"]
@@ -268,10 +268,10 @@
                         {
                             <MudTooltip>
                                 <TooltipContent>
-                                    <div>Filename: @file.Name</div>
-                                @if (file.IsFile && !string.IsNullOrWhiteSpace(file.CreatedBy))
+                                    <div>@Loc["Filename"]: @file.Name</div>
+                                    @if (file.IsFile && !string.IsNullOrWhiteSpace(file.CreatedBy))
                                     {
-                                        <div>Created By: @Usernames.GetValueOrDefault(file.CreatedBy)</div>
+                                        <div>@Loc["Created By"]: @Usernames.GetValueOrDefault(file.CreatedBy)</div>
                                     }
                                 </TooltipContent>
                                 <ChildContent>
@@ -305,7 +305,7 @@
                     }
                     else
                     {
-                        <MudText>Unknown View</MudText>
+                        <MudText>@Loc["Unknown View"]</MudText>
                     }
                 }
                 else if (!IsLoading)
@@ -332,7 +332,7 @@
 
         @if (SelectedFiles.Count > 0)
         {
-            <MudText Typo="Typo.body2">@SelectedFiles.Count of @Files.Count selected</MudText>
+            <MudText Typo="Typo.body2">@Loc["FileExplorerSelectedCount", SelectedFiles.Count, Files.Count]</MudText>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" OnClick="DeselectAllFiles"></MudIconButton>
         }
 
@@ -344,12 +344,12 @@
         @if (UploadingFiles?.Count > 0)
         {
             <MudProgressCircular Style="margin-inline-end: 4px;" Color="Color.Primary" Size="@Size.Small" Value="@UploadingFiles.Completed" Max="@UploadingFiles.Count" />
-            <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@UploadingFiles.Completed of @UploadingFiles.Count Uploaded</MudText>
+            <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@Loc["FileExplorerUploadCount", UploadingFiles.Completed, UploadingFiles.Count]</MudText>
         }
         <MudSpacer/>
 
         <MudButtonGroup Class="change-view" Variant="Variant.Outlined" Size="Size.Small">
-            <MudButton OnClick="() => SetView()" StartIcon="@Icons.Material.Filled.ViewList">Switch View</MudButton>
+            <MudButton OnClick="() => SetView()" StartIcon="@Icons.Material.Filled.ViewList">@Loc["Switch View"]</MudButton>
             <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
                 <MudMenuItem Icon="@Icons.Material.Filled.ViewModule" @onclick="() => SetView(FileView.Detailed)">@Loc["Detailed"]</MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Small)">@Loc["Small"]</MudMenuItem>
