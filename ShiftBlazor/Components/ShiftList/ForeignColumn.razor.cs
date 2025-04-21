@@ -222,7 +222,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             });
         }
 
-        void IDisposable.Dispose()
+        public override void Dispose()
         {
             ShiftBlazorEvents.OnBeforeGridDataBound -= OnBeforeDataBound;
         }

@@ -534,7 +534,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         TriggerGridSort(order);
     }
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         OnGridSort -= HandleGridSort;
         UploaderToken?.Dispose();

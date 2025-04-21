@@ -426,7 +426,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await OnTaskFinished.InvokeAsync(Task);
         }
 
-        void IDisposable.Dispose()
+        public void Dispose()
         {
             IShortcutComponent.Remove(Id);
         }

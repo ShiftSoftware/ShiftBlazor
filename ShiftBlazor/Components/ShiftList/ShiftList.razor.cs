@@ -1184,7 +1184,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [GeneratedRegex("\\$skip=[0-9]+&?|\\$top=[0-9]+&?")]
         private static partial Regex ExportUrlRegex();
 
-        void IDisposable.Dispose()
+        public void Dispose()
         {
             ShiftBlazorEvents.OnModalClosed -= ShiftBlazorEvents_OnModalClosed;
             IShortcutComponent.Remove(Id);
