@@ -162,9 +162,6 @@ public partial class FileExplorer : IShortcutComponent
         IconSize = Dense ? Size.Medium : Size.Large;
         SetBreadcrumb();
 
-        var userSettings = SettingManager.GetFileExplorerSetting(SettingKey);
-        SetView(userSettings?.View ?? View ?? DefaultSettings.View);
-        Settings = userSettings ?? DefaultSettings;
     }
 
     [JSInvokable]
@@ -207,6 +204,10 @@ public partial class FileExplorer : IShortcutComponent
         {
             LoggedInUser = (await TokenStore.GetTokenAsync())?.UserData;
         }
+
+        var userSettings = SettingManager.GetFileExplorerSetting(SettingKey);
+        Settings = userSettings ?? DefaultSettings;
+        SetView(userSettings?.View ?? View ?? DefaultSettings.View, false);
 
         string urlPath = await JsRuntime.InvokeAsync<string>("getQueryParam", URLPathKey);
 
@@ -696,7 +697,7 @@ public partial class FileExplorer : IShortcutComponent
         };
     }
 
-    public void SetView(FileView? view = null)
+    public void SetView(FileView? view = null, bool save = true)
     {
         if (view == null)
         {
@@ -710,7 +711,8 @@ public partial class FileExplorer : IShortcutComponent
             Settings.View = view.Value;
         }
 
-        SettingManager.SetFileExplorerSetting(SettingKey, Settings);
+        if (save)
+            SettingManager.SetFileExplorerSetting(SettingKey, Settings);
     }
 
     private void HandleUploading(UploadEventArgs args)
