@@ -189,7 +189,7 @@ public class ActionButton<T> : MudButtonExtended
         if (!string.IsNullOrWhiteSpace(Action))
         {
             string? baseUrl = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
-            baseUrl = baseUrl?.AddUrlPath(Action) ?? SettingManager.Configuration.ApiPath.AddUrlPath(Action);
+            baseUrl = baseUrl?.AddUrlPath(Action) ?? SettingManager.Configuration.BaseAddress.AddUrlPath(Action);
 
             using var request = Http.CreateIdempotencyRequest(ShiftListGeneric?.SelectState ?? new(), baseUrl, IdempotencyToken);
             using var response = await Http.SendAsync(request);

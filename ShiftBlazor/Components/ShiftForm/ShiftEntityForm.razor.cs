@@ -150,9 +150,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 url = SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey);
 
             if (url is null)
-                return SettingManager.Configuration.ApiPath;
+                return SettingManager.Configuration.BaseAddress;
 
-            return url.AddUrlPath(SettingManager.Configuration._ApiPath);
+            return url;
         }
 
         internal override string _SubmitText

@@ -152,8 +152,8 @@ public partial class FileExplorer : IShortcutComponent
         }
 
         var apiUrl = BaseUrl
-            ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "")
-            ?? SettingManager.Configuration.ApiPath;
+            ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "") 
+            ?? SettingManager.Configuration.BaseAddress;
 
         Url = apiUrl.AddUrlPath("FileExplorer", "FileOperations");
 

@@ -37,8 +37,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public string? BaseUrlKey { get; set; }
-        [Parameter]
-        public string ODataPath { get; set; } = "api";
 
         [Parameter]
         public string? DataValueField { get; set; }
@@ -273,7 +271,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     string? baseUrl = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
 
-                    baseUrl = baseUrl?.AddUrlPath(this.ODataPath);
 
                     url = OData.CreateNewQuery<TEntitySet>(EntitySet, baseUrl)
                             //.AddQueryOption("$select", $"{_DataValueField},{_DataTextField}")
@@ -353,8 +350,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             string? url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
 
-            url = url?.AddUrlPath(this.ODataPath);
-
+            
             var builder = OData
                 .CreateNewQuery<TEntitySet>(EntitySet, url)
                 .AddQueryOptionIf("$select", $"{_DataValueField},{_DataTextField}", MinResponseContent);

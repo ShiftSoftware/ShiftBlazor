@@ -258,7 +258,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     internal async Task GetSASForFilesAsync(IEnumerable<UploaderItem> items)
     {
-        var url = SettingManager.Configuration.ApiPath.AddUrlPath(Url);
+        var url = SettingManager.Configuration.BaseAddress.AddUrlPath(Url);
 
         List<ShiftFileDTO> files = new();
 
@@ -324,7 +324,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         item.File = null;
         item.Message = null;
 
-        var url = SettingManager.Configuration.ApiPath.AddUrlPath(Url);
+        var url = SettingManager.Configuration.BaseAddress.AddUrlPath(Url);
 
         using var multipartContent = new MultipartFormDataContent();
 

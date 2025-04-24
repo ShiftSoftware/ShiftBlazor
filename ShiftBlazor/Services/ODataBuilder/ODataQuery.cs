@@ -8,9 +8,9 @@ namespace ShiftSoftware.ShiftBlazor.Services
         private string ODataPath;
 
         public ODataQuery(SettingManager settings) :
-            this(settings.Configuration.ApiPath)
+            this(settings.Configuration.BaseAddress)
         {
-            ODataPath = settings.Configuration.ApiPath;
+            ODataPath = settings.Configuration.BaseAddress;
         }
 
         public ODataQuery(string serviceRoot) :
