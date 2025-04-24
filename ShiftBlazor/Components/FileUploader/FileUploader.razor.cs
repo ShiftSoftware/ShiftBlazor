@@ -105,7 +105,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         {
             if (_mode != value)
             {
-                Items = Values?.Select(x => new UploaderItem(x)).ToList() ?? new();
+                Items = Values?.Select(x => new UploaderItem(x) { State = FileUploadState.Uploaded }).ToList() ?? new();
             }
             _mode = value;
         }
