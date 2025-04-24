@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Filters;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Filters.Builders;
 
-namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Builders;
+namespace ShiftSoftware.ShiftBlazor.Components;
 
 public class DateTimeFilter<T, TProperty> : FilterBuilder<T, TProperty>
 {

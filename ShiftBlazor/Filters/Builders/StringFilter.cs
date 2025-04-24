@@ -1,23 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using Microsoft.AspNetCore.Components;
-using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
-
+using ShiftSoftware.ShiftBlazor.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Filters.Builders;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public class BooleanFilter<T, TProperty> : FilterBuilder<T, TProperty>
+public class StringFilter<T, TProperty> : FilterBuilder<T, TProperty>
 {
     [Parameter]
-    public bool Value { get; set; }
+    public Type? DTOType { get; set; }
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
 
     protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
-        var filter = FilterModelBase.CreateFilter(propertyInfo);
+        var filter = FilterModelBase.CreateFilter(propertyInfo, DTOType);
         filter.Value = Value;
         return filter;
     }
@@ -26,7 +24,7 @@ public class BooleanFilter<T, TProperty> : FilterBuilder<T, TProperty>
     {
         if (IsInitialized)
         {
-            var newValue = parameters.GetValueOrDefault<bool>(nameof(Value));
+            var newValue = parameters.GetValueOrDefault<string>(nameof(Value));
 
             if (Value != newValue)
             {

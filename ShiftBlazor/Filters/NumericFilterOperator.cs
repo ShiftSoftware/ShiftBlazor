@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters;
+namespace ShiftSoftware.ShiftBlazor.Filters;
 
 public enum NumericFilterOperator
 {

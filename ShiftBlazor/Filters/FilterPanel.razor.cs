@@ -1,12 +1,13 @@
 ﻿using System.Reflection;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Components;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 
-namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters;
+namespace ShiftSoftware.ShiftBlazor.Filters;
 
 public partial class FilterPanel: ComponentBase
 {

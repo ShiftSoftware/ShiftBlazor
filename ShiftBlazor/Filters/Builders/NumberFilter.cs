@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using Microsoft.AspNetCore.Components;
-using Newtonsoft.Json.Linq;
-using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters;
-using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Filters;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Filters.Builders;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 

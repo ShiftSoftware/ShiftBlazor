@@ -1,9 +1,9 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using ShiftSoftware.ShiftBlazor.Events
+@using ShiftSoftware.ShiftBlazor.Filters
 @typeparam T where T : ShiftEntityDTOBase, new()
 @inherits EventComponentBase
 @implements IODataComponent
-@using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters
 
 @if (TypeAuthAction == null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
 {

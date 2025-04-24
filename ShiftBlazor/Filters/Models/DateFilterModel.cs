@@ -3,7 +3,7 @@ using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
 
-namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
+namespace ShiftSoftware.ShiftBlazor.Filters.Models;
 
 public class DateFilterModel : FilterModelBase
 {

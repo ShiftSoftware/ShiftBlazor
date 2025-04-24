@@ -1,6 +1,6 @@
 ﻿using ShiftSoftware.ShiftBlazor.Utils;
 
-namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
+namespace ShiftSoftware.ShiftBlazor.Filters.Models;
 
 public class StringFilterModel : FilterModelBase
 {

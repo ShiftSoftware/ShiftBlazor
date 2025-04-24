@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
-using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Components;
 
-namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters;
+namespace ShiftSoftware.ShiftBlazor.Filters.UI;
 
 public class FilterUIBase : ComponentBase
 {

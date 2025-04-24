@@ -13,7 +13,7 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using Microsoft.JSInterop;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
-using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -89,16 +89,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal string _DataValueField = string.Empty;
         internal string _DataTextField = string.Empty;
         public bool FilterImmediate { get; set; }
-        public ODataFilterGenerator Filters { get; private set; } = new ODataFilterGenerator(true);
         private string? PreviousFilters;
         private int DropdownItemCount = 0;
         private bool ShrinkTags = false;
         public Guid Id { get; private set; } = Guid.NewGuid();
         public RenderFragment? FilterTemplate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public ODataFilterGenerator ODataFilters => throw new NotImplementedException();
+        public ODataFilterGenerator ODataFilters { get; private set; } = new ODataFilterGenerator(true);
 
-        Dictionary<Guid, FilterModelBase> IFilterableComponent.Filters { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public Dictionary<Guid, FilterModelBase> Filters { get; set; } = new();
 
         public override Task SetParametersAsync(ParameterView parameters)
         {
@@ -172,16 +171,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var filter = new ODataFilterGenerator(true, Id);
                 Filter.Invoke(filter);
-                Filters.Add(filter);
+                ODataFilters.Add(filter);
             }
 
-            if (Filters.ToString() != PreviousFilters)
+            if (ODataFilters.ToString() != PreviousFilters)
             {
                 // We need to check null here otherwise the value will be reset on initialized
                 if (PreviousFilters != null && Mode >= FormModes.Edit)
                     ResetValueAsync();
 
-                PreviousFilters = Filters.ToString();
+                PreviousFilters = ODataFilters.ToString();
             }
         }
 
@@ -207,7 +206,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null)
         {
-            Filters.Add(field, op, value, id);
+            ODataFilters.Add(field, op, value, id);
         }
 
         private async Task HandleKeyDown(KeyboardEventArgs args)
@@ -367,11 +366,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 .CreateNewQuery<TEntitySet>(EntitySet, url)
                 .AddQueryOptionIf("$select", $"{_DataValueField},{_DataTextField}", MinResponseContent);
 
-            var filters = new List<string>();
+            var filters = Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
 
-            if (Filters.Count > 0)
+            if (ODataFilters.Count > 0)
             {
-                filters.Add(Filters.ToString());
+                filters.Add(ODataFilters.ToString());
             }
 
             if (!string.IsNullOrWhiteSpace(q))
@@ -388,7 +387,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (filters.Count > 0)
             {
-                builder = builder.AddQueryOption("$filter", string.Join(" and ", filters));
+                var filterQueryString = $"({string.Join(") and (", filters)})";
+                builder = builder.AddQueryOption("$filter", filterQueryString);
             }
 
             return builder.Take(MaxItems ?? 100).ToString()!;

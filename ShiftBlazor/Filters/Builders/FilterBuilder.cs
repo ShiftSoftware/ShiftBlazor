@@ -1,13 +1,12 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
-using AutoMapper;
 using Microsoft.AspNetCore.Components;
-using Newtonsoft.Json.Linq;
-using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Components;
 
-namespace ShiftSoftware.ShiftBlazor.Components;
+namespace ShiftSoftware.ShiftBlazor.Filters.Builders;
 
 public abstract class FilterBuilder<T, TProperty> : ComponentBase
 {
@@ -33,7 +32,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
 
     protected override void OnInitialized()
     {
-        if (Parent is IShiftList)
+        //if (Parent is IShiftList)
         {
             var memberExpression = Property.Body as MemberExpression;
             var field = memberExpression?.Member;
@@ -58,10 +57,10 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
 
             IsInitialized = true;
         }
-        else
-        {
-            throw new Exception("Parent is not IShiftList");
-        }
+        //else
+        //{
+        //    throw new Exception("Parent is not IShiftList");
+        //}
     }
 
     public override Task SetParametersAsync(ParameterView parameters)

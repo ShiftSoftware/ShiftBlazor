@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
-using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
 
