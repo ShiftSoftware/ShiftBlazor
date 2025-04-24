@@ -1,5 +1,6 @@
-﻿@using ShiftSoftware.ShiftEntity.Model
-@inherits FilterInput
+﻿@using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models
+@using ShiftSoftware.ShiftEntity.Model
+@inherits FilterUIBase
 
 
 <MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged" Label="Operator" >
@@ -20,8 +21,6 @@ else
 	<DynamicComponent Type="AutoCompleteType" Parameters="AutoCompleteParameters" />
 }
 
-
-
 @code
 {
 	private string Value => (string?)Filter.Value ?? string.Empty;
@@ -36,7 +35,7 @@ else
 	{
 		base.OnInitialized();
 
-		if (Filter is _StringFilter stringFilter
+		if (Filter is StringFilterModel stringFilter
 			&& stringFilter.DtoType != null
 			&& Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(stringFilter.DtoType) != null
 			&& !string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
@@ -46,6 +45,7 @@ else
 			{
 				["EntitySet"] = ShiftList.EntitySet,
 				["DataTextField"] = stringFilter.Field,
+				["Strict"] = false,
 				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged)
 			};
 		}

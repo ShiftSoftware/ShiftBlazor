@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+﻿using System.Reflection;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
@@ -56,14 +53,14 @@ public partial class FilterPanel: ComponentBase
 
     private void AddFilter(PropertyInfo field)
     {
-        var filter = FilterBase.CreateFilter(field, DTO);
+        var filter = FilterModelBase.CreateFilter(field, DTO);
         Parent?.Filters.TryAdd(filter.Id, filter);
         ReloadList(false);
     }
 
     private void RemoveFilterComponent(Guid id)
     {
-        ClearFilter(id, false);
+        ClearFilter(id, true);
     }
 
     public void ClearFilter(Guid id, bool immediate)

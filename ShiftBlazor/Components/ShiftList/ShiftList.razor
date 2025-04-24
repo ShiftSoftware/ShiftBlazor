@@ -130,7 +130,7 @@
                         <MudForm Class="pa-4">
 
                             <CascadingValue Value="Filters">
-                                <FilterPanel DTO="typeof(T)" FilterTempalte="FilterTemplate" />
+                                <FilterPanel DTO="typeof(T)" />
                             </CascadingValue>
 
                             @if (!FilterImmediate) {
@@ -140,7 +140,6 @@
                     </MudCollapse>
                 }
 
-       
                 @HeaderTemplate
 
                 <MudOverlay Visible="IsGridEditorOpen" LockScroll="false" OnClick="@CloseGridEditor" />

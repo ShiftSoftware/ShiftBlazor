@@ -355,7 +355,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsDeleteColumnHidden = true;
         private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
         private FilterPanel? _FilterPanel { get; set; }
-        public Dictionary<Guid, FilterBase> Filters { get; set; } = [];
+        public Dictionary<Guid, FilterModelBase> Filters { get; set; } = [];
 
         private List<Column<T>> DraggableColumns
         {

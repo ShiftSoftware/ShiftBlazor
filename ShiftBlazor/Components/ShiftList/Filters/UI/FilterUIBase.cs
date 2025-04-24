@@ -1,26 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
+using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 
 namespace ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters;
 
-public class FilterInput : ComponentBase
+public class FilterUIBase : ComponentBase
 {
     [Parameter]
     [EditorRequired]
-    public FilterBase Filter { get; set; }
-
-    [Parameter]
-    public bool Immediate { get; set; }
-
-    [Parameter]
-    public Type? FieldType { get; set; }
-
-    [Parameter]
-    public bool IsHidden { get; set; }
-
-    [Parameter]
-    public bool Disabled { get; set; }
+    public FilterModelBase Filter { get; set; }
 
     [CascadingParameter]
     public IFilterableComponent? Parent { get; set; }
@@ -54,7 +43,21 @@ public class FilterInput : ComponentBase
         {
             Parent.Filters.Remove(Id);
             Parent.Filters.TryAdd(Id, Filter!);
-            StateHasChanged();
+            if (!ReloadList())
+            {
+                StateHasChanged();
+            }
         }
+    }
+
+    private bool ReloadList(bool immediate = false)
+    {
+        if (Parent is IShiftList list && (Parent?.FilterImmediate == true || immediate || Filter.IsImmediate))
+        {
+            list.Reload();
+            return true;
+        }
+
+        return false;
     }
 }

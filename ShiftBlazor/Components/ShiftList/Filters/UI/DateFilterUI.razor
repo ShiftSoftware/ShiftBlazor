@@ -1,7 +1,8 @@
 ﻿@using System.Globalization
-@inherits FilterInput
+@using ShiftSoftware.ShiftBlazor.Components.ShiftList.Filters.Models
+@inherits FilterUIBase
 
-@if (Filter is _DateFilter dateFilter)
+@if (Filter is DateFilterModel dateFilter)
 {
 	<MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged" Label="Operator">
 		<MudSelectItem Value="ODataOperator.Equal">Is</MudSelectItem>
@@ -12,14 +13,14 @@
 
 	@if (Filter.Operator == ODataOperator.Equal || Filter.Operator == ODataOperator.NotEqual)
 	{
-		<MudSelectExtended T="DateFilterOption?" Clearable Value="dateFilter.SelectedDateOperator" ValueChanged="OnDateOperatorChanged" Label="Value">
-			@foreach (var item in Enum.GetValues<DateFilterOption>())
+		<MudSelectExtended T="DateFilterOperator?" Clearable Value="dateFilter.SelectedDateOperator" ValueChanged="OnDateOperatorChanged" Label="Value">
+			@foreach (var item in Enum.GetValues<DateFilterOperator>())
 			{
-				<MudSelectItem T="DateFilterOption?" Value="item">@item.ToString()</MudSelectItem>
+				<MudSelectItem T="DateFilterOperator?" Value="item">@item.ToString()</MudSelectItem>
 			}
 		</MudSelectExtended>
 
-		@if (dateFilter.SelectedDateOperator == DateFilterOption.Last || dateFilter.SelectedDateOperator == DateFilterOption.Next)
+		@if (dateFilter.SelectedDateOperator == DateFilterOperator.Last || dateFilter.SelectedDateOperator == DateFilterOperator.Next)
 		{
 			<MudNumericField T="int" Value="dateFilter.UnitValue" ValueChanged="OnTimeUnitValueChanged" Min="1"></MudNumericField>
 			<MudSelectExtended T="TimeUnit" Value="dateFilter.SelectedTimeUnit" ValueChanged="OnTimeUnitChanged">
@@ -29,11 +30,11 @@
 				}
 			</MudSelectExtended>
 		}
-		else if (dateFilter.SelectedDateOperator == DateFilterOption.Date || dateFilter.SelectedDateOperator == DateFilterOption.After || dateFilter.SelectedDateOperator == DateFilterOption.Before)
+		else if (dateFilter.SelectedDateOperator == DateFilterOperator.Date || dateFilter.SelectedDateOperator == DateFilterOperator.After || dateFilter.SelectedDateOperator == DateFilterOperator.Before)
 		{
 			<MudDatePicker Date="dateFilter.DateTimeValue" DateChanged="OnDateTimeValueChanged" />
 		}
-		else if (dateFilter.SelectedDateOperator == DateFilterOption.Range)
+		else if (dateFilter.SelectedDateOperator == DateFilterOperator.Range)
 		{
 			<MudDateRangePicker DateRange="dateFilter.DateRangeValue" DateRangeChanged="OnDateRangeValueChanged" />
 		}
@@ -44,9 +45,9 @@
 
 	#region Operator Changed
 
-	private void OnDateOperatorChanged(DateFilterOption? value)
+	private void OnDateOperatorChanged(DateFilterOperator? value)
 	{
-		if (Filter is _DateFilter dateFilter)
+		if (Filter is DateFilterModel dateFilter)
 		{
 			dateFilter.SelectedDateOperator = value;
 			UpdateFilter();
@@ -55,7 +56,7 @@
 
 	private void OnTimeUnitChanged(TimeUnit value)
 	{
-		if (Filter is _DateFilter dateFilter)
+		if (Filter is DateFilterModel dateFilter)
 		{
 			dateFilter.SelectedTimeUnit = value;
 			UpdateFilter();
@@ -64,7 +65,7 @@
 
 	private void OnTimeUnitValueChanged(int value)
 	{
-		if (Filter is _DateFilter dateFilter)
+		if (Filter is DateFilterModel dateFilter)
 		{
 			dateFilter.UnitValue = value;
 			UpdateFilter();
@@ -73,7 +74,7 @@
 
 	private void OnDateTimeValueChanged(DateTime? value)
 	{
-		if (Filter is _DateFilter dateFilter)
+		if (Filter is DateFilterModel dateFilter)
 		{
 			dateFilter.DateTimeValue = value;
 			UpdateFilter();
@@ -82,7 +83,7 @@
 
 	private void OnDateRangeValueChanged(DateRange value)
 	{
-		if (Filter is _DateFilter dateFilter)
+		if (Filter is DateFilterModel dateFilter)
 		{
 			dateFilter.DateRangeValue = value;
 			UpdateFilter();
@@ -90,35 +91,4 @@
 	}
 	#endregion
 
-	public enum DateFilterOption
-	{
-		Today,
-		Yesterday,
-		Torrorrow,
-		Next7Days,
-		Previous7Days,
-		LastWeek,
-		ThisWeek,
-		NextWeek,
-		LastMonth,
-		ThisMonth,
-		NextMonth,
-		LastYear,
-		ThisYear,
-		NextYear,
-		Last,
-		Next,
-		Date,
-		Before,
-		After,
-		Range,
-	}
-	
-	public enum TimeUnit
-	{
-		Day,
-		Week,
-		Month,
-		Year,
-	}
 }
