@@ -8,11 +8,18 @@ public class StringFilterModel : FilterModelBase
 
     public override ODataFilterGenerator ToODataFilter()
     {
-        return new ODataFilterGenerator(true, Id).Add(new ODataFilter
+        var filter = new ODataFilterGenerator(true, Id);
+
+        if (Value != null || Value == null && (Operator == Enums.ODataOperator.IsEmpty || Operator == Enums.ODataOperator.IsNotEmpty))
         {
-            Field = Field,
-            Operator = Operator,
-            Value = Value
-        });
+            filter.Add(new ODataFilter
+            {
+                Field = Field,
+                Operator = Operator,
+                Value = Value
+            });
+        }
+
+        return filter;
     }
 }

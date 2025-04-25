@@ -10,15 +10,20 @@
 	<MudSelectItem Value="ODataOperator.Contains">Contains</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
+	<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
+	<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
 </MudSelectExtended>
 
-@if (AutoCompleteType == null || AutoCompleteParameters == null)
+@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
 {
-	<MudTextField T="string" Label="Value" Value="Value" ValueChanged="ValueChanged" />
-}
-else
-{
-	<DynamicComponent Type="AutoCompleteType" Parameters="AutoCompleteParameters" />
+	if (AutoCompleteType == null || AutoCompleteParameters == null)
+	{
+		<MudTextField T="string" Label="Value" Value="Value" ValueChanged="ValueChanged" />
+	}
+	else
+	{
+		<DynamicComponent Type="AutoCompleteType" Parameters="AutoCompleteParameters" />
+	}
 }
 
 @code
@@ -49,6 +54,22 @@ else
 				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged)
 			};
 		}
+	}
+
+	protected override void OnParametersSet()
+	{
+		if (AutoCompleteParameters != null && ShiftList is IFilterableComponent filterable)
+		{
+			var filterList = filterable.Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x));
+
+			if (filterList.Any())
+			{
+				var filterQueryString = $"({string.Join(" and ", filterList)})";
+				AutoCompleteParameters["Filter"] = delegate (ODataFilterGenerator x) { x.Add(filterQueryString); };
+			}
+		}
+
+		base.OnParametersSet();
 	}
 
 	private void AutocompleteChanged(ShiftEntitySelectDTO? dto) {
