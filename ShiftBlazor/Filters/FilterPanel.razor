@@ -54,7 +54,13 @@
 
             @foreach (var field in Fields)
             {
-                <MudMenuItem OnClick="() => AddFilter(field)">@field.Name</MudMenuItem>
+                <MudMenuItem OnClick="() => AddFilter(field)">
+                    <MudStack Row>
+                        @field.Name
+                        <MudSpacer/>
+                        <MudChip T="string">@GetTypeName(field)</MudChip>
+                    </MudStack>
+                </MudMenuItem>
             }
         </ChildContent>
     </MudMenu>

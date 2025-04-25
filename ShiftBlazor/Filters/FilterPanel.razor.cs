@@ -75,4 +75,23 @@ public partial class FilterPanel: ComponentBase
     {
         if (Parent is IShiftList list && (Parent?.FilterImmediate == true || immediate || Immediate)) list.Reload();
     }
+
+    private string GetTypeName(PropertyInfo field)
+    {
+        var type = FieldType.Identify(field.PropertyType);
+        
+        if (type.IsNumber)
+            return "number";
+        if (type.IsBoolean)
+            return "boolean";
+        if (type.IsGuid)
+            return "string";
+        if (type.IsEnum)
+            return "enum";
+        if (Misc.IsDateTime(field.PropertyType))
+            return "date";
+
+        return "string";
+
+    }
 }
