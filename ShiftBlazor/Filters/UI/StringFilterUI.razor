@@ -3,7 +3,7 @@
 @inherits FilterUIBase
 
 
-<MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged" Label="Operator" >
+<MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="_OperatorChanged" Label="Operator" >
 	<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
@@ -12,6 +12,7 @@
 	<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
+	<MudSelectItem Value="ODataOperator.In">In</MudSelectItem>
 </MudSelectExtended>
 
 @if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
@@ -51,7 +52,9 @@
 				["EntitySet"] = ShiftList.EntitySet,
 				["DataTextField"] = stringFilter.Field,
 				["Strict"] = false,
-				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged)
+				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged),
+				["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged),
+				["MultiSelect"] = Filter.Operator == ODataOperator.In,
 			};
 		}
 	}
@@ -60,7 +63,7 @@
 	{
 		if (AutoCompleteParameters != null && ShiftList is IFilterableComponent filterable)
 		{
-			var filterList = filterable.Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x));
+			var filterList = filterable.Filters.Where(x => x.Key != Id).Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x));
 
 			if (filterList.Any())
 			{
@@ -72,8 +75,33 @@
 		base.OnParametersSet();
 	}
 
-	private void AutocompleteChanged(ShiftEntitySelectDTO? dto) {
-		ValueChanged(dto?.Text);
+	private void _OperatorChanged(ODataOperator oDataOperator)
+	{
+
+		if (AutoCompleteParameters != null && oDataOperator == ODataOperator.In)
+		{
+			AutoCompleteParameters["MultiSelect"] = true;
+		}
+		else if (AutoCompleteParameters != null)
+		{
+			AutoCompleteParameters["MultiSelect"] = false;
+		}
+
+		Filter!.Operator = oDataOperator;
+		UpdateFilter();
+
+		
 	}
 
+	private void AutocompleteMultiChanged(List<ShiftEntitySelectDTO>? dto)
+	{
+		Filter.Value = dto?.Select(x => x.Text).ToList();
+		UpdateFilter();
+	}
+
+
+	private void AutocompleteChanged(ShiftEntitySelectDTO? dto)
+	{
+		ValueChanged(dto?.Text);
+	}
 }
