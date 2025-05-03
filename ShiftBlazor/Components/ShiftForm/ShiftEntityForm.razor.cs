@@ -331,8 +331,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 var token = await tokenResult.Content.ReadAsStringAsync();
 
+                var language = SettingManager.GetLanguage();
+
                 //Open /print endpoint with the obtained token
-                await JsRuntime.InvokeVoidAsync("open", $"{path}/print/{Key?.ToString()}?{token}", "_blank");
+                await JsRuntime.InvokeVoidAsync("open", $"{path}/print/{Key?.ToString()}?{token}&culture={language.CultureName}", "_blank");
             });
         }
 
