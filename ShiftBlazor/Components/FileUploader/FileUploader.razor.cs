@@ -32,6 +32,14 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Inject] IIdentityStore? TokenStore { get; set; }
 
     [Parameter]
+    public string? Capture { get; set; }
+
+    [Parameter]
+    public bool Sortable { get; set; } = true;
+
+    private Dictionary<string, object> AdditionalAttributes { get; set; } = new();
+
+    [Parameter]
     public List<ShiftFileDTO>? Values { get; set; }
 
     [Parameter]
@@ -191,8 +199,24 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     {
         if (firstRender)
         {
-            SetAsSortable();
-            SetDropZone();
+            if (Sortable && this.MaxFileCount > 1)
+                SetAsSortable();
+
+            if (DropAreaSelector is not null)
+                SetDropZone();
+
+            this.AdditionalAttributes = new()
+            {
+                ["id"] = this.InputId,
+                ["class"] = "file-uploader-input",
+                ["multiple"] = "multiple",
+                ["accept"] = InputAccept,
+            };
+
+            if (this.Capture is not null)
+            {
+                this.AdditionalAttributes["capture"] = this.Capture;
+            }
         }
     }
 
