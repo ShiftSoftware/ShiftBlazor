@@ -217,6 +217,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             {
                 this.AdditionalAttributes["capture"] = this.Capture;
             }
+
+            StateHasChanged();
         }
     }
 
