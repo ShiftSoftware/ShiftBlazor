@@ -336,15 +336,15 @@
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" OnClick="DeselectAllFiles"></MudIconButton>
         }
 
-        @if (SelectedFiles.Count > 0 && UploadingFiles?.Count > 0)
+        @if (SelectedFiles.Count > 0 && UploadingFiles?.Items.Count > 0)
         {
             <MudDivider Style="margin: 0 6px;" Vertical/>
         }
 
-        @if (UploadingFiles?.Count > 0)
+        @if (UploadingFiles?.Items.Count > 0)
         {
             <MudProgressCircular Style="margin-inline-end: 4px;" Color="Color.Primary" Size="@Size.Small" Value="@UploadingFiles.Completed" Max="@UploadingFiles.Count" />
-            <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@Loc["FileExplorerUploadCount", UploadingFiles.Completed, UploadingFiles.Count]</MudText>
+            <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@Loc["FileExplorerUploadCount", UploadingFiles.Completed, UploadingFiles.Items.Count]</MudText>
         }
         <MudSpacer/>
 
