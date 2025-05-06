@@ -37,7 +37,6 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Parameter]
     public bool Sortable { get; set; } = true;
 
-    private Dictionary<string, object> AdditionalAttributes { get; set; } = new();
 
     [Parameter]
     public List<ShiftFileDTO>? Values { get; set; }
@@ -127,6 +126,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     private InputFile? InputFileRef { get; set; }
     private bool? IsDirectoryUpload = false;
     private bool DisplayUploadDialog { get; set; }
+    private Dictionary<string, object> AdditionalAttributes { get; set; } = new();
 
     [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
     [Parameter]
@@ -185,6 +185,14 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         OnGridSort += HandleGridSort;
 
+        this.AdditionalAttributes = new()
+        {
+            ["id"] = this.InputId,
+            ["class"] = "file-uploader-input",
+            ["multiple"] = "multiple",
+            ["accept"] = InputAccept,
+        };
+
         if (For != null && ShiftForm?.EditContext != null)
         {
             _FieldIdentifier = FieldIdentifier.Create(For);
@@ -204,14 +212,6 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
             if (DropAreaSelector is not null)
                 SetDropZone();
-
-            this.AdditionalAttributes = new()
-            {
-                ["id"] = this.InputId,
-                ["class"] = "file-uploader-input",
-                ["multiple"] = "multiple",
-                ["accept"] = InputAccept,
-            };
 
             if (this.Capture is not null)
             {

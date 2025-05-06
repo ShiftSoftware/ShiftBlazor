@@ -181,6 +181,7 @@ window.setDropZone = function (UploaderId, dropZoneSelector) {
     input.addEventListener("drop", () => endDrop(input, dropZone));
     input.addEventListener("dragleave", () => endDrop(input, dropZone));
     input.addEventListener("dragend", () => endDrop(input, dropZone));
+    input.addEventListener("mouseleave", () => endDrop(input, dropZone));
     dropZone.addEventListener("dragenter", () => startDrop(input, dropZone));
 
     if (dropZone.style.position === "static" || dropZone.style.position === "") {
