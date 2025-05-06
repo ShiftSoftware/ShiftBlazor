@@ -424,6 +424,7 @@ public partial class FileExplorer : IShortcutComponent
 
     private async Task CreateNewFolder()
     {
+        DisplayContextMenu = false;
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
@@ -436,7 +437,6 @@ public partial class FileExplorer : IShortcutComponent
         {
             if (result?.Data is string value)
             {
-                DisplayContextMenu = false;
                 var newFolderData = DefaultDirectoryContentObject();
                 newFolderData.Action = "create";
                 newFolderData.Path = GetPath(CWD);
@@ -664,13 +664,21 @@ public partial class FileExplorer : IShortcutComponent
 
     private async Task<List<UserDetails>> GetUsers(List<string> userIds)
     {
-        var filter = new ODataFilterGenerator()
+        try
+        {
+            var filter = new ODataFilterGenerator()
             .Add(nameof(UserDetails.ID), ODataOperator.In, userIds)
             .ToString();
-        var url = SettingManager.Configuration.UserListEndpoint + "?$filter=" + filter;
+            var url = SettingManager.Configuration.UserListEndpoint + "?$filter=" + filter;
 
-        var users = await HttpClient.GetFromJsonAsync<ODataDTO<UserDetails>>(url);
-        return users?.Value ?? [];
+            var users = await HttpClient.GetFromJsonAsync<ODataDTO<UserDetails>>(url);
+            return users?.Value ?? [];
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+        
     }
 
     private string GetViewClass(FileView? view = null)
