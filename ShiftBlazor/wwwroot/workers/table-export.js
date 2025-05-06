@@ -5,68 +5,65 @@ async function fetchRows(url, headers) {
 }
 
 function buildForeignColumnsMapper(columns, foreignColumns, origin) {
-    const mapper = {}
-    const foreignKeys = []
+    const foreignTables = {}
+    const fieldMapper = {}
 
     foreignColumns.forEach((col) => {
         // if the foreign is not in the columns ( hidden ) then skip it
         if (!columns.some((column) => column.key === col.propertyName)) return
 
-        foreignKeys.push(col.propertyName)
-
-        mapper[col.propertyName] = {
-            entries: {},
-            filterValues: [],
-            rowKey: col.propertyName,
-            idKey: col.tEntityValueField, 
-            valueKey: col.tEntityTextField,
-            url: `${col.url || origin}/${col.entitySet}`,
+        if (!foreignTables[col.entitySet]) foreignTables[col.entitySet] = {
+            items: [],
+            itemsMapper: {},
+            filterValues: {},
+            url: `${col.url || origin}/${col.entitySet}`
         }
+
+        fieldMapper[col.propertyName] = {
+            table: col.entitySet,
+            idKey: col.tEntityValueField,
+            valueKey: col.tEntityTextField,
+        }
+
     })
 
-    return { foreignColumnsMapper: mapper, foreignKeys }
+    return { foreignTables, fieldMapper }
 }
 
-function populateForeignFilterValues(rows, foreignKeys, mapper) {
+function populateForeignFilterValues(rows, foreignTables, fieldMapper) {
 
     // if there is no foreign columns then skip populating
-    if (!foreignKeys.length) return
+    if (!Object.keys(fieldMapper)) return
 
     // push unique values into filterValues
     rows.forEach((row) => {
-        foreignKeys.forEach((key) => {
-            const value = row[key]
-            if (value && `${value}`.length && !mapper[key].filterValues.includes(value)) {
-                mapper[key].filterValues.push(value)
+        Object.entries(fieldMapper).forEach(([k, { table, idKey, valueKey }]) => {
+            const value = row[k]
+            if (value && `${value}`.length) {
+                if (foreignTables[table].filterValues[idKey]) {
+                    if (!foreignTables[table].filterValues[idKey].includes(value)) foreignTables[table].filterValues[idKey].push(value)
+                } else {
+                    foreignTables[table].filterValues[idKey] = [value]
+                }
             }
         })
     })
-
-    // Remove foreign keys and their mapper if their mapper doeasnt have any filterValues
-    for (let i = foreignKeys.length - 1; i >= 0; i--) {
-        if (!mapper[foreignKeys[i]].filterValues.length) {
-            delete mapper[foreignKeys[i]]
-            foreignKeys.splice(i, 1)
-        }
-    }
 }
 
-function createODataQuery(filterType, filterValues, selectFields) {
-    const quotedIds = filterValues.map((v) => `'${v}'`).join(",")
-    const filterClause = `${filterType} in (${quotedIds})`
-    const selectClause = selectFields.join(",")
-    return `?$filter=${encodeURIComponent(filterClause)}&$select=${selectClause}`
+function createODataQuery(filters) {
+    const filterClauses = Object.entries(filters).map(([key, values]) => {
+        const quoted = values.map((v) => `'${v}'`).join(",");
+        return `${key} in (${quoted})`;
+    });
+
+    const filterClause = filterClauses.join(" and ");
+    return `?$filter=${encodeURIComponent(filterClause)}`;
 }
 
-function fetchForeignEntries(foreignKeys, mapper, headers) {
-    const fetchPromises = foreignKeys.map((key) => {
-        const foreignColumn = mapper[key]
+function fetchForeignEntries(foreignTables, headers) {
+    const fetchPromises = Object.values(foreignTables).map((v) => {
 
-        const url = foreignColumn.url + createODataQuery(
-            foreignColumn.idKey,
-            foreignColumn.filterValues,
-            [foreignColumn.idKey, foreignColumn.valueKey]
-        )
+        const url = v.url + createODataQuery(v.filterValues)
 
         return fetch(url, { headers, method: "GET" })
             .then(async (response) => {
@@ -82,49 +79,118 @@ function fetchForeignEntries(foreignKeys, mapper, headers) {
                     items = [];
                 }
 
-                // create entry mapper as id : value, for example "u23" : "toyota"
-                items.forEach((item) => {
-                    foreignColumn.entries[item[foreignColumn.idKey]] = item[foreignColumn.valueKey]
-                })
+                v.items = [...v.items, ...items]
             })
     })
 
     return Promise.all(fetchPromises)
 }
 
+function generateItemMapper(foreignTables) {
+    Object.values(foreignTables).map((v) => {
+        // create entry mapper as id : value, for example "u23" : 1 (the index)
+        v.items.forEach((item, idx) => {
+            if (item.ID) {
+                v.itemsMapper[item.ID.toString()] = idx.toString()
+            }
+        })
+    })
+}
+
 function capitalizeFirstLetter(str) {
     return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-function formatDateColumns(date) {
-    date.setUTCHours(date.getUTCHours() + 3);
+const pad = (n) => (n < 10 ? '0' + n : n);
 
-    // Format the date as "YYYY-MM-DD HH:MM:SS" using UTC getters
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+const replacements = {
+    yyyy: (date) => date.getFullYear(),
+    yy: (date) => String(date.getFullYear()).slice(-2),
+    MM: (date) => pad(date.getMonth() + 1),
+    M: (date) => date.getMonth() + 1,
+    dd: (date) => pad(date.getDate()),
+    d: (date) => date.getDate(),
+    HH: (date) => pad(date.getHours()),
+    H: (date) => date.getHours(),
+    hh: (date) => pad(date.getHours() % 12 || 12),
+    h: (date) => date.getHours() % 12 || 12,
+    mm: (date) => pad(date.getMinutes()),
+    m: (date) => date.getMinutes(),
+    tt: (date) => date.getHours() < 12 ? 'AM' : 'PM'
+};
 
-    const formatted = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+function formatDate(date, dateFormat, timeFormat, isRTL) {
+    const isForwardSlash = dateFormat.includes("/")
 
-    return formatted;
+    let dateParts
+
+    if (isForwardSlash) dateParts = dateFormat.split("/")
+    else dateParts = dateFormat.split("-")
+
+    const parsedDateParts = dateParts.map(part => (replacements[part] && replacements[part](date)) || part)
+
+    const parsedDate = parsedDateParts.join(isForwardSlash ? "/" : "-")
+
+
+    const [hour, rest] = timeFormat.split(":");
+    const [minute, period] = rest ? rest.split(" ") : [undefined, undefined];
+    const timeParts = [hour, minute, period].filter(Boolean);
+
+    const parsedTimeParts = timeParts.map(part => (replacements[part] && replacements[part](date)) || part)
+
+    let parsedTime = `${parsedTimeParts[0]}:${parsedTimeParts[1]}`
+
+    if (parsedTimeParts.length > 2) {
+        if (isRTL) parsedTime = `${parsedTimeParts[2]} ` + parsedTime
+        else parsedTime += ` ${parsedTimeParts[2]}`
+    }
+
+    return isRTL ? `${parsedTime} ${parsedDate}`  :`${parsedDate} ${parsedTime}`
 }
 
-function generateCSVContent(rows, columns, language, viableForeignKeys, mapper) {
-    const languageKey = language.slice(0, 2)
-    const localizedColumns = new Set()
+function parseRawValue(value, col, localizedColumns, language, dateFormat, timeFormat, isRTL) {
+    
+    if (localizedColumns.has(col.title)) { // normal texts localized
+        try {
+            const localizedObject = JSON.parse(value)
+            return localizedObject[language] ?? value
+        } catch { }
+    } else if (value instanceof Date) {
+        value = formatDate(value, dateFormat, timeFormat, isRTL)
+    } else if (typeof value === "boolean") {
+        value = capitalizeFirstLetter(String(value))
+    }
+
+    return value
+}
+
+function generateCSVContent(rows, columns, language, dateFormat, timeFormat, foreignTables, fieldMapper, isRTL) {
     const csvRows = []
+    const localizedColumns = new Set()
+    const foreignKeys = Object.keys(fieldMapper)
 
     // Header row
     csvRows.push(columns.map((c) => c.title).join(","))
 
     rows.forEach((row, rowIndex) => {
         const csvRowData = columns.map((col) => {
-            let value = row[col.key]
+            let value = row[col.key] || ""
 
-            if (col.key.includes('.')) {
+            if (foreignKeys.includes(col.key)) { // process the foriegn values
+                const foreignField = fieldMapper[col.key]
+                const foreign = foreignTables[foreignField.table]
+
+                let table = {}
+
+                if (foreign.itemsMapper[value]) {
+                    table = foreign.items[+foreign.itemsMapper[value]]
+                } else {
+                    table = foreign.items.find(item => item[foreignField.idKey] == value)
+                }
+
+                if (table[foreignField.valueKey]) value = table[foreignField.valueKey]
+
+            } else if (col.key.includes('.')) { // process dateTime columns
                 const [columnKey, columnType] = col.key.split('.');
 
                 value = row[columnKey]
@@ -132,83 +198,57 @@ function generateCSVContent(rows, columns, language, viableForeignKeys, mapper) 
                 if (columnType === "DateTime") value = new Date(value)
             }
 
-            // If the column is foreign and it has coresponding value then replace it
-            if (viableForeignKeys.includes(col.key)) {
-                const foreignColumn = mapper[col.key]
-                if (value && foreignColumn.entries[value]) {
-                    value = foreignColumn.entries[value]
-                }
-            }
-
             // Determine localized columns based on the first row
             if (rowIndex === 0) {
                 try {
                     const localizedObject = JSON.parse(value)
-                    if (localizedObject[languageKey]) localizedColumns.add(col.title)
+                    if (localizedObject[language]) localizedColumns.add(col.title)
                 } catch { }
             }
 
-            // For localized columns, parse and extract the localized string
-            if (localizedColumns.has(col.title)) {
-                try {
-                    const localizedObject = JSON.parse(value)
-                    value = localizedObject[languageKey] ?? value
-                } catch { }
-            }
-
-            if (value instanceof Date) {
-                value = formatDateColumns(value)
-            } else if (typeof value === "boolean") {
-                value = capitalizeFirstLetter(String(value))
-            }
-
-            // Escape special characters for CSV formatting
-            if (
-                typeof value === "string" &&
-                (value.includes(",") || value.includes("\n") || value.includes('"'))
-            ) {
-                value = `"${value.replace(/"/g, '""')}"`
-            }
+            //// Escape special characters for CSV formatting
+            //if (
+            //    typeof value === "string" &&
+            //    (value.includes(",") || value.includes("\n") || value.includes('"'))
+            //) {
+            //    value = `"${value.replace(/"/g, '""')}"`
+            //}
 
 
-            return value
+            return parseRawValue(value, col, localizedColumns, language, dateFormat, timeFormat, isRTL)
         })
 
         csvRows.push(csvRowData.join(","))
     })
 
+    console.log(csvRows)
     return csvRows.join("\n")
 }
 
 self.onmessage = async (event) => {
     const { payload, headers, origin } = event.data;
-    const { urlValue, values, columns, fileName, language, foreignColumns } = payload;
+    
+    const { urlValue, values, columns, fileName, language, foreignColumns, dateFormat, timeFormat, isRTL } = payload;
 
-    console.log(columns)
-
-    return
     try {
         const rows = Array.isArray(values) && values.length ? values : await fetchRows(urlValue, headers);
 
         if (!rows.length) throw new Error("No Items found");
 
-        const { foreignColumnsMapper, foreignKeys } = buildForeignColumnsMapper(columns, foreignColumns, origin)
+        const { foreignTables, fieldMapper } = buildForeignColumnsMapper(columns, foreignColumns, origin)
 
         // Populate unique filter values for foreign keys
-        populateForeignFilterValues(rows, foreignKeys, foreignColumnsMapper)
+        populateForeignFilterValues(rows, foreignTables, fieldMapper)
 
+        
         // Concurrently fetch data for foreign columns
-        await fetchForeignEntries(foreignKeys, foreignColumnsMapper, headers)
+        await fetchForeignEntries(foreignTables, headers)
 
-        // Only use keys that have filter values and fetched entries
-        const viableForeignKeys = foreignKeys.filter(
-            (key) =>
-                foreignColumnsMapper[key].filterValues.length &&
-                Object.keys(foreignColumnsMapper[key].entries).length
-        )
+        generateItemMapper(foreignTables)
 
-        const csvContent = generateCSVContent(rows, columns, language, viableForeignKeys, foreignColumnsMapper)
+        const csvContent = generateCSVContent(rows, columns, language, dateFormat, timeFormat, foreignTables, fieldMapper, isRTL )
 
+        return
         const csvURL = URL.createObjectURL(new Blob([csvContent], { type: "text/csv" }))
 
         self.postMessage({ csvURL, fileName, message: "", isSuccess: true })

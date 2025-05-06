@@ -1013,15 +1013,24 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                     });
 
-            var language = SettingManager.GetLanguage().CultureName;
+            var language = SettingManager.GetCulture().TwoLetterISOLanguageName;
+
+            var isRTL = SettingManager.GetLanguage().RTL;
+
+            var dateFormat= SettingManager.GetDateFormat();
+
+            var timeFormat = SettingManager.GetTimeFormat();
 
             var payload = new
             {
+                isRTL,
                 values,
                 columns,
                 fileName,
                 language,
                 urlValue,
+                dateFormat,
+                timeFormat,
                 foreignColumns,
             };
 
