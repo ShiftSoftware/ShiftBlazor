@@ -103,7 +103,7 @@
                     }
                     <MudText title="@item.GetFileName()" Style="width: 600px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@item.GetFileName()</MudText>
 
-                    @if (item.Progress == 1 && item.Message == null)
+                    @if (item.State == FileUploadState.Uploaded && item.Message == null)
                     {
                         <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
                     }
