@@ -825,8 +825,10 @@ public partial class FileExplorer : IShortcutComponent
 
     private async Task FileUploaderValuesChanged(List<ShiftFileDTO> files)
     {
-        if (files?.Any() == true)
+        if (files?.Any(x => (x.Data is FileUploadState state && state == FileUploadState.Uploaded)) == true)
         {
+            DisplayError(JsonSerializer.Serialize(files));
+
             await Refresh();
         }
         else

@@ -2,7 +2,6 @@
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
@@ -459,32 +458,27 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
                 }
             }
 
-            try
-            {
-                await blobClient.UploadAsync(
+            await blobClient.UploadAsync(
                 stream,
                 headers,
                 metadata,
                 progressHandler: prog,
                 cancellationToken: token
-                //,transferOptions: new Azure.Storage.StorageTransferOptions
-                //{
-                //    InitialTransferSize = (long)(0.5m * 1024m * 1024m), // 0.5MB
-                //    MaximumTransferSize = (long)(0.5m * 1024m * 1024m), // 0.5MB
-                //}
+            //,transferOptions: new Azure.Storage.StorageTransferOptions
+            //{
+            //    InitialTransferSize = (long)(0.5m * 1024m * 1024m), // 0.5MB
+            //    MaximumTransferSize = (long)(0.5m * 1024m * 1024m), // 0.5MB
+            //}
             );
 
-                item.LocalFile = null;
-                item.State = FileUploadState.Uploaded;
-                await OnUploadFinished.InvokeAsync(new UploadEventArgs(Items));
-            }
-            catch
-            {
-                item.State = FileUploadState.Failed;
-            }
+            item.LocalFile = null;
+            item.State = FileUploadState.Uploaded;
+            item.File.Data = FileUploadState.Uploaded;
+            await OnUploadFinished.InvokeAsync(new UploadEventArgs(Items));
         }
         catch (Exception ex)
         {
+            item.State = FileUploadState.Failed;
             item.Message = new Message { Title = Loc["FileUploaderError3", ex.Message] };
             item.CancellationTokenSource?.Cancel();
         }
