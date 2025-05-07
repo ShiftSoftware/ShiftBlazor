@@ -158,7 +158,7 @@ function formatDate(date, dateFormat, timeFormat, isRTL) {
 }
 
 function parseRawValue(value, col, localizedColumns, language, dateFormat, timeFormat, isRTL) {
-    
+
     if (localizedColumns.has(col.title)) { // normal texts localized
         try {
             const localizedObject = JSON.parse(value)
@@ -181,6 +181,96 @@ function parseRawValue(value, col, localizedColumns, language, dateFormat, timeF
     return value
 }
 
+
+function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables) {
+    let value = row[col.key]
+
+    if (foreignKeys.includes(col.key)) { // process the foriegn values
+        if (value) {
+            const foreignField = fieldMapper[col.key]
+            const foreign = foreignTables[foreignField.table]
+
+            let table = {}
+
+            if (foreign.itemsMapper[value]) {
+                table = foreign.items[+foreign.itemsMapper[value]]
+            } else {
+                table = foreign.items.find(item => item[foreignField.idKey] == value)
+            }
+
+            if (table[foreignField.valueKey]) value = table[foreignField.valueKey]
+        }
+
+    } else if (col.key.includes('.')) { // process dateTime columns
+        const [columnKey, columnType] = col.key.split('.');
+
+        value = row[columnKey]
+
+        if (columnType === "DateTime") value = new Date(value)
+    }
+
+    return value;
+
+}
+
+function parseCustomColumn(row, col, localizedColumns, language, dateFormat, timeFormat, isRTL, fieldMapper, foreignTables) {
+    let parsedValue = ""
+
+    col.customColumn.forEach(({ type, value }) => {
+        if (type === "string") parsedValue += value
+        else if (type === "property") {
+            if (value.includes(".")) {
+                const [tableTarget, fieldTarget] = value.split(".")
+
+                if (foreignTables[tableTarget]) {
+                    const [foreignColumnKey, foreignColumnData] = Object.entries(fieldMapper).find(([_, ref]) => ref.table === tableTarget)
+
+                    const foreign = foreignTables[tableTarget]
+
+                    let foreignTableRow = {}
+
+                    try {
+                        if (foreign.itemsMapper[row[foreignColumnKey]]) {
+                            foreignTableRow = foreign.items[+foreign.itemsMapper[row[foreignColumnKey]]]
+                        } else {
+                            foreignTableRow = foreign.items.find(item => item[foreignColumnData.idKey] == row[foreignColumnKey])
+                        }
+
+                        let tempValue = foreignTableRow[fieldTarget];
+
+                        try {
+                            const localizedObject = JSON.parse(tempValue)
+                            tempValue = localizedObject[language]
+                        } catch { }
+
+                        parsedValue += parseRawValue(tempValue, col, localizedColumns, language, dateFormat, timeFormat, isRTL)
+                    } catch { }
+
+
+                }
+            } else {
+                if (row[value]) {
+                    if (typeof row[value] === "string") {
+                        let tempValue = row[value];
+
+                        try {
+                            const localizedObject = JSON.parse(tempValue)
+                            tempValue = localizedObject[language]
+                        } catch { }
+
+                        parsedValue += parseRawValue(tempValue, col, localizedColumns, language, dateFormat, timeFormat, isRTL)
+
+                    } else {
+                        parsedValue += parseRawValue(row[value], col, localizedColumns, language, dateFormat, timeFormat, isRTL)
+                    }
+                }
+            }
+        }
+    })
+
+    return parsedValue
+}
+
 function generateCSVContent(rows, columns, language, dateFormat, timeFormat, foreignTables, fieldMapper, isRTL) {
     const csvRows = []
     const localizedColumns = new Set()
@@ -191,31 +281,11 @@ function generateCSVContent(rows, columns, language, dateFormat, timeFormat, for
 
     rows.forEach((row, rowIndex) => {
         const csvRowData = columns.map((col) => {
-            let value = row[col.key]
-            
-            if (foreignKeys.includes(col.key)) { // process the foriegn values
-                if (value) {
-                    const foreignField = fieldMapper[col.key]
-                    const foreign = foreignTables[foreignField.table]
 
-                    let table = {}
+            let value;
 
-                    if (foreign.itemsMapper[value]) {
-                        table = foreign.items[+foreign.itemsMapper[value]]
-                    } else {
-                        table = foreign.items.find(item => item[foreignField.idKey] == value)
-                    }
-
-                    if (table[foreignField.valueKey]) value = table[foreignField.valueKey]
-                }
-
-            } else if (col.key.includes('.')) { // process dateTime columns
-                const [columnKey, columnType] = col.key.split('.');
-
-                value = row[columnKey]
-
-                if (columnType === "DateTime") value = new Date(value)
-            }
+            if (col.customColumn) value = parseCustomColumn(row, col, localizedColumns, language, dateFormat, timeFormat, isRTL, fieldMapper, foreignTables)
+            else value = parseColumn(col, foreignKeys, fieldMapper, row, foreignTables)
 
             // Determine localized columns based on the first row
             if (rowIndex === 0) {
