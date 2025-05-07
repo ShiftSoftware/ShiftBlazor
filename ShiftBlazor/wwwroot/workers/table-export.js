@@ -9,10 +9,11 @@ function buildForeignColumnsMapper(columns, foreignColumns, origin) {
     const fieldMapper = {}
 
     foreignColumns.forEach((col) => {
+
         // if the foreign is not in the columns ( hidden ) then skip it
         if (!columns.some((column) => column.key === col.propertyName)) return
 
-        if (!foreignTables[col.entitySet]) foreignTables[col.entitySet] = {
+        if (!foreignTables[col.foreignEntiyField]) foreignTables[col.foreignEntiyField] = {
             items: [],
             itemsMapper: {},
             filterValues: {},
@@ -20,7 +21,7 @@ function buildForeignColumnsMapper(columns, foreignColumns, origin) {
         }
 
         fieldMapper[col.propertyName] = {
-            table: col.entitySet,
+            table: col.foreignEntiyField,
             idKey: col.tEntityValueField,
             valueKey: col.tEntityTextField,
         }

@@ -954,7 +954,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await InvokeAsync(StateHasChanged);
         }
 
-        #region Export
+        #region Export  
 
         internal async Task ExportList()
         {
@@ -973,7 +973,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var foreignColumns = DataGrid!
                     .RenderedColumns
                     .Where(x => x.Class?.Contains("foreign-column") == true)
-                    .Select(x => x as IForeignColumn);
+                    .Select(x =>
+                    {
+                        var foreignColumn = x as IForeignColumn;
+
+                        var fullName = foreignColumn.GetType().GetGenericArguments().Last().FullName;
+                        var parts = fullName.Split('.');
+                        var tableName = parts.Length >= 2 ? parts[^2] : fullName;
+
+                        foreignColumn.ForeignEntiyField = tableName;
+
+                        return foreignColumn;
+                    });
 
             var columns = DataGrid!
                     .RenderedColumns
