@@ -17,8 +17,11 @@ namespace ShiftSoftware.ShiftBlazor.Enums
         Contains,
         NotContains,
         StartsWith,
+        NotStartsWith,
         EndsWith,
+        NotEndsWith,
         In,
+        NotIn,
         IsEmpty,
         IsNotEmpty,
     }

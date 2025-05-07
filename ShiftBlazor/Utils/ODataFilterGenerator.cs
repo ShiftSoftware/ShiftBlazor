@@ -284,12 +284,16 @@ public class ODataFilterGenerator
             ODataOperator.Contains or FilterOperator.String.Contains => "contains({0},{1})",
             ODataOperator.NotContains or FilterOperator.String.NotContains => "not contains({0},{1})",
             ODataOperator.StartsWith or FilterOperator.String.StartsWith => "startswith({0},{1})",
+            ODataOperator.NotStartsWith=> "startswith({0},{1}) eq false",
             ODataOperator.EndsWith or FilterOperator.String.EndsWith => "endswith({0},{1})",
+            ODataOperator.NotEndsWith => "endswith({0},{1}) eq false",
             ODataOperator.IsEmpty or FilterOperator.String.Empty => "{0} eq null",
             ODataOperator.IsNotEmpty or FilterOperator.String.NotEmpty => "{0} ne null",
             ODataOperator.In => "{0} in ({1})",
+            ODataOperator.NotIn => "{0} in ({1}) eq false",
             _ => "{0} eq {1}",
         };
+
         return filterTemplate;
     }
 }

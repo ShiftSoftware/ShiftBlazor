@@ -14,7 +14,6 @@ public enum NumericFilterOperator
     Odd,
     WholeNumbers,
     Equal,
-    NotEqual,
     GreaterThan,
     LessThan,
     GreaterThanOrEqual,

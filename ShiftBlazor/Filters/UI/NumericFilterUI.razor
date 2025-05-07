@@ -5,11 +5,12 @@
 {
 	<MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged" Label="Operator">
 		<MudSelectItem Value="ODataOperator.Equal">Is</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.NotEqual">Is Not</MudSelectItem>
 		<MudSelectItem Value="ODataOperator.IsNotEmpty">IsSet</MudSelectItem>
 		<MudSelectItem Value="ODataOperator.IsEmpty">IsNotSet</MudSelectItem>
 	</MudSelectExtended>
 
-	@if (Filter.Operator == ODataOperator.Equal)
+	@if (Filter.Operator == ODataOperator.Equal || Filter.Operator == ODataOperator.NotEqual)
 	{
 		<MudSelectExtended T="NumericFilterOperator?" Value="numericFilter.SelectedNumOperator" ValueChanged="OnNumOperatorChanged">
 			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.Positive">Positive</MudSelectItem>
@@ -21,7 +22,6 @@
 			}
 			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.WholeNumbers">WholeNumbers</MudSelectItem>
 			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.Equal">Equal</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.NotEqual">NotEqual</MudSelectItem>
 			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.GreaterThan">GreaterThan</MudSelectItem>
 			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.GreaterThanOrEqual">GreaterThanOrEqual</MudSelectItem>
 			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.LessThan">LessThan</MudSelectItem>
@@ -39,15 +39,15 @@
 		@if (numericFilter.SelectedNumOperator == NumericFilterOperator.PercentageOf)
 		{
 			<MudNumericField T="double"
-							 Label="Percentage"
-							 Class="percent-input"
-							 MaxLength="3"
-							 Max="100"
-							 Min="0"
-							 Adornment="Adornment.End"
-							 AdornmentIcon="@Icons.Material.Filled.Percent"
-							 Value="numericFilter.PercentValue"
-							 ValueChanged="PercentValueChanged" />
+			Label="Percentage"
+			Class="percent-input"
+			MaxLength="3"
+			Max="100"
+			Min="0"
+			Adornment="Adornment.End"
+			AdornmentIcon="@Icons.Material.Filled.Percent"
+			Value="numericFilter.PercentValue"
+			ValueChanged="PercentValueChanged" />
 		}
 		@if (numericFilter.SelectedNumOperator >= NumericFilterOperator.Equal)
 		{
@@ -68,6 +68,12 @@
 
 	// Even and Odd don't really work for floating numbers
 	private bool IsDouble => FieldType == null || FieldType == typeof(double) || Nullable.GetUnderlyingType(FieldType) == typeof(double);
+
+	protected override void OnInitialized()
+	{
+		Filter.Value = Value;
+		base.OnInitialized();
+	}
 
 	private void PercentValueChanged(double value)
 	{
