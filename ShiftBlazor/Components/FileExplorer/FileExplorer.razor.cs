@@ -827,8 +827,6 @@ public partial class FileExplorer : IShortcutComponent
     {
         if (files?.Any(x => (x.Data is FileUploadState state && state == FileUploadState.Uploaded)) == true)
         {
-            DisplayError(JsonSerializer.Serialize(files));
-
             await Refresh();
         }
         else
