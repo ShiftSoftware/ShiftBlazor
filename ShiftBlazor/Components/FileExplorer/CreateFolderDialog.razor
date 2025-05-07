@@ -2,14 +2,14 @@
 
 <MudDialog>
     <TitleContent>
-        Folder
+        @Loc["Folder"]
     </TitleContent>
     <DialogContent>
         <MudTextField Error="ErrorText != null" ErrorText="@ErrorText" Immediate TextChanged="OnInputChanged" @bind-Value="Value" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+        <MudButton OnClick="Cancel">@Loc["CancelChanges"]</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">@Loc["OkButton"]</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -20,11 +20,13 @@
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = default!;
 
+    [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
+
     private void Submit()
     {
         if (string.IsNullOrWhiteSpace(Value))
         {
-			ErrorText = "Folder name cannot be empty";
+			ErrorText = Loc["Folder name cannot be empty"];
         }
         else
         {

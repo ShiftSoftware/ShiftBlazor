@@ -503,7 +503,7 @@ public partial class FileExplorer : IShortcutComponent
         bool? result = await DialogService.ShowMessageBox(
             Loc["Delete File"],
             Loc["Are you sure you want to delete this file?"],
-            yesText: Loc["Delete"], cancelText: Loc["Cancel"], options: options);
+            yesText: Loc["Delete"], cancelText: Loc["CancelChanges"], options: options);
         
         if (result == true)
         {
@@ -653,7 +653,7 @@ public partial class FileExplorer : IShortcutComponent
         bool? result = await DialogService.ShowMessageBox(
             Loc["Restore File"],
             Loc["Are you sure you want to undelete this file?"],
-            yesText: Loc["Restore"], cancelText: Loc["Cancel"], options: options);
+            yesText: Loc["Restore"], cancelText: Loc["CancelChanges"], options: options);
 
         if (result == true)
         {
@@ -817,7 +817,7 @@ public partial class FileExplorer : IShortcutComponent
 
     private void DisplayError(string message)
     {
-        Snackbar.Add(message ?? "Could not parse server data", severity: Severity.Error, configure: o =>
+        Snackbar.Add(message ?? Loc["Could not parse server data"], severity: Severity.Error, configure: o =>
         {
             o.VisibleStateDuration = 5000;
         });
@@ -833,7 +833,7 @@ public partial class FileExplorer : IShortcutComponent
         }
         else
         {
-            DisplayError("Uploading Failed.");
+            DisplayError(Loc["Uploading Failed."]);
         }
     }
 
