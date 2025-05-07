@@ -109,7 +109,7 @@
                     }
                     else
                     {
-                        <MudProgressLinear Color="item.Message == null ? Color.Primary : Color.Error" Style="max-width: 200px;" Indeterminate="item.IsWaitingForUpload" Value="item.Progress" Max="1" />
+                        <MudProgressLinear Color="item.Message == null ? Color.Primary : Color.Error" Style="max-width: 200px;" Indeterminate="item.IsWaitingForUpload || item.State == FileUploadState.Uploading" />
                     }
 
                     <MudSpacer />

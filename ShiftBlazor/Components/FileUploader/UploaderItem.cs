@@ -50,4 +50,5 @@ public enum FileUploadState
     Prepared,
     Uploading,
     Uploaded,
+    Failed
 }

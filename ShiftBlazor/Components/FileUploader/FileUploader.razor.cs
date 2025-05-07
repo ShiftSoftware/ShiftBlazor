@@ -272,17 +272,18 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         var filesToUpload = Items.Where(x => x.IsWaitingForUpload).ToList();
 
-        await GetSASForFilesAsync(filesToUpload);
-
-        await Parallel.ForEachAsync(filesToUpload, new ParallelOptions { MaxDegreeOfParallelism = 5 }, async (file, _) =>
+        if (await GetSASForFilesAsync(filesToUpload))
         {
-            await UploadFileToAzureAsync(file);
-        });
+            await Parallel.ForEachAsync(filesToUpload, new ParallelOptions { MaxDegreeOfParallelism = 5 }, async (file, _) =>
+            {
+                await UploadFileToAzureAsync(file);
+            });
+        }
 
         await SetValue(Items);
     }
 
-    internal async Task GetSASForFilesAsync(IEnumerable<UploaderItem> items)
+    internal async Task<bool> GetSASForFilesAsync(IEnumerable<UploaderItem> items)
     {
         var url = SettingManager.Configuration.BaseAddress.AddUrlPath(Url);
 
@@ -293,7 +294,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             if (item.LocalFile == null)
             {
                 item.Message = new Message { Title = Loc["FileUploaderError1"] };
-                return;
+                return false;
             }
 
             item.File = null;
@@ -316,10 +317,10 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             files.Add(file);
         }
 
-        using var postResponse = await HttpClient.PostAsJsonAsync(url, files);
-
         try
         {
+            using var postResponse = await HttpClient.PostAsJsonAsync(url, files);
+            
             var filesWithSASTokenReponse = await postResponse.Content.ReadFromJsonAsync<ShiftEntityResponse<List<ShiftFileDTO>>>();
 
             if (postResponse.IsSuccessStatusCode && filesWithSASTokenReponse?.Entity != null)
@@ -334,8 +335,16 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         }
         catch (Exception)
         {
-            throw;
+            foreach (var file in items)
+            {
+                file.Message = new Message("Error Generating Upload Token");
+                file.State = FileUploadState.Failed;
+            }
+
+            return false;
         }
+
+        return true;
     }
 
     [Obsolete]
@@ -450,11 +459,29 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
                 }
             }
 
-            await blobClient.UploadAsync(stream, headers, metadata, progressHandler: prog, cancellationToken: token);
+            try
+            {
+                await blobClient.UploadAsync(
+                stream,
+                headers,
+                metadata,
+                progressHandler: prog,
+                cancellationToken: token
+                //,transferOptions: new Azure.Storage.StorageTransferOptions
+                //{
+                //    InitialTransferSize = (long)(0.5m * 1024m * 1024m), // 0.5MB
+                //    MaximumTransferSize = (long)(0.5m * 1024m * 1024m), // 0.5MB
+                //}
+            );
 
-            item.LocalFile = null;
-            item.State = FileUploadState.Uploaded;
-            await OnUploadFinished.InvokeAsync(new UploadEventArgs(Items));
+                item.LocalFile = null;
+                item.State = FileUploadState.Uploaded;
+                await OnUploadFinished.InvokeAsync(new UploadEventArgs(Items));
+            }
+            catch
+            {
+                item.State = FileUploadState.Failed;
+            }
         }
         catch (Exception ex)
         {
