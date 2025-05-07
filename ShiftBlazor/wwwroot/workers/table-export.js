@@ -63,6 +63,14 @@ function createODataQuery(filters) {
 function fetchForeignEntries(foreignTables, headers) {
     const fetchPromises = Object.values(foreignTables).map((v) => {
 
+        let processFetching = false
+
+        Object.values(v.filterValues).forEach(filterValue => {
+            if (!!filterValue.length) processFetching = true
+        })
+
+        if (!processFetching) return
+
         const url = v.url + createODataQuery(v.filterValues)
 
         return fetch(url, { headers, method: "GET" })
@@ -153,12 +161,20 @@ function parseRawValue(value, col, localizedColumns, language, dateFormat, timeF
     if (localizedColumns.has(col.title)) { // normal texts localized
         try {
             const localizedObject = JSON.parse(value)
-            return localizedObject[language] ?? value
+            value = localizedObject[language] ?? value
         } catch { }
     } else if (value instanceof Date) {
         value = formatDate(value, dateFormat, timeFormat, isRTL)
     } else if (typeof value === "boolean") {
         value = capitalizeFirstLetter(String(value))
+    }
+
+    // Escape special characters for CSV formatting
+    if (
+        typeof value === "string" &&
+        (value.includes(",") || value.includes("\n") || value.includes('"'))
+    ) {
+        value = `"${value.replace(/"/g, '""')}"`
     }
 
     return value
@@ -174,21 +190,23 @@ function generateCSVContent(rows, columns, language, dateFormat, timeFormat, for
 
     rows.forEach((row, rowIndex) => {
         const csvRowData = columns.map((col) => {
-            let value = row[col.key] || ""
-
+            let value = row[col.key]
+            
             if (foreignKeys.includes(col.key)) { // process the foriegn values
-                const foreignField = fieldMapper[col.key]
-                const foreign = foreignTables[foreignField.table]
+                if (value) {
+                    const foreignField = fieldMapper[col.key]
+                    const foreign = foreignTables[foreignField.table]
 
-                let table = {}
+                    let table = {}
 
-                if (foreign.itemsMapper[value]) {
-                    table = foreign.items[+foreign.itemsMapper[value]]
-                } else {
-                    table = foreign.items.find(item => item[foreignField.idKey] == value)
+                    if (foreign.itemsMapper[value]) {
+                        table = foreign.items[+foreign.itemsMapper[value]]
+                    } else {
+                        table = foreign.items.find(item => item[foreignField.idKey] == value)
+                    }
+
+                    if (table[foreignField.valueKey]) value = table[foreignField.valueKey]
                 }
-
-                if (table[foreignField.valueKey]) value = table[foreignField.valueKey]
 
             } else if (col.key.includes('.')) { // process dateTime columns
                 const [columnKey, columnType] = col.key.split('.');
@@ -205,15 +223,6 @@ function generateCSVContent(rows, columns, language, dateFormat, timeFormat, for
                     if (localizedObject[language]) localizedColumns.add(col.title)
                 } catch { }
             }
-
-            //// Escape special characters for CSV formatting
-            //if (
-            //    typeof value === "string" &&
-            //    (value.includes(",") || value.includes("\n") || value.includes('"'))
-            //) {
-            //    value = `"${value.replace(/"/g, '""')}"`
-            //}
-
 
             return parseRawValue(value, col, localizedColumns, language, dateFormat, timeFormat, isRTL)
         })
