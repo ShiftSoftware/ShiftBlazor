@@ -23,6 +23,7 @@ public partial class FileExplorer : IShortcutComponent
     [Inject] HttpClient HttpClient { get; set; } = default!;
     [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] IIdentityStore? TokenStore { get; set; }
 
@@ -312,7 +313,7 @@ public partial class FileExplorer : IShortcutComponent
         }
         catch (Exception e)
         {
-            await DisplayError(e.Message);
+            DisplayError(e.Message);
         }
 
         IsLoading = false;
@@ -463,7 +464,7 @@ public partial class FileExplorer : IShortcutComponent
         }
         catch (Exception e)
         {
-            await DisplayError(e.Message);
+            DisplayError(e.Message);
         }
     }
 
@@ -513,8 +514,15 @@ public partial class FileExplorer : IShortcutComponent
             deleteData.Path = SelectedFiles.First().FilterPath;
             deleteData.Data = files;
 
-            var response = await HttpClient.PostAsJsonAsync(Url, deleteData);
-            await Refresh();
+            try
+            {
+                var response = await HttpClient.PostAsJsonAsync(Url, deleteData);
+                await Refresh();
+            }
+            catch (Exception ex) 
+            {
+                DisplayError(ex.Message);
+            }
         }
     }
 
@@ -807,16 +815,24 @@ public partial class FileExplorer : IShortcutComponent
         return string.Join(" ", classes);
     }
 
-    private async Task DisplayError(string message)
+    private void DisplayError(string message)
     {
-        var options = new DialogOptions
+        Snackbar.Add(message ?? "Could not parse server data", severity: Severity.Error, configure: o =>
         {
-            MaxWidth = MaxWidth.ExtraSmall,
-            BackdropClick = true,
-            CloseOnEscapeKey = true,
-        };
+            o.VisibleStateDuration = 5000;
+        });
+    }
 
-        await DialogService.ShowMessageBox("Error", message ?? "Could not parse server data", yesText: "Ok", options: options);
+    private async Task FileUploaderValuesChanged(List<ShiftFileDTO> files)
+    {
+        if (files?.Any() == true)
+        {
+            await Refresh();
+        }
+        else
+        {
+            DisplayError("Uploading Failed.");
+        }
     }
 
     public void Dispose()
