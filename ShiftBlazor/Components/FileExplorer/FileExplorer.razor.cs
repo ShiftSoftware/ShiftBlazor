@@ -95,6 +95,9 @@ public partial class FileExplorer : IShortcutComponent
     [Parameter]
     public int MaxFileSizeInMegaBytes { get; set; } = 128;
 
+    [Parameter]
+    public int MaxUploadFileCount { get; set; } = 16;
+
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -468,6 +471,7 @@ public partial class FileExplorer : IShortcutComponent
     {
         if (_FileUploader != null)
         {
+            this._FileUploader.Items.Clear();
             await _FileUploader.OpenInput(directoryUpload: false);
         }
     }
