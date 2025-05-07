@@ -238,10 +238,12 @@ function parseCustomColumn(row, col, localizedColumns, language, dateFormat, tim
 
                         let tempValue = foreignTableRow[fieldTarget];
 
-                        try {
-                            const localizedObject = JSON.parse(tempValue)
-                            tempValue = localizedObject[language]
-                        } catch { }
+                        if (typeof tempValue === "string") {
+                            try {
+                                const localizedObject = JSON.parse(tempValue)
+                                tempValue = localizedObject[language]
+                            } catch { }
+                        }
 
                         parsedValue += parseRawValue(tempValue, col, localizedColumns, language, dateFormat, timeFormat, isRTL)
                     } catch { }
