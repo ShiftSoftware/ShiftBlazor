@@ -12,6 +12,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
+using System.ComponentModel;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Text.Json;
@@ -950,6 +951,39 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         #region Export  
 
+        public static Dictionary<string, string>? GetEnumMap(Type? enumType)
+        {
+            if (enumType == null || !enumType.IsEnum)
+                return null;
+
+            return Enum.GetValues(enumType)
+                .Cast<Enum>()
+                .ToDictionary(
+                    val => Convert.ToInt32(val).ToString(),
+                    val =>
+                    {
+                        var member = enumType.GetMember(val.ToString()).FirstOrDefault();
+                        var description = member?.GetCustomAttribute<DescriptionAttribute>()?.Description;
+                        return description ?? val.ToString();
+                    }
+                );
+        }
+
+        string? ExtractPropertyName(string? expression)
+        {
+            if (string.IsNullOrWhiteSpace(expression))
+                return null;
+
+            var start = expression.IndexOf("x.") + 2;
+            if (start < 2 || start >= expression.Length)
+                return null;
+
+            var end = expression.IndexOf(',', start);
+            if (end == -1) end = expression.Length;
+
+            return expression.Substring(start, end - start);
+        }
+
         internal async Task ExportList()
         {
             this.ExportIsInProgress = true;
@@ -980,37 +1014,35 @@ namespace ShiftSoftware.ShiftBlazor.Components
                         return foreignColumn;
                     });
 
-            var formattedColumns = typeof(T)
-            .GetProperties()
-            .Select(p => new
-            {
-                Name = p.Name,
-                Format = p.GetCustomAttribute<ShiftListNumberFormatterExportAttribute>()?.Format
-            })
-            .Where(x => x.Format != null)
-            .ToDictionary(x => x.Name, x => x.Format);
-
-            var customColumns = typeof(T)
-            .GetProperties()
-            .Select(p => new
-            {
-                Name = p.Name,
-                Attr = p.GetCustomAttribute<ShiftListCustomColumnExportAttribute>()
-            })
-            .Where(x => x.Attr != null)
-            .ToDictionary(x => x.Name, x => x.Attr.ToList());
-
             var columns = DataGrid!
-                    .RenderedColumns
-                    .Where(x => x.GetType().GetProperty("Property") != null)
-                    .Select(x => new
-                        {
-                            title = x.Title,
-                            hidden = x.Hidden,
-                            key = x.PropertyName,
-                            format = formattedColumns.TryGetValue(x.PropertyName!, out var formatStr) ? formatStr : null,
-                            customColumn = customColumns.TryGetValue(x.PropertyName!, out var list) ? list : null
-                        });
+                .RenderedColumns
+                .Where(x => x.GetType().GetProperty("Property") != null)
+                .Select(x =>
+                {
+                    var propertyExpression = x.GetType().GetProperty("Property")?.GetValue(x)?.ToString();
+
+                    var key = ExtractPropertyName(propertyExpression) ?? x.PropertyName;
+
+                    var property = typeof(T).GetProperty(key) ?? null;
+
+                    var format = property?.GetCustomAttribute<ShiftListNumberFormatterExportAttribute>()?.Format;
+                    var customColumn = property?.GetCustomAttribute<ShiftListCustomColumnExportAttribute>()?.ToList();
+
+                    var enumValues = property == null
+                        ? null
+                        : GetEnumMap(Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType);
+
+
+                    return new
+                    {
+                        key,
+                        format,
+                        enumValues,
+                        customColumn,
+                        title = x.Title,
+                        hidden = x.Hidden,
+                    };
+                });
 
             var language = SettingManager.GetCulture().TwoLetterISOLanguageName;
 
