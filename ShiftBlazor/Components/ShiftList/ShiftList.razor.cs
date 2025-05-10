@@ -956,17 +956,24 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (enumType == null || !enumType.IsEnum)
                 return null;
 
-            return Enum.GetValues(enumType)
-                .Cast<Enum>()
-                .ToDictionary(
-                    val => Convert.ToInt32(val).ToString(),
-                    val =>
-                    {
-                        var member = enumType.GetMember(val.ToString()).FirstOrDefault();
-                        var description = member?.GetCustomAttribute<DescriptionAttribute>()?.Description;
-                        return description ?? val.ToString();
-                    }
-                );
+            var result = new Dictionary<string, string>();
+
+            foreach (Enum val in Enum.GetValues(enumType))
+            {
+                var member = enumType.GetMember(val.ToString()).FirstOrDefault();
+                var description = member?.GetCustomAttribute<DescriptionAttribute>()?.Description;
+                var name = val.ToString();
+                var value = Convert.ToInt32(val).ToString();
+
+                // Always prefer description if available
+                var label = description ?? name;
+
+                // Add both entries:
+                result[value] = label; // e.g., "1": "Batch/LOT"
+                result[name] = label;  // e.g., "Batch_LOT": "Batch/LOT"
+            }
+
+            return result;
         }
 
         string? ExtractPropertyName(string? expression)

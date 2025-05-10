@@ -161,6 +161,13 @@ function formatDate(date, dateFormat, timeFormat, isRTL) {
 
 function parseRawValue(value, col, localizedColumns, language, dateFormat, timeFormat, isRTL) {
 
+    if (col.enumValues && col.enumValues[value]) {
+        try {
+            value = col.enumValues[value]
+        } catch { }
+    }
+    
+
     if (localizedColumns.has(col.title)) { // normal texts localized
         try {
             const localizedObject = JSON.parse(value)
@@ -296,8 +303,6 @@ function generateCSVContent(rows, columns, language, dateFormat, timeFormat, for
 
     rows.forEach((row, rowIndex) => {
         const csvRowData = visibleColumns.map((col) => {
-
-            console.log(col.title)
 
             let value;
 
