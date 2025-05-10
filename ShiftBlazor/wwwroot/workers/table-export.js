@@ -19,7 +19,7 @@ function buildForeignColumnsMapper(columns, foreignColumns, origin) {
             items: [],
             itemsMapper: {},
             filterValues: {},
-            url: `${col.url || origin}/${col.entitySet}`
+            url: (`${col.url || origin}/${col.entitySet}`).replaceAll("//", "/").replace(":/", "://")
         }
 
         fieldMapper[col.propertyName] = {
@@ -338,10 +338,6 @@ self.onmessage = async (event) => {
 
         // Concurrently fetch data for foreign columns
         await fetchForeignEntries(foreignTables, headers)
-
-        console.log(foreignTables)
-        console.log(fieldMapper)
-        return
 
         generateItemMapper(foreignTables)
 
