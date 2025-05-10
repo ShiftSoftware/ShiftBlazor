@@ -986,6 +986,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
                         return foreignColumn;
                     });
 
+            var formattedColumns = typeof(T)
+            .GetProperties()
+            .Select(p => new
+            {
+                Name = p.Name,
+                Format = p.GetCustomAttribute<ShiftListNumberFormatterExportAttribute>()?.Format
+            })
+            .Where(x => x.Format != null)
+            .ToDictionary(x => x.Name, x => x.Format);
+
+            var customColumns = typeof(T)
+            .GetProperties()
+            .Select(p => new
+            {
+                Name = p.Name,
+                Attr = p.GetCustomAttribute<ShiftListCustomColumnExportAttribute>()
+            })
+            .Where(x => x.Attr != null)
+            .ToDictionary(x => x.Name, x => x.Attr.ToList());
+
             var columns = DataGrid!
                     .RenderedColumns
                     .Where(x => !x.Hidden)
@@ -994,35 +1014,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                         {
                             title = x.Title,
                             key = x.PropertyName,
-                            format = x.Title == "Price" ? "#,0.00": null,
-                            customColumn = x.Title == "Custom ID" ? new List<object>()
-                                {
-                                    new
-                                    {
-                                        type = "property",
-                                        value = "ID",
-
-                                    },
-                                    new {
-                                        type = "string",
-                                        value = "-",
-                                    },
-                                    new {
-                                        type = "property",
-                                        value = "CityID"
-                                    },
-                                    new {
-                                        type = "string",
-                                        value = "-",
-                                    },
-                                    new {
-                                        type= "property",
-                                        value = "City.Name"
-                                    }
-
-                                } : null
-
-                    });
+                            format = formattedColumns.TryGetValue(x.PropertyName!, out var formatStr) ? formatStr : null,
+                            customColumn = customColumns.TryGetValue(x.PropertyName!, out var list) ? list : null
+                        });
 
             var language = SettingManager.GetCulture().TwoLetterISOLanguageName;
 

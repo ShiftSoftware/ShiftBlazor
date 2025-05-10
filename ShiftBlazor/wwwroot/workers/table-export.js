@@ -166,7 +166,17 @@ function parseRawValue(value, col, localizedColumns, language, dateFormat, timeF
             const localizedObject = JSON.parse(value)
             value = localizedObject[language] ?? value
         } catch { }
-    } else if (value instanceof Date) {
+    }
+
+    try {
+        if (col.format) {
+            let tempValue = +value
+            value = format(col.format, tempValue)
+        }
+    } catch { }
+
+
+    if (value instanceof Date) {
         value = formatDate(value, dateFormat, timeFormat, isRTL)
     } else if (typeof value === "boolean") {
         value = capitalizeFirstLetter(String(value))
@@ -182,7 +192,6 @@ function parseRawValue(value, col, localizedColumns, language, dateFormat, timeF
 
     return value
 }
-
 
 function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables) {
     let value = row[col.key]
@@ -305,7 +314,6 @@ function generateCSVContent(rows, columns, language, dateFormat, timeFormat, for
         csvRows.push(csvRowData.join(","))
     })
 
-    console.log(csvRows)
     return csvRows.join("\n")
 }
 
@@ -332,7 +340,6 @@ self.onmessage = async (event) => {
 
         const csvContent = generateCSVContent(rows, columns, language, dateFormat, timeFormat, foreignTables, fieldMapper, isRTL )
 
-        return
         const csvURL = URL.createObjectURL(new Blob([csvContent], { type: "text/csv" }))
 
         self.postMessage({ csvURL, fileName, message: "", isSuccess: true })
