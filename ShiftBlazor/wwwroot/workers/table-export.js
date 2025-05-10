@@ -1,9 +1,11 @@
+importScripts("javascript-number-formatter.min.js")
+// Docs: https://mottie.github.io/javascript-number-formatter/
+
 async function fetchRows(url, headers) {
     const response = await fetch(url, { headers, method: "GET" })
     const data = await response.json()
     return data?.Value || []
 }
-
 function buildForeignColumnsMapper(columns, foreignColumns, origin) {
     const foreignTables = {}
     const fieldMapper = {}
