@@ -31,6 +31,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
+        [Parameter] public string? BaseUrl { get; set; }
+        [Parameter] public string? BaseUrlKey { get; set; }
+
         /// <summary>
         ///     The URL endpoint that processes the CRUD operations.
         /// </summary>
@@ -134,9 +137,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             get
             {
-                var path = SettingManager.Configuration.ApiPath.AddUrlPath(Action);
+                var path = GetPath().AddUrlPath(Action);
                 return IsCreateMode ? path : path.AddUrlPath(Key?.ToString());
             }
+        }
+
+        private string GetPath()
+        {
+            string? url = BaseUrl;
+
+            if (url is null && BaseUrlKey is not null)
+                url = SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey);
+
+            if (url is null)
+                return SettingManager.Configuration.BaseAddress;
+
+            return url;
         }
 
         internal override string _SubmitText
@@ -309,14 +325,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 //await OnPrint.InvokeAsync();
 
                 //Get a Signed Token to Authenticate /print end-point
-                var path = SettingManager.Configuration.ApiPath.AddUrlPath(Action);
+                var path = GetPath().AddUrlPath(Action);
                 
                 var tokenResult = await Http.GetAsync($"{path}/print-token/{Key?.ToString()}");
 
                 var token = await tokenResult.Content.ReadAsStringAsync();
 
+                var language = SettingManager.GetLanguage();
+
                 //Open /print endpoint with the obtained token
-                await JsRuntime.InvokeVoidAsync("open", $"{path}/print/{Key?.ToString()}?{token}", "_blank");
+                await JsRuntime.InvokeVoidAsync("open", $"{path}/print/{Key?.ToString()}?{token}&culture={language.CultureName}", "_blank");
             });
         }
 

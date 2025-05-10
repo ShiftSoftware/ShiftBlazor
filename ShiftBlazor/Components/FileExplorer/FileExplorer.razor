@@ -1,54 +1,404 @@
-﻿@using ShiftSoftware.ShiftEntity.Model
-@using Syncfusion.Blazor.FileManager
-@using Syncfusion.Blazor.Navigations
-@namespace ShiftSoftware.ShiftBlazor.Components
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
 
-<div id="@FileManagerId">
-    <FileUploader @ref="_FileUploader"
-                  ContainerName="@ContainerName"
-                  AccountName="@AccountName"
-                  Prefix="@(this.Root + SfFileManager?.Path)"
-                  DropAreaSelector="@($"#{FileManagerId}")"
-                  HideUI="true"
-                  MaxFileCount="this.MaxUploadFileCount"
-                  ValuesChanged="Refresh" />
+@if (!string.IsNullOrWhiteSpace(Title) && !IsEmbed)
+{
+    <PageTitle>@Title</PageTitle>
+}
 
-    <SfFileManager @ref="SfFileManager"
-                   TValue="FileExplorerDirectoryContent"
-                   ShowThumbnail="true"
-                   ShowTooltip
-                   ShowFileExtension
-                   ShowItemCheckBoxes="false"
-                   EnableRangeSelection="false"
-                   EnablePersistence="false"
-                   RootAliasName="@RootAliasName"
-                   Height="@Height"
-                   View="@View"
-                   ShowHiddenItems="@ShowDeleted"
-                   AllowMultiSelection>
+<MudPaper Class="file-explorer" Elevation="25" Outlined="Outlined" id="@FileExplorerId">
+    <MudToolBar Style="@ToolbarStyle" Dense="@Dense" Class="light-toolbar shift-toolbar-header">
+        <MudIcon Size="@IconSize" Icon="@IconSvg"></MudIcon>
+        <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FileExplorer"])</MudText>
 
-        <FileManagerAjaxSettings HttpClientInstance="HttpClient"
-                                 Url="@(Url?.AddUrlPath("FileOperations"))" />
+        <MudSpacer></MudSpacer>
 
-        <FileManagerEvents TValue="FileExplorerDirectoryContent"
-                           BeforeImageLoad="OnBeforeImageLoad"
-                           BeforeDownload="OnBeforeDownload"
-                           FileSelected="OnFileSelected"
-                           ItemsUploading="OnItemsUploading"
-                           Searching="OnSearching"
-                           OnRead="OnRead"
-                           OnSend="OnSend"
-                           Created="OnCreated"
-                           OnSuccess="OnSuccess"
-                           BeforePopupOpen="OnBeforePopupOpen" />
+        @if (DisplayNewFolderButton)
+        {
+            <MudTooltip Text="@Loc["NewFolderTooltip"]">
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.CreateNewFolder"
+                                   KeyboardKey="KeyboardKeys.KeyN"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["NewFolderTooltip"]"
+                                   OnClick="CreateNewFolder">
+                    @Loc["New Folder"]
+                </MudButtonExtended>
+            </MudTooltip>
+        }
 
-        <FileManagerToolbarSettings ToolbarItems="@Items" />
-        <FileManagerContextMenuSettings Visible="false" />
-        <FileManagerUploadSettings DropArea="null" />
-    </SfFileManager>
+        @if (DisplayUploadButton)
+        {
+            <MudTooltip Text="@Loc["UploadTooltip"]">
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.UploadFile"
+                                   KeyboardKey="KeyboardKeys.KeyU"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["UploadTooltip"]"
+                                   OnClick="Upload">
+                    @Loc["Upload"]
+                </MudButtonExtended>
+            </MudTooltip>
+        }
 
+        <MudTooltip Text="@Loc["SortTooltip"]">
+            <MudMenu ActivationEvent="MouseEvent.MouseOver" AnchorOrigin="Origin.BottomLeft">
+                <ActivatorContent>
+                    <MudButtonExtended StartIcon="@SortIcon"
+                                       KeyboardKey="KeyboardKeys.KeyS"
+                                       style="text-transform: capitalize;"
+                                       Size="@IconSize"
+                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                       aria-label="@Loc["SortTooltip"]"
+                                       OnClick="Sort">
+                        @Loc["Sort"]
+                    </MudButtonExtended>
+                </ActivatorContent>
 
-    <style>
-        @DeletedItemsCss
-    </style>
-</div>
+                <ChildContent>
+                    <MudMenuItem class="@(Settings.Sort == FileSort.Name ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Name)">@Loc["Name"]</MudMenuItem>
+                    <MudMenuItem class="@(Settings.Sort == FileSort.Date ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Date)">@Loc["Date"]</MudMenuItem>
+                    <MudMenuItem class="@(Settings.Sort == FileSort.Size ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Size)">@Loc["Size"]</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+            
+        </MudTooltip>
+
+        <MudTooltip Text="@Loc["RefreshTooltip"]">
+            <MudButtonExtended StartIcon="@Icons.Material.Filled.Refresh"
+                               KeyboardKey="KeyboardKeys.KeyR"
+                               style="text-transform: capitalize;"
+                               Size="@IconSize"
+                               Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                               aria-label="@Loc["RefreshTooltip"]"
+                               OnClick="() => Refresh(true)">
+                @Loc["Refresh"]
+            </MudButtonExtended>
+        </MudTooltip>
+
+        @if (DisplayDeleteButton)
+        {
+            <MudTooltip Text="@Loc["DeleteTooltip"]">
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.Delete"
+                                   KeyboardKey="KeyboardKeys.KeyD"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["Delete"]"
+                                   OnClick="Delete">
+                    @Loc["Delete"]
+                </MudButtonExtended>
+            </MudTooltip>
+        }
+
+        @if (DisplayDownloadButton)
+        {
+            <MudTooltip Text="@Loc["DownloadTooltip"]">
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.Download"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["DownloadTooltip"]"
+                                   OnClick="() => Download()">
+                    @Loc["Download"]
+                </MudButtonExtended>
+            </MudTooltip>
+        }
+
+        @if (DisplayQuickAccessButton)
+        {
+            @*             <MudTooltip Text="@Loc["QuickAccess"]">
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.AddToDrive"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["QuickAccess"]"
+                                   OnClick="() => AddToQuickAccess()">
+                    @Loc["Quick Access"]
+                </MudButtonExtended>
+            </MudTooltip> *@
+        }
+
+        <MudTooltip Text="@Loc["ToggleDeleteTooltip"]">
+            <MudButtonExtended StartIcon="@Icons.Material.Filled.RestoreFromTrash"
+                               KeyboardKey="KeyboardKeys.KeyT"
+                               style="text-transform: capitalize;"
+                               Size="@IconSize"
+                               Color="ShowDeletedFiles? Color.Error : (NavIconFlatColor ? Color.Inherit : Color.Default)"
+                               aria-label="@Loc["ToggleDeleteTooltip"]"
+                               OnClick="ViewDeletedFiles">
+                @Loc["Toggle Delete"]
+            </MudButtonExtended>
+        </MudTooltip>
+
+        @if (DisplayRestoreButton)
+        {
+            <MudTooltip Text="@Loc["RestoreFileTooltip"]">
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.RestoreFromTrash"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                   aria-label="@Loc["RestoreFileTooltip"]"
+                                   OnClick="RestoreFile">
+                    @Loc["Restore File"]
+                </MudButtonExtended>
+            </MudTooltip>
+        }
+    </MudToolBar>
+
+    <div style="display: flex;">
+
+        @if (RenderQuickAccess)
+        {
+            <div class="quick-access-items">
+                @foreach (var item in Settings.QuickAccessItems)
+                {
+                    <MudChip T="string" Size="Size.Small" OnClick="() => GoToPath(item)" OnClose="() => RemoveQuickAccessItem(item)">
+                        @item.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()
+                    </MudChip>
+                }
+            </div>
+
+            <MudDivider Vertical="true" FlexItem="true" />
+        }
+
+        <div class="main-window" style="overflow: hidden; height: @(IsIconsView ? Height : "auto");">
+            <MudToolBar Dense Class="breadcrumb">
+
+                @* <MudText>@(RootAliasName ?? "Root")</MudText> *@
+
+                @for (var i = 0; i < PathParts.Count - 1; i++)
+                {
+                    var index = i;
+                    var part = PathParts[i];
+                    <MudButton Size="Size.Small" OnClick="() => OnBreadCrumbClick(index)">@part</MudButton>
+                    <MudText>></MudText>
+                }
+
+                <MudButton Size="Size.Small" Disabled>@PathParts.Last()</MudButton>
+            </MudToolBar>
+
+            <MudDivider Style="flex-grow: initial;" />
+
+            <div class="file-listing @GetViewClass()" @onclick="() => {if (IsIconsView) DeselectAllFiles();} " @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
+
+                @if (Files.Count > 0)
+                {
+                    if (Settings.View == FileView.Detailed)
+                    {
+                        <MudDataGrid Items="Files"
+                                     Dense
+                                     Filterable="false"
+                                     SortMode="SortMode.None"
+                                     Virtualize
+                                     Height="@Height"
+                                     Hover
+                                     Striped
+                                     Elevation="0"
+                                     SelectOnRowClick="false"
+                                     RowClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
+                                     RowContextMenuClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
+                                     T="FileExplorerDirectoryContent"
+                                     RowClassFunc="@((file, index) => SpecialItemClasses(file))"
+                                     ShowColumnOptions="false">
+                            <Columns>
+
+                                @* On small screens, MudDataGrid will display Title instead of HeaderTemplate *@
+                                <TemplateColumn Title="@Loc["Name"]">
+                                    <HeaderTemplate>
+                                        <div class="header-text" @onclick="() => SortBy(FileSort.Name)">
+										    @Loc["Name"]
+                                            <MudSpacer/>
+                                            @if (Settings.Sort == FileSort.Name)
+                                            {
+                                                <MudIcon Size="Size.Small" Icon="@SortIcon" />
+                                            }
+                                        </div>
+                                    </HeaderTemplate>
+                                    <CellTemplate>
+                                        <MudIcon Icon="@GetFileIcon(context.Item).Key" Style=@($"color: {@GetFileIcon(context.Item).Value};") />
+                                        <span>@context.Item.Name</span>
+                                    </CellTemplate>
+                                </TemplateColumn>
+
+                                <TemplateColumn HideSmall>
+                                    <HeaderTemplate>
+                                        <div class="header-text" @onclick="() => SortBy(FileSort.Date)">
+                                            @Loc["Date modified"]
+                                            <MudSpacer />
+                                            @if (Settings.Sort == FileSort.Date)
+                                            {
+                                                <MudIcon Size="Size.Small" Icon="@SortIcon" />
+                                            }
+                                        </div>
+                                    </HeaderTemplate>
+                                    <CellTemplate>
+                                        @if (context.Item.IsFile)
+                                        {
+                                            <span>@context.Item.DateModified</span>
+                                        }
+                                    </CellTemplate>
+                                </TemplateColumn>
+
+                                <TemplateColumn HideSmall>
+                                    <HeaderTemplate>
+                                        <div class="header-text" @onclick="() => SortBy(FileSort.Size)">
+                                            @Loc["Size"]
+                                            <MudSpacer />
+                                            @if (Settings.Sort == FileSort.Size)
+                                            {
+                                                <MudIcon Size="Size.Small" Icon="@SortIcon" />
+                                            }
+                                        </div>
+                                    </HeaderTemplate>
+                                    <CellTemplate>
+                                        @if (context.Item.IsFile)
+                                        {
+                                            <span>@context.Item.Size</span>
+                                        }
+                                    </CellTemplate>
+                                </TemplateColumn>
+                            </Columns>
+                        </MudDataGrid>
+                    }
+                    else if (IsIconsView)
+                    {
+                        @foreach (var file in Files)
+                        {
+                            <MudTooltip>
+                                <TooltipContent>
+                                    <div>@Loc["Filename"]: @file.Name</div>
+                                    @if (file.IsFile && !string.IsNullOrWhiteSpace(file.CreatedBy))
+                                    {
+                                        <div>@Loc["Created By"]: @Usernames.GetValueOrDefault(file.CreatedBy)</div>
+                                    }
+                                </TooltipContent>
+                                <ChildContent>
+                                    <div @key="file.Path"
+                                         class="file-explorer-item @SpecialItemClasses(file)"
+                                         @onclick="(e) => OnFileClick(e, file)"
+                                         @onclick:stopPropagation="true"
+                                         @oncontextmenu="(e) => OnFileClick(e, file)">
+
+                                        @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
+                                        {
+                                            <MudImage Height="@GetImageSize()"
+                                                      Width="@GetImageSize()"
+                                                      ObjectFit="ObjectFit.Contain"
+                                                      ObjectPosition="ObjectPosition.Center"
+                                                      Src="@file.ThumbnailUrl"
+                                                      data-src="@file.TargetPath"
+                                                      loading="lazy"
+                                                      onerror="if (this.src !== this.dataset.src) this.src = this.dataset.src" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};") />
+                                        }
+
+                                        <MudText>@file.Name</MudText>
+                                    </div>
+                                </ChildContent>
+                            </MudTooltip>
+                        }
+                    }
+                    else
+                    {
+                        <MudText>@Loc["Unknown View"]</MudText>
+                    }
+                }
+                else if (!IsLoading)
+                {
+                    <div class="no-files">
+                        <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Large"/>
+                        <MudText>@Loc["NoFiles"]</MudText>
+                    </div>
+                    @* <MudAlert Severity="Severity.Info">@Loc["NoFiles"]</MudAlert> *@
+                }
+            </div>
+
+            @if (IsLoading) {
+                <div class="loading-indicator">
+                    <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+                </div>
+            }
+        </div>
+    </div>
+
+    <MudDivider/>
+
+    <MudToolBar Dense="true">
+
+        @if (SelectedFiles.Count > 0)
+        {
+            <MudText Typo="Typo.body2">@Loc["FileExplorerSelectedCount", SelectedFiles.Count, Files.Count]</MudText>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" OnClick="DeselectAllFiles"></MudIconButton>
+        }
+
+        @if (SelectedFiles.Count > 0 && UploadingFiles?.Items.Count > 0)
+        {
+            <MudDivider Style="margin: 0 6px;" Vertical/>
+        }
+
+        @if (UploadingFiles?.Items.Count > 0)
+        {
+            <MudProgressCircular Style="margin-inline-end: 4px;" Color="Color.Primary" Size="@Size.Small" Value="@UploadingFiles.Completed" Max="@UploadingFiles.Count" />
+            <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@Loc["FileExplorerUploadCount", UploadingFiles.Completed, UploadingFiles.Items.Count]</MudText>
+        }
+        <MudSpacer/>
+
+        <MudButtonGroup Class="change-view" Variant="Variant.Outlined" Size="Size.Small">
+            <MudButton OnClick="() => SetView()" StartIcon="@Icons.Material.Filled.ViewList">@Loc["Switch View"]</MudButton>
+            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
+                <MudMenuItem Icon="@Icons.Material.Filled.ViewModule" @onclick="() => SetView(FileView.Detailed)">@Loc["Detailed"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Small)">@Loc["Small"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Medium)">@Loc["Medium"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.Large)">@Loc["Large"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.List" @onclick="() => SetView(FileView.ExtraLarge)">@Loc["ExtraLarge"]</MudMenuItem>
+            </MudMenu>
+        </MudButtonGroup>
+    </MudToolBar>
+
+    <MudOverlay @bind-Visible="DisplayContextMenu" ZIndex="10000" AutoClose LockScroll="false" OnClosed="CloseContextMenu" @oncontextmenu="CloseContextMenu">
+        <MudPaper Class="context-menu" Elevation="25" Width="300px" Style="@($"left: {ContextLeft}px; top: {ContextTop}px;")">
+            <MudList T="string">
+                @if (DisplayNewFolderButton)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.CreateNewFolder" OnClick="CreateNewFolder">@Loc["New Folder"]</MudListItem>
+                }
+                @if (DisplayDownloadButton)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.Download" OnClick="() => Download()">@Loc["Download"]</MudListItem>
+                }
+                @if (DisplayDeleteButton)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.Delete" OnClick="Delete">@Loc["Delete"]</MudListItem>
+                }
+                @if (DisplayQuickAccessButton)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.AddToDrive" OnClick="AddToQuickAccess">@Loc["Add to Quick Access"]</MudListItem>
+                }
+
+                @if (MenuItemsTemplate != null)
+                {
+                    <MudDivider />
+                    @MenuItemsTemplate
+                }
+            </MudList>
+        </MudPaper>
+    </MudOverlay>
+</MudPaper>
+
+<FileUploader @ref="_FileUploader"
+              ContainerName="@ContainerName"
+              AccountName="@AccountName"
+              Prefix="@(CWD?.Path)"
+              HideUI
+              DropAreaSelector="@($"#{FileExplorerId} .main-window")"
+              OnBatchUploadStarted="HandleUploading"
+              OnUploadFinished="HandleUploading"
+              MaxFileSizeInMegaBytes="MaxFileSizeInMegaBytes"
+              MaxFileCount="this.MaxUploadFileCount"
+              OpenDialogOnUpload="OpenDialogOnUpload"
+              ValuesChanged="FileUploaderValuesChanged" />

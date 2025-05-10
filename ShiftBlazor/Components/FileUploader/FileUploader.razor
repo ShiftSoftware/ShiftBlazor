@@ -11,47 +11,47 @@
               Variant="Variant.Outlined"
               Error="!string.IsNullOrWhiteSpace(ErrorText)"
               ErrorText="@ErrorText"
-              Style="@(HideUI == true ? "display: none;" : "")">
+              Style="@(HideUI ? "display: none;" : "")">
 
         @if (Items.Count > 0 || !ReadOnly)
         {
-             <MudGrid Spacing="@(_ShowThumbnail ? 2 : 1)">
-                 <CascadingValue Value="this" IsFixed="true">
-                     @foreach (var item in Items)
-                     {
-                         <MudItem @key="item.Id" Style="cursor: grab;" data-guid="@item.Id">
-                             @if (_ShowThumbnail)
-                             {
-                                 <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize"/>
-                             }
-                             else
-                             {
-                                 <UploaderItemChip CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item"/>
-                             }
-                         </MudItem>
-                     }
-                 </CascadingValue>
+            <MudGrid Spacing="@(_ShowThumbnail ? 2 : 1)">
+                <CascadingValue Value="this" IsFixed="true">
+                    @foreach (var item in Items)
+                    {
+                        <MudItem @key="item.Id" Style="cursor: grab;" data-guid="@item.Id">
+                            @if (_ShowThumbnail)
+                            {
+                                <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize" />
+                            }
+                            else
+                            {
+                                <UploaderItemChip CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" />
+                            }
+                        </MudItem>
+                    }
+                </CascadingValue>
 
-                 @if (Items.Count < MaxFileCount && !ReadOnly && (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)))
-                 {
-                     <MudItem @key="@("add-file")" Class="add-file">
-                         @if (_ShowThumbnail)
-                         {
-                             <MudTooltip Text="@Loc["AddButtonTitleThumbnail"]">
-                                 <MudIconButton OnClick="() => OpenInput()"
-                                                Icon="@Icons.Material.Filled.Add"
-                                                Size="Size.Large"
-                                                Variant="Variant.Filled"
-                                                aria-label="@Loc["AddButtonTitleThumbnail"]"
-                                                Style=@($"width: {ThumbnailSize}px;height: {ThumbnailSize}px;") />
-                             </MudTooltip>
-                         }
-                         else
-                         {
+                @if (Items.Count < MaxFileCount && !ReadOnly && (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)))
+                {
+                    <MudItem @key="@("add-file")" Class="add-file">
+                        @if (_ShowThumbnail)
+                        {
+                            <MudTooltip Text="@Loc["AddButtonTitleThumbnail"]">
+                                <MudIconButton OnClick="() => OpenInput()"
+                                               Icon="@Icons.Material.Filled.Add"
+                                               Size="Size.Large"
+                                               Variant="Variant.Filled"
+                                               aria-label="@Loc["AddButtonTitleThumbnail"]"
+                                               Style=@($"width: {ThumbnailSize}px;height: {ThumbnailSize}px;") />
+                            </MudTooltip>
+                        }
+                        else
+                        {
                             <MudChip Icon="@Icons.Material.Filled.Add" OnClick="() => OpenInput()" T="string">@Loc["AddButtonChip"]</MudChip>
-                         }
-                     </MudItem>
-                 }
+                        }
+                    </MudItem>
+                }
             </MudGrid>
 
             if (DisableToolbar != true)
@@ -66,13 +66,9 @@
                 </MudToolBar>
             }
 
-            <InputFile id="@InputId"
+            <InputFile @ref="InputFileRef"
                        OnChange="OnInputFileChanged"
-                       style="@InputStyle"
-                       multiple
-                       @ref="InputFileRef"
-                       accept="@InputAccept" />
-
+                       AdditionalAttributes="AdditionalAttributes" />
         }
         else
         {
@@ -80,3 +76,59 @@
         }
     </MudField>
 }
+
+<MudOverlay @bind-Visible="DisplayUploadDialog" DarkBackground ZIndex="1200" LockScroll="false" OnClosed="CloseUploadDialog">
+    <MudPaper Class="file-uploader-progress-dialog" Elevation="25">
+
+        <MudToolBar Dense Class="light-toolbar">
+            <MudIcon Icon="@Icons.Material.Filled.Upload" />
+            <MudText>File Uploader</MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseUploadDialog" />
+        </MudToolBar>
+
+        <MudStack Spacing="2" Class="upload-list">
+            @foreach (var item in Items.Where(x => x.State != FileUploadState.None).Reverse())
+            {
+                <MudStack @key="item.Id" Row Spacing="2" AlignItems="AlignItems.Center">
+                    @if (item.Message == null)
+                    {
+                        <MudIcon Icon="@(item.IsImage() ? Icons.Material.Filled.Image : Icons.Material.Filled.InsertDriveFile)" />
+                    }
+                    else
+                    {
+                        <MudTooltip Text="@item.Message.Title">
+                            <MudIconButton Style="padding: 0;" Icon="@Icons.Material.Filled.Error" Color="Color.Error" OnClick="() => OpenErrorDialog(item.Message)" />
+                        </MudTooltip>
+                    }
+                    <MudText title="@item.GetFileName()" Style="width: 600px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">@item.GetFileName()</MudText>
+
+                    @if (item.State == FileUploadState.Uploaded && item.Message == null)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                    }
+                    else
+                    {
+                        <MudProgressLinear Color="item.Message == null ? Color.Primary : Color.Error" Style="max-width: 200px;" Indeterminate="item.IsWaitingForUpload || item.State == FileUploadState.Uploading" />
+                    }
+
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Disabled="item.State == FileUploadState.Uploaded" OnClick="@(() => Remove(item))" />
+                </MudStack>
+                if (item.Message != null)
+                {
+                    <MudText Style="font-size: 12px; margin-inline-start: 30px;">
+                        @item.Message.Title
+                    </MudText>
+                }
+            }
+
+            <MudToolBar Dense>
+                <MudButton Color="Color.Error" OnClick="CancelAllUploads">Cancel All</MudButton>
+                <MudSpacer />
+                <MudButton OnClick="ClearUploaded">Clear Completed</MudButton>
+                <MudButton OnClick="() => OpenInput()">Upload</MudButton>
+            </MudToolBar>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>

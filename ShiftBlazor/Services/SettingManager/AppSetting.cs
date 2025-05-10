@@ -1,10 +1,5 @@
 ﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShiftSoftware.ShiftBlazor.Services
 {
@@ -19,6 +14,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public virtual Dictionary<string, List<ColumnState>>? ColumnStates { get; set; }
         public virtual LanguageInfo? Language { get; set; }
         public virtual bool? EnableFormClone { get; set; }
+        public virtual Dictionary<string, FileExplorerSettings>? FileExplorerSettings { get; set; }
         public virtual bool? IsDrawerOpen { get; set; }
     }
 
@@ -38,6 +34,12 @@ namespace ShiftSoftware.ShiftBlazor.Services
             RTL = false,
         };
         public static bool EnableFormClone = false;
+        public static FileExplorerSettings FileExplorerSettings = new FileExplorerSettings
+        {
+            View = FileView.Large,
+            Sort = FileSort.Date,
+            SortDescending = true,
+        };
         public static bool IsDrawerOpen = false;
     }
 }

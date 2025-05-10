@@ -33,9 +33,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? BaseUrlKey { get; set; }
         
         [Parameter]
-        public string ODataPath { get; set; } = "api";
-
-        [Parameter]
         public string? DataValueField { get; set; }
 
         [Parameter]
@@ -76,7 +73,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             ShiftBlazorEvents.OnBeforeGridDataBound += OnBeforeDataBound;
 
             Url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
-            Url = Url?.AddUrlPath(this.ODataPath);
             QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySet, Url);
 
             base.OnInitialized();
@@ -226,7 +222,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             });
         }
 
-        void IDisposable.Dispose()
+        public override void Dispose()
         {
             ShiftBlazorEvents.OnBeforeGridDataBound -= OnBeforeDataBound;
         }

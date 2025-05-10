@@ -2,19 +2,21 @@
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using ShiftSoftware.ShiftIdentity.Blazor;
 using System.Linq.Expressions;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Web;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -26,6 +28,14 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] internal ShiftBlazorLocalizer Loc { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
+    [Inject] IIdentityStore? TokenStore { get; set; }
+
+    [Parameter]
+    public string? Capture { get; set; }
+
+    [Parameter]
+    public bool Sortable { get; set; } = true;
+
 
     [Parameter]
     public List<ShiftFileDTO>? Values { get; set; }
@@ -75,7 +85,16 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     public string? Prefix { get; set; }
 
     [Parameter]
-    public bool? HideUI { get; set; }
+    public bool HideUI { get; set; }
+
+    [Parameter]
+    public bool OpenDialogOnUpload { get; set; }
+
+    [Parameter]
+    public EventCallback<UploadEventArgs> OnBatchUploadStarted { get; set; }
+
+    [Parameter]
+    public EventCallback<UploadEventArgs> OnUploadFinished { get; set; }
 
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftForm { get; set; }
@@ -92,7 +111,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         {
             if (_mode != value)
             {
-                Items = Values?.Select(x => new UploaderItem(x)).ToList() ?? new();
+                Items = Values?.Select(x => new UploaderItem(x) { State = FileUploadState.Uploaded }).ToList() ?? new();
             }
             _mode = value;
         }
@@ -103,9 +122,10 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     internal string ImageTypes = "image/*";
     internal int ThumbnailSize = 150;
     internal bool _ShowThumbnail;
-    private string InputStyle = "position: absolute;top: 0;left: 0;height: 100%;width: 100%;z-index:1000;display: none;opacity: 0;";
     private InputFile? InputFileRef { get; set; }
     private bool? IsDirectoryUpload = false;
+    private bool DisplayUploadDialog { get; set; }
+    private Dictionary<string, object> AdditionalAttributes { get; set; } = new();
 
     [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
     [Parameter]
@@ -126,7 +146,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     internal string Classes {
         get
         {
-            var classNames = "FileUpload relative my-4 z-10";
+            var classNames = "file-uploader relative my-4 z-10";
             if (ReadOnly) classNames += " readonly";
             return classNames;
         }
@@ -155,12 +175,22 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     private FieldIdentifier _FieldIdentifier;
     private string? ErrorText;
+    private DateTime _lastProgressUpdate = DateTime.MinValue;
+    private CancellationTokenSource UploaderToken = new CancellationTokenSource();
 
     protected override void OnInitialized()
     {
         _ShowThumbnail = ShowThumbnail;
 
         OnGridSort += HandleGridSort;
+
+        this.AdditionalAttributes = new()
+        {
+            ["id"] = this.InputId,
+            ["class"] = "file-uploader-input",
+            ["multiple"] = "multiple",
+            ["accept"] = InputAccept,
+        };
 
         if (For != null && ShiftForm?.EditContext != null)
         {
@@ -176,8 +206,18 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     {
         if (firstRender)
         {
-            SetAsSortable();
-            SetDropZone();
+            if (Sortable && this.MaxFileCount > 1)
+                SetAsSortable();
+
+            if (DropAreaSelector is not null)
+                SetDropZone();
+
+            if (this.Capture is not null)
+            {
+                this.AdditionalAttributes["capture"] = this.Capture;
+            }
+
+            StateHasChanged();
         }
     }
 
@@ -219,32 +259,32 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         if (IsDirectoryUpload == true && InputFileRef?.Element != null)
         {
             var fileRelativePaths = await JsRuntime.InvokeAsync<string[]>("getFileList", InputFileRef.Element.Value);
-            Items.AddRange(fileRelativePaths.Select((relativePath, index) => new UploaderItem(files[index], relativePath)).ToList());
+            Items.AddRange(fileRelativePaths.Select((relativePath, index) => new UploaderItem(files[index], UploaderToken.Token, relativePath)).ToList());
         }
         else
         {
-            Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile)).ToList());
+            Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile, UploaderToken.Token)).ToList());
         }
 
-        var filesToUpload = Items.Where(x => x.IsWaitingForUpload()).ToList();
+        await OnBatchUploadStarted.InvokeAsync(new UploadEventArgs(Items));
+        if (OpenDialogOnUpload) OpenUploadDialog();
 
-        await GetSASForFilesAsync(filesToUpload);
+        var filesToUpload = Items.Where(x => x.IsWaitingForUpload).ToList();
 
-        var tasks = new List<Task>();
-
-        foreach (var item in filesToUpload)
+        if (await GetSASForFilesAsync(filesToUpload))
         {
-            tasks.Add(Task.Run(async () => await UploadFileToAzureAsync(item)));
+            await Parallel.ForEachAsync(filesToUpload, new ParallelOptions { MaxDegreeOfParallelism = 5 }, async (file, _) =>
+            {
+                await UploadFileToAzureAsync(file);
+            });
         }
-
-        await Task.WhenAll(tasks);
 
         await SetValue(Items);
     }
 
-    internal async Task GetSASForFilesAsync(IEnumerable<UploaderItem> items)
+    internal async Task<bool> GetSASForFilesAsync(IEnumerable<UploaderItem> items)
     {
-        var url = SettingManager.Configuration.ApiPath.AddUrlPath(Url);
+        var url = SettingManager.Configuration.BaseAddress.AddUrlPath(Url);
 
         List<ShiftFileDTO> files = new();
 
@@ -253,7 +293,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             if (item.LocalFile == null)
             {
                 item.Message = new Message { Title = Loc["FileUploaderError1"] };
-                return;
+                return false;
             }
 
             item.File = null;
@@ -276,10 +316,10 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             files.Add(file);
         }
 
-        var postResponse = await HttpClient.PostAsJsonAsync(url, files);
-
         try
         {
+            using var postResponse = await HttpClient.PostAsJsonAsync(url, files);
+            
             var filesWithSASTokenReponse = await postResponse.Content.ReadFromJsonAsync<ShiftEntityResponse<List<ShiftFileDTO>>>();
 
             if (postResponse.IsSuccessStatusCode && filesWithSASTokenReponse?.Entity != null)
@@ -287,17 +327,26 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
                 filesWithSASTokenReponse.Entity.ForEach((file) =>
                 {
                     var match = items.FirstOrDefault(x => x.LocalFile?.Name == file.Name)!;
-
+                    match.State = FileUploadState.Prepared;
                     match.File = file;
                 });
             }
         }
         catch (Exception)
         {
-            throw;
+            foreach (var file in items)
+            {
+                file.Message = new Message("Error Generating Upload Token");
+                file.State = FileUploadState.Failed;
+            }
+
+            return false;
         }
+
+        return true;
     }
 
+    [Obsolete]
     internal async Task UploadFile(UploaderItem item)
     {
         if (item.LocalFile == null)
@@ -309,13 +358,13 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         item.File = null;
         item.Message = null;
 
-        var url = SettingManager.Configuration.ApiPath.AddUrlPath(Url);
+        var url = SettingManager.Configuration.BaseAddress.AddUrlPath(Url);
 
         using var multipartContent = new MultipartFormDataContent();
 
         try
         {
-            var maxFileSize = MaxFileSizeInMegaBytes * 1024 * 1024;
+            var maxFileSize = (long)MaxFileSizeInMegaBytes * 1024 * 1024;
             var stream = item.LocalFile.OpenReadStream(maxFileSize);
 
             var content = new StreamContent(stream, Convert.ToInt32(stream.Length));
@@ -366,25 +415,70 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             return;
         }
 
+        item.State = FileUploadState.Uploading;
+
         item.Message = null;
 
         try
         {
-            var maxFileSize = MaxFileSizeInMegaBytes * 1024 * 1024;
-            var stream = item.LocalFile.OpenReadStream(maxFileSize);
-
+            var maxFileSize = (long)MaxFileSizeInMegaBytes * 1024 * 1024;
+            using var stream = item.LocalFile.OpenReadStream(maxFileSize);
             var blobClient = new BlobClient(new Uri(item.File!.Url!));
-
+            var token = item.CancellationTokenSource?.Token ?? CancellationToken.None;
+            var headers = new BlobHttpHeaders { ContentType = item.LocalFile.ContentType };
             item.File.ContentType = item.LocalFile.ContentType;
-
             item.File.Size = item.LocalFile.Size;
+            var thumbnailSizes = SettingManager.Configuration.ThumbnailSizes.Select((x) => $"{x.Item1}x{x.Item2}");
 
-            await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = item.LocalFile.ContentType });
+            var prog = new Progress<long>(value =>
+            {
+                item.Progress = (double)value / item.LocalFile.Size;
+                var now = DateTime.UtcNow;
+                if ((now - _lastProgressUpdate).TotalSeconds >= 1)
+                {
+                    _lastProgressUpdate = now;
+                    StateHasChanged();
+                }
+
+            });
+
+            //Metadata name/value pairs are valid HTTP headers and should adhere to all restrictions governing HTTP headers
+            var metadata = new Dictionary<string, string>
+            {
+                { Constants.FileExplorerNameMetadataKey, HttpUtility.UrlEncode(item.LocalFile.Name) },
+                { Constants.FileExplorerSizesMetadataKey, string.Join("|", thumbnailSizes)},
+            };
+
+            if (TokenStore != null)
+            {
+                var loggedInUser = (await TokenStore.GetTokenAsync())?.UserData;
+                if (loggedInUser != null)
+                {
+                    metadata.Add(Constants.FileExplorerCreatedByMetadataKey, loggedInUser.ID);
+                }
+            }
+
+            await blobClient.UploadAsync(
+                stream,
+                headers,
+                metadata,
+                progressHandler: prog,
+                cancellationToken: token
+            //,transferOptions: new Azure.Storage.StorageTransferOptions
+            //{
+            //    InitialTransferSize = (long)(0.5m * 1024m * 1024m), // 0.5MB
+            //    MaximumTransferSize = (long)(0.5m * 1024m * 1024m), // 0.5MB
+            //}
+            );
 
             item.LocalFile = null;
+            item.State = FileUploadState.Uploaded;
+            item.File.Data = FileUploadState.Uploaded;
+            await OnUploadFinished.InvokeAsync(new UploadEventArgs(Items));
         }
         catch (Exception ex)
         {
+            item.State = FileUploadState.Failed;
             item.Message = new Message { Title = Loc["FileUploaderError3", ex.Message] };
             item.CancellationTokenSource?.Cancel();
         }
@@ -437,7 +531,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     public async Task ClearAll()
     {
-        if (Mode >= FormModes.Edit)
+        if (Mode == null || Mode >= FormModes.Edit)
         {
             foreach (var item in Items.Where(x => x.CancellationTokenSource != null))
             {
@@ -457,14 +551,39 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             );
     }
 
+    public void OpenUploadDialog()
+    {
+        DisplayUploadDialog = true;
+    }
+
+    public void CloseUploadDialog()
+    {
+        DisplayUploadDialog = false;
+    }
+
+    public void CancelAllUploads()
+    {
+        UploaderToken?.Cancel();
+        UploaderToken?.Dispose();
+        UploaderToken = new CancellationTokenSource();
+    }
+
+    public void ClearUploaded() => Items.RemoveAll(x => x.State == FileUploadState.Uploaded || x.Message != null);
+
+    private void OpenErrorDialog(Message message)
+    {
+        DialogService.ShowMessageBox(message.Title, message.Body);
+    }
+
     [JSInvokable]
     public static void ReorderGrid(KeyValuePair<string, List<Guid>> order)
     {
         TriggerGridSort(order);
     }
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         OnGridSort -= HandleGridSort;
+        UploaderToken?.Dispose();
     }
 }

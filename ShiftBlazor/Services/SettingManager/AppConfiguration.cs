@@ -11,19 +11,18 @@ public class AppConfiguration
     public Dictionary<string, string?> ExternalAddresses = new();
     public string? UserListEndpoint { get; set; }
 
-    private string _ApiPath = "/api";
-    //private string _ODataPath = "/odata";
-    public string ApiPath
-    {
-        get => BaseAddress.AddUrlPath(_ApiPath);
-        set => _ApiPath = value;
-    }
 
     //public string ODataPath
     //{
     //    get => BaseAddress.AddUrlPath(_ODataPath);
     //    set => _ODataPath = value;
     //}
+
+    /// <summary>
+    /// A list of thumbnail sizes to generate when a new image is uploaded.
+    /// Width x Height format.
+    /// </summary>
+    public List<ValueTuple<int, int>> ThumbnailSizes = [(250, 250), (500, 500), (1000, 1000)];
 
     public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
 

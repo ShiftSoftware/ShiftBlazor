@@ -366,7 +366,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
                 else
                 {
-                    await JsRuntime.InvokeVoidAsync("scrollToFirstError", $"Form-{Id}");
+                    // await JsRuntime.InvokeVoidAsync("scrollToFirstError", $"Form-{Id}");
                     await InvalidSubmitHandler(context);
                 }
             });
@@ -426,7 +426,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await OnTaskFinished.InvokeAsync(Task);
         }
 
-        void IDisposable.Dispose()
+        public void Dispose()
         {
             IShortcutComponent.Remove(Id);
         }
