@@ -1002,11 +1002,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             var columns = DataGrid!
                     .RenderedColumns
-                    .Where(x => !x.Hidden)
                     .Where(x => x.GetType().GetProperty("Property") != null)
                     .Select(x => new
                         {
                             title = x.Title,
+                            hidden = x.Hidden,
                             key = x.PropertyName,
                             format = formattedColumns.TryGetValue(x.PropertyName!, out var formatStr) ? formatStr : null,
                             customColumn = customColumns.TryGetValue(x.PropertyName!, out var list) ? list : null

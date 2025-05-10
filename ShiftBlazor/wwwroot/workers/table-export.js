@@ -85,7 +85,7 @@ function fetchForeignEntries(foreignTables, headers) {
                 let items;
 
                 try {
-                    items = (await response.json()).Value ;
+                    items = (await response.json()).Value;
                 } catch (err) {
                     items = [];
                 }
@@ -156,7 +156,7 @@ function formatDate(date, dateFormat, timeFormat, isRTL) {
         else parsedTime += ` ${parsedTimeParts[2]}`
     }
 
-    return isRTL ? `${parsedTime} ${parsedDate}`  :`${parsedDate} ${parsedTime}`
+    return isRTL ? `${parsedTime} ${parsedDate}` : `${parsedDate} ${parsedTime}`
 }
 
 function parseRawValue(value, col, localizedColumns, language, dateFormat, timeFormat, isRTL) {
@@ -289,11 +289,15 @@ function generateCSVContent(rows, columns, language, dateFormat, timeFormat, for
     const localizedColumns = new Set()
     const foreignKeys = Object.keys(fieldMapper)
 
+    const visibleColumns = columns.filter(col => !col.hidden)
+
     // Header row
-    csvRows.push(columns.map((c) => c.title).join(","))
+    csvRows.push(visibleColumns.map((c) => c.title).join(","))
 
     rows.forEach((row, rowIndex) => {
-        const csvRowData = columns.map((col) => {
+        const csvRowData = visibleColumns.map((col) => {
+
+            console.log(col.title)
 
             let value;
 
@@ -319,7 +323,7 @@ function generateCSVContent(rows, columns, language, dateFormat, timeFormat, for
 
 self.onmessage = async (event) => {
     const { payload, headers, origin } = event.data;
-    
+
     const { urlValue, values, columns, fileName, language, foreignColumns, dateFormat, timeFormat, isRTL } = payload;
 
     try {
@@ -332,13 +336,16 @@ self.onmessage = async (event) => {
         // Populate unique filter values for foreign keys
         populateForeignFilterValues(rows, foreignTables, fieldMapper)
 
-        
         // Concurrently fetch data for foreign columns
         await fetchForeignEntries(foreignTables, headers)
 
+        console.log(foreignTables)
+        console.log(fieldMapper)
+        return
+
         generateItemMapper(foreignTables)
 
-        const csvContent = generateCSVContent(rows, columns, language, dateFormat, timeFormat, foreignTables, fieldMapper, isRTL )
+        const csvContent = generateCSVContent(rows, columns, language, dateFormat, timeFormat, foreignTables, fieldMapper, isRTL)
 
         const csvURL = URL.createObjectURL(new Blob([csvContent], { type: "text/csv" }))
 
@@ -347,5 +354,5 @@ self.onmessage = async (event) => {
         console.error(error)
         self.postMessage({ isSuccess: false, message: error?.message || "Please try again later." })
     }
-   
+
 };
