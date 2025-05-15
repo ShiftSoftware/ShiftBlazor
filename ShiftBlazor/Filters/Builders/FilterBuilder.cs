@@ -24,6 +24,22 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     [Parameter]
     public bool Immediate { get; set; }
 
+    [Parameter]
+    public int xxl { get; set; }
+    [Parameter]
+    public int xl { get; set; }
+    [Parameter]
+    public int lg { get; set; }
+    [Parameter]
+    public int md { get; set; }
+    [Parameter]
+    public int sm { get; set; }
+    [Parameter]
+    public int xs { get; set; }
+    [Parameter]
+    public RenderFragment<FilterModelBase>? Template { get; set; }
+
+
     [CascadingParameter]
     public IFilterableComponent? Parent { get; set; }
 
@@ -51,6 +67,17 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
             Filter.IsHidden = Hidden;
             Filter.IsReadOnly = ReadOnly;
             Filter.IsImmediate = Immediate;
+
+            Filter.UIOptions = new FilterUIOptions
+            {
+                xxl = xxl,
+                xl = xl,
+                lg = lg,
+                md = md,
+                sm = sm,
+                xs = xs,
+                Template = Template,
+            };
 
             Parent.Filters.Remove(Id);
             Parent.Filters.TryAdd(Id, Filter!);

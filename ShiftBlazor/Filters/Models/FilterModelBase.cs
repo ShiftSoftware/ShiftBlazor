@@ -14,6 +14,7 @@ public abstract class FilterModelBase
     public bool IsHidden { get; set; }
     public bool IsReadOnly { get; set; }
     public bool IsImmediate { get; set; }
+    public FilterUIOptions UIOptions { get; set; } = new();
 
     public abstract ODataFilterGenerator ToODataFilter();
 

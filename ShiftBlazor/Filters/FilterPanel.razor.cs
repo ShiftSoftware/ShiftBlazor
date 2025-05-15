@@ -55,6 +55,7 @@ public partial class FilterPanel: ComponentBase
     private void AddFilter(PropertyInfo field)
     {
         var filter = FilterModelBase.CreateFilter(field, DTO);
+        filter.UIOptions.lg = 4;
         Parent?.Filters.TryAdd(filter.Id, filter);
         ReloadList(false);
     }
