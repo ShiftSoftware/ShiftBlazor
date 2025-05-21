@@ -9,16 +9,15 @@ namespace ShiftSoftware.ShiftBlazor.Components;
 
 public class DateTimeFilter<T, TProperty> : FilterBuilder<T, TProperty>
 {
+    
     [Parameter]
-    public TProperty? Value { get; set; }
+    public DateRange? Value { get; set; }
     [Parameter]
-    public DateFilterOperator DateOperator { get; set; }
+    public TProperty? DateTimeValue { get; set; }
     [Parameter]
     public TimeUnit TimeUnit { get; set; } = TimeUnit.Day;
     [Parameter]
     public int UnitValue { get; set; } = 1;
-    [Parameter]
-    public DateRange? DateRangeValue { get; set; }
 
     protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
@@ -27,11 +26,12 @@ public class DateTimeFilter<T, TProperty> : FilterBuilder<T, TProperty>
 
         if (dateFilter != null)
         {
-            dateFilter.Value = Value;
+            // DateTimeFilter builder was refactored, variable names need to be updated
+            dateFilter.Value = DateTimeValue;
             dateFilter.SelectedDateOperator = DateFilterOperator.Range;
             dateFilter.SelectedTimeUnit = TimeUnit;
             dateFilter.UnitValue = UnitValue;
-            dateFilter.DateRangeValue = DateRangeValue;
+            dateFilter.DateRangeValue = Value;
         }
 
         return dateFilter ?? filter;

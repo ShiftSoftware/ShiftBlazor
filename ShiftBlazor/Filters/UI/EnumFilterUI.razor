@@ -1,21 +1,36 @@
 ﻿@inherits FilterUIBase
 
-
-<MudSelectExtended T="ODataOperator" Label="Operator" Value="Filter.Operator" ValueChanged="OperatorChanged">
-	<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
-	<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
-</MudSelectExtended>
-
-<MudSelectExtended T="object" Label="Value" Value="Filter.Value" ValueChanged="ValueChanged">
-	@if (EnumTypeToUse != null)
-	{
-		@foreach (var item in Enum.GetValues(EnumTypeToUse))
+<div style="width: 100%;">
+	<MudSelectExtended T="object"
+					   Label="@Filter.Field"
+					   MultiSelection
+					   SelectedValues="Filter.Value as IEnumerable<object>"
+					   SelectedValuesChanged="ValueChanged"
+					   Clearable
+					   Adornment="Adornment.End"
+					   AdornmentIcon="@Icons.Material.Filled.Settings"
+					   OnAdornmentClick="OpenMenu">
+		@if (EnumTypeToUse != null)
 		{
-			<MudSelectItem Value="@item">@(item is Enum _enum ? _enum.Describe() : item)</MudSelectItem>
+			@foreach (var item in Enum.GetValues(EnumTypeToUse))
+			{
+				<MudSelectItem Value="@item">@(item is Enum _enum && !string.IsNullOrWhiteSpace(_enum.Describe()) ? _enum.Describe() : item)</MudSelectItem>
+			}
 		}
-	}
-</MudSelectExtended>
+	</MudSelectExtended>
 
+	<MudPopover Open="IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft">
+		<MudList T="ODataOperator" SelectedValue="Filter.Operator" SelectedValueChanged="_OperatorChanged">
+			<MudListItem Value="ODataOperator.In">Equal</MudListItem>
+			<MudListItem Value="ODataOperator.NotIn">Not Equal</MudListItem>
+			<MudListItem Value="ODataOperator.IsNotEmpty">Is Set</MudListItem>
+			<MudListItem Value="ODataOperator.IsEmpty">Is Not Set</MudListItem>
+		</MudList>
+	</MudPopover>
+
+</div>
+
+<MudOverlay Visible="IsMenuOpen" AutoClose OnClosed="CloseMenu" />
 
 @code {
 	[Parameter]
@@ -23,6 +38,33 @@
 	public Type? EnumType { get;set; }
 
 	private Type? EnumTypeToUse;
+
+	private bool HasNoValue => Filter.Operator == ODataOperator.IsEmpty || Filter.Operator == ODataOperator.IsNotEmpty;
+
+	private IEnumerable<object> Values { get; set; } = Enumerable.Empty<object>();
+
+	protected override Task OnInitializedAsync()
+	{
+		Values = Filter.Value as IEnumerable<object> ?? Enumerable.Empty<object>();
+		return base.OnInitializedAsync();
+	}
+
+	private void InputClicked()
+	{
+		if (HasNoValue)
+		{
+			OpenMenu();
+		}
+	}
+
+	private void _OperatorChanged(ODataOperator oDataOperator)
+	{
+		CloseMenu();
+
+		Filter!.Operator = oDataOperator;
+		UpdateFilter();
+
+	}
 
 	protected override void OnInitialized()
 	{

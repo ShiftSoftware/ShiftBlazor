@@ -198,8 +198,6 @@ public class ODataFilterGenerator
             }
         }
 
-
-
         foreach (var childGenerator in generator.ChildFilters.Where(x => x.Count > 0))
         {
             var childFilters = BuildQueryString(childGenerator);
@@ -282,7 +280,7 @@ public class ODataFilterGenerator
             ODataOperator.LessThan or FilterOperator.Number.LessThan or FilterOperator.DateTime.Before => "{0} lt {1}",
             ODataOperator.LessThanOrEqual or FilterOperator.Number.LessThanOrEqual or FilterOperator.DateTime.OnOrBefore => "{0} le {1}",
             ODataOperator.Contains or FilterOperator.String.Contains => "contains({0},{1})",
-            ODataOperator.NotContains or FilterOperator.String.NotContains => "not contains({0},{1})",
+            ODataOperator.NotContains or FilterOperator.String.NotContains => "contains({0},{1}) eq false",
             ODataOperator.StartsWith or FilterOperator.String.StartsWith => "startswith({0},{1})",
             ODataOperator.NotStartsWith=> "startswith({0},{1}) eq false",
             ODataOperator.EndsWith or FilterOperator.String.EndsWith => "endswith({0},{1})",

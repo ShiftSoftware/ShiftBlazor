@@ -7,11 +7,18 @@ public class BooleanFilterModel : FilterModelBase
 {
     public override ODataFilterGenerator ToODataFilter()
     {
-        return new ODataFilterGenerator(true, Id).Add(new ODataFilter
+        var filter = new ODataFilterGenerator(true, Id);
+
+        if (Value != null)
         {
-            Field = Field,
-            Operator = ODataOperator.Equal,
-            Value = Value is bool val && val == true,
-        });
+            filter.Add(new ODataFilter
+             {
+                 Field = Field,
+                 Operator = ODataOperator.Equal,
+                 Value = Value,
+             });
+        }
+
+        return filter;
     }
 }

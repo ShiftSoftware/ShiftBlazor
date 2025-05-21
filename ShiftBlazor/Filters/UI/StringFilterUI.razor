@@ -2,8 +2,7 @@
 @using ShiftSoftware.ShiftEntity.Model
 @inherits FilterUIBase
 
-
-<MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="_OperatorChanged" Label="Operator" >
+@* <MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="_OperatorChanged" Label="Operator" >
 	<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
@@ -13,19 +12,52 @@
 	<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
 	<MudSelectItem Value="ODataOperator.In">In</MudSelectItem>
-</MudSelectExtended>
+</MudSelectExtended> *@
 
-@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
+
+@* @if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
 {
 	if (AutoCompleteType == null || AutoCompleteParameters == null)
 	{
-		<MudTextField T="string" Label="Value" Value="Value" ValueChanged="ValueChanged" />
+		<MudTextField T="string" Label="@Filter.Field" Value="Value" Clearable ValueChanged="ValueChanged" />
 	}
 	else
 	{
 		<DynamicComponent Type="AutoCompleteType" Parameters="AutoCompleteParameters" />
 	}
-}
+} *@
+
+<div style="width: 100%;">
+	<MudTextField T="string"
+				  Label="@Filter.Field"
+				  Value="Value"
+				  Clearable
+				  ValueChanged="ValueChanged"
+				  ReadOnly="HasNoValue"
+				  @onmousedown="InputClicked"
+				  Adornment="Adornment.End"
+				  AdornmentIcon="@Icons.Material.Filled.Settings"
+				  OnAdornmentClick="OpenMenu" />
+
+	<MudPopover Open="IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft">
+		<MudList T="ODataOperator" SelectedValue="Filter.Operator" SelectedValueChanged="_OperatorChanged">
+			<MudListItem Value="ODataOperator.Equal">Equal</MudListItem>
+			<MudListItem Value="ODataOperator.NotEqual">Not Equal</MudListItem>
+			<MudListItem Value="ODataOperator.StartsWith">Starts With</MudListItem>
+			<MudListItem Value="ODataOperator.NotStartsWith">Not Starts With</MudListItem>
+			<MudListItem Value="ODataOperator.EndsWith">Ends With</MudListItem>
+			<MudListItem Value="ODataOperator.NotEndsWith">Not Ends With</MudListItem>
+			<MudListItem Value="ODataOperator.Contains">Contains</MudListItem>
+			<MudListItem Value="ODataOperator.NotContains">Not Contains</MudListItem>
+			<MudListItem Value="ODataOperator.IsNotEmpty">Is Set</MudListItem>
+			<MudListItem Value="ODataOperator.IsEmpty">Is Not Set</MudListItem>
+			<MudListItem Value="ODataOperator.In">In</MudListItem>
+			<MudListItem Value="ODataOperator.NotIn">Not In</MudListItem>
+		</MudList>
+	</MudPopover>
+</div>
+
+<MudOverlay Visible="IsMenuOpen" AutoClose OnClosed="CloseMenu" />
 
 @code
 {
@@ -37,26 +69,49 @@
 	private Type? AutoCompleteType;
 	private Dictionary<string, object>? AutoCompleteParameters;
 
+	private bool HasNoValue => Filter.Operator == ODataOperator.IsEmpty || Filter.Operator == ODataOperator.IsNotEmpty;
+
+	private void InputClicked()
+	{
+		if (HasNoValue)
+		{
+			OpenMenu();
+		}
+	}
+
+	// internal async Task<IEnumerable<string>> SearchFunc(string val, CancellationToken token)
+	// {
+	// 	List<string> items = new()
+	// 	{
+	// 		"Is not Empty",
+	// 		"Is Empty",
+	// 	};
+
+	// 	return items;
+	// }
+
 	protected override void OnInitialized()
 	{
 		base.OnInitialized();
 
-		if (Filter is StringFilterModel stringFilter
-			&& stringFilter.DtoType != null
-			&& Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(stringFilter.DtoType) != null
-			&& !string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
-		{
-			AutoCompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(stringFilter.DtoType);
-			AutoCompleteParameters = new()
-			{
-				["EntitySet"] = ShiftList.EntitySet,
-				["DataTextField"] = stringFilter.Field,
-				["Strict"] = false,
-				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged),
-				["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged),
-				["MultiSelect"] = Filter.Operator == ODataOperator.In,
-			};
-		}
+		// if (Filter is StringFilterModel stringFilter
+		// 	&& stringFilter.DtoType != null
+		// 	&& Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(stringFilter.DtoType) != null
+		// 	&& !string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
+		// {
+		// 	AutoCompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(stringFilter.DtoType);
+		// 	AutoCompleteParameters = new()
+		// 	{
+		// 		["Label"] = Filter.Field,
+		// 		["EntitySet"] = ShiftList.EntitySet,
+		// 		["DataTextField"] = stringFilter.Field,
+		// 		["Strict"] = false,
+		// 		["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged),
+		// 		["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged),
+		// 		["MultiSelect"] = Filter.Operator == ODataOperator.In,
+		// 		["Clearable"] = true,
+		// 	};
+		// }
 	}
 
 	protected override void OnParametersSet()
@@ -77,7 +132,7 @@
 
 	private void _OperatorChanged(ODataOperator oDataOperator)
 	{
-
+		IsMenuOpen = false;
 		if (AutoCompleteParameters != null && oDataOperator == ODataOperator.In)
 		{
 			AutoCompleteParameters["MultiSelect"] = true;

@@ -1,4 +1,6 @@
-﻿using ShiftSoftware.ShiftBlazor.Enums;
+﻿using System.Collections;
+using System.Text.Json;
+using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Filters.Models;
@@ -20,11 +22,29 @@ public class EnumFilterModel : FilterModelBase
 
     public override ODataFilterGenerator ToODataFilter()
     {
-        return new ODataFilterGenerator(true, Id).Add(new ODataFilter
+        var filter = new ODataFilterGenerator(true, Id);
+        //Console.WriteLine($"{Operator} {JsonSerializer.Serialize(Value)}");
+
+        if (Value != null && Value is IEnumerable<object> val && val.Any())
         {
-            Field = Field,
-            Operator = ODataOperator.Equal,
-            Value = Value
-        });
+            filter.Add(new ODataFilter
+            {
+                Field = Field,
+                Operator = Operator == ODataOperator.NotIn ? Operator : ODataOperator.In,
+                Value = Value
+            });
+        }
+
+        //if (Value != null && Enum.IsDefined(Value.GetType(), Value))
+        //{
+        //    filter.Add(new ODataFilter
+        //    {
+        //        Field = Field,
+        //        Operator = ODataOperator.Equal,
+        //        Value = Value
+        //    });
+        //}
+
+        return filter;
     }
 }

@@ -64,6 +64,8 @@ public class DateFilterModel : FilterModelBase
             });
         }
 
+        Console.WriteLine($" se{SelectedDateOperator}");
+
         return filter;
     }
 
@@ -90,7 +92,7 @@ public class DateFilterModel : FilterModelBase
             DateFilterOperator.Date => (date ?? DateTime.Today, (date ?? DateTime.Today).AddDays(1)),
             DateFilterOperator.Before => (DateTime.MinValue.ToUniversalTime(), date ?? DateTime.Today),
             DateFilterOperator.After => (date ?? DateTime.Today, DateTime.MaxValue.ToUniversalTime()),
-            DateFilterOperator.Range => (range?.Start ?? DateTime.Today, (range?.End ?? DateTime.Today).AddDays(1)),
+            DateFilterOperator.Range => (range?.Start ?? DateTime.MinValue.ToUniversalTime(), range?.End?.AddDays(1) ?? DateTime.MaxValue.ToUniversalTime()),
             _ => (default, default)
         };
 

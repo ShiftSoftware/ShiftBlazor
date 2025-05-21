@@ -9,8 +9,9 @@ public class StringFilterModel : FilterModelBase
     public override ODataFilterGenerator ToODataFilter()
     {
         var filter = new ODataFilterGenerator(true, Id);
+        var hasValue = !(Value == null || Value is string value && string.IsNullOrWhiteSpace(value));
 
-        if (Value != null || Value == null && (Operator == Enums.ODataOperator.IsEmpty || Operator == Enums.ODataOperator.IsNotEmpty))
+        if (hasValue || hasValue && (Operator == Enums.ODataOperator.IsEmpty || Operator == Enums.ODataOperator.IsNotEmpty))
         {
             filter.Add(new ODataFilter
             {

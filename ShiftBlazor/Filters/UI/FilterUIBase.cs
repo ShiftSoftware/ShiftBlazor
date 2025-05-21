@@ -18,6 +18,8 @@ public class FilterUIBase : ComponentBase
     public string ClassName => $"filter-input {this.GetType().Name.ToLower().Replace("filter", "")}-filter";
     public Guid Id => Filter.Id;
 
+    protected bool IsMenuOpen = false;
+
     protected override void OnInitialized()
     {
         if (Filter == null)
@@ -28,12 +30,14 @@ public class FilterUIBase : ComponentBase
 
     protected void ValueChanged<T>(T value)
     {
+        //Console.WriteLine($"ValueChanged: {value}");
         Filter!.Value = value;
         UpdateFilter();
     }
 
     protected void OperatorChanged(ODataOperator oDataOperator)
     {
+        IsMenuOpen = false;
         Filter!.Operator = oDataOperator;
         UpdateFilter();
     }
@@ -49,6 +53,15 @@ public class FilterUIBase : ComponentBase
                 StateHasChanged();
             }
         }
+    }
+
+    protected void OpenMenu()
+    {
+        IsMenuOpen = true;
+    }
+    protected void CloseMenu()
+    {
+        IsMenuOpen = false;
     }
 
     private bool ReloadList(bool immediate = false)

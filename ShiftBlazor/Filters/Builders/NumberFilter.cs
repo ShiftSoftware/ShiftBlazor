@@ -11,28 +11,11 @@ public class NumberFilter<T, TProperty> : FilterBuilder<T, TProperty>
     [Parameter]
     public TProperty Value { get; set; }
 
-    [Parameter]
-    public TProperty Value2 { get; set; }
-
-    [Parameter]
-    public double PercentValue { get; set; }
-
-    [Parameter]
-    public NumericFilterOperator? NumberOperator { get; set; }
-
     protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
         var filter = FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
-        var numericFilter = filter as NumericFilterModel;
-
-        if (numericFilter != null)
-        {
-            numericFilter.Value = Value == null ? 0d : Value;
-            numericFilter.Value2 = Value2 == null ? 0d : Value2;
-            numericFilter.PercentValue = PercentValue;
-            numericFilter.SelectedNumOperator = NumberOperator;
-        }
-        return numericFilter ?? filter;
+        filter.Value = Value;
+        return filter;
     }
 
     protected override void OnParametersChanged()
@@ -41,9 +24,6 @@ public class NumberFilter<T, TProperty> : FilterBuilder<T, TProperty>
         if (Filter is NumericFilterModel filter)
         {
             filter.Value = Value;
-            filter.Value2 = Value2;
-            filter.PercentValue = PercentValue;
-            filter.SelectedNumOperator = NumberOperator;
         }
     }
 }

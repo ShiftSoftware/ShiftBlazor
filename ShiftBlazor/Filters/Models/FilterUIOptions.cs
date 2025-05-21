@@ -10,6 +10,7 @@ public class FilterUIOptions
     public int md { get; set; }
     public int sm { get; set; }
     public int xs { get; set; }
+    public int Order { get; set; }
 
     public RenderFragment<FilterModelBase>? Template { get; set; }
 }

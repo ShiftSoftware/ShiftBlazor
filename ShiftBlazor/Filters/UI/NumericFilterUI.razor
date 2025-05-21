@@ -1,105 +1,46 @@
 ﻿@using ShiftSoftware.ShiftBlazor.Filters.Models
 @inherits FilterUIBase
 
-@if (Filter is NumericFilterModel numericFilter)
-{
-	<MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged" Label="Operator">
-		<MudSelectItem Value="ODataOperator.Equal">Is</MudSelectItem>
-		<MudSelectItem Value="ODataOperator.NotEqual">Is Not</MudSelectItem>
-		<MudSelectItem Value="ODataOperator.IsNotEmpty">IsSet</MudSelectItem>
-		<MudSelectItem Value="ODataOperator.IsEmpty">IsNotSet</MudSelectItem>
-	</MudSelectExtended>
+<div style="width: 100%;">
 
-	@if (Filter.Operator == ODataOperator.Equal || Filter.Operator == ODataOperator.NotEqual)
-	{
-		<MudSelectExtended T="NumericFilterOperator?" Value="numericFilter.SelectedNumOperator" ValueChanged="OnNumOperatorChanged">
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.Positive">Positive</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.Negative">Negative</MudSelectItem>
-			@if (!IsDouble)
-			{
-				<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.Even">Even</MudSelectItem>
-				<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.Odd">Odd</MudSelectItem>
-			}
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.WholeNumbers">WholeNumbers</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.Equal">Equal</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.GreaterThan">GreaterThan</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.GreaterThanOrEqual">GreaterThanOrEqual</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.LessThan">LessThan</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.LessThanOrEqual">LessThanOrEqual</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.Between">Between</MudSelectItem>
-			@if (!IsDouble)
-			{
-				<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.MultipleOf">MultipleOf</MudSelectItem>
-			}
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.StartsWith">StartsWith</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.EndsWith">EndsWith</MudSelectItem>
-			<MudSelectItem T="NumericFilterOperator?" Value="NumericFilterOperator.PercentageOf">PercentageOf</MudSelectItem>
-		</MudSelectExtended>
+	<MudNumericField T="double?"
+					 Label="@Filter.Field"
+					 Value="Filter.Value as double?"
+					 ValueChanged="ValueChanged"
+					 Clearable
+					 Adornment="Adornment.End"
+					 AdornmentIcon="@Icons.Material.Filled.Settings"
+					 OnAdornmentClick="OpenMenu" />
 
-		@if (numericFilter.SelectedNumOperator == NumericFilterOperator.PercentageOf)
-		{
-			<MudNumericField T="double"
-			Label="Percentage"
-			Class="percent-input"
-			MaxLength="3"
-			Max="100"
-			Min="0"
-			Adornment="Adornment.End"
-			AdornmentIcon="@Icons.Material.Filled.Percent"
-			Value="numericFilter.PercentValue"
-			ValueChanged="PercentValueChanged" />
-		}
-		@if (numericFilter.SelectedNumOperator >= NumericFilterOperator.Equal)
-		{
-			<MudNumericField T="double" Label="Value" Value="Value" ValueChanged="ValueChanged"/>
-		}
-		@if (numericFilter.SelectedNumOperator == NumericFilterOperator.Between)
-		{
-			<MudNumericField T="double" Label="Value" Value="(double)numericFilter.Value2" ValueChanged="Value2Changed" />
-		}
-	}
-}
+	<MudPopover Open="IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft">
+
+		<MudList T="ODataOperator" SelectedValue="Filter.Operator" SelectedValueChanged="OperatorChanged">
+			<MudListItem Value="ODataOperator.Equal">Equal</MudListItem>
+			<MudListItem Value="ODataOperator.NotEqual">Not Equal</MudListItem>
+			<MudListItem Value="ODataOperator.GreaterThan">GreaterThan</MudListItem>
+			<MudListItem Value="ODataOperator.GreaterThanOrEqual">GreaterThanOrEqual</MudListItem>
+			<MudListItem Value="ODataOperator.LessThan">LessThan</MudListItem>
+			<MudListItem Value="ODataOperator.LessThanOrEqual">LessThanOrEqual</MudListItem>
+			<MudListItem Value="ODataOperator.StartsWith">Starts With</MudListItem>
+			<MudListItem Value="ODataOperator.EndsWith">Ends With</MudListItem>
+			<MudListItem Value="ODataOperator.Contains">Contains</MudListItem>
+			<MudListItem Value="ODataOperator.NotContains">Not Contains</MudListItem>
+			<MudListItem Value="ODataOperator.IsNotEmpty">Is Set</MudListItem>
+			<MudListItem Value="ODataOperator.IsEmpty">Is Not Set</MudListItem>
+		</MudList>
+
+	</MudPopover>
+</div>
+
+<MudOverlay Visible="IsMenuOpen" AutoClose OnClosed="CloseMenu" />
 
 @code {
 
-	private double Value => (double)(Filter.Value ?? 0d);
-
-	private Type? FieldType { get; set; }
-
-	// Even and Odd don't really work for floating numbers
-	private bool IsDouble => FieldType == null || FieldType == typeof(double) || Nullable.GetUnderlyingType(FieldType) == typeof(double);
 
 	protected override void OnInitialized()
 	{
-		Filter.Value = Value;
+		// Filter.Value = Value;
 		base.OnInitialized();
-	}
-
-	private void PercentValueChanged(double value)
-	{
-		if (Filter is NumericFilterModel numericFilter)
-		{
-			numericFilter.PercentValue = value;
-			UpdateFilter();
-		}
-	}
-
-	private void Value2Changed(double value)
-	{
-		if (Filter is NumericFilterModel numericFilter)
-		{
-			numericFilter.Value2 = value;
-			UpdateFilter();
-		}
-	}
-
-	private void OnNumOperatorChanged(NumericFilterOperator? value)
-	{
-		if (Filter is NumericFilterModel numericFilter)
-		{
-			numericFilter.SelectedNumOperator = value;
-			UpdateFilter();
-		}
 	}
 	
 }

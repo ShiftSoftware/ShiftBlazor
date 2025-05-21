@@ -9,7 +9,7 @@ namespace ShiftSoftware.ShiftBlazor.Components;
 public class BooleanFilter<T, TProperty> : FilterBuilder<T, TProperty>
 {
     [Parameter]
-    public bool Value { get; set; }
+    public bool? Value { get; set; }
 
     [Obsolete]
     public new ODataOperator Operator { get; set; }

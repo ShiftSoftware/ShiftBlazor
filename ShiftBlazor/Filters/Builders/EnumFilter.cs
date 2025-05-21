@@ -11,13 +11,13 @@ public class EnumFilter<T, TProperty> : FilterBuilder<T, TProperty>
     [Parameter]
     public TProperty? Value { get; set; }
 
-    [Obsolete]
-    public new ODataOperator Operator { get; set; }
-
     protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
         var filter = FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
-        filter.Value = Value;
+        if (Value != null && Enum.IsDefined(typeof(TProperty), Value))
+        {
+            filter.Value = Value;
+        }
         return filter;
     }
 }

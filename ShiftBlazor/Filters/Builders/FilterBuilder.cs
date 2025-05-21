@@ -37,6 +37,8 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     [Parameter]
     public int xs { get; set; }
     [Parameter]
+    public int Order { get; set; } = int.MaxValue;
+    [Parameter]
     public RenderFragment<FilterModelBase>? Template { get; set; }
 
 
@@ -78,6 +80,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
                 md = md,
                 sm = sm,
                 xs = xs,
+                Order = Order,
                 Template = Template,
             };
 
