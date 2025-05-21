@@ -16,23 +16,8 @@ public class EnumFilter<T, TProperty> : FilterBuilder<T, TProperty>
 
     protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
-        var filter = FilterModelBase.CreateFilter(propertyInfo);
+        var filter = FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
         filter.Value = Value;
         return filter;
-    }
-
-    public override Task SetParametersAsync(ParameterView parameters)
-    {
-        if (IsInitialized)
-        {
-            var newValue = parameters.GetValueOrDefault<TProperty>(nameof(Value));
-
-            if (Value?.Equals(newValue) == false)
-            {
-                UpdateFilterValue(newValue);
-            }
-        }
-
-        return base.SetParametersAsync(parameters);
     }
 }

@@ -12,13 +12,14 @@ public abstract class FilterModelBase
     public ODataOperator Operator { get; set; }
     public object? Value { get; set; }
     public bool IsHidden { get; set; }
-    public bool IsReadOnly { get; set; }
+    public bool IsDisabled { get; set; }
     public bool IsImmediate { get; set; }
+    internal bool IsDefault { get; set; }
     public FilterUIOptions UIOptions { get; set; } = new();
 
     public abstract ODataFilterGenerator ToODataFilter();
 
-    public static FilterModelBase CreateFilter(PropertyInfo field, Type? type = null)
+    public static FilterModelBase CreateFilter(PropertyInfo field, Type? type = null, bool isDefault = false)
     {
         var fieldType = FieldType.Identify(field.PropertyType);
         FilterModelBase? filter = null;
@@ -54,6 +55,7 @@ public abstract class FilterModelBase
         filter ??= new StringFilterModel { };
         filter.Field = field.Name;
         filter.Id = Guid.NewGuid();
+        filter.IsDefault = isDefault;
 
         return filter;
     }

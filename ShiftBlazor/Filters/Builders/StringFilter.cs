@@ -15,23 +15,14 @@ public class StringFilter<T, TProperty> : FilterBuilder<T, TProperty>
 
     protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
-        var filter = FilterModelBase.CreateFilter(propertyInfo, DTOType);
+        var filter = FilterModelBase.CreateFilter(propertyInfo, DTOType, true);
         filter.Value = Value;
         return filter;
     }
 
-    public override Task SetParametersAsync(ParameterView parameters)
+    protected override void OnParametersChanged()
     {
-        if (IsInitialized)
-        {
-            var newValue = parameters.GetValueOrDefault<string>(nameof(Value));
-
-            if (Value != newValue)
-            {
-                UpdateFilterValue(newValue);
-            }
-        }
-
-        return base.SetParametersAsync(parameters);
+        base.OnParametersChanged();
+        Filter.Value = Value;
     }
 }

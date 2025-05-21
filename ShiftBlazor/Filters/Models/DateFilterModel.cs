@@ -27,30 +27,7 @@ public class DateFilterModel : FilterModelBase
             //    return;
             //}
 
-            (valueStart, valueEnd) = SelectedDateOperator switch
-            {
-                DateFilterOperator.Today => GetLastOrNextDateRange(0),
-                DateFilterOperator.Torrorrow => GetLastOrNextDateRange(1),
-                DateFilterOperator.Yesterday => GetLastOrNextDateRange(-1),
-                DateFilterOperator.Next7Days => GetLastOrNextDateRange(1, 7),
-                DateFilterOperator.Previous7Days => GetLastOrNextDateRange(-7, 7),
-                DateFilterOperator.LastWeek => GetLastOrNextDateRange(-1, unit: TimeUnit.Week),
-                DateFilterOperator.ThisWeek => GetLastOrNextDateRange(0, unit: TimeUnit.Week),
-                DateFilterOperator.NextWeek => GetLastOrNextDateRange(1, unit: TimeUnit.Week),
-                DateFilterOperator.LastMonth => GetLastOrNextDateRange(-1, unit: TimeUnit.Month),
-                DateFilterOperator.ThisMonth => GetLastOrNextDateRange(0, unit: TimeUnit.Month),
-                DateFilterOperator.NextMonth => GetLastOrNextDateRange(1, unit: TimeUnit.Month),
-                DateFilterOperator.LastYear => GetLastOrNextDateRange(-1, unit: TimeUnit.Year),
-                DateFilterOperator.ThisYear => GetLastOrNextDateRange(0, unit: TimeUnit.Year),
-                DateFilterOperator.NextYear => GetLastOrNextDateRange(1, unit: TimeUnit.Year),
-                DateFilterOperator.Last => GetLastOrNextDateRange(UnitValue * -1, UnitValue, SelectedTimeUnit),
-                DateFilterOperator.Next => GetLastOrNextDateRange(1, UnitValue, SelectedTimeUnit),
-                DateFilterOperator.Date => (DateTimeValue ?? DateTime.Today, (DateTimeValue ?? DateTime.Today).AddDays(1)),
-                DateFilterOperator.Before => (DateTime.MinValue.ToUniversalTime(), DateTimeValue ?? DateTime.Today),
-                DateFilterOperator.After => (DateTimeValue ?? DateTime.Today, DateTime.MaxValue.ToUniversalTime()),
-                DateFilterOperator.Range => (DateRangeValue?.Start ?? DateTime.Today, (DateRangeValue?.End ?? DateTime.Today).AddDays(1)),
-                _ => (default, default)
-            };
+            (valueStart, valueEnd) = GetDateRange(SelectedDateOperator, SelectedTimeUnit, UnitValue, DateTimeValue, DateRangeValue);
 
             if (valueStart != default || valueEnd != default)
             {
@@ -90,7 +67,37 @@ public class DateFilterModel : FilterModelBase
         return filter;
     }
 
-    private (DateTime, DateTime) GetLastOrNextDateRange(int start, int end = 1, TimeUnit unit = TimeUnit.Day)
+    public static (DateTime dateStart, DateTime dateEnd) GetDateRange(DateFilterOperator? dateOperator, TimeUnit timeUnit = TimeUnit.Day, int unitValue = 1, DateTime? date = null, DateRange? range = null)
+    {
+        (DateTime valueStart, DateTime valueEnd) = dateOperator switch
+        {
+            DateFilterOperator.Today => GetLastOrNextDateRange(0),
+            DateFilterOperator.Torrorrow => GetLastOrNextDateRange(1),
+            DateFilterOperator.Yesterday => GetLastOrNextDateRange(-1),
+            DateFilterOperator.Next7Days => GetLastOrNextDateRange(1, 7),
+            DateFilterOperator.Previous7Days => GetLastOrNextDateRange(-7, 7),
+            DateFilterOperator.LastWeek => GetLastOrNextDateRange(-1, unit: TimeUnit.Week),
+            DateFilterOperator.ThisWeek => GetLastOrNextDateRange(0, unit: TimeUnit.Week),
+            DateFilterOperator.NextWeek => GetLastOrNextDateRange(1, unit: TimeUnit.Week),
+            DateFilterOperator.LastMonth => GetLastOrNextDateRange(-1, unit: TimeUnit.Month),
+            DateFilterOperator.ThisMonth => GetLastOrNextDateRange(0, unit: TimeUnit.Month),
+            DateFilterOperator.NextMonth => GetLastOrNextDateRange(1, unit: TimeUnit.Month),
+            DateFilterOperator.LastYear => GetLastOrNextDateRange(-1, unit: TimeUnit.Year),
+            DateFilterOperator.ThisYear => GetLastOrNextDateRange(0, unit: TimeUnit.Year),
+            DateFilterOperator.NextYear => GetLastOrNextDateRange(1, unit: TimeUnit.Year),
+            DateFilterOperator.Last => GetLastOrNextDateRange(unitValue * -1, unitValue, timeUnit),
+            DateFilterOperator.Next => GetLastOrNextDateRange(1, unitValue, timeUnit),
+            DateFilterOperator.Date => (date ?? DateTime.Today, (date ?? DateTime.Today).AddDays(1)),
+            DateFilterOperator.Before => (DateTime.MinValue.ToUniversalTime(), date ?? DateTime.Today),
+            DateFilterOperator.After => (date ?? DateTime.Today, DateTime.MaxValue.ToUniversalTime()),
+            DateFilterOperator.Range => (range?.Start ?? DateTime.Today, (range?.End ?? DateTime.Today).AddDays(1)),
+            _ => (default, default)
+        };
+
+        return (valueStart, valueEnd);
+    }
+
+    public static (DateTime, DateTime) GetLastOrNextDateRange(int start, int end = 1, TimeUnit unit = TimeUnit.Day)
     {
         DateTime valueStart = default;
         DateTime valueEnd = default;

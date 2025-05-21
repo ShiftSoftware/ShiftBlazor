@@ -46,6 +46,8 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     protected FilterModelBase? Filter { get; set; }
     protected bool IsInitialized = false;
 
+    private readonly Dictionary<string, object?> _previousParameters = new();
+
     protected override void OnInitialized()
     {
         //if (Parent is IShiftList)
@@ -65,7 +67,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
             Filter.Operator = Operator;
             Filter.Id = Id;
             Filter.IsHidden = Hidden;
-            Filter.IsReadOnly = ReadOnly;
+            Filter.IsDisabled = ReadOnly;
             Filter.IsImmediate = Immediate;
 
             Filter.UIOptions = new FilterUIOptions
@@ -90,36 +92,60 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
         //}
     }
 
-    public override Task SetParametersAsync(ParameterView parameters)
+    protected virtual void OnParametersChanged()
     {
-        if (IsInitialized)
+        Filter.Operator = Operator;
+        Filter.Id = Id;
+        Filter.IsHidden = Hidden;
+        Filter.IsDisabled = ReadOnly;
+        Filter.IsImmediate = Immediate;
+    }
+
+    private bool HasParametersChanged(ParameterView parameters)
+    {
+        var hasChanged = false;
+        var props = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.GetCustomAttribute<ParameterAttribute>() != null)
+            .Where(p => p.Name != nameof(Property));
+
+        foreach (var prop in props)
         {
-            Console.WriteLine("SetParametersAsync");
+            var name = prop.Name;
+            if (!parameters.TryGetValue(name, out object? newValue))
+                continue;
 
-            var newOperator = parameters.GetValueOrDefault<ODataOperator>(nameof(Operator));
-            var newHidden = parameters.GetValueOrDefault<bool>(nameof(Hidden));
-            var newReadOnly = parameters.GetValueOrDefault<bool>(nameof(ReadOnly));
-            var newImmediate = parameters.GetValueOrDefault<bool>(nameof(Immediate));
+            _previousParameters.TryGetValue(name, out var oldValue);
 
-            if (Operator != newOperator ||
-                Hidden != newHidden ||
-                ReadOnly != newReadOnly ||
-                Immediate != newImmediate)
+            if (!Equals(newValue, oldValue))
             {
-                Filter!.Operator = newOperator;
-                Filter.IsHidden = newHidden;
-                Filter.IsReadOnly = newReadOnly;
-                Filter.IsImmediate = newImmediate;
-                UpdateFilter();
+                _previousParameters[name] = newValue;
+                hasChanged = true;
             }
         }
 
-        return base.SetParametersAsync(parameters);
+        return hasChanged;
+    }
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        bool hasChanged = false;
+        if (IsInitialized)
+        {
+            hasChanged = HasParametersChanged(parameters);
+        }
+
+        await base.SetParametersAsync(parameters);
+
+        if (IsInitialized && hasChanged)
+        {
+            OnParametersChanged();
+            UpdateFilter();
+        }
     }
 
     protected virtual FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
-        return FilterModelBase.CreateFilter(propertyInfo);
+        return FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
     }
 
     protected void UpdateFilterValue<T>(T value)

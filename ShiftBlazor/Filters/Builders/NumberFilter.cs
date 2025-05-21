@@ -22,42 +22,23 @@ public class NumberFilter<T, TProperty> : FilterBuilder<T, TProperty>
 
     protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
-        var filter = FilterModelBase.CreateFilter(propertyInfo);
-        SetNumberFilterValues(filter as NumericFilterModel);
-        return filter;
-    }
+        var filter = FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
+        var numericFilter = filter as NumericFilterModel;
 
-    public override Task SetParametersAsync(ParameterView parameters)
-    {
-        if (IsInitialized)
+        if (numericFilter != null)
         {
-            // check if the parameters have changed
-            var newValue = parameters.GetValueOrDefault<TProperty>(nameof(Value));
-            var newValue2 = parameters.GetValueOrDefault<TProperty>(nameof(Value2));
-            var newPercentValue = parameters.GetValueOrDefault<double>(nameof(PercentValue));
-            var newNumberOperator = parameters.GetValueOrDefault<NumericFilterOperator?>(nameof(NumberOperator));
-
-            if (!EqualityComparer<TProperty>.Default.Equals(Value, newValue) ||
-                !EqualityComparer<TProperty>.Default.Equals(Value2, newValue2) ||
-                PercentValue != newPercentValue ||
-                NumberOperator != newNumberOperator)
-            {
-                if (Filter is NumericFilterModel filter)
-                {
-                    filter.Value = newValue ?? default!;
-                    filter.Value2 = newValue2 ?? default!;
-                    filter.PercentValue = newPercentValue;
-                    filter.SelectedNumOperator = newNumberOperator;
-                }
-            }
-
+            numericFilter.Value = Value == null ? 0d : Value;
+            numericFilter.Value2 = Value2 == null ? 0d : Value2;
+            numericFilter.PercentValue = PercentValue;
+            numericFilter.SelectedNumOperator = NumberOperator;
         }
-        return base.SetParametersAsync(parameters);
+        return numericFilter ?? filter;
     }
 
-    private void SetNumberFilterValues(NumericFilterModel? filter)
+    protected override void OnParametersChanged()
     {
-        if (filter != null)
+        base.OnParametersChanged();
+        if (Filter is NumericFilterModel filter)
         {
             filter.Value = Value;
             filter.Value2 = Value2;
