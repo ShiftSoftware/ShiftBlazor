@@ -30,7 +30,6 @@ public class FilterUIBase : ComponentBase
 
     protected void ValueChanged<T>(T value)
     {
-        //Console.WriteLine($"ValueChanged: {value}");
         Filter!.Value = value;
         UpdateFilter();
     }

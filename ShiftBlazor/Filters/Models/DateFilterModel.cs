@@ -64,8 +64,6 @@ public class DateFilterModel : FilterModelBase
             });
         }
 
-        Console.WriteLine($" se{SelectedDateOperator}");
-
         return filter;
     }
 

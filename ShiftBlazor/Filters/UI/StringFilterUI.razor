@@ -28,16 +28,23 @@
 } *@
 
 <div style="width: 100%;">
-	<MudTextField T="string"
-				  Label="@Filter.Field"
-				  Value="Value"
-				  Clearable
-				  ValueChanged="ValueChanged"
-				  ReadOnly="HasNoValue"
-				  @onmousedown="InputClicked"
-				  Adornment="Adornment.End"
-				  AdornmentIcon="@Icons.Material.Filled.Settings"
-				  OnAdornmentClick="OpenMenu" />
+	@if (Filter is StringFilterModel stringFilter && stringFilter.AutocompleteOptions != null)
+	{
+		<DynamicComponent Type="AutocompleteType" Parameters="AutocompleteParameters" />
+	}
+	else
+	{
+		<MudTextField T="string"
+					  Label="@Filter.Field"
+					  Value="Value"
+					  Clearable
+					  ValueChanged="ValueChanged"
+					  ReadOnly="HasNoValue"
+					  @onmousedown="InputClicked"
+					  Adornment="Adornment.End"
+					  AdornmentIcon="@Icons.Material.Filled.Settings"
+					  OnAdornmentClick="OpenMenu" />
+	}
 
 	<MudPopover Open="IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft">
 		<MudList T="ODataOperator" SelectedValue="Filter.Operator" SelectedValueChanged="_OperatorChanged">
@@ -66,10 +73,11 @@
 	[CascadingParameter]
 	public IShiftList? ShiftList { get; set; }
 
-	private Type? AutoCompleteType;
-	private Dictionary<string, object>? AutoCompleteParameters;
+	private Type? AutocompleteType;
+	private Dictionary<string, object>? AutocompleteParameters;
 
 	private bool HasNoValue => Filter.Operator == ODataOperator.IsEmpty || Filter.Operator == ODataOperator.IsNotEmpty;
+	private bool IsMultiSelect => Filter.Operator == ODataOperator.In || Filter.Operator == ODataOperator.NotIn;
 
 	private void InputClicked()
 	{
@@ -94,69 +102,92 @@
 	{
 		base.OnInitialized();
 
-		// if (Filter is StringFilterModel stringFilter
-		// 	&& stringFilter.DtoType != null
-		// 	&& Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(stringFilter.DtoType) != null
-		// 	&& !string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
-		// {
-		// 	AutoCompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(stringFilter.DtoType);
-		// 	AutoCompleteParameters = new()
-		// 	{
-		// 		["Label"] = Filter.Field,
-		// 		["EntitySet"] = ShiftList.EntitySet,
-		// 		["DataTextField"] = stringFilter.Field,
-		// 		["Strict"] = false,
-		// 		["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged),
-		// 		["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged),
-		// 		["MultiSelect"] = Filter.Operator == ODataOperator.In,
-		// 		["Clearable"] = true,
-		// 	};
-		// }
+		if (Filter is StringFilterModel stringFilter)
+		{
+			if (stringFilter.AutocompleteOptions != null &&
+				stringFilter.DtoType == null)
+			{
+				throw new ArgumentNullException(nameof(stringFilter.DtoType));
+			}
+			else if (stringFilter.DtoType == null)
+			{
+				return;
+			}
+
+			var options = stringFilter.AutocompleteOptions;
+			AutocompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(stringFilter.DtoType);
+			AutocompleteParameters = new()
+			{
+				["Label"] = Filter.Field,
+				["Strict"] = false,
+				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged),
+				["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged),
+				["MultiSelect"] = IsMultiSelect,
+				["Clearable"] = true,
+				["Adornment"] = Adornment.End,
+				["AdornmentIcon"] = Icons.Material.Filled.Settings,
+				["OnAdornmentClick"] = new EventCallback<MouseEventArgs>(this, OpenMenu),
+			};
+
+			if (stringFilter.AutocompleteOptions != null)
+			{
+				AutocompleteParameters["BaseUrl"] = options.BaseUrl;
+				AutocompleteParameters["BaseUrlKey"] = options.BaseUrlKey;
+				AutocompleteParameters["EntitySet"] = options.EntitySet;
+				AutocompleteParameters["DataTextField"] = options.DataTextField;
+				AutocompleteParameters["DataValueField"] = options.DataValueField;
+				AutocompleteParameters["ForeignTextField"] = options.ForeignTextField;
+				AutocompleteParameters["ForeignEntiyField"] = options.ForeignEntiyField;
+			}
+			else if (Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(stringFilter.DtoType) != null &&
+					!string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
+			{
+				AutocompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(stringFilter.DtoType);
+				AutocompleteParameters = new()
+				{
+					["EntitySet"] = ShiftList.EntitySet,
+					["DataTextField"] = stringFilter.Field,
+				};
+			}
+		}
 	}
 
 	protected override void OnParametersSet()
 	{
-		if (AutoCompleteParameters != null && ShiftList is IFilterableComponent filterable)
-		{
-			var filterList = filterable.Filters.Where(x => x.Key != Id).Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x));
-
-			if (filterList.Any())
-			{
-				var filterQueryString = $"({string.Join(" and ", filterList)})";
-				AutoCompleteParameters["Filter"] = delegate (ODataFilterGenerator x) { x.Add(filterQueryString); };
-			}
-		}
-
 		base.OnParametersSet();
 	}
 
 	private void _OperatorChanged(ODataOperator oDataOperator)
 	{
 		IsMenuOpen = false;
-		if (AutoCompleteParameters != null && oDataOperator == ODataOperator.In)
+		if (AutocompleteParameters != null)
 		{
-			AutoCompleteParameters["MultiSelect"] = true;
-		}
-		else if (AutoCompleteParameters != null)
-		{
-			AutoCompleteParameters["MultiSelect"] = false;
+			AutocompleteParameters["MultiSelect"] = IsMultiSelect;
 		}
 
 		Filter!.Operator = oDataOperator;
 		UpdateFilter();
-
-		
 	}
 
 	private void AutocompleteMultiChanged(List<ShiftEntitySelectDTO>? dto)
 	{
-		Filter.Value = dto?.Select(x => x.Text).ToList();
+		if (Filter is StringFilterModel filter && filter.AutocompleteOptions != null)
+		{
+			Filter.Value = dto?.Select(x => x.Value).ToList();
+		}
+		else
+		{
+			Filter.Value = dto?.Select(x => x.Text).ToList();
+		}
 		UpdateFilter();
 	}
 
-
 	private void AutocompleteChanged(ShiftEntitySelectDTO? dto)
 	{
-		ValueChanged(dto?.Text);
+		var value = Filter is StringFilterModel filter && filter.AutocompleteOptions != null
+			? dto?.Value
+			: dto?.Text;
+
+		ValueChanged(value);
 	}
 }

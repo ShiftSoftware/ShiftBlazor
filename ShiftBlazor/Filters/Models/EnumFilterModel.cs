@@ -23,7 +23,6 @@ public class EnumFilterModel : FilterModelBase
     public override ODataFilterGenerator ToODataFilter()
     {
         var filter = new ODataFilterGenerator(true, Id);
-        //Console.WriteLine($"{Operator} {JsonSerializer.Serialize(Value)}");
 
         if (Value != null && Value is IEnumerable<object> val && val.Any())
         {
