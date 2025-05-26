@@ -3,44 +3,32 @@
 
 <div style="width: 100%;">
 
-	<MudNumericField T="double?"
-					 Label="@Filter.Field"
-					 Value="Filter.Value as double?"
-					 ValueChanged="ValueChanged"
-					 Clearable
-					 Adornment="Adornment.End"
-					 AdornmentIcon="@Icons.Material.Filled.Settings"
-					 OnAdornmentClick="OpenMenu" />
+	<MudField Label="@Filter.Field" InnerPadding="false">
+		<MudStack Row>
+			<MudSelect Underline="false" T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged">
+				<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.GreaterThan">GreaterThan</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.GreaterThanOrEqual">GreaterThanOrEqual</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.LessThan">LessThan</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.LessThanOrEqual">LessThanOrEqual</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.Contains">Contains</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
+			</MudSelect>
 
-	<MudPopover Open="IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft">
+			@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
+			{
+				<MudNumericField T="double?"
+								 Value="Filter.Value as double?"
+								 ValueChanged="ValueChanged"
+								 Clearable
+								 Underline="false" />
+			}
+		</MudStack>
+	</MudField>
 
-		<MudList T="ODataOperator" SelectedValue="Filter.Operator" SelectedValueChanged="OperatorChanged">
-			<MudListItem Value="ODataOperator.Equal">Equal</MudListItem>
-			<MudListItem Value="ODataOperator.NotEqual">Not Equal</MudListItem>
-			<MudListItem Value="ODataOperator.GreaterThan">GreaterThan</MudListItem>
-			<MudListItem Value="ODataOperator.GreaterThanOrEqual">GreaterThanOrEqual</MudListItem>
-			<MudListItem Value="ODataOperator.LessThan">LessThan</MudListItem>
-			<MudListItem Value="ODataOperator.LessThanOrEqual">LessThanOrEqual</MudListItem>
-			<MudListItem Value="ODataOperator.StartsWith">Starts With</MudListItem>
-			<MudListItem Value="ODataOperator.EndsWith">Ends With</MudListItem>
-			<MudListItem Value="ODataOperator.Contains">Contains</MudListItem>
-			<MudListItem Value="ODataOperator.NotContains">Not Contains</MudListItem>
-			<MudListItem Value="ODataOperator.IsNotEmpty">Is Set</MudListItem>
-			<MudListItem Value="ODataOperator.IsEmpty">Is Not Set</MudListItem>
-		</MudList>
-
-	</MudPopover>
 </div>
-
-<MudOverlay Visible="IsMenuOpen" AutoClose OnClosed="CloseMenu" />
-
-@code {
-
-
-	protected override void OnInitialized()
-	{
-		// Filter.Value = Value;
-		base.OnInitialized();
-	}
-	
-}

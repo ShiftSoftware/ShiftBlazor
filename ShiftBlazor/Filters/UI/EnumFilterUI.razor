@@ -1,36 +1,38 @@
 ﻿@inherits FilterUIBase
 
 <div style="width: 100%;">
-	<MudSelectExtended T="object"
-					   Label="@Filter.Field"
-					   MultiSelection
-					   SelectedValues="Filter.Value as IEnumerable<object>"
-					   SelectedValuesChanged="ValueChanged"
-					   Clearable
-					   Adornment="Adornment.End"
-					   AdornmentIcon="@Icons.Material.Filled.Settings"
-					   OnAdornmentClick="OpenMenu">
-		@if (EnumTypeToUse != null)
-		{
-			@foreach (var item in Enum.GetValues(EnumTypeToUse))
-			{
-				<MudSelectItem Value="@item">@(item is Enum _enum && !string.IsNullOrWhiteSpace(_enum.Describe()) ? _enum.Describe() : item)</MudSelectItem>
-			}
-		}
-	</MudSelectExtended>
 
-	<MudPopover Open="IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft">
-		<MudList T="ODataOperator" SelectedValue="Filter.Operator" SelectedValueChanged="_OperatorChanged">
-			<MudListItem Value="ODataOperator.In">Equal</MudListItem>
-			<MudListItem Value="ODataOperator.NotIn">Not Equal</MudListItem>
-			<MudListItem Value="ODataOperator.IsNotEmpty">Is Set</MudListItem>
-			<MudListItem Value="ODataOperator.IsEmpty">Is Not Set</MudListItem>
-		</MudList>
-	</MudPopover>
+	<MudField Label="@Filter.Field" InnerPadding="false">
+		<MudStack Row>
+
+			<MudSelect T="ODataOperator" Underline="false" Value="Filter.Operator" ValueChanged="_OperatorChanged">
+				<MudSelectItem Value="ODataOperator.In">Equal</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.NotIn">Not Equal</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
+				<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
+			</MudSelect>
+
+			@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
+			{
+				<MudSelectExtended T="object"
+								   MultiSelection
+								   SelectedValues="Filter.Value as IEnumerable<object>"
+								   SelectedValuesChanged="ValueChanged"
+								   Underline="false"
+								   Clearable >
+					@if (EnumTypeToUse != null)
+					{
+						@foreach (var item in Enum.GetValues(EnumTypeToUse))
+						{
+							<MudSelectItem Value="@item">@(item is Enum _enum && !string.IsNullOrWhiteSpace(_enum.Describe()) ? _enum.Describe() : item)</MudSelectItem>
+						}
+					}
+				</MudSelectExtended>
+			}
+		</MudStack>
+	</MudField>
 
 </div>
-
-<MudOverlay Visible="IsMenuOpen" AutoClose OnClosed="CloseMenu" />
 
 @code {
 	[Parameter]

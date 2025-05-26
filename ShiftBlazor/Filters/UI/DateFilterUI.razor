@@ -5,29 +5,39 @@
 <MudField Class="custom-date-range-picker"
 		  Adornment="Adornment.End"
 		  AdornmentIcon="@Icons.Material.Filled.Settings"
+		  InnerPadding="false"
+		  Label="@Filter.Field"
 		  OnAdornmentClick="OpenMenu">
 
-	<MudDatePicker Adornment="Adornment.None"
-				   Label="@Filter.Field"
-				   Editable
-				   Underline="false"
-				   DateChanged="DateStartChanged"
-				   Date="_dateRangeValue.Start"
-				   @onfocus="OpenPicker" />
+	<MudSelect Underline="false" T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged">
+		<MudSelectItem Value="ODataOperator.Equal">Is</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.NotEqual">Is Not</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
+		<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
+	</MudSelect>
 
-	@if (IsPickerOpen || _dateRangeValue.Start != null || _dateRangeValue.End != null)
+	@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
 	{
-		<MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt" Color="Color.Default" Style="align-self: end;margin: 4px;" />
-	}
+		<MudDatePicker Adornment="Adornment.None"
+					   Editable
+					   Underline="false"
+					   DateChanged="DateStartChanged"
+					   Date="_dateRangeValue.Start"
+					   @onfocus="OpenPicker" />
 
-	<MudDatePicker Adornment="Adornment.None"
-				   Label=" "
-				   Clearable
-				   Underline="false"
-				   DateChanged="DateEndChanged"
-				   Date="_dateRangeValue.End"
-				   Editable
-				   @onfocus="OpenPicker" />
+		@if (IsPickerOpen || _dateRangeValue.Start != null || _dateRangeValue.End != null)
+		{
+			<MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt" Color="Color.Default" Style="align-self: end;margin: 4px;" />
+		}
+
+		<MudDatePicker Adornment="Adornment.None"
+					   Clearable
+					   Underline="false"
+					   DateChanged="DateEndChanged"
+					   Date="_dateRangeValue.End"
+					   Editable
+					   @onfocus="OpenPicker" />
+	}
 
 	<MudPopover Open="IsPickerOpen" AnchorOrigin="Origin.BottomLeft">
 		<MudDateRangePicker DateRange="_dateRangeValue"
@@ -77,12 +87,7 @@
 	</MudPopover>
 
 	<MudPopover Open="IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft">
-		<MudList T="ODataOperator" SelectedValue="Filter.Operator" SelectedValueChanged="OperatorChanged">
-			<MudListItem Value="ODataOperator.Equal">Is</MudListItem>
-			<MudListItem Value="ODataOperator.NotEqual">Is Not</MudListItem>
-			<MudListItem Value="ODataOperator.IsNotEmpty">Is Set</MudListItem>
-			<MudListItem Value="ODataOperator.IsEmpty">Is Not Set</MudListItem>
-		</MudList>
+
 	</MudPopover>
 </MudField>
 
@@ -92,21 +97,19 @@
 
 <style>
 	.MyTestClass {
-	max-width: max-content !important;
+		max-width: max-content !important;
 	}
 
 	.custom-date-range-picker > .mud-input-control-input-container > .mud-input > .mud-input-root {
-	display: flex !important;
-	flex-grow: 1 !important;
-	z-index: 10 !important;
-	padding-bottom: 0 !important;
+		display: flex !important;
+		flex-grow: 1 !important;
+		z-index: 10 !important;
+		padding-bottom: 0 !important;
 	}
 
-	.custom-date-range-picker > .mud-input-control-input-container > .mud-input > .mud-input-adornment
+ 	.custom-date-range-picker > .mud-input-control-input-container > .mud-input > .mud-input-adornment
 	{
-	align-self: end !important;
-	height: auto !important;
-	margin-left: -14px !important;
+		margin-left: -14px !important;
 	}
 </style>
 
