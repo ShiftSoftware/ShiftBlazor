@@ -32,30 +32,41 @@
 		<MudStack Row>
 			@if (Filter is StringFilterModel stringFilter && stringFilter.AutocompleteOptions != null)
 			{
-				<MudSelect Underline="false" T="ODataOperator" Value="Filter.Operator" ValueChanged="_OperatorChanged">
-					<MudSelectItem Value="ODataOperator.In">In</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.NotIn">Not In</MudSelectItem>
-				</MudSelect>
+				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+					<ActivatorContent>
+						<MudText>@Filter.Operator</MudText>
+						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
+					</ActivatorContent>
+					<ChildContent>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.In))">In</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotIn))">Not In</MudMenuItem>
+					</ChildContent>
+				</MudMenu>
 
 				<DynamicComponent Type="AutocompleteType" Parameters="AutocompleteParameters" />
 			}
 			else
 			{
-		
-				<MudSelect Underline="false" T="ODataOperator" Value="Filter.Operator" ValueChanged="_OperatorChanged">
-					<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.NotStartsWith">Not Starts With</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.NotEndsWith">Not Ends With</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.Contains">Contains</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.In">In</MudSelectItem>
-					<MudSelectItem Value="ODataOperator.NotIn">Not In</MudSelectItem>
-				</MudSelect>
+				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+					<ActivatorContent>
+						<MudText>@Filter.Operator</MudText>
+						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
+					</ActivatorContent>
+					<ChildContent>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.Equal))">Equal</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotEqual))">Not Equal</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.StartsWith))">Starts With</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotStartsWith))">Not Starts With</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.EndsWith))">Ends With</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotEndsWith))">Not Ends With</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.Contains))">Contains</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotContains))">Not Contains</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsNotEmpty))">Is Set</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsEmpty))">Is Not Set</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.In))">In</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotIn))">Not In</MudMenuItem>
+					</ChildContent>
+				</MudMenu>
 
 				@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
 				{

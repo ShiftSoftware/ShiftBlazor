@@ -9,12 +9,18 @@
 		  Label="@Filter.Field"
 		  OnAdornmentClick="OpenMenu">
 
-	<MudSelect Underline="false" T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged">
-		<MudSelectItem Value="ODataOperator.Equal">Is</MudSelectItem>
-		<MudSelectItem Value="ODataOperator.NotEqual">Is Not</MudSelectItem>
-		<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
-		<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
-	</MudSelect>
+	<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+		<ActivatorContent>
+			<MudText>@Filter.Operator</MudText>
+			<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
+		</ActivatorContent>
+		<ChildContent>
+			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">Is</MudMenuItem>
+			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">Is Not</MudMenuItem>
+			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">Is Set</MudMenuItem>
+			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">Is Not Set</MudMenuItem>
+		</ChildContent>
+	</MudMenu>
 
 	@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
 	{
@@ -86,12 +92,12 @@
 		</MudDateRangePicker>
 	</MudPopover>
 
-	<MudPopover Open="IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft">
+	<MudPopover Open="_IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft">
 
 	</MudPopover>
 </MudField>
 
-<MudOverlay Visible="IsPickerOpen || IsMenuOpen" AutoClose OnClosed="OverlayClosed" />
+<MudOverlay Visible="IsPickerOpen || _IsMenuOpen" AutoClose OnClosed="OverlayClosed" />
 
 
 
@@ -117,6 +123,7 @@
 @code {
 
 	private bool IsPickerOpen { get; set; }
+	private bool _IsMenuOpen { get; set; }
 
 	private DateRange _dateRangeValue { get; set; } = new DateRange(null, null);
 	private MudDateRangePicker? picker;
@@ -153,6 +160,16 @@
 	private void ClosePicker()
 	{
 		IsPickerOpen = false;
+	}
+
+	private void OpenMenu()
+	{
+		_IsMenuOpen = true;
+	}
+
+	private void CloseMenu()
+	{
+		_IsMenuOpen = false;
 	}
 
 	private void OverlayClosed()

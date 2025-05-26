@@ -4,13 +4,18 @@
 
 	<MudField Label="@Filter.Field" InnerPadding="false">
 		<MudStack Row>
-
-			<MudSelect T="ODataOperator" Underline="false" Value="Filter.Operator" ValueChanged="_OperatorChanged">
-				<MudSelectItem Value="ODataOperator.In">Equal</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.NotIn">Not Equal</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
-				<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
-			</MudSelect>
+			<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+				<ActivatorContent>
+					<MudText>@Filter.Operator</MudText>
+					<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
+				</ActivatorContent>
+				<ChildContent>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.In))">Equal</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotIn))">Not Equal</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsNotEmpty))">Is Set</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsEmpty))">Is Not Set</MudMenuItem>
+				</ChildContent>
+			</MudMenu>
 
 			@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
 			{
@@ -51,17 +56,9 @@
 		return base.OnInitializedAsync();
 	}
 
-	private void InputClicked()
-	{
-		if (HasNoValue)
-		{
-			OpenMenu();
-		}
-	}
-
 	private void _OperatorChanged(ODataOperator oDataOperator)
 	{
-		CloseMenu();
+		// CloseMenu();
 
 		Filter!.Operator = oDataOperator;
 		UpdateFilter();

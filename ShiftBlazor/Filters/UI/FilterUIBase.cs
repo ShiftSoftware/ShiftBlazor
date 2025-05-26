@@ -3,6 +3,7 @@ using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Components;
+using MudBlazor;
 
 namespace ShiftSoftware.ShiftBlazor.Filters.UI;
 
@@ -16,6 +17,7 @@ public class FilterUIBase : ComponentBase
     public IFilterableComponent? Parent { get; set; }
 
     public string ClassName => $"filter-input {this.GetType().Name.ToLower().Replace("filter", "")}-filter";
+    public string MenuIcon => IsMenuOpen ? Icons.Material.Filled.ArrowDropUp : Icons.Material.Filled.ArrowDropDown;
     public Guid Id => Filter.Id;
 
     protected bool IsMenuOpen = false;
@@ -53,14 +55,9 @@ public class FilterUIBase : ComponentBase
             }
         }
     }
-
-    protected void OpenMenu()
+    protected void OnMenuOpened(bool value)
     {
-        IsMenuOpen = true;
-    }
-    protected void CloseMenu()
-    {
-        IsMenuOpen = false;
+        IsMenuOpen = value;
     }
 
     private bool ReloadList(bool immediate = false)

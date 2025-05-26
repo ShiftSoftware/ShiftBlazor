@@ -110,6 +110,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 
 .shift-autocomplete {
     position: relative;
+    flex-grow: 1;
 }
 
 .shift-autocomplete .autocomplete-tags {
