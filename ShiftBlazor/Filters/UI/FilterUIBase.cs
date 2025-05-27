@@ -4,6 +4,7 @@ using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Components;
 using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Filters.UI;
 
@@ -43,7 +44,14 @@ public class FilterUIBase : ComponentBase
         UpdateFilter();
     }
 
+    private Debouncer Debouncer = new();
+
     protected void UpdateFilter()
+    {
+        Debouncer.Debounce(100, Update);
+    }
+
+    private void Update()
     {
         if (Parent != null)
         {
@@ -55,6 +63,7 @@ public class FilterUIBase : ComponentBase
             }
         }
     }
+
     protected void OnMenuOpened(bool value)
     {
         IsMenuOpen = value;

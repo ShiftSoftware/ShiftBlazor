@@ -68,24 +68,8 @@
 
 @FilterTempalte
 
-@if (DTO != null)
-{
-    <MudMenu>
-        <ActivatorContent>
-            <MudButton>Add</MudButton>
-        </ActivatorContent>
-        <ChildContent>
-
-            @foreach (var field in Fields)
-            {
-                <MudMenuItem OnClick="() => AddFilter(field)">
-                    <MudStack Row>
-                        @field.Name
-                        <MudSpacer/>
-                        <MudChip T="string">@GetTypeName(field)</MudChip>
-                    </MudStack>
-                </MudMenuItem>
-            }
-        </ChildContent>
-    </MudMenu>
-}
+<MudStack Row>
+    <MudSpacer/>
+    <MudButton OnClick="Reset">Reset</MudButton>
+    <MudButton OnClick="@(() => ReloadList(true))" Color="Color.Primary">Filter</MudButton>
+</MudStack>

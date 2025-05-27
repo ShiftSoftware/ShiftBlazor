@@ -41,7 +41,6 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     [Parameter]
     public RenderFragment<FilterModelBase>? Template { get; set; }
 
-
     [CascadingParameter]
     public IFilterableComponent? Parent { get; set; }
 
@@ -49,6 +48,8 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     protected bool IsInitialized = false;
 
     private readonly Dictionary<string, object?> _previousParameters = new();
+
+    private bool FirstRun = true;
 
     protected override void OnInitialized()
     {
@@ -131,6 +132,12 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
 
     public override async Task SetParametersAsync(ParameterView parameters)
     {
+        if (FirstRun)
+        {
+            HasParametersChanged(parameters);
+            FirstRun = false;
+        }
+
         bool hasChanged = false;
         if (IsInitialized)
         {

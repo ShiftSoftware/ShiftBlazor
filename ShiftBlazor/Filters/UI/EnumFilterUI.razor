@@ -48,14 +48,6 @@
 
 	private bool HasNoValue => Filter.Operator == ODataOperator.IsEmpty || Filter.Operator == ODataOperator.IsNotEmpty;
 
-	private IEnumerable<object> Values { get; set; } = Enumerable.Empty<object>();
-
-	protected override Task OnInitializedAsync()
-	{
-		Values = Filter.Value as IEnumerable<object> ?? Enumerable.Empty<object>();
-		return base.OnInitializedAsync();
-	}
-
 	private void _OperatorChanged(ODataOperator oDataOperator)
 	{
 		// CloseMenu();

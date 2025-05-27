@@ -54,5 +54,4 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
         }
         return filter;
     }
-
 }

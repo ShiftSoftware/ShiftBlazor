@@ -29,35 +29,6 @@ public partial class FilterPanel: ComponentBase
     protected override void OnInitialized()
     {
         ODataFilters = new ODataFilterGenerator(IsAnd);
-
-        if (DTO != null)
-        {
-            var fields = DTO.GetProperties().Where(x => x.CanWrite);
-            var attr = Misc.GetAttribute<FilterableAttribute>(DTO);
-            Immediate = attr?.Immediate ?? false;
-
-            if (attr?.Disabled == true) return;
-
-            // only get fields that have the filterable attribute
-            // unless the dto itself has the filterable attribute
-            // then get every field that isn't disabled using filterable attribute
-            if (attr == null)
-            {
-                Fields = fields.Where(x => x.GetCustomAttribute<FilterableAttribute>()?.Disabled == false);
-            }
-            else
-            {
-                Fields = fields.Where(x => x.GetCustomAttribute<FilterableAttribute>()?.Disabled != true);
-            }
-        }
-    }
-
-    private void AddFilter(PropertyInfo field)
-    {
-        var filter = FilterModelBase.CreateFilter(field, DTO);
-        filter.UIOptions.lg = 4;
-        Parent?.Filters.TryAdd(filter.Id, filter);
-        ReloadList(false);
     }
 
     private void RemoveFilterComponent(Guid id)
@@ -77,22 +48,12 @@ public partial class FilterPanel: ComponentBase
         if (Parent is IShiftList list && (Parent?.FilterImmediate == true || immediate || Immediate)) list.Reload();
     }
 
-    private string GetTypeName(PropertyInfo field)
+    private void Reset()
     {
-        var type = FieldType.Identify(field.PropertyType);
-        
-        if (type.IsNumber)
-            return "number";
-        if (type.IsBoolean)
-            return "boolean";
-        if (type.IsGuid)
-            return "string";
-        if (type.IsEnum)
-            return "enum";
-        if (Misc.IsDateTime(field.PropertyType))
-            return "date";
-
-        return "string";
-
+        foreach (var filter in Parent.Filters.Values.Where(x => !x.IsHidden))
+        {
+            filter.Value = null;
+        }
+        ReloadList(true);
     }
 }

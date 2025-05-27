@@ -7,12 +7,6 @@ namespace ShiftSoftware.ShiftBlazor.Filters.Models;
 
 public class DateFilterModel : FilterModelBase
 {
-    public DateTime? DateTimeValue { get; set; } = DateTime.Now;
-    public DateFilterOperator? SelectedDateOperator { get; set; }
-    public DateRange? DateRangeValue { get; set; }
-    public TimeUnit SelectedTimeUnit { get; set; }
-    public int UnitValue { get; set; } = 1;
-
     public override ODataFilterGenerator ToODataFilter()
     {
         DateTime valueStart = default;
@@ -27,9 +21,9 @@ public class DateFilterModel : FilterModelBase
             //    return;
             //}
 
-            (valueStart, valueEnd) = GetDateRange(SelectedDateOperator, SelectedTimeUnit, UnitValue, DateTimeValue, DateRangeValue);
+            (valueStart, valueEnd) = GetDateRange(DateFilterOperator.Range, range: Value as DateRange);
 
-            if (valueStart != default || valueEnd != default)
+            if (valueStart != default || (valueEnd != default && valueEnd != DateTime.MaxValue.ToUniversalTime()))
             {
                 var filterStart = new ODataFilter
                 {
