@@ -19,7 +19,8 @@ public class DateTimeFilter<T, TProperty> : FilterBuilder<T, TProperty>
     protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
         var filter = FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
-        filter.Value = new DateRange(DateStart, DateEnd);
+
+        filter.Value = new DateRange(DateStart?.Date, DateEnd?.Date);
 
         return filter;
     }
@@ -29,12 +30,12 @@ public class DateTimeFilter<T, TProperty> : FilterBuilder<T, TProperty>
         base.OnParametersChanged();
         if (Filter!.Value is DateRange dateRange)
         {
-            dateRange.Start = DateStart;
-            dateRange.End = DateEnd;
+            dateRange.Start = DateStart?.Date;
+            dateRange.End = DateEnd?.Date;
         }
         else
         {
-            Filter!.Value = new DateRange(DateStart, DateEnd);
+            Filter!.Value = new DateRange(DateStart?.Date, DateEnd?.Date);
         }
     }
 }

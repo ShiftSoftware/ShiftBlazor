@@ -129,11 +129,24 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
 
             _previousParameters.TryGetValue(name, out var oldValue);
 
-            if (!Equals(newValue, oldValue))
+            if (oldValue is DateTime _old && newValue is DateTime _new)
             {
-                _previousParameters[name] = newValue;
-                hasChanged = true;
+                // to prevent infinite loop when the time of the DateTime is changing
+                if (!Equals(_new.Date, _old.Date))
+                {
+                    _previousParameters[name] = newValue;
+                    hasChanged = true;
+                }
             }
+            else
+            {
+                if (!Equals(newValue, oldValue))
+                {
+                    _previousParameters[name] = newValue;
+                    hasChanged = true;
+                }
+            }
+           
         }
 
         return hasChanged;
