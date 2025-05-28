@@ -22,6 +22,7 @@ public class FilterUIBase : ComponentBase
     public Guid Id => Filter.Id;
 
     protected bool IsMenuOpen = false;
+    private Debouncer Debouncer = new();
 
     protected override void OnInitialized()
     {
@@ -44,8 +45,6 @@ public class FilterUIBase : ComponentBase
         UpdateFilter();
     }
 
-    private Debouncer Debouncer = new();
-
     protected void UpdateFilter()
     {
         Debouncer.Debounce(100, Update);
@@ -64,11 +63,6 @@ public class FilterUIBase : ComponentBase
         }
     }
 
-    protected void OnMenuOpened(bool value)
-    {
-        IsMenuOpen = value;
-    }
-
     private bool ReloadList(bool immediate = false)
     {
         if (Parent is IShiftList list && (Parent?.FilterImmediate == true || immediate || Filter.IsImmediate))
@@ -78,5 +72,10 @@ public class FilterUIBase : ComponentBase
         }
 
         return false;
+    }
+
+    protected void OnMenuOpened(bool value)
+    {
+        IsMenuOpen = value;
     }
 }

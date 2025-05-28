@@ -24,4 +24,17 @@ public class DateTimeFilter<T, TProperty> : FilterBuilder<T, TProperty>
         return filter;
     }
 
+    protected override void OnParametersChanged()
+    {
+        base.OnParametersChanged();
+        if (Filter!.Value is DateRange dateRange)
+        {
+            dateRange.Start = DateStart;
+            dateRange.End = DateEnd;
+        }
+        else
+        {
+            Filter!.Value = new DateRange(DateStart, DateEnd);
+        }
+    }
 }

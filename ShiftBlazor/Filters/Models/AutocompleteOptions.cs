@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ShiftSoftware.ShiftBlazor.Filters;
+namespace ShiftSoftware.ShiftBlazor.Filters.Models;
 
 public class AutocompleteOptions
 {

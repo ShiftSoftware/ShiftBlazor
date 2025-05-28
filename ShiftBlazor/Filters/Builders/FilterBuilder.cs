@@ -20,8 +20,6 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     [Parameter]
     public bool Hidden { get; set; }
     [Parameter]
-    public bool ReadOnly { get; set; }
-    [Parameter]
     public bool Immediate { get; set; }
 
     [Parameter]
@@ -53,56 +51,67 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
 
     protected override void OnInitialized()
     {
-        //if (Parent is IShiftList)
+        if (Parent == null)
         {
-            var memberExpression = Property.Body as MemberExpression;
-            var field = memberExpression?.Member;
-
-            if (field is PropertyInfo propertyInfo)
-            {
-                Filter = CreateFilter(propertyInfo);
-            }
-            else
-            {
-                throw new Exception("Could not find property");
-            }
-
-            Filter.Operator = Operator;
-            Filter.Id = Id;
-            Filter.IsHidden = Hidden;
-            Filter.IsDisabled = ReadOnly;
-            Filter.IsImmediate = Immediate;
-
-            Filter.UIOptions = new FilterUIOptions
-            {
-                xxl = xxl,
-                xl = xl,
-                lg = lg,
-                md = md,
-                sm = sm,
-                xs = xs,
-                Order = Order,
-                Template = Template,
-            };
-
-            Parent.Filters.Remove(Id);
-            Parent.Filters.TryAdd(Id, Filter!);
-
-            IsInitialized = true;
+            throw new Exception("Filter must be inside an IFilterableComponent");
         }
-        //else
-        //{
-        //    throw new Exception("Parent is not IShiftList");
-        //}
-    }
 
-    protected virtual void OnParametersChanged()
-    {
+        var memberExpression = Property.Body as MemberExpression;
+        var field = memberExpression?.Member;
+
+        if (field is PropertyInfo propertyInfo)
+        {
+            Filter = CreateFilter(propertyInfo);
+        }
+        else
+        {
+            throw new Exception("Could not find property");
+        }
+
         Filter.Operator = Operator;
         Filter.Id = Id;
         Filter.IsHidden = Hidden;
-        Filter.IsDisabled = ReadOnly;
         Filter.IsImmediate = Immediate;
+
+        Filter.UIOptions = new FilterUIOptions
+        {
+            xxl = xxl,
+            xl = xl,
+            lg = lg,
+            md = md,
+            sm = sm,
+            xs = xs,
+            Order = Order,
+            Template = Template,
+        };
+
+        Parent.Filters.Remove(Id);
+        Parent.Filters.TryAdd(Id, Filter!);
+
+        IsInitialized = true;
+    }
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        if (FirstRun)
+        {
+            HasParametersChanged(parameters);
+            FirstRun = false;
+        }
+
+        bool hasChanged = false;
+        if (IsInitialized)
+        {
+            hasChanged = HasParametersChanged(parameters);
+        }
+
+        await base.SetParametersAsync(parameters);
+
+        if (IsInitialized && hasChanged)
+        {
+            OnParametersChanged();
+            UpdateFilter();
+        }
     }
 
     private bool HasParametersChanged(ParameterView parameters)
@@ -130,38 +139,17 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
         return hasChanged;
     }
 
-    public override async Task SetParametersAsync(ParameterView parameters)
+    protected virtual void OnParametersChanged()
     {
-        if (FirstRun)
-        {
-            HasParametersChanged(parameters);
-            FirstRun = false;
-        }
-
-        bool hasChanged = false;
-        if (IsInitialized)
-        {
-            hasChanged = HasParametersChanged(parameters);
-        }
-
-        await base.SetParametersAsync(parameters);
-
-        if (IsInitialized && hasChanged)
-        {
-            OnParametersChanged();
-            UpdateFilter();
-        }
+        Filter!.Operator = Operator;
+        Filter.Id = Id;
+        Filter.IsHidden = Hidden;
+        Filter.IsImmediate = Immediate;
     }
 
     protected virtual FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
         return FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
-    }
-
-    protected void UpdateFilterValue<T>(T value)
-    {
-        Filter!.Value = value;
-        UpdateFilter();
     }
 
     public void UpdateFilter()

@@ -143,3 +143,14 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .filter-input .percent-input input {
     text-align: end;
 }
+
+.custom-date-range-picker > .mud-input-control-input-container > .mud-input > .mud-input-root {
+    display: flex !important;
+    flex-grow: 1 !important;
+    z-index: 10 !important;
+    padding-bottom: 0 !important;
+}
+
+.custom-date-range-picker > .mud-input-control-input-container > .mud-input > .mud-input-adornment {
+    margin-left: -14px !important;
+}

@@ -15,12 +15,6 @@ public class DateFilterModel : FilterModelBase
 
         if (Operator == ODataOperator.Equal || Operator == ODataOperator.NotEqual)
         {
-            //if (SelectedDateOperator == null)
-            //{
-            //    ClearFilter();
-            //    return;
-            //}
-
             (valueStart, valueEnd) = GetDateRange(DateFilterOperator.Range, range: Value as DateRange);
 
             if (valueStart != default || (valueEnd != default && valueEnd != DateTime.MaxValue.ToUniversalTime()))

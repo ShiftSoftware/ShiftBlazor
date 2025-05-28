@@ -2,32 +2,7 @@
 @using ShiftSoftware.ShiftEntity.Model
 @inherits FilterUIBase
 
-@* <MudSelectExtended T="ODataOperator" Value="Filter.Operator" ValueChanged="_OperatorChanged" Label="Operator" >
-	<MudSelectItem Value="ODataOperator.Equal">Equal</MudSelectItem>
-	<MudSelectItem Value="ODataOperator.StartsWith">Starts With</MudSelectItem>
-	<MudSelectItem Value="ODataOperator.EndsWith">Ends With</MudSelectItem>
-	<MudSelectItem Value="ODataOperator.Contains">Contains</MudSelectItem>
-	<MudSelectItem Value="ODataOperator.NotEqual">Not Equal</MudSelectItem>
-	<MudSelectItem Value="ODataOperator.NotContains">Not Contains</MudSelectItem>
-	<MudSelectItem Value="ODataOperator.IsNotEmpty">Is Set</MudSelectItem>
-	<MudSelectItem Value="ODataOperator.IsEmpty">Is Not Set</MudSelectItem>
-	<MudSelectItem Value="ODataOperator.In">In</MudSelectItem>
-</MudSelectExtended> *@
-
-
-@* @if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
-{
-	if (AutoCompleteType == null || AutoCompleteParameters == null)
-	{
-		<MudTextField T="string" Label="@Filter.Field" Value="Value" Clearable ValueChanged="ValueChanged" />
-	}
-	else
-	{
-		<DynamicComponent Type="AutoCompleteType" Parameters="AutoCompleteParameters" />
-	}
-} *@
-
-<div style="width: 100%;">
+<div style="width: 100%;" class="@ClassName">
 	<MudField Label="@Filter.Field" InnerPadding="false">
 		<MudStack Row>
 			@if (Filter is StringFilterModel stringFilter && stringFilter.AutocompleteOptions != null)
@@ -38,8 +13,8 @@
 						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
 					</ActivatorContent>
 					<ChildContent>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.In))">In</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotIn))">Not In</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.In))">In</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotIn))">Not In</MudMenuItem>
 					</ChildContent>
 				</MudMenu>
 
@@ -53,22 +28,29 @@
 						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
 					</ActivatorContent>
 					<ChildContent>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.Equal))">Equal</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotEqual))">Not Equal</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.StartsWith))">Starts With</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotStartsWith))">Not Starts With</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.EndsWith))">Ends With</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotEndsWith))">Not Ends With</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.Contains))">Contains</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotContains))">Not Contains</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsNotEmpty))">Is Set</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsEmpty))">Is Not Set</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.In))">In</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotIn))">Not In</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">Equal</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">Not Equal</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.StartsWith))">Starts With</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotStartsWith))">Not Starts With</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.EndsWith))">Ends With</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEndsWith))">Not Ends With</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Contains))">Contains</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotContains))">Not Contains</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">Is Set</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">Is Not Set</MudMenuItem>
+						@if (AutocompleteType != null)
+						{
+							<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.In))">In</MudMenuItem>
+							<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotIn))">Not In</MudMenuItem>
+						}
 					</ChildContent>
 				</MudMenu>
 
-				@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
+				@if (AutocompleteType != null && (Filter.Operator == ODataOperator.In || Filter.Operator == ODataOperator.NotIn))
+				{
+					<DynamicComponent Type="AutocompleteType" Parameters="AutocompleteParameters" />
+				}
+				else if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
 				{
 					<MudTextField T="string"
 									Value="Value"
@@ -93,20 +75,6 @@
 	private Type? AutocompleteType;
 	private Dictionary<string, object>? AutocompleteParameters;
 
-	private bool IsMultiSelect => Filter.Operator == ODataOperator.In || Filter.Operator == ODataOperator.NotIn;
-
-
-	// internal async Task<IEnumerable<string>> SearchFunc(string val, CancellationToken token)
-	// {
-	// 	List<string> items = new()
-	// 	{
-	// 		"Is not Empty",
-	// 		"Is Empty",
-	// 	};
-
-	// 	return items;
-	// }
-
 	protected override void OnInitialized()
 	{
 		base.OnInitialized();
@@ -130,7 +98,7 @@
 				["Strict"] = false,
 				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged),
 				["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged),
-				["MultiSelect"] = IsMultiSelect,
+				["MultiSelect"] = true,
 				["Clearable"] = true,
 				["Underline"] = false,
 			};
@@ -152,23 +120,6 @@
 				AutocompleteParameters["DataTextField"] = stringFilter.Field;
 			}
 		}
-	}
-
-	protected override void OnParametersSet()
-	{
-		base.OnParametersSet();
-	}
-
-	private void _OperatorChanged(ODataOperator oDataOperator)
-	{
-		IsMenuOpen = false;
-		if (AutocompleteParameters != null)
-		{
-			AutocompleteParameters["MultiSelect"] = IsMultiSelect;
-		}
-
-		Filter!.Operator = oDataOperator;
-		UpdateFilter();
 	}
 
 	private void AutocompleteMultiChanged(List<ShiftEntitySelectDTO>? dto)

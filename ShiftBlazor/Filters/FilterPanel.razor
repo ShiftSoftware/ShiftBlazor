@@ -18,37 +18,34 @@
                              xs="filter.UIOptions.xs">
                         <MudStack Row @key="id" AlignItems="AlignItems.End">
 
-                            <CascadingValue Name="@FormHelper.ParentDisabledName" Value="filter.IsDisabled">
-
-                                @if (filter.UIOptions.Template == null)
+                            @if (filter.UIOptions.Template == null)
+                            {
+                                @if (filter is BooleanFilterModel booleanFilter)
                                 {
-                                    @if (filter is BooleanFilterModel booleanFilter)
-                                    {
-                                        <BooleanFilterUI Filter="filter" />
-                                    }
-                                    else if (filter is StringFilterModel stringFilter)
-                                    {
-                                        <StringFilterUI Filter="filter" />
-                                    }
-                                    else if (filter is EnumFilterModel enumFilter && enumFilter.EnumTypeToUse != null)
-                                    {
-                                        <EnumFilterUI Filter="filter" EnumType="enumFilter.EnumType" />
-                                    }
-                                    else if (filter is DateFilterModel dateFilter)
-                                    {
-                                        <DateFilterUI Filter="filter" />
-                                    }
-                                    else if (filter is NumericFilterModel)
-                                    {
-                                        <NumericFilterUI Filter="filter" />
-                                    }
+                                    <BooleanFilterUI Filter="filter" />
                                 }
-                                else
+                                else if (filter is StringFilterModel stringFilter)
                                 {
-                                    @filter.UIOptions.Template(filter);
+                                    <StringFilterUI Filter="filter" />
                                 }
+                                else if (filter is EnumFilterModel enumFilter && enumFilter.EnumTypeToUse != null)
+                                {
+                                    <EnumFilterUI Filter="filter" EnumType="enumFilter.EnumType" />
+                                }
+                                else if (filter is DateFilterModel dateFilter)
+                                {
+                                    <DateFilterUI Filter="filter" />
+                                }
+                                else if (filter is NumericFilterModel)
+                                {
+                                    <NumericFilterUI Filter="filter" />
+                                }
+                            }
+                            else
+                            {
+                                @filter.UIOptions.Template(filter);
+                            }
 
-                            </CascadingValue>
 
                             @if (filter.IsDefault)
                             {

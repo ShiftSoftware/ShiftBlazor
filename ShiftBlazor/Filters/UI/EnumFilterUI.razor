@@ -1,6 +1,6 @@
 ﻿@inherits FilterUIBase
 
-<div style="width: 100%;">
+<div style="width: 100%;" class="@ClassName">
 
 	<MudField Label="@Filter.Field" InnerPadding="false">
 		<MudStack Row>
@@ -50,11 +50,8 @@
 
 	private void _OperatorChanged(ODataOperator oDataOperator)
 	{
-		// CloseMenu();
-
 		Filter!.Operator = oDataOperator;
 		UpdateFilter();
-
 	}
 
 	protected override void OnInitialized()

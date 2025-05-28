@@ -23,6 +23,6 @@ public class StringFilter<T, TProperty> : FilterBuilder<T, TProperty>
     protected override void OnParametersChanged()
     {
         base.OnParametersChanged();
-        Filter.Value = Value;
+        Filter!.Value = Value;
     }
 }

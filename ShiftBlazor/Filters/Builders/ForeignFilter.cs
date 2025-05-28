@@ -54,4 +54,19 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
         }
         return filter;
     }
+
+    protected override void OnParametersChanged()
+    {
+        base.OnParametersChanged();
+        if (Filter is StringFilterModel stringFilter && stringFilter.AutocompleteOptions != null)
+        {
+            stringFilter.AutocompleteOptions.BaseUrl = BaseUrl;
+            stringFilter.AutocompleteOptions.BaseUrlKey = BaseUrlKey;
+            stringFilter.AutocompleteOptions.EntitySet = EntitySet;
+            stringFilter.AutocompleteOptions.DataTextField = DataTextField;
+            stringFilter.AutocompleteOptions.DataValueField = DataValueField;
+            stringFilter.AutocompleteOptions.ForeignTextField = ForeignTextField;
+            stringFilter.AutocompleteOptions.ForeignEntiyField = ForeignEntiyField;
+        }
+    }
 }

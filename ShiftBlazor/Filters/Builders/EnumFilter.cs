@@ -20,4 +20,10 @@ public class EnumFilter<T, TProperty> : FilterBuilder<T, TProperty>
         }
         return filter;
     }
+
+    protected override void OnParametersChanged()
+    {
+        base.OnParametersChanged();
+        Filter!.Value = Value;
+    }
 }
