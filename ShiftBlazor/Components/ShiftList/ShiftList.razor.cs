@@ -10,6 +10,7 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
 using System.ComponentModel;
@@ -960,17 +961,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             foreach (Enum val in Enum.GetValues(enumType))
             {
-                var member = enumType.GetMember(val.ToString()).FirstOrDefault();
-                var description = member?.GetCustomAttribute<DescriptionAttribute>()?.Description;
-                var name = val.ToString();
-                var value = Convert.ToInt32(val).ToString();
+                var description = val.Describe(); //description ?? name;
 
-                // Always prefer description if available
-                var label = description ?? name;
+                // Add both string and int representations of the enum value
+                // This is useful for cases where the enum value is used as a string in some contexts and as an integer in others.
 
-                // Add both entries:
-                result[value] = label; // e.g., "1": "Batch/LOT"
-                result[name] = label;  // e.g., "Batch_LOT": "Batch/LOT"
+                //The Name property of the enum value is used as the key for the string representation.
+                result[val.ToString()] = description;
+                // ["SomeEnum"] = "Some Description"
+
+
+                //The integer value of the enum is converted to a string and used as the key for the integer representation.
+                result[Convert.ToInt32(val).ToString()] = description;
+                // ["1"] = "Some Description"
             }
 
             return result;

@@ -161,7 +161,7 @@ function formatDate(date, dateFormat, timeFormat, isRTL) {
 
 function parseRawValue(value, col, localizedColumns, language, dateFormat, timeFormat, isRTL) {
 
-    if (col.enumValues && col.enumValues[value]) {
+    if (col.enumValues && typeof col.enumValues[value] === "string") {
         try {
             value = col.enumValues[value]
         } catch { }
