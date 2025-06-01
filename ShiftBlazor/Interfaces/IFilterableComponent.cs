@@ -14,6 +14,4 @@ public interface IFilterableComponent
     public Dictionary<Guid, FilterModelBase> Filters { get; set; }
 
     public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null);
-    public void AddFilter<TProperty>(Guid id, object property, Dictionary<string, object>? parameters = null);
-
 }

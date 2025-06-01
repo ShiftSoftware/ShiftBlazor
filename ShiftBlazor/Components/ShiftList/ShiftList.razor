@@ -31,7 +31,7 @@
                         {
                             <MudTooltip Text="@Loc["ToggleFilterPanelTitle"]">
                                 <MudIconButtonExtended Size="@IconSize"
-                                                       Icon="@(ShowFilterPanel ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
+                                                       Icon="@(IsFilterPanelOpen ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
                                                        aria-label="@Loc["ToggleFilterPanelTitle"]"
                                                        OnClick="ToggleFilterPanel" />
@@ -126,7 +126,7 @@
                 }
                 @if (EnableFilterPanel)
                 {
-                    <MudCollapse Expanded="ShowFilterPanel" Style="border:none" Class="light-toolbar">
+         IsFilterPanelOpenCollapse Expanded="ShowFilterPanel" Style="border:none" Class="light-toolbar">
                         <MudForm Class="pa-4">
 
                             <CascadingValue Value="Filters">

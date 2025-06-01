@@ -166,12 +166,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public RenderFragment? ToolbarControlsTemplate { get; set; }
 
-        [Parameter]
-        public RenderFragment? FilterPanelStartTemplate { get; set; }
-
-        [Parameter]
-        public RenderFragment? FilterPanelEndTemplate { get; set; }
-
         /// <summary>
         /// When true, the header toolbar will not be rendered.
         /// </summary>
@@ -355,9 +349,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsGridEditorOpen = false;
         private bool IsDeleteColumnHidden = true;
         private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
-        private FilterPanel? _FilterPanel { get; set; }
         public Dictionary<Guid, FilterModelBase> Filters { get; set; } = [];
         private Debouncer Debouncer { get; set; } = new Debouncer();
+        private bool IsFilterPanelOpen { get; set; }
+        public HashSet<Guid> ActiveOperations { get; set; } = [];
+        private CancellationTokenSource? ReloadBlockTokenSource;
 
         private List<Column<T>> DraggableColumns
         {
@@ -391,10 +387,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 OnLoad.InvokeAsync();
             }
         }
-
-        private bool ShowFilterPanel { get; set; }
-        public HashSet<Guid> ActiveOperations { get; set; } = [];
-        private CancellationTokenSource? ReloadBlockTokenSource;
 
         public bool ExportIsInProgress { get; private set; } = false;
 
@@ -448,7 +440,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
 
-            ShowFilterPanel = SettingManager?.SetFilterPanelState() ?? false;
+            IsFilterPanelOpen = SettingManager?.SetFilterPanelState() ?? false;
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -575,35 +567,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             ODataFilters.Add(field, op, value, id);
         }
-
-        public void AddFilter<TProperty>(Guid id, object field, Dictionary<string, object>? parameters = null)
-        {
-            if (field is Expression<Func<T, TProperty>> property)
-            {
-                AddFilter(id, property);
-            }
-        }
-
-        public void AddFilter<TProperty>(Guid id, Expression<Func<T, TProperty>> property, Dictionary<string, object>? parameters = null)
-        {
-            var memberExpression = property?.Body as MemberExpression;
-            var field = memberExpression?.Member;
-
-            if (field is PropertyInfo propertyInfo)
-            {
-                AddFilter(id, propertyInfo);
-            }
-        }
-
-        public void AddFilter(Guid id, string field, Dictionary<string, object>? parameters = null)
-        {
-            var _field = typeof(T).GetProperties().First(x => x.Name == field);
-            AddFilter(id, _field);
-        }
-
-        private void AddFilter(Guid id, PropertyInfo field, Dictionary<string, object>? parameters = null)
-        {
-                }
 
         public void GridStateHasChanged()
         {
@@ -1245,7 +1208,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public void ToggleFilterPanel()
         {
-            ShowFilterPanel = SettingManager?.SetFilterPanelState(!ShowFilterPanel) ?? !ShowFilterPanel;
+            IsFilterPanelOpen = SettingManager?.SetFilterPanelState(!IsFilterPanelOpen) ?? !IsFilterPanelOpen;
         }
 
         public void Reload()
