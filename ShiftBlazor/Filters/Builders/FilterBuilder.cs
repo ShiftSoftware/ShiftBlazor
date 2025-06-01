@@ -1,10 +1,11 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
-using Microsoft.AspNetCore.Components;
-using ShiftSoftware.ShiftBlazor.Filters.Models;
-using ShiftSoftware.ShiftBlazor.Enums;
-using ShiftSoftware.ShiftBlazor.Interfaces;
+﻿using Microsoft.AspNetCore.Components;
 using ShiftSoftware.ShiftBlazor.Components;
+using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Interfaces;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Reflection.Metadata;
 
 namespace ShiftSoftware.ShiftBlazor.Filters.Builders;
 
@@ -16,7 +17,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     [EditorRequired]
     public Expression<Func<T, TProperty>> Property { get; set; }
     [Parameter]
-    public ODataOperator Operator { get; set; }
+    public ODataOperator? Operator { get; set; }
     [Parameter]
     public bool Hidden { get; set; }
     [Parameter]
@@ -43,11 +44,11 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     public IFilterableComponent? Parent { get; set; }
 
     protected FilterModelBase? Filter { get; set; }
-    protected bool IsInitialized = false;
 
     private readonly Dictionary<string, object?> _previousParameters = new();
 
-    private bool FirstRun = true;
+    protected bool HasInitialized = false;
+    protected bool HasChanged = false;
 
     protected override void OnInitialized()
     {
@@ -68,7 +69,15 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
             throw new Exception("Could not find property");
         }
 
-        Filter.Operator = Operator;
+        if (Hidden &&
+            Filter.Value == null &&
+            Operator != ODataOperator.IsEmpty &&
+            Operator != ODataOperator.IsNotEmpty)
+        {
+            return;
+        }
+
+        Filter.Operator = Operator ?? ODataOperator.Equal;
         Filter.Id = Id;
         Filter.IsHidden = Hidden;
         Filter.IsImmediate = Immediate;
@@ -88,76 +97,75 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
         Parent.Filters.Remove(Id);
         Parent.Filters.TryAdd(Id, Filter!);
 
-        IsInitialized = true;
+        HasInitialized = true;
     }
 
     public override async Task SetParametersAsync(ParameterView parameters)
     {
-        if (FirstRun)
+        if (HasInitialized)
         {
-            HasParametersChanged(parameters);
-            FirstRun = false;
-        }
+            foreach (var parameter in parameters)
+            {
+                var isEqual = parameter.Name switch
+                {
+                    nameof(Operator) => Operator == parameter.Value as ODataOperator?,
+                    nameof(Hidden) => Hidden == parameter.Value as bool?,
+                    nameof(Immediate) => Immediate == parameter.Value as bool?,
+                    nameof(xxl) => xxl == parameter.Value as int?,
+                    nameof(xl) => xl == parameter.Value as int?,
+                    nameof(lg) => lg == parameter.Value as int?,
+                    nameof(md) => md == parameter.Value as int?,
+                    nameof(sm) => sm == parameter.Value as int?,
+                    nameof(xs) => xs == parameter.Value as int?,
+                    nameof(Order) => Order == parameter.Value as int?,
+                    nameof(Template) => Template == parameter.Value as RenderFragment<FilterModelBase>,
+                    _ => true,
+                };
+            
+                if (!isEqual)
+                {
+                    HasChanged = true;
+                    break;
+                }
+            }
 
-        bool hasChanged = false;
-        if (IsInitialized)
+            parameters.TryGetValue(nameof(Parent), out IFilterableComponent? _parent);
+            (_parent as IShiftList)?.ActiveOperations.Remove(Id);
+        }
+        else
         {
-            hasChanged = HasParametersChanged(parameters);
+            parameters.TryGetValue(nameof(Parent), out IFilterableComponent? _parent);
+            (_parent as IShiftList)?.ActiveOperations.Add(Id);
         }
 
         await base.SetParametersAsync(parameters);
 
-        if (IsInitialized && hasChanged)
+        if (HasChanged)
         {
-            OnParametersChanged();
-            UpdateFilter();
+            UpdateFilterValues();
+            HasChanged = false;
         }
     }
 
-    private bool HasParametersChanged(ParameterView parameters)
+    protected virtual void UpdateFilterValues()
     {
-        var hasChanged = false;
-        var props = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.GetCustomAttribute<ParameterAttribute>() != null)
-            .Where(p => p.Name != nameof(Property));
-
-        foreach (var prop in props)
-        {
-            var name = prop.Name;
-            if (!parameters.TryGetValue(name, out object? newValue))
-                continue;
-
-            _previousParameters.TryGetValue(name, out var oldValue);
-
-            if (oldValue is DateTime _old && newValue is DateTime _new)
-            {
-                // to prevent infinite loop when the time of the DateTime is changing
-                if (!Equals(_new.Date, _old.Date))
-                {
-                    _previousParameters[name] = newValue;
-                    hasChanged = true;
-                }
-            }
-            else
-            {
-                if (!Equals(newValue, oldValue))
-                {
-                    _previousParameters[name] = newValue;
-                    hasChanged = true;
-                }
-            }
-           
-        }
-
-        return hasChanged;
-    }
-
-    protected virtual void OnParametersChanged()
-    {
-        Filter!.Operator = Operator;
+        Filter!.Operator = Operator ?? ODataOperator.Equal;
         Filter.Id = Id;
         Filter.IsHidden = Hidden;
         Filter.IsImmediate = Immediate;
+        Filter.UIOptions = new FilterUIOptions
+        {
+            xxl = xxl,
+            xl = xl,
+            lg = lg,
+            md = md,
+            sm = sm,
+            xs = xs,
+            Order = Order,
+            Template = Template,
+        };
+
+        UpdateFilter();
     }
 
     protected virtual FilterModelBase CreateFilter(PropertyInfo propertyInfo)

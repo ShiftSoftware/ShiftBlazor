@@ -38,11 +38,15 @@ public class FilterUIBase : ComponentBase
         UpdateFilter();
     }
 
-    protected void OperatorChanged(ODataOperator oDataOperator)
+    protected virtual void OperatorChanged(ODataOperator oDataOperator)
     {
         IsMenuOpen = false;
         Filter!.Operator = oDataOperator;
-        UpdateFilter();
+
+        if (Filter.Value != null)
+        {
+            UpdateFilter();
+        }
     }
 
     protected void UpdateFilter()

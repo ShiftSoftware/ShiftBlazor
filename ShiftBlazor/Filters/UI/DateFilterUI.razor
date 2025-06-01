@@ -148,8 +148,8 @@
 		if (dateTime != _dateRangeValue.Start)
 		{
 			_dateRangeValue.Start = dateTime;
+			UpdateFilter();
 		}
-		UpdateFilter();
 	}
 
 	private void DateEndChanged(DateTime? dateTime)
@@ -157,15 +157,15 @@
 		if (dateTime != _dateRangeValue.End)
 		{
 			_dateRangeValue.End = dateTime;
+			UpdateFilter();
 		}
-
-		UpdateFilter();
 	}
 
 	private void ClearInput()
 	{
 		_dateRangeValue.Start = null;
 		_dateRangeValue.End = null;
+		UpdateFilter();
 	}
 
 	private void SetDateRange()

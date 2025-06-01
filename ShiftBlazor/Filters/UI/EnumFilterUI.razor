@@ -1,4 +1,5 @@
-﻿@inherits FilterUIBase
+﻿@using System.Collections
+@inherits FilterUIBase
 
 <div style="width: 100%;" class="@ClassName">
 
@@ -21,9 +22,12 @@
 			{
 				<MudSelectExtended T="object"
 								   MultiSelection
-								   SelectedValues="Filter.Value as IEnumerable<object>"
+								   SelectedValues="Value"
 								   SelectedValuesChanged="ValueChanged"
 								   Underline="false"
+								   ToStringFunc="x => (x as Enum)?.Describe()"
+								   AnchorOrigin="Origin.BottomCenter"
+								   FullWidth
 								   Clearable >
 					@if (EnumTypeToUse != null)
 					{
@@ -46,6 +50,7 @@
 
 	private Type? EnumTypeToUse;
 
+	private IEnumerable<object>? Value => (Filter.Value as IEnumerable)?.Cast<object>();
 	private bool HasNoValue => Filter.Operator == ODataOperator.IsEmpty || Filter.Operator == ODataOperator.IsNotEmpty;
 
 	private void _OperatorChanged(ODataOperator oDataOperator)

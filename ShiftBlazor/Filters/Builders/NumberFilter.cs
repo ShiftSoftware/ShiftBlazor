@@ -17,9 +17,19 @@ public class NumberFilter<T, TProperty> : FilterBuilder<T, TProperty>
         return filter;
     }
 
-    protected override void OnParametersChanged()
+    public override Task SetParametersAsync(ParameterView parameters)
     {
-        base.OnParametersChanged();
-        Filter!.Value = Value;
+        if (HasInitialized)
+        {
+            parameters.TryGetValue(nameof(Value), out TProperty? newValue);
+
+            if (Value?.Equals(newValue) == false)
+            {
+                Filter!.Value = newValue;
+                HasChanged = true;
+            }
+        }
+
+        return base.SetParametersAsync(parameters);
     }
 }

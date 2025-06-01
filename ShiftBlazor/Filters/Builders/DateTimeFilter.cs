@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Filters;
 using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Filters.Builders;
 
@@ -20,22 +19,29 @@ public class DateTimeFilter<T, TProperty> : FilterBuilder<T, TProperty>
     {
         var filter = FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
 
-        filter.Value = new DateRange(DateStart?.Date, DateEnd?.Date);
+        if (DateStart != null || DateEnd != null)
+        {
+            filter.Value = new DateRange(DateStart?.Date, DateEnd?.Date);
+        }
 
         return filter;
     }
 
-    protected override void OnParametersChanged()
+    public override Task SetParametersAsync(ParameterView parameters)
     {
-        base.OnParametersChanged();
-        if (Filter!.Value is DateRange dateRange)
+        if (HasInitialized)
         {
-            dateRange.Start = DateStart?.Date;
-            dateRange.End = DateEnd?.Date;
+            parameters.TryGetValue(nameof(DateStart), out DateTime? newStart);
+            parameters.TryGetValue(nameof(DateEnd), out DateTime? newEnd);
+
+            if (DateStart != newStart ||
+                DateEnd != newEnd)
+            {
+                Filter!.Value = new DateRange(DateStart?.Date, DateEnd?.Date);
+                HasChanged = true;
+            }
         }
-        else
-        {
-            Filter!.Value = new DateRange(DateStart?.Date, DateEnd?.Date);
-        }
+
+        return base.SetParametersAsync(parameters);
     }
 }

@@ -9,6 +9,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils;
 public class Debouncer
 {
     private CancellationTokenSource? CancellationTokenSource = null;
+    private readonly object _lock = new object();
 
     public void Debounce(int delayMilliseconds, Action action)
     {
@@ -23,5 +24,28 @@ public class Debouncer
                     action();
                 }
             }, TaskScheduler.Default);
+    }
+
+    public void Debounce(int delayMilliseconds, Func<Task> action)
+    {
+        lock (_lock)
+        {
+            CancellationTokenSource?.Cancel();
+            CancellationTokenSource = new();
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(delayMilliseconds, CancellationTokenSource.Token);
+                    if (!CancellationTokenSource.IsCancellationRequested)
+                    {
+                        await action();
+                    }
+                }
+                catch (Exception) { }
+
+            });
+        }
     }
 }

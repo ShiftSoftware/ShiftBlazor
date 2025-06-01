@@ -357,6 +357,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
         private FilterPanel? _FilterPanel { get; set; }
         public Dictionary<Guid, FilterModelBase> Filters { get; set; } = [];
+        private Debouncer Debouncer { get; set; } = new Debouncer();
 
         private List<Column<T>> DraggableColumns
         {
@@ -392,6 +393,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         }
 
         private bool ShowFilterPanel { get; set; }
+        public HashSet<Guid> ActiveOperations { get; set; } = [];
+        private CancellationTokenSource? ReloadBlockTokenSource;
 
         public bool ExportIsInProgress { get; private set; } = false;
 
@@ -628,6 +631,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
         {
+            // Check if there are any active operations,
+            // if so, wait for them to finish before proceeding.
+            // Operations could be things like Filter, Sort...
+            if (ActiveOperations.Count > 0)
+            {
+                try
+                {
+                    ReloadBlockTokenSource = new CancellationTokenSource();
+                    await Task.Delay(1000, ReloadBlockTokenSource.Token);
+                }
+                catch (Exception) { }
+            }
+
             var builder = QueryBuilder;
             ErrorMessage = null;
 
@@ -1234,7 +1250,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public void Reload()
         {
-            DataGrid?.ReloadServerData();
+            if (ReloadBlockTokenSource?.IsCancellationRequested == false)
+            {
+                ReloadBlockTokenSource.Cancel();
+            }
+            else
+            {
+                Debouncer.Debounce(100, DataGrid!.ReloadServerData);
+            }
         }
 
         private readonly MudBlazor.Converter<bool, bool?> _oppositeBoolConverter = new()

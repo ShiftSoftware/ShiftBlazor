@@ -46,17 +46,17 @@
 					</ChildContent>
 				</MudMenu>
 
-				@if (AutocompleteType != null && (Filter.Operator == ODataOperator.In || Filter.Operator == ODataOperator.NotIn))
+				@if (AllowAutocomplete && IsMultiSelectOperator(Filter.Operator))
 				{
 					<DynamicComponent Type="AutocompleteType" Parameters="AutocompleteParameters" />
 				}
 				else if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
 				{
 					<MudTextField T="string"
-									Value="Value"
-									Clearable
-									Underline="false"
-									ValueChanged="ValueChanged" />
+								  Value="Value"
+								  Clearable
+								  Underline="false"
+								  ValueChanged="ValueChanged" />
 				}
 			}
 
@@ -74,6 +74,8 @@
 
 	private Type? AutocompleteType;
 	private Dictionary<string, object>? AutocompleteParameters;
+
+	private bool AllowAutocomplete { get; set; }
 
 	protected override void OnInitialized()
 	{
@@ -116,23 +118,46 @@
 			else if (Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(stringFilter.DtoType) != null &&
 					!string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
 			{
+				AllowAutocomplete = true;
 				AutocompleteParameters["EntitySet"] = ShiftList.EntitySet;
 				AutocompleteParameters["DataTextField"] = stringFilter.Field;
 			}
 		}
 	}
 
+	protected override void OperatorChanged(ODataOperator oDataOperator)
+	{
+		if (IsMultiSelectOperator(Filter!.Operator) != IsMultiSelectOperator(oDataOperator) || Value == string.Empty)
+		{
+			Filter.Value = null;
+		}
+
+		base.OperatorChanged(oDataOperator);
+	}
+
+	private bool IsMultiSelectOperator(ODataOperator oDataOperator)
+	{
+		return oDataOperator == ODataOperator.In || oDataOperator == ODataOperator.NotIn;
+	}
+
 	private void AutocompleteMultiChanged(List<ShiftEntitySelectDTO>? dto)
 	{
+		IEnumerable<string>? newValue;
+		var oldValue = Filter.Value as IEnumerable<string>;
 		if (Filter is StringFilterModel filter && filter.AutocompleteOptions != null)
 		{
-			Filter.Value = dto?.Select(x => x.Value).ToList();
+			newValue = dto?.Select(x => x.Value).ToList();
 		}
 		else
 		{
-			Filter.Value = dto?.Select(x => x.Text).ToList();
+			newValue = dto?.Where(x => !string.IsNullOrWhiteSpace(x.Text)).Select(x => x.Text!).ToList();
 		}
-		UpdateFilter();
+
+		if (!new HashSet<string>(oldValue ?? []).SetEquals(newValue ?? []))
+		{
+			Filter.Value = newValue;
+			UpdateFilter();
+		}
 	}
 
 	private void AutocompleteChanged(ShiftEntitySelectDTO? dto)
@@ -141,6 +166,9 @@
 			? dto?.Value
 			: dto?.Text;
 
-		ValueChanged(value);
+		if (Filter.Value as string != value)
+		{
+			ValueChanged(value);
+		}
 	}
 }

@@ -1,6 +1,5 @@
 ﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
-using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -24,6 +23,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool Outlined { get; set; }
         public bool IsEmbed { get; }
         public string? EntitySet { get; set; }
+        public HashSet<Guid> ActiveOperations { get; set; }
 
         public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null);
         public void Reload();

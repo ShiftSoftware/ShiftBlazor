@@ -21,10 +21,20 @@ public class BooleanFilter<T, TProperty> : FilterBuilder<T, TProperty>
         return filter;
     }
 
-    protected override void OnParametersChanged()
+    public override Task SetParametersAsync(ParameterView parameters)
     {
-        base.OnParametersChanged();
-        Filter!.Value = Value;
+        if (HasInitialized)
+        {
+            parameters.TryGetValue(nameof(Value), out bool? newValue);
+
+            if (Value != newValue)
+            {
+                Filter!.Value = newValue;
+                HasChanged = true;
+            }
+        }
+
+        return base.SetParametersAsync(parameters);
     }
 
 }

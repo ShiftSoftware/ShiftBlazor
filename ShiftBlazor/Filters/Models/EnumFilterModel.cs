@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Text.Json;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
 
@@ -24,7 +23,9 @@ public class EnumFilterModel : FilterModelBase
     {
         var filter = new ODataFilterGenerator(true, Id);
 
-        if (Value != null && Value is IEnumerable<object> val && val.Any())
+        var val = (Value as IEnumerable)?.Cast<object>();
+
+        if (val != null && val.Any())
         {
             filter.Add(new ODataFilter
             {
@@ -33,16 +34,6 @@ public class EnumFilterModel : FilterModelBase
                 Value = Value
             });
         }
-
-        //if (Value != null && Enum.IsDefined(Value.GetType(), Value))
-        //{
-        //    filter.Add(new ODataFilter
-        //    {
-        //        Field = Field,
-        //        Operator = ODataOperator.Equal,
-        //        Value = Value
-        //    });
-        //}
 
         return filter;
     }

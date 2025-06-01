@@ -9,21 +9,36 @@ namespace ShiftSoftware.ShiftBlazor.Components;
 public class EnumFilter<T, TProperty> : FilterBuilder<T, TProperty>
 {
     [Parameter]
-    public TProperty? Value { get; set; }
+    public IEnumerable<TProperty>? Value { get; set; }
+
+    private IEnumerable<TProperty>? OldValue { get; set; }
 
     protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
     {
         var filter = FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
-        if (Value != null && Enum.IsDefined(typeof(TProperty), Value))
-        {
-            filter.Value = Value;
-        }
+
+        Operator ??= ODataOperator.In;
+
+        filter.Value = Value;
+
         return filter;
     }
 
-    protected override void OnParametersChanged()
+    public override Task SetParametersAsync(ParameterView parameters)
     {
-        base.OnParametersChanged();
-        Filter!.Value = Value;
+        if (HasInitialized)
+        {
+            parameters.TryGetValue(nameof(Value), out IEnumerable<TProperty>? newValue);
+
+            if (!new HashSet<TProperty>(OldValue ?? []).SetEquals(newValue ?? []))
+            {
+                Filter!.Value = newValue;
+                HasChanged = true;
+            }
+
+            OldValue = newValue?.ToList();
+        }
+
+        return base.SetParametersAsync(parameters);
     }
 }
