@@ -238,6 +238,22 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return Settings.IsDrawerOpen ?? DefaultAppSetting.IsDrawerOpen;
         }
 
+        public bool SetFilterPanelState(bool open)
+        {
+            if (Settings.IsDataGridFilterPanelOpen != open)
+            {
+                Settings.IsDataGridFilterPanelOpen = open;
+                SyncLocalStorage.SetItem(Key, Settings);
+            }
+
+            return SetFilterPanelState();
+        }
+
+        public bool SetFilterPanelState()
+        {
+            return Settings.IsDataGridFilterPanelOpen ?? DefaultAppSetting.IsDataGridFilterPanelOpen;
+        }
+
         private async Task<DeviceInfo> GetDeviceInfo()
         {
             return await JsRuntime!.InvokeAsync<DeviceInfo>("getWindowDimensions");

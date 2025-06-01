@@ -173,5 +173,24 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             path.Reverse();
             return string.Join(".", path);
         }
+
+
+        // Mud's FieldType.Identify doesn't work with DateTimeOffset
+        public static bool IsDateTime(Type? type)
+        {
+            if (type is null)
+            {
+                return false;
+            }
+
+            if (type == typeof(DateTime) || type == typeof(DateTimeOffset))
+            {
+                return true;
+            }
+
+            var underlyingType = Nullable.GetUnderlyingType(type);
+
+            return underlyingType is not null && (underlyingType == typeof(DateTime) || type == typeof(DateTimeOffset));
+        }
     }
 }

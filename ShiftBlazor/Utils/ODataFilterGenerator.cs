@@ -51,27 +51,29 @@ public class ODataFilterGenerator
 
     public ODataFilterGenerator Add(ODataFilterGenerator generator)
     {
-        var found = ChildFilters.FirstOrDefault(x => generator.Id != null && x.Id == generator.Id);
-
-        if (found != null)
+        if (generator.Count > 0)
         {
-            ChildFilters.Remove(found);
+            Remove(generator.Id);
+            ChildFilters.Add(generator);
         }
-
-        ChildFilters.Add(generator);
         return this;
     }
 
     public ODataFilterGenerator Add(ODataFilter filter)
     {
-        var found = Filters.FirstOrDefault(x => filter.Id != null && x.Id == filter.Id);
-
-        if (found != null)
-        {
-            Filters.Remove(found);
-        }
+        Remove(filter.Id);
 
         Filters.Add(filter);
+        return this;
+    }
+
+    public ODataFilterGenerator Add(IEnumerable<ODataFilter> filters)
+    {
+        foreach (var filter in filters)
+        {
+            Add(filter);
+        }
+
         return this;
     }
 
@@ -101,32 +103,17 @@ public class ODataFilterGenerator
 
     public ODataFilterGenerator And(Action<ODataFilterGenerator> filterConfig, Guid? id = null)
     {
-        var found = ChildFilters.FirstOrDefault(x => id != null && x.Id == id);
-
-        if (found != null)
-        {
-            ChildFilters.Remove(found);
-        }
-
-        var generator = new ODataFilterGenerator(true);
+        var generator = new ODataFilterGenerator(true, id);
         filterConfig.Invoke(generator);
-        ChildFilters.Add(generator);
-        return this;
+        return Add(generator);
     }
 
     public ODataFilterGenerator Or(Action<ODataFilterGenerator> filterConfig, Guid? id = null)
     {
-        var found = ChildFilters.FirstOrDefault(x => id != null && x.Id == id);
 
-        if (found != null)
-        {
-            ChildFilters.Remove(found);
-        }
-
-        var generator = new ODataFilterGenerator(false);
+        var generator = new ODataFilterGenerator(false, id);
         filterConfig.Invoke(generator);
-        ChildFilters.Add(generator);
-        return this;
+        return Add(generator);
     }
 
     public ODataFilterGenerator AddIf(bool condition, ODataFilter filter)
@@ -172,6 +159,22 @@ public class ODataFilterGenerator
         return this;
     }
 
+    public void Remove(Guid? id)
+    {
+        var found = Filters.FirstOrDefault(x => id != null && x.Id == id);
+        var found2 = ChildFilters.FirstOrDefault(x => id != null && x.Id == id);
+
+        if (found != null)
+        {
+            Filters.Remove(found);
+        }
+        if (found2 != null)
+        {
+            ChildFilters.Remove(found2);
+        }
+
+    }
+
     public override string ToString()
     {
         return BuildQueryString(this);
@@ -188,14 +191,14 @@ public class ODataFilterGenerator
         {
             if (!string.IsNullOrWhiteSpace(filter.Field))
             {
+                var field =  string.IsNullOrWhiteSpace(filter.CastToType) ? filter.Field : $"cast({filter.Field}, '{filter.CastToType}')";
                 var template = CreateFilterTemplate(filter.Operator);
-                var type = FieldType.Identify(filter.Value?.GetType());
-                var value = GetValueString(filter.Value, type);
-                filters.Add(string.Format(template, filter.Field, value));
+                var value = GetValueString(filter.Value);
+                filters.Add(string.Format(template, field, value));
             }
         }
 
-        foreach (var childGenerator in generator.ChildFilters)
+        foreach (var childGenerator in generator.ChildFilters.Where(x => x.Count > 0))
         {
             var childFilters = BuildQueryString(childGenerator);
             if (!string.IsNullOrWhiteSpace(childFilters))
@@ -211,13 +214,14 @@ public class ODataFilterGenerator
 
         if (value != null)
         {
+            // Check if the value is a list
+            // to be used with In operator
             if (value is not string && value is IEnumerable list)
             {
                 var fixedList = new List<object>();
                 foreach (var item in list)
                 {
-                    var type = FieldType.Identify(item?.GetType());
-                    var val = GetValueString(item, type);
+                    var val = GetValueString(item);
                     if (val != null)
                         fixedList.Add(val);
                 }
@@ -267,70 +271,26 @@ public class ODataFilterGenerator
 
     internal static string CreateFilterTemplate(object? filterOperator)
     {
-        string? filterTemplate;
-        switch (filterOperator)
+        string? filterTemplate = filterOperator switch
         {
-            case ODataOperator.Equal:
-            case FilterOperator.Number.Equal:
-            case FilterOperator.String.Equal:
-            case FilterOperator.DateTime.Is:
-                filterTemplate = "{0} eq {1}";
-                break;
-            case ODataOperator.NotEqual:
-            case FilterOperator.Number.NotEqual:
-            case FilterOperator.String.NotEqual:
-            case FilterOperator.DateTime.IsNot:
-                filterTemplate = "{0} ne {1}";
-                break;
-            case ODataOperator.GreaterThan:
-            case FilterOperator.Number.GreaterThan:
-            case FilterOperator.DateTime.After:
-                filterTemplate = "{0} gt {1}";
-                break;
-            case ODataOperator.GreaterThanOrEqual:
-            case FilterOperator.Number.GreaterThanOrEqual:
-            case FilterOperator.DateTime.OnOrAfter:
-                filterTemplate = "{0} ge {1}";
-                break;
-            case ODataOperator.LessThan:
-            case FilterOperator.Number.LessThan:
-            case FilterOperator.DateTime.Before:
-                filterTemplate = "{0} lt {1}";
-                break;
-            case ODataOperator.LessThanOrEqual:
-            case FilterOperator.Number.LessThanOrEqual:
-            case FilterOperator.DateTime.OnOrBefore:
-                filterTemplate = "{0} le {1}";
-                break;
-            case ODataOperator.Contains:
-            case FilterOperator.String.Contains:
-                filterTemplate = "contains({0},{1})";
-                break;
-            case ODataOperator.NotContains:
-            case FilterOperator.String.NotContains:
-                filterTemplate = "contains({0},{1}) ne true";
-                break;
-            case ODataOperator.StartsWith:
-            case FilterOperator.String.StartsWith:
-                filterTemplate = "startswith({0},{1})";
-                break;
-            case ODataOperator.EndsWith:
-            case FilterOperator.String.EndsWith:
-                filterTemplate = "endswith({0},{1})";
-                break;
-            case ODataOperator.In:
-                filterTemplate = "{0} in ({1})";
-                break;
-            case FilterOperator.String.Empty:
-                filterTemplate = "{0} eq null";
-                break;
-            case FilterOperator.String.NotEmpty:
-                filterTemplate = "{0} ne null";
-                break;
-            default:
-                filterTemplate = "{0} eq {1}";
-                break;
-        }
+            ODataOperator.Equal or FilterOperator.Number.Equal or FilterOperator.String.Equal or FilterOperator.DateTime.Is => "{0} eq {1}",
+            ODataOperator.NotEqual or FilterOperator.Number.NotEqual or FilterOperator.String.NotEqual or FilterOperator.DateTime.IsNot => "{0} ne {1}",
+            ODataOperator.GreaterThan or FilterOperator.Number.GreaterThan or FilterOperator.DateTime.After => "{0} gt {1}",
+            ODataOperator.GreaterThanOrEqual or FilterOperator.Number.GreaterThanOrEqual or FilterOperator.DateTime.OnOrAfter => "{0} ge {1}",
+            ODataOperator.LessThan or FilterOperator.Number.LessThan or FilterOperator.DateTime.Before => "{0} lt {1}",
+            ODataOperator.LessThanOrEqual or FilterOperator.Number.LessThanOrEqual or FilterOperator.DateTime.OnOrBefore => "{0} le {1}",
+            ODataOperator.Contains or FilterOperator.String.Contains => "contains({0},{1})",
+            ODataOperator.NotContains or FilterOperator.String.NotContains => "contains({0},{1}) eq false",
+            ODataOperator.StartsWith or FilterOperator.String.StartsWith => "startswith({0},{1})",
+            ODataOperator.NotStartsWith=> "startswith({0},{1}) eq false",
+            ODataOperator.EndsWith or FilterOperator.String.EndsWith => "endswith({0},{1})",
+            ODataOperator.NotEndsWith => "endswith({0},{1}) eq false",
+            ODataOperator.IsEmpty or FilterOperator.String.Empty => "{0} eq null",
+            ODataOperator.IsNotEmpty or FilterOperator.String.NotEmpty => "{0} ne null",
+            ODataOperator.In => "{0} in ({1})",
+            ODataOperator.NotIn => "{0} in ({1}) eq false",
+            _ => "{0} eq {1}",
+        };
 
         return filterTemplate;
     }
