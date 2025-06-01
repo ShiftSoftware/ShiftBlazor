@@ -11,14 +11,14 @@
 
 	<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
 		<ActivatorContent>
-			<MudText>@Filter.Operator</MudText>
+			<MudText>@Filter.Operator.Describe()</MudText>
 			<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
 		</ActivatorContent>
 		<ChildContent>
-			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">Is</MudMenuItem>
-			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">Is Not</MudMenuItem>
-			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">Is Set</MudMenuItem>
-			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">Is Not Set</MudMenuItem>
+			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">@ODataOperator.Equal.Describe()</MudMenuItem>
+			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">@ODataOperator.NotEqual.Describe()</MudMenuItem>
+			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">@ODataOperator.IsNotEmpty.Describe()</MudMenuItem>
+			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">@ODataOperator.IsEmpty.Describe()</MudMenuItem>
 		</ChildContent>
 	</MudMenu>
 
@@ -61,7 +61,7 @@
 			<MudSelectExtended @bind-Value="DateOperator">
 				@foreach (var item in Enum.GetValues<DateFilterOperator>().Where(x => x.ToString() != "Range"))
 				{
-					<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
+					<MudSelectItem Value="item">@item.Describe()</MudSelectItem>
 				}
 			</MudSelectExtended>
 

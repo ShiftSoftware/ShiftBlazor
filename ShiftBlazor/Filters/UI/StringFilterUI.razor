@@ -9,12 +9,12 @@
 			{
 				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
 					<ActivatorContent>
-						<MudText>@Filter.Operator</MudText>
+						<MudText>@Filter.Operator.Describe()</MudText>
 						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
 					</ActivatorContent>
 					<ChildContent>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.In))">In</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotIn))">Not In</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.In))">@ODataOperator.In.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotIn))">@ODataOperator.NotIn.Describe()</MudMenuItem>
 					</ChildContent>
 				</MudMenu>
 
@@ -24,24 +24,24 @@
 			{
 				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
 					<ActivatorContent>
-						<MudText>@Filter.Operator</MudText>
+						<MudText>@Filter.Operator.Describe()</MudText>
 						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
 					</ActivatorContent>
 					<ChildContent>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">Equal</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">Not Equal</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.StartsWith))">Starts With</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotStartsWith))">Not Starts With</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.EndsWith))">Ends With</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEndsWith))">Not Ends With</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Contains))">Contains</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotContains))">Not Contains</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">Is Set</MudMenuItem>
-						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">Is Not Set</MudMenuItem>
-						@if (AutocompleteType != null)
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">@ODataOperator.Equal.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">@ODataOperator.NotEqual.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.StartsWith))">@ODataOperator.StartsWith.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotStartsWith))">@ODataOperator.NotStartsWith.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.EndsWith))">@ODataOperator.EndsWith.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEndsWith))">@ODataOperator.NotEndsWith.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Contains))">@ODataOperator.Contains.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotContains))">@ODataOperator.NotContains.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">@ODataOperator.IsNotEmpty.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">@ODataOperator.IsEmpty.Describe()</MudMenuItem>
+						@if (AllowAutocomplete)
 						{
-							<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.In))">In</MudMenuItem>
-							<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotIn))">Not In</MudMenuItem>
+							<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.In))">@ODataOperator.In.Describe()</MudMenuItem>
+							<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotIn))">@ODataOperator.NotIn.Describe()</MudMenuItem>
 						}
 					</ChildContent>
 				</MudMenu>

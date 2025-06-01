@@ -6,14 +6,14 @@
 		<MudStack Row>
 			<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
 				<ActivatorContent>
-					<MudText>@Filter.Operator</MudText>
+					<MudText>@Filter.Operator.Describe()</MudText>
 					<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
 				</ActivatorContent>
 				<ChildContent>
-					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.In))">Equal</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotIn))">Not Equal</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsNotEmpty))">Is Set</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsEmpty))">Is Not Set</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.In))">@ODataOperator.In.Describe()</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotIn))">@ODataOperator.NotIn.Describe()</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsNotEmpty))">@ODataOperator.IsNotEmpty.Describe()</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsEmpty))">@ODataOperator.IsEmpty.Describe()</MudMenuItem>
 				</ChildContent>
 			</MudMenu>
 
