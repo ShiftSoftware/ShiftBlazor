@@ -18,7 +18,7 @@
     private string? ErrorText { get; set; }
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
 

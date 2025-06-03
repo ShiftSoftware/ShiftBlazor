@@ -12,7 +12,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] internal ShiftBlazorLocalizer Loc { get; set; } = default!;
 
         [CascadingParameter]
-        public MudDialogInstance? MudDialog { get; set; }
+        public IMudDialogInstance? MudDialog { get; set; }
 
         [Parameter]
         public string? Title { get; set; }

@@ -1,4 +1,5 @@
-﻿@inject SettingManager SettingManager
+﻿@using System.Text.Json
+@inject SettingManager SettingManager
 
 <MudThemeProvider @bind-IsDarkMode="IsDarkMode"
                   DefaultScrollbar="@DefaultScrollbar"
@@ -10,7 +11,8 @@
                    FullWidth="_DialogOptions.FullWidth"
                    MaxWidth="_DialogOptions.MaxWidth"
                    NoHeader="_DialogOptions.NoHeader"
-                   BackgroundClass="_DialogOptions.BackgroundClass" />
+                   BackgroundClass="_DialogOptions.BackgroundClass"
+                   />
 <MudPopoverProvider />
 <MudSnackbarProvider />
 
@@ -29,44 +31,23 @@
     public MudTheme? Theme { get; set; } = new();
 
     [Parameter]
-    public Action<DialogOptions>? DialogOptions { get; set; }
+    public DialogOptions? DialogOptions { get; set; }
 
     private DialogOptions _DialogOptions = new();
 
     protected override void OnInitialized()
     {
-        _DialogOptions.CloseOnEscapeKey = true;
-        _DialogOptions.BackdropClick = false;
-        _DialogOptions.FullWidth = true;
-        _DialogOptions.NoHeader = false;
-        _DialogOptions.CloseButton = true;
+        _DialogOptions = new DialogOptions()
+        {
+            CloseOnEscapeKey = DialogOptions?.CloseOnEscapeKey ?? true,
+            BackdropClick = DialogOptions?.BackdropClick ?? false,
+            FullWidth = DialogOptions?.FullWidth ?? true,
+            NoHeader = DialogOptions?.NoHeader ?? false,
+            CloseButton = DialogOptions?.CloseButton ?? true,
+            BackgroundClass = DialogOptions?.BackgroundClass,
+            Position = SettingManager.Settings.ModalPosition ?? DialogOptions?.Position ?? DefaultAppSetting.ModalPosition,
+            MaxWidth = SettingManager.Settings.ModalWidth ?? DialogOptions?.MaxWidth ?? DefaultAppSetting.ModalWidth,
+        };
 
-        DialogOptions?.Invoke(_DialogOptions);
-
-        if (SettingManager.Settings.ModalPosition != null)
-        {
-            _DialogOptions.Position = SettingManager.Settings.ModalPosition;
-        }
-        else if (_DialogOptions.Position == null)
-        {
-            _DialogOptions.Position = DefaultAppSetting.ModalPosition;
-        }
-        else
-        {
-            SettingManager.SetModalPosition((DialogPosition)_DialogOptions.Position);
-        }
-
-        if (SettingManager.Settings.ModalWidth != null)
-        {
-            _DialogOptions.MaxWidth = SettingManager.Settings.ModalWidth;
-        }
-        else if (_DialogOptions.MaxWidth == null)
-        {
-            _DialogOptions.MaxWidth = DefaultAppSetting.ModalWidth;
-        }
-        else
-        {
-            SettingManager.SetModalWidth((MaxWidth)_DialogOptions.MaxWidth);
-        }
     }
 }

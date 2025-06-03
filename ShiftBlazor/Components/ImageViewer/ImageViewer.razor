@@ -57,7 +57,7 @@
     public string? Title { get; set; }
 
     [CascadingParameter]
-    public MudDialogInstance? MudDialog { get; set; }
+    public IMudDialogInstance? MudDialog { get; set; }
 
     public Guid Id { get; private set; } = Guid.NewGuid();
 

@@ -54,7 +54,7 @@ public partial class DropdownTree
     public bool DropShadow { get; set; } = true;
 
     [Parameter]
-    public bool FullWidth { get; set; }
+    public DropdownWidth DropdownWidth { get; set; } = DropdownWidth.Relative;
 
     [Parameter]
     public bool Dense { get; set; }

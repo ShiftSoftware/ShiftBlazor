@@ -56,7 +56,7 @@
 		</MudDateRangePicker>
 	</MudPopover>
 
-	<MudPopover Open="_IsMenuOpen" RelativeWidth AnchorOrigin="Origin.BottomLeft" Paper Class="pa-5">
+	<MudPopover Open="_IsMenuOpen" RelativeWidth="DropdownWidth.Relative" AnchorOrigin="Origin.BottomLeft" Paper Class="pa-5">
 		<MudStack Row>
 			<MudSelectExtended @bind-Value="DateOperator">
 				@foreach (var item in Enum.GetValues<DateFilterOperator>().Where(x => x.ToString() != "Range"))

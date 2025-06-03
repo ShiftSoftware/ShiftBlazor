@@ -10,7 +10,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
     public partial class ShiftForm<TComponent, T> : ComponentBase where TComponent : ComponentBase where T : ShiftEntityViewAndUpsertDTO, new()
     {
         [Inject] private SettingManager SettingManager { get; set; } = default!;
-        [CascadingParameter] public MudDialogInstance? MudDialog { get; set; }
+        [CascadingParameter] public IMudDialogInstance? MudDialog { get; set; }
         [Parameter] public FormModes Mode { get; set; } = FormModes.View;
         [Parameter] public object? Key { get; set; }
         [Parameter] public FormOnSaveAction FormSetting { get; set; } = FormOnSaveAction.ViewFormOnSave;

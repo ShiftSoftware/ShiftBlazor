@@ -124,7 +124,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         ///     Close the form dialog.
         /// </summary>
         /// <param name="mudDialog">An instance of the MudDialog.</param>
-        public void Close(MudDialogInstance mudDialog, object? data = null)
+        public void Close(IMudDialogInstance mudDialog, object? data = null)
         {
             ShiftBlazorEvents.TriggerOnModalClosed(data);
 

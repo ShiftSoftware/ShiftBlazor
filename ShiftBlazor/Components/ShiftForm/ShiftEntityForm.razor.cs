@@ -447,8 +447,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             Maximized = MudDialog.Options.FullScreen != true;
-            MudDialog.Options.FullScreen = Maximized;
-            MudDialog.SetOptions(MudDialog.Options);
+            MudDialog.SetOptionsAsync(MudDialog.Options with
+            {
+                FullScreen = Maximized,
+            });
         }
 
         internal async Task FetchItem(DateTimeOffset? asOf = null)

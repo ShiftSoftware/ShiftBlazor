@@ -40,7 +40,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
         [CascadingParameter]
-        protected MudDialogInstance? MudDialog { get; set; }
+        protected IMudDialogInstance? MudDialog { get; set; }
 
         /// <summary>
         /// To check whether this list is currently embeded inside a form component.

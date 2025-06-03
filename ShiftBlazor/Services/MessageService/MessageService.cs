@@ -113,7 +113,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 {
                     config.Action = string.IsNullOrWhiteSpace(buttonText) ? "View" : buttonText;
                     config.ActionColor = buttonColor;
-                    config.Onclick = snackbar =>
+                    config.OnClick = snackbar =>
                     {
                         ShowDialog(title, detail, modalColor, icon);
                         return Task.CompletedTask;
