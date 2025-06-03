@@ -281,7 +281,7 @@
                     {
                         // Using SelectColumn doesn't work as expected with ServerData
                         <TemplateColumn T="T" Tag="@("select-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%"
-                                        Filterable="false" IsEditable="false" StickyLeft Title="@Loc["SelectColumnHeaderText"]">
+                                        Filterable="false" Editable="false" StickyLeft Title="@Loc["SelectColumnHeaderText"]">
                             <HeaderTemplate>
                                 <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
                                     <MudCheckBox T="bool" Size="@IconSize" Value="@SelectState.All" ValueChanged="SelectAll" />
@@ -359,7 +359,7 @@
 }
 
 @code {
-    private MudDropContainer<Column<T>> _columnsPanelDropContainer { get; set; }
+    private MudDropContainer<Column<T>>? _columnsPanelDropContainer { get; set; }
 
     internal void DropContainerHasChanged()
     {
