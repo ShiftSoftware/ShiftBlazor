@@ -24,7 +24,6 @@ public partial class FilterPanel: ComponentBase
 
     private IEnumerable<PropertyInfo> Fields = [];
     private bool IsAnd = true;
-    private bool Immediate;
 
     protected override void OnInitialized()
     {
@@ -45,7 +44,7 @@ public partial class FilterPanel: ComponentBase
 
     private void ReloadList(bool immediate)
     {
-        if (Parent is IShiftList list && (Parent?.FilterImmediate == true || immediate || Immediate)) list.Reload();
+        if (Parent is IShiftList list && (Parent?.FilterImmediate == true || immediate)) list.Reload();
     }
 
     private void Reset()
