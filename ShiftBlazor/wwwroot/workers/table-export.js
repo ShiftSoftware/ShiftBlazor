@@ -64,7 +64,7 @@ function createODataQuery(filters) {
 }
 
 function fetchForeignEntries(foreignTables, headers) {
-    const fetchPromises = Object.values(foreignTables).map((v) => {
+    const fetchPromises = Object.entries(foreignTables).map(([tableName, v]) => {
 
         let processFetching = false
 
@@ -75,6 +75,11 @@ function fetchForeignEntries(foreignTables, headers) {
         if (!processFetching) return
 
         const url = v.url + createODataQuery(v.filterValues)
+
+        if (url.length > 2000) {
+            console.error(`For foregign column: ${tableName}, URL exceeds maximum allowed length of 2000 characters. Actual length: ${url.length}`)
+            return
+        }
 
         return fetch(url, { headers, method: "GET" })
             .then(async (response) => {
@@ -216,7 +221,9 @@ function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables) {
                 table = foreign.items.find(item => item[foreignField.idKey] == value)
             }
 
-            if (table[foreignField.valueKey]) value = table[foreignField.valueKey]
+            if (table && table[foreignField?.valueKey]) value = table[foreignField.valueKey]
+
+            if (!table && foreignField?.valueKey) value = ""
         }
 
     } else if (col.key.includes('.')) { // process dateTime columns
