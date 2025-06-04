@@ -36,7 +36,7 @@ function buildForeignColumnsMapper(columns, foreignColumns, origin) {
 function populateForeignFilterValues(rows, foreignTables, fieldMapper) {
 
     // if there is no foreign columns then skip populating
-    if (!Object.keys(fieldMapper)) return
+    if (!Object.keys(fieldMapper).length) return
 
     // push unique values into filterValues
     rows.forEach((row) => {
@@ -103,7 +103,7 @@ function fetchForeignEntries(foreignTables, headers) {
 }
 
 function generateItemMapper(foreignTables) {
-    Object.values(foreignTables).map((v) => {
+    Object.values(foreignTables).forEach((v) => {
         // create entry mapper as id : value, for example "u23" : 1 (the index)
         v.items.forEach((item, idx) => {
             if (item.ID) {
