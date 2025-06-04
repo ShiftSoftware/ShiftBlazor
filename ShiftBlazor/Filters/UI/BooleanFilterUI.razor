@@ -1,0 +1,10 @@
+﻿@inherits FilterUIBase
+
+<MudSelectExtended T="bool?" Label="@Filter.Field" Value="Value" ValueChanged="ValueChanged" Clearable AnchorOrigin="Origin.BottomCenter">
+	<MudSelectItem T="bool?" Value="true">True</MudSelectItem>
+	<MudSelectItem T="bool?" Value="false">False</MudSelectItem>
+</MudSelectExtended>
+
+@code {
+	private bool? Value => Filter.Value as bool?;
+}

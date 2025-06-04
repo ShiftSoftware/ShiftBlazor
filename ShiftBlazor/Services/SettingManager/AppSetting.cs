@@ -16,6 +16,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public virtual bool? EnableFormClone { get; set; }
         public virtual Dictionary<string, FileExplorerSettings>? FileExplorerSettings { get; set; }
         public virtual bool? IsDrawerOpen { get; set; }
+        public virtual bool? IsDataGridFilterPanelOpen { get; set; }
     }
 
     public static class DefaultAppSetting
@@ -41,5 +42,6 @@ namespace ShiftSoftware.ShiftBlazor.Services
             SortDescending = true,
         };
         public static bool IsDrawerOpen = false;
+        public static bool IsDataGridFilterPanelOpen = false;
     }
 }

@@ -30,7 +30,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
         [CascadingParameter]
-        internal MudDialogInstance? MudDialog { get; set; }
+        internal IMudDialogInstance? MudDialog { get; set; }
 
         /// <summary>
         ///     The current Mode of the form.

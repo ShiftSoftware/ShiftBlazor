@@ -21,12 +21,13 @@ namespace ShiftSoftware.ShiftBlazor.Services
         private static readonly string QueryKey = "modal";
         private readonly List<Assembly> Assemblies;
 
-        public ShiftModal(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService, SettingManager settingManager)
+        public ShiftModal(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService, SettingManager settingManager, MessageService messageService)
         {
             JsRuntime = jsRuntime;
             NavManager = navManager;
             DialogService = dialogService;
             SettingManager = settingManager;
+            MessageService = messageService;
 
             Assemblies = new List<Assembly> { Assembly.GetEntryAssembly()! };
 
@@ -124,7 +125,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         ///     Close the form dialog.
         /// </summary>
         /// <param name="mudDialog">An instance of the MudDialog.</param>
-        public void Close(MudDialogInstance mudDialog, object? data = null)
+        public void Close(IMudDialogInstance mudDialog, object? data = null)
         {
             ShiftBlazorEvents.TriggerOnModalClosed(data);
 

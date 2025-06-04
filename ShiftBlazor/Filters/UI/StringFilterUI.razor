@@ -1,0 +1,174 @@
+﻿@using ShiftSoftware.ShiftBlazor.Filters.Models
+@using ShiftSoftware.ShiftEntity.Model
+@inherits FilterUIBase
+
+<div style="width: 100%;" class="@ClassName">
+	<MudField Label="@Filter.Field" InnerPadding="false">
+		<MudStack Row>
+			@if (Filter is StringFilterModel stringFilter && stringFilter.AutocompleteOptions != null)
+			{
+				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+					<ActivatorContent>
+						<MudText>@Filter.Operator.Describe()</MudText>
+						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
+					</ActivatorContent>
+					<ChildContent>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.In))">@ODataOperator.In.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotIn))">@ODataOperator.NotIn.Describe()</MudMenuItem>
+					</ChildContent>
+				</MudMenu>
+
+				<DynamicComponent Type="AutocompleteType" Parameters="AutocompleteParameters" />
+			}
+			else
+			{
+				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+					<ActivatorContent>
+						<MudText>@Filter.Operator.Describe()</MudText>
+						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
+					</ActivatorContent>
+					<ChildContent>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">@ODataOperator.Equal.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">@ODataOperator.NotEqual.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.StartsWith))">@ODataOperator.StartsWith.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotStartsWith))">@ODataOperator.NotStartsWith.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.EndsWith))">@ODataOperator.EndsWith.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEndsWith))">@ODataOperator.NotEndsWith.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Contains))">@ODataOperator.Contains.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotContains))">@ODataOperator.NotContains.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">@ODataOperator.IsNotEmpty.Describe()</MudMenuItem>
+						<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">@ODataOperator.IsEmpty.Describe()</MudMenuItem>
+						@if (AllowAutocomplete)
+						{
+							<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.In))">@ODataOperator.In.Describe()</MudMenuItem>
+							<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotIn))">@ODataOperator.NotIn.Describe()</MudMenuItem>
+						}
+					</ChildContent>
+				</MudMenu>
+
+				@if (AllowAutocomplete && IsMultiSelectOperator(Filter.Operator))
+				{
+					<DynamicComponent Type="AutocompleteType" Parameters="AutocompleteParameters" />
+				}
+				else if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
+				{
+					<MudTextField T="string"
+								  Value="Value"
+								  Clearable
+								  Underline="false"
+								  ValueChanged="ValueChanged" />
+				}
+			}
+
+		</MudStack>
+	</MudField>
+
+</div>
+
+@code
+{
+	private string Value => (string?)Filter.Value ?? string.Empty;
+
+	[CascadingParameter]
+	public IShiftList? ShiftList { get; set; }
+
+	private Type? AutocompleteType;
+	private Dictionary<string, object>? AutocompleteParameters;
+
+	private bool AllowAutocomplete { get; set; }
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+
+		if (Filter is StringFilterModel stringFilter)
+		{
+			if (stringFilter.AutocompleteOptions != null &&
+				stringFilter.DtoType == null)
+			{
+				throw new ArgumentNullException(nameof(stringFilter.DtoType));
+			}
+			else if (stringFilter.DtoType == null)
+			{
+				return;
+			}
+
+			var options = stringFilter.AutocompleteOptions;
+			AutocompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(stringFilter.DtoType);
+			AutocompleteParameters = new()
+			{
+				["Strict"] = false,
+				["ValueChanged"] = new EventCallback<ShiftEntitySelectDTO>(this, AutocompleteChanged),
+				["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged),
+				["MultiSelect"] = true,
+				["Clearable"] = true,
+				["Underline"] = false,
+			};
+
+			if (stringFilter.AutocompleteOptions != null)
+			{
+				AutocompleteParameters["BaseUrl"] = options.BaseUrl;
+				AutocompleteParameters["BaseUrlKey"] = options.BaseUrlKey;
+				AutocompleteParameters["EntitySet"] = options.EntitySet;
+				AutocompleteParameters["DataTextField"] = options.DataTextField;
+				AutocompleteParameters["DataValueField"] = options.DataValueField;
+				AutocompleteParameters["ForeignTextField"] = options.ForeignTextField;
+				AutocompleteParameters["ForeignEntiyField"] = options.ForeignEntiyField;
+			}
+			else if (Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(stringFilter.DtoType) != null &&
+					!string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
+			{
+				AllowAutocomplete = true;
+				AutocompleteParameters["EntitySet"] = ShiftList.EntitySet;
+				AutocompleteParameters["DataTextField"] = stringFilter.Field;
+			}
+		}
+	}
+
+	protected override void OperatorChanged(ODataOperator oDataOperator)
+	{
+		if (IsMultiSelectOperator(Filter!.Operator) != IsMultiSelectOperator(oDataOperator) || Value == string.Empty)
+		{
+			Filter.Value = null;
+		}
+
+		base.OperatorChanged(oDataOperator);
+	}
+
+	private bool IsMultiSelectOperator(ODataOperator oDataOperator)
+	{
+		return oDataOperator == ODataOperator.In || oDataOperator == ODataOperator.NotIn;
+	}
+
+	private void AutocompleteMultiChanged(List<ShiftEntitySelectDTO>? dto)
+	{
+		IEnumerable<string>? newValue;
+		var oldValue = Filter.Value as IEnumerable<string>;
+		if (Filter is StringFilterModel filter && filter.AutocompleteOptions != null)
+		{
+			newValue = dto?.Select(x => x.Value).ToList();
+		}
+		else
+		{
+			newValue = dto?.Where(x => !string.IsNullOrWhiteSpace(x.Text)).Select(x => x.Text!).ToList();
+		}
+
+		if (!new HashSet<string>(oldValue ?? []).SetEquals(newValue ?? []))
+		{
+			Filter.Value = newValue;
+			UpdateFilter();
+		}
+	}
+
+	private void AutocompleteChanged(ShiftEntitySelectDTO? dto)
+	{
+		var value = Filter is StringFilterModel filter && filter.AutocompleteOptions != null
+			? dto?.Value
+			: dto?.Text;
+
+		if (Filter.Value as string != value)
+		{
+			ValueChanged(value);
+		}
+	}
+}

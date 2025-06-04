@@ -20,7 +20,7 @@
                                    Icon="@Icons.Material.Filled.Close"
                                    Edge="Edge.End"
                                    Color="Color.Inherit"
-                                   Title="@Loc["ClosePopupButtonLabel"]" />
+                                   title="@Loc["ClosePopupButtonLabel"]" />
         </MudAppBar>
 
         <div class="pa-6">
@@ -86,7 +86,7 @@
     public bool ReportButton { get; set; }
 
     [CascadingParameter]
-    internal MudDialogInstance? MudDialog { get; set; }
+    internal IMudDialogInstance? MudDialog { get; set; }
 
     public Guid Id { get; private set; } = Guid.NewGuid();
     public string Title { get; set; } = string.Empty;

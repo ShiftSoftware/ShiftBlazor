@@ -110,6 +110,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 
 .shift-autocomplete {
     position: relative;
+    flex-grow: 1;
 }
 
 .shift-autocomplete .autocomplete-tags {
@@ -337,3 +338,25 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 }
 
 /* ============== File Explorer end ============== */
+}
+
+
+.filter-input .percent-input {
+    flex-grow: 0;
+    width: 80px;
+}
+
+.filter-input .percent-input input {
+    text-align: end;
+}
+
+.custom-date-range-picker > .mud-input-control-input-container > .mud-input > .mud-input-root {
+    display: flex !important;
+    flex-grow: 1 !important;
+    z-index: 10 !important;
+    padding-bottom: 0 !important;
+}
+
+.custom-date-range-picker > .mud-input-control-input-container > .mud-input > .mud-input-adornment {
+    margin-left: -14px !important;
+}

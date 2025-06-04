@@ -1,5 +1,6 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using ShiftSoftware.ShiftBlazor.Events
+@using ShiftSoftware.ShiftBlazor.Filters
 @using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @typeparam T where T : ShiftEntityDTOBase, new()
 @inherits EventComponentBase
@@ -15,7 +16,6 @@
 
     <MudPaper Elevation="25" Outlined="Outlined" id="@($"Grid-{Id}")">
         <CascadingValue Value="this" IsFixed="true">
-
             <header>
                 @if (!DisableHeaderToolbar)
                 {
@@ -39,6 +39,17 @@
                             </MudTooltip>
                         }
 
+                        @if (EnableFilterPanel)
+                        {
+                            <MudTooltip Text="@Loc["ToggleFilterPanelTitle"]">
+                                <MudIconButtonExtended Size="@IconSize"
+                                                       Icon="@(IsFilterPanelOpen ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
+                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                       aria-label="@Loc["ToggleFilterPanelTitle"]"
+                                                       OnClick="ToggleFilterPanel" />
+                            </MudTooltip>
+                        }
+
                         @if (!DisableGridEditor)
                         {
                             <MudTooltip Text="@Loc["ColumnChooserTitle"]">
@@ -50,6 +61,8 @@
                                                        OnClick="OpenGridEditor" />
                             </MudTooltip>
                         }
+
+                          
 
                         @if (!DisableDeleteFilter && Values == null)
                         {
@@ -120,7 +133,20 @@
                             </MudTooltip>
                         }
 
+
                     </MudToolBar>
+                }
+                @if (EnableFilterPanel)
+                {
+                    <MudCollapse Expanded="IsFilterPanelOpen" Style="border:none" Class="light-toolbar">
+                        <MudForm Class="pa-4">
+
+                            <CascadingValue Value="Filters">
+                                <FilterPanel DTO="typeof(T)" />
+                            </CascadingValue>
+
+                        </MudForm>
+                    </MudCollapse>
                 }
 
                 @HeaderTemplate
@@ -142,6 +168,7 @@
                                             <MudText Typo="Typo.h6" Style="width: 70px;">@Loc["ColumnEditorStickyToggleHeader"]</MudText>
                                             <MudIconButton Ripple="false" Disabled Icon="@Icons.Material.Filled.DragIndicator" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
                                         </MudStack>
+
                                         @if (EnableSelection)
                                         {
                                             <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px;">
@@ -254,7 +281,7 @@
                     {
                         // Using SelectColumn doesn't work as expected with ServerData
                         <TemplateColumn T="T" Tag="@("select-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%"
-                                        Filterable="false" IsEditable="false" StickyLeft Title="@Loc["SelectColumnHeaderText"]">
+                                        Filterable="false" Editable="false" StickyLeft Title="@Loc["SelectColumnHeaderText"]">
                             <HeaderTemplate>
                                 <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
                                     <MudCheckBox T="bool" Size="@IconSize" Value="@SelectState.All" ValueChanged="SelectAll" />
@@ -281,7 +308,7 @@
 
                     @ChildContent
 
-                    <PropertyColumn Property="x => x.IsDeleted" Title="@Loc["IsDeletedColumnHeaderText"]" Hidden="IsDeleteColumnHidden"/>
+                    <PropertyColumnExtended Property="x => x.IsDeleted" Title="@Loc["IsDeletedColumnHeaderText"]" Hidden="IsDeleteColumnHidden" />
 
                     <ShiftSoftware.ShiftBlazor.Components.ShiftList.Flags.HasBrandForeignColumn T="T" />
 
@@ -332,7 +359,7 @@
 }
 
 @code {
-    private MudDropContainer<Column<T>> _columnsPanelDropContainer { get; set; }
+    private MudDropContainer<Column<T>>? _columnsPanelDropContainer { get; set; }
 
     internal void DropContainerHasChanged()
     {

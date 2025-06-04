@@ -1,0 +1,72 @@
+﻿@using ShiftSoftware.ShiftBlazor.Filters.Models
+@using ShiftSoftware.ShiftBlazor.Filters.UI
+
+@if (Parent?.Filters != null)
+{
+    @* We cascade these two values for when a list is being used inside a form, so that they don't get disabled by the form *@
+    <CascadingValue Name="@FormHelper.ParentReadOnlyName" Value="false">
+        <CascadingValue Name="@FormHelper.ParentDisabledName" Value="false">
+    
+            <MudGrid>
+                @foreach (var (id, filter) in Parent.Filters.Where(x => !x.Value.IsHidden).OrderBy(x => x.Value.UIOptions.Order))
+                {
+                    <MudItem xxl="filter.UIOptions.xxl"
+                             xl="filter.UIOptions.xl"
+                             lg="filter.UIOptions.lg"
+                             md="filter.UIOptions.md"
+                             sm="filter.UIOptions.sm"
+                             xs="filter.UIOptions.xs">
+                        <MudStack Row @key="id" AlignItems="AlignItems.End">
+
+                            @if (filter.UIOptions.Template == null)
+                            {
+                                @if (filter is BooleanFilterModel booleanFilter)
+                                {
+                                    <BooleanFilterUI Filter="filter" />
+                                }
+                                else if (filter is StringFilterModel stringFilter)
+                                {
+                                    <StringFilterUI Filter="filter" />
+                                }
+                                else if (filter is EnumFilterModel enumFilter && enumFilter.EnumTypeToUse != null)
+                                {
+                                    <EnumFilterUI Filter="filter" EnumType="enumFilter.EnumType" />
+                                }
+                                else if (filter is DateFilterModel dateFilter)
+                                {
+                                    <DateFilterUI Filter="filter" />
+                                }
+                                else if (filter is NumericFilterModel)
+                                {
+                                    <NumericFilterUI Filter="filter" />
+                                }
+                            }
+                            else
+                            {
+                                @filter.UIOptions.Template(filter);
+                            }
+
+
+                            @if (filter.IsDefault)
+                            {
+                                @* <MudSwitchExtended T="bool" @bind-Value="filter.IsDisabled" /> *@
+                            }
+                            else
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@(() => RemoveFilterComponent(id))" />
+                            }
+                        </MudStack>
+                    </MudItem>
+                }
+            </MudGrid>
+        </CascadingValue>
+    </CascadingValue>
+}
+
+@FilterTempalte
+
+<MudStack Row>
+    <MudSpacer/>
+    <MudButton OnClick="Reset">Reset</MudButton>
+    <MudButton OnClick="@(() => ReloadList(true))" Color="Color.Primary">Filter</MudButton>
+</MudStack>

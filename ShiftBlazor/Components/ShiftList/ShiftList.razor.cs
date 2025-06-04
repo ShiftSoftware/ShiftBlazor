@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Filters;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
@@ -35,7 +37,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
         [CascadingParameter]
-        protected MudDialogInstance? MudDialog { get; set; }
+        protected IMudDialogInstance? MudDialog { get; set; }
 
         /// <summary>
         /// To check whether this list is currently embeded inside a form component.
@@ -307,6 +309,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool SelectOnRowClick { get; set; } = false;
 
+        [Parameter]
+        public bool EnableFilterPanel { get; set; }
+
+        [Parameter]
+        public bool FilterImmediate { get; set; }
+
+        [Parameter]
+        public RenderFragment? FilterTemplate {  get; set; }
 
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
@@ -329,7 +339,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private ITypeAuthService? TypeAuthService;
         private string ToolbarStyle = string.Empty;
         internal SortMode SortMode = SortMode.Multiple;
-        private ODataFilterGenerator Filters = new ODataFilterGenerator(true);
+        public ODataFilterGenerator ODataFilters { get; private set; } = new ODataFilterGenerator(true);
         private string PreviousFilters = string.Empty;
         private bool ReadyToRender = false;
         private bool IsModalOpen = false;
@@ -337,6 +347,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsDeleteColumnHidden = true;
         private DotNetObjectReference<ShiftList<T>> dotNetRef;
         private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
+        public Dictionary<Guid, FilterModelBase> Filters { get; set; } = [];
+        private Debouncer Debouncer { get; set; } = new Debouncer();
+        private bool IsFilterPanelOpen { get; set; }
+        public HashSet<Guid> ActiveOperations { get; set; } = [];
+        private CancellationTokenSource? ReloadBlockTokenSource;
 
         private List<Column<T>> DraggableColumns
         {
@@ -424,6 +439,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
+
+            IsFilterPanelOpen = SettingManager?.SetFilterPanelState() ?? false;
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -453,7 +470,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var filter = new ODataFilterGenerator(true, Id);
                 Filter.Invoke(filter);
-                Filters.Add(filter);
+                ODataFilters.Add(filter);
             }
 
             if (Filters.ToString() != PreviousFilters)
@@ -546,9 +563,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <param name="field">The field to apply the filter on.</param>
         /// <param name="op">The comparison operator for the filter (e.g., Equal, GreaterThan).</param>
         /// <param name="value">The value to compare against for the filter.</param>
-        public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null)
+        public void AddFilter(Guid id, string field, ODataOperator op, object? value = null)
         {
-            Filters.Add(field, op, value, id);
+            ODataFilters.Add(field, op, value, id);
         }
 
         public void GridStateHasChanged()
@@ -577,6 +594,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
         {
+            // Check if there are any active operations,
+            // if so, wait for them to finish before proceeding.
+            // Operations could be things like Filter, Sort...
+            if (ActiveOperations.Count > 0)
+            {
+                try
+                {
+                    ReloadBlockTokenSource = new CancellationTokenSource();
+                    await Task.Delay(1000, ReloadBlockTokenSource.Token);
+                }
+                catch (Exception) { }
+            }
+
             var builder = QueryBuilder;
             ErrorMessage = null;
 
@@ -602,14 +632,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             try
             {
+                var filterPanel = Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x));
+
                 // Convert MudBlazor's FilterDefinitions to OData query
                 var userFilters = state.FilterDefinitions.ToODataFilter().Select(x => string.Join(" or ", x));
 
                 var filterList = new List<string>();
                 filterList.AddRange(userFilters);
+                filterList.AddRange(filterPanel);
 
-                if (Filters.Count > 0)
-                    filterList.Add(Filters.ToString());
+                if (ODataFilters.Count > 0)
+                    filterList.Add(ODataFilters.ToString());
 
                 if (filterList.Any())
                 {
@@ -1129,6 +1162,23 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 SelectState.Clear();
             }
             await OnSelectStateChanged.InvokeAsync(SelectState);
+        }
+
+        public void ToggleFilterPanel()
+        {
+            IsFilterPanelOpen = SettingManager?.SetFilterPanelState(!IsFilterPanelOpen) ?? !IsFilterPanelOpen;
+        }
+
+        public void Reload()
+        {
+            if (ReloadBlockTokenSource?.IsCancellationRequested == false)
+            {
+                ReloadBlockTokenSource.Cancel();
+            }
+            else
+            {
+                Debouncer.Debounce(100, DataGrid!.ReloadServerData);
+            }
         }
 
         private readonly MudBlazor.Converter<bool, bool?> _oppositeBoolConverter = new()

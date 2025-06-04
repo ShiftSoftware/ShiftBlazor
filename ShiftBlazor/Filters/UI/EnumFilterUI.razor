@@ -1,0 +1,69 @@
+﻿@using System.Collections
+@inherits FilterUIBase
+
+<div style="width: 100%;" class="@ClassName">
+
+	<MudField Label="@Filter.Field" InnerPadding="false">
+		<MudStack Row>
+			<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+				<ActivatorContent>
+					<MudText>@Filter.Operator.Describe()</MudText>
+					<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
+				</ActivatorContent>
+				<ChildContent>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.In))">@ODataOperator.In.Describe()</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.NotIn))">@ODataOperator.NotIn.Describe()</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsNotEmpty))">@ODataOperator.IsNotEmpty.Describe()</MudMenuItem>
+					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.IsEmpty))">@ODataOperator.IsEmpty.Describe()</MudMenuItem>
+				</ChildContent>
+			</MudMenu>
+
+			@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
+			{
+				<MudSelectExtended T="object"
+								   MultiSelection
+								   SelectedValues="Value"
+								   SelectedValuesChanged="ValueChanged"
+								   Underline="false"
+								   ToStringFunc="x => (x as Enum)?.Describe()"
+								   AnchorOrigin="Origin.BottomCenter"
+								   FullWidth
+								   Clearable >
+					@if (EnumTypeToUse != null)
+					{
+						@foreach (var item in Enum.GetValues(EnumTypeToUse))
+						{
+							<MudSelectItem Value="@item">@(item is Enum _enum && !string.IsNullOrWhiteSpace(_enum.Describe()) ? _enum.Describe() : item)</MudSelectItem>
+						}
+					}
+				</MudSelectExtended>
+			}
+		</MudStack>
+	</MudField>
+
+</div>
+
+@code {
+	[Parameter]
+	[EditorRequired]
+	public Type? EnumType { get;set; }
+
+	private Type? EnumTypeToUse;
+
+	private IEnumerable<object>? Value => (Filter.Value as IEnumerable)?.Cast<object>();
+	private bool HasNoValue => Filter.Operator == ODataOperator.IsEmpty || Filter.Operator == ODataOperator.IsNotEmpty;
+
+	private void _OperatorChanged(ODataOperator oDataOperator)
+	{
+		Filter!.Operator = oDataOperator;
+		UpdateFilter();
+	}
+
+	protected override void OnInitialized()
+	{
+		if (EnumType == null)
+			throw new ArgumentNullException(nameof(EnumType));
+
+		EnumTypeToUse = EnumType.IsEnum ? EnumType : Nullable.GetUnderlyingType(EnumType);
+	}
+}

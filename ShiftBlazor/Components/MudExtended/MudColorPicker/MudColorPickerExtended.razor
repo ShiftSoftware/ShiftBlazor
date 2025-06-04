@@ -7,11 +7,17 @@
 }
 
 @code {
+    private bool FirstRun = true;
+
     public override Task SetParametersAsync(ParameterView parameters)
     {
-        if (parameters.TryGetValue(nameof(For), out System.Linq.Expressions.Expression<Func<MudBlazor.Utilities.MudColor>>? _For))
+        if (FirstRun)
         {
-            Required = FormHelper.IsRequired(_For!);
+            FirstRun = false;
+            if (parameters.TryGetValue(nameof(For), out System.Linq.Expressions.Expression<Func<MudBlazor.Utilities.MudColor>>? _For))
+            {
+                Required = FormHelper.IsRequired(_For!);
+            }
         }
 
         return base.SetParametersAsync(parameters);
