@@ -1028,6 +1028,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal async Task ExportList()
         {
             this.ExportIsInProgress = true;
+
             var name = Title != null && ExportTitleRegex().IsMatch(Title)
                 ? Title
                 : EntitySet ?? typeof(T).Name;
@@ -1114,6 +1115,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public void OnExportProcessed(bool isSuccess, string message)
         {
 
+            this.ExportIsInProgress = false;
+
             try
             {
                 if (!isSuccess) throw new InvalidOperationException(message);
@@ -1124,7 +1127,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 MessageService.Error(Loc["ShiftListForeignColumnError"], Loc["ShiftListForeignColumnError"], e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
 
-            this.ExportIsInProgress = false;
 
             StateHasChanged();
 
