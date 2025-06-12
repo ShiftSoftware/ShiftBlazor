@@ -331,7 +331,7 @@
                                 @if (_RenderSubmitButton)
                                 {
                                         <MudButtonGroup Color="Color.Primary" Variant="Variant.Text">
-                                            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
+                                            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" ButtonType="ButtonType.Button" Disabled="@DisableSubmit" OnClick="async() => await Form!.OnSubmit.InvokeAsync(Form.EditContext)">
                                                 @if (TaskInProgress == FormTasks.Save || TaskInProgress == FormTasks.SaveAsNew)
                                                 {
                                                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
