@@ -33,19 +33,14 @@ public class Debouncer
             CancellationTokenSource?.Cancel();
             CancellationTokenSource = new();
 
-            Task.Run(async () =>
-            {
-                try
+            Task.Delay(delayMilliseconds, CancellationTokenSource.Token)
+                .ContinueWith(async task =>
                 {
-                    await Task.Delay(delayMilliseconds, CancellationTokenSource.Token);
-                    if (!CancellationTokenSource.IsCancellationRequested)
+                    if (!task.IsCanceled)
                     {
                         await action();
                     }
-                }
-                catch (Exception) { }
-
-            });
+                }, TaskScheduler.Default);
         }
     }
 }
