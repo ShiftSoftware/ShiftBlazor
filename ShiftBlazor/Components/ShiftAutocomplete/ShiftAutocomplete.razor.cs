@@ -328,8 +328,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
 
     protected override void OnInitialized()
     {
-        Console.WriteLine($"IS NULL {EditContext == null}");
-
         if (string.IsNullOrWhiteSpace(EntitySet))
         {
             throw new ArgumentException("EntitySet parameter is required.", nameof(EntitySet));
