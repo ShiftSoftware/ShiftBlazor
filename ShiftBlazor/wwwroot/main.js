@@ -152,21 +152,6 @@ window.fixAllStickyColumns = function () {
     document.querySelectorAll("[id^='Grid-']").forEach(x => fixStickyColumn(x.id));
 }
 
-window.fixAutocompleteIndent = function (inputId) {
-    // calculate visible tags size
-    var input = document.getElementById(inputId);
-    var tags = input.getElementsByClassName("autocomplete-tags")[0];
-    var tagsWidth = tags.getBoundingClientRect().width;
-    input.querySelector("input").style.textIndent = tagsWidth + "px";
-
-    // calculate total tags size
-    var inputWidth = input.getBoundingClientRect().width;
-    var hiddenTags = input.getElementsByClassName("autocomplete-tags")[1];
-    var hiddenTagsWidth = hiddenTags.getBoundingClientRect().width;
-
-    return hiddenTagsWidth / inputWidth;
-}
-
 window.scrollToFirstError = function (id) {
     var form = document.getElementById(id);
     var element = form?.getElementsByClassName("mud-input-error")[0];
@@ -241,6 +226,15 @@ window.downloadFileFromUrl = function (fileName, url) {
     anchorElement.target = "_blank";
     anchorElement.click();
     anchorElement.remove();
+}
+
+window.getCursorPosition = function (inputId) {
+    const input = document.getElementById(inputId);
+    if (input && input.selectionStart !== undefined) {
+        return [input.selectionStart, input.selectionEnd];
+    }
+
+    return [-1, -1]; // Return -1 if the input is not found or selectionStart is not supported
 }
 
 window.addEventListener("keydown", handleKeydown);

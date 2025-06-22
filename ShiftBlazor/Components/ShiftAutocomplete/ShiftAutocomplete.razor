@@ -1,87 +1,301 @@
 ﻿@typeparam TEntitySet where TEntitySet : ShiftEntityDTOBase
-@inherits MudAutocomplete<ShiftEntitySelectDTO>
+
 @namespace ShiftSoftware.ShiftBlazor.Components
-@implements IODataComponent
 
-<div class="shift-autocomplete" id="@($"Input-{Id}")">
+<MudField InnerPadding="false"
+          Class="@Classname"
+          Style="@Style"
+          Disabled="@IsDisabled"
+          Variant="@Variant"
+          Error="@Error"
+          Underline="@Underline"
+          ErrorText="@ErrorText">
 
-@{
-    base.NoItemsTemplate = @<MudText Align="Align.Center" Class="px-4 py-1">No items found</MudText>;
-    base.ShrinkLabel = SelectedValues?.Count > 0;
+    <div class="@InputContainerClassname" @ref="ContainerRef" style="display: flex;">
 
-    if (ShiftItemTemplate != null && !MultiSelect)
-    {
-        base.ItemTemplate = (e) => @RenderItem(e.Value);
-    }
+        <MudStack Row Spacing="0" Wrap="Wrap.Wrap" Style="flex-grow: 1;" @onkeydown="FieldKeyDownHandler" @onkeyup="FieldKeyUpHandler">
 
-    if (MultiSelect)
-    {
-        base.ItemTemplate = (e) =>
-        {
-            return
-            @<MudStack Row>
-                <MudIcon Icon="@(SelectedValues?.Any(x => x.Value == e.Value) == true ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)" Class="mb-n1 mr-3" />
-                <MudText>
-                    @e.Text
-                </MudText>
-                <MudSpacer/>
-                @if (ShiftItemTemplate != null && e.Value != null)
-                {
-                    @RenderItem(e.Value);
-                }
-            </MudStack>;
-        };
-
-        var MultiSelectText = string.Join(", ", SelectedValues?.Select(x => x.Text) ?? new List<string>());
-
-        if (!string.IsNullOrWhiteSpace(_Placeholder) && string.IsNullOrWhiteSpace(MultiSelectText))
-        {
-            Class = _Class;
-            Placeholder = _Placeholder;
-        }
-        else if (SelectedValueTemplate == null)
-        {
-            Class = _Class + " " + MultiSelectClassName;
-            Placeholder = MultiSelectText;
-        }   
-    }
-
-    base.BuildRenderTree(__builder);
-}
-
-    @if (MultiSelect && SelectedValueTemplate != null)
-    {
-        <MudStack Row Spacing="0" Class="autocomplete-tags">
-            @if (SelectedValues != null)
+            @if (Adornment == Adornment.Start)
             {
-                if (ShrinkTags && SelectedValues.Count > 1)
+                <div class="mud-input-adornment">
+                    <MudIconButton Class="mud-input-adornment-icon-button mud-no-activator"
+                                    Icon="@CurrentIcon"
+                                    OnClick="@AdornmentClickHandler"
+                                    Edge="@Edge.Start"
+                                    Size="@AdornmentSize"
+                                    Color="@AdornmentColor"
+                                    aria-label="@AdornmentAriaLabel"
+                                    tabindex="-1"
+                                    @onmousedown:stopPropagation />
+                </div>
+            }
+
+            @if (MultiSelect && SelectedValues.Count > 0)
+            {
+                @for (var i = 0; i < SelectedValues.Count; i++)
                 {
-                    @SelectedValueTemplate(new ShiftEntitySelectDTO { Text = $"+{SelectedValues.Count - 1}" })
-                    @SelectedValueTemplate(SelectedValues.Last())
-                }
-                else
-                {
-                    foreach (var value in SelectedValues)
+                    var index = i;
+                    var item = SelectedValues.ElementAt(index);
+                    var isHighlighted = SelectedValuesIndex == index;
+                    var _class = isHighlighted ? ShiftAutocomplete<TEntitySet>.HighlightedClassname : string.Empty;
+                        
+                    @if (SelectedValuesTemplate != null)
                     {
-                        @SelectedValueTemplate(value);
+                        @SelectedValuesTemplate(new (this, item))
+                    }
+                    else
+                    {
+                        if (IsReadOnly || IsDisabled)
+                        {
+                            <MudChip @key="item"
+                                        Class="@_class"
+                                        Value="@item.Text"
+                                        Disabled="IsDisabled"/>
+                        }
+                        else
+                        {
+                            <MudChip @key="item"
+                                        @ondblclick="@(() => AddEditItem(item.Value))"
+                                        OnClose="() => RemoveSelected(item)"
+                                        OnClick="() => ChangeSelectedValuesIndex(index)"
+                                        Class="@_class"
+                                        Value="@item.Text"
+                                        T="string"/>
+                        }
                     }
                 }
             }
+
+            @if (IsIntitialValueLoading)
+            {
+                @if (LoadingTemplate != null)
+                {
+                    @LoadingTemplate
+                }
+                else
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                }
+                <MudSpacer/>
+            }
+            else if (InputTemplate != null)
+            {
+                @InputTemplate(new (this))
+            }
+            else
+            {
+                <MudTextField T="string"
+                              @ref="_InputRef"
+                              Underline="false"
+                              @onfocus="InputFocusHandler"
+                              OnBlur="InputBlurHandler"
+                              TextChanged="TextChangedHandler"
+                              TextUpdateSuppression="TextUpdateSuppression"
+                              KeyUpPreventDefault="true"
+                              InputId="@InputId"
+                              Immediate="true"
+                              Placeholder="@Placeholder"
+                              Style="@InputStyle"
+                              Class="@InputClassname"
+                              Value="Text" />
+            }
+
         </MudStack>
 
-        <MudStack Row Spacing="0" Class="autocomplete-tags" Style="visibility: hidden !important; opacity: 0 !important; pointer-events: none;">
-            @if (SelectedValues != null)
-            {
-                foreach (var value in SelectedValues)
+        <div style="height: 0;">
+            <div class="mud-input-adornment">
+
+                @if (IsLoading)
                 {
-                    @SelectedValueTemplate(value);
+                    @if (LoadingTemplate != null)
+                    {
+                        @LoadingTemplate
+                    }
+                    else
+                    {
+                        // use 0 width to not take space in the layout
+                        // otherwise it could push the input or chips down
+                        // when dropdown items are being loading
+                        <div style="width: 0; display: flex; justify-content: end;">
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Style="flex-shrink: 0;" />
+                        </div>
+                    }
                 }
+
+                @if (DisplayClearable)
+                {
+                    <MudIconButton OnClick="ClearSelected"
+                                   Icon="@Icons.Material.Filled.Clear"
+                                   Size="Size.Small"
+                                   Edge="@Edge.End"
+                                   tabindex="-1"/>
+                }
+
+                @if (DisplayQuickAdd)
+                {
+                    var itemId = MultiSelect ? null : Value?.Value;
+                    <MudIconButton OnClick="() => AddEditItem(itemId)"
+                                   Icon="@GetAdornmentIcon()"
+                                   Size="@AdornmentSize"
+                                   Edge="@Edge.End"
+                                   tabindex="-1"/>
+                }
+
+                @if (Adornment == Adornment.End)
+                {
+                    <MudIconButton Class="mud-input-adornment-icon-button mud-no-activator"
+                                   Icon="@CurrentIcon"
+                                   OnClick="@AdornmentClickHandler"
+                                   Edge="@Edge.End"
+                                   Size="@AdornmentSize"
+                                   Color="@AdornmentColor"
+                                   aria-label="@AdornmentAriaLabel"
+                                   tabindex="-1"
+                                   @onmousedown:stopPropagation />
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <MudInputLabel Class="shift-autocomplete-label mud-input-label-inputcontrol"
+                   Disabled="@IsDisabled"
+                   Variant="@Variant"
+                   ForId="@InputId">
+        @Label
+    </MudInputLabel>
+
+    <MudPopover RelativeWidth="DropdownWidth.Relative"
+                MaxHeight="@MaxHeight"
+                Open="IsDropdownOpen"
+                AnchorOrigin="@AnchorOrigin"
+                TransformOrigin="@TransformOrigin"
+                OverflowBehavior="@OverflowBehavior"
+                Fixed="@DropdownFixed"
+                Class="@DropdownClass">
+        @if (DropdownItems.Count > 0 || FreeInput && MultiSelect)
+        {
+            @BeforeItemsTemplate
+            <MudList T="TEntitySet" Class="@ListClass">
+                @for (var i = 0; i < DropdownItems.Count; i++)
+                {
+                    var index = i;
+                    var item = DropdownItems[index];
+                    var isHighlighted = HighlightedListItemIndex == index;
+                    var value = GetProperty(item, _DataValueField);
+                    var text = GetProperty(item, _DataTextField);
+                    var isSelected = SelectedValues?.Any(x => x.Value == value) == true;
+                    <MudListItem T="TEntitySet"
+                                 @key="item"
+                                 id="@GetItemId(i)"
+                                 OnClick="@(() => SelectItem(item))"
+                                 OnClickPreventDefault="true"
+                                 Class="@GetListItemClassname(isHighlighted)">
+
+                        @if (DropdownItemTemplate != null)
+                        {
+                            
+                            @DropdownItemTemplate(new()
+                            {
+                                IsHighlighted = isHighlighted,
+                                IsSelected = isSelected,
+                                Item = item,
+                                Value = value,
+                                Text = text,
+                                Index = index,
+                            });
+                        }
+                        else
+                        {
+                            if (MultiSelect)
+                            {
+                                <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)" Class="mb-n1 mr-3" />
+                            }
+                            @text
+                        }
+                    </MudListItem>
+                }
+
+                @if (MultiSelect && FreeInput && !string.IsNullOrWhiteSpace(Text))
+                {
+                    <MudListItem id="@GetItemId(DropdownItems.Count)" OnClick="() => AddFreeInputValue()" Class="@GetListItemClassname(HighlightedListItemIndex >= DropdownItems.Count)">
+                        Add New
+                    </MudListItem>
+                }
+            </MudList>
+
+            @AfterItemsTemplate
+        }
+        else
+        {
+            if (NoItemsTemplate != null)
+            {
+                @NoItemsTemplate
             }
-        </MudStack>
+            else
+            {
+                <MudAlert>No Items found</MudAlert>
+            }
+        }
+
+    </MudPopover>
+</MudField>
+
+@* @if (IsLoading)
+{
+    <MudProgressLinear Indeterminate Color="Color.Primary" Size="Size.Small"/>
+} *@
+
+<MudOverlay Visible="IsDropdownOpen" LockScroll="@LockScroll" AutoClose OnClosed="() => CloseDropdown()"></MudOverlay>
+
+
+<style>
+
+    .shift-autocomplete .mud-input-slot-nopadding {
+        padding: 0 !important;
     }
 
-</div>
+    .shift-autocomplete .shift-autocomplete-input-container {
+        align-items: center;
+    }
 
-<CascadingValue Value="this">
-    @ChildContent
-</CascadingValue>
+    .shift-autocomplete .shift-autocomplete-input-container.mud-input-text-with-label {
+        margin-top: 16px;
+    }
+
+    .shift-autocomplete .shift-autocomplete-label {
+        color: var(--mud-palette-text-secondary);
+        padding: 0;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.15rem;
+        letter-spacing: .00938em;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .shift-autocomplete .shift-autocomplete-label.mud-input-label-outlined {
+        background-color: #fff;
+    }
+
+    .shift-autocomplete .shift-autocomplete-label.mud-disabled
+    {
+        color: var(--mud-palette-text-disabled) !important;
+    }
+
+    .shift-autocomplete .shift-autocomplete-input-container:focus-within ~ label.shift-autocomplete-label {
+        color: var(--mud-palette-primary);
+    }
+
+    .highlighted-selected-value {
+        background-color: var(--mud-palette-action-disabled);
+    }
+
+    .shift-autocomplete .mud-input-filled .shift-autocomplete-input input.mud-input-root {
+        padding: 27px 12px 10px;
+    }
+
+    .shift-autocomplete .mud-input-outlined .shift-autocomplete-input input.mud-input-root {
+        padding: 18.5px 14px;
+    }
+</style>
