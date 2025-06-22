@@ -296,14 +296,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     { "CancelText",  Loc["DeleteDecline"].ToString()}
                 };
 
-                var result = await DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+                var dialogReference = await DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                     NoHeader = true,
                     CloseOnEscapeKey = false,
-                }).Result;
+                });
 
-                if (!result.Canceled)
+                var result = await dialogReference.Result;
+
+                if (result?.Canceled != true)
                 {
                     var url = ItemUrl + "?ignoreGlobalFilters";
                     using (var res = await Http.DeleteAsync(ItemUrl))
@@ -417,8 +419,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal override async Task SetMode(FormModes mode)
         {
+            var _previousMode = Mode;
             await base.SetMode(mode);
             SetTitle();
+
+            if (AutoFocus && _previousMode <= FormModes.Archive && mode >= FormModes.Edit)
+            {
+                await ContentContainerRef.MudFocusFirstAsync();
+            }
         }
 
         internal async Task SetValue(T? value, bool copyValue = true)
@@ -514,7 +522,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     { "Icon", Icons.Material.Filled.Error },
                 };
 
-                DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+                _ = DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                     NoHeader = true,
@@ -640,8 +648,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     CloseOnEscapeKey = false,
                 };
 
-                var result = await DialogService.Show<RevisionViewer>("", dParams, options).Result;
-                date = (DateTimeOffset?)result.Data;
+                var dialogReference = await DialogService.ShowAsync<RevisionViewer>("", dParams, options);
+                var result = await dialogReference.Result;
+                date = (DateTimeOffset?)result?.Data;
             });
 
             if (date == null)
