@@ -135,6 +135,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
     [Parameter]
     public bool TextUpdateSuppression { get; set; } = true;
 
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
     // ======== Classes and Styles =========
     [Parameter]
     public string? Class { get; set; }
@@ -247,7 +250,10 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
     [Parameter]
     public EventCallback<bool> OnDropdownStateChanged { get; set; }
 
-    // ======= FilterableComponent Properties =======
+    // ======= Filter Properties =======
+
+    [Parameter]
+    public Action<ODataFilterGenerator>? Filter { get; set; }
     public bool FilterImmediate { get; set; }
     public RenderFragment? FilterTemplate { get; set; }
     public ODataFilterGenerator ODataFilters { get; private set; } = new ODataFilterGenerator(true);
@@ -388,6 +394,13 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
         {
             var filter = new ODataFilterGenerator().Add(_DataTextField, ODataOperator.Contains, searchQuery);
             filters.Add(filter.ToString());
+        }
+
+        if (Filter != null)
+        {
+            var filter = new ODataFilterGenerator(true, Id);
+            Filter.Invoke(filter);
+            ODataFilters.Add(filter);
         }
 
         if (ODataFilters.Count > 0)

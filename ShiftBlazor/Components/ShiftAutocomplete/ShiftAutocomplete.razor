@@ -248,6 +248,10 @@
 
 <MudOverlay Visible="IsDropdownOpen" LockScroll="@LockScroll" AutoClose OnClosed="() => CloseDropdown()"></MudOverlay>
 
+<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
 
 <style>
 
