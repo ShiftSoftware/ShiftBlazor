@@ -20,7 +20,7 @@ using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisposable where TEntitySet : ShiftEntityDTOBase
+public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShortcutComponent, IDisposable where TEntitySet : ShiftEntityDTOBase
 {
     [Inject] private SettingManager SettingManager { get; set; } = default!;
     [Inject] private HttpClient Http { get; set; } = default!;
@@ -288,6 +288,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
     public static readonly string HighlightedClassname = "highlighted-selected-value";
     public Guid Id { get; private set; } = Guid.NewGuid();
     public string InputId => "Input" + Id.ToString().Replace("-", string.Empty);
+    public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
 
     public bool IsDropdownOpen { get; private set; } = false;
     public bool IsFocused { get; private set; } = false;
@@ -368,6 +369,19 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
         _ = UpdateInitialValue();
 
         base.OnInitialized();
+    }
+
+    public async ValueTask HandleShortcut(KeyboardKeys key)
+    {
+        // inheriting IShortcutComponent will allow us
+        // to close the dropdown menu without
+        // closing the modal if the input is inside a form
+        switch (key)
+        {
+            case KeyboardKeys.Escape:
+                await CloseDropdown();
+                break;
+        }
     }
 
     private void DebouncedFetchItems(string? searchQuery = null)
@@ -518,18 +532,24 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
         return url;
     }
 
-    public async Task OpenDropdown(bool selectText = true)
+    public async Task OpenDropdown(bool selectText = true, bool fetchItems = true)
     {
+        if (IsDropdownOpen)
+        {
+            return;
+        }
+
+        IShortcutComponent.Register(this);
+        await OnDropdownStateChanged.InvokeAsync(true);
+
         if (selectText && _InputRef != null)
         {
             await _InputRef.SelectAsync();
         }
-        await FetchItems();
 
-        // If the dropdown is already open, do not call the event
-        if (!IsDropdownOpen)
+        if (fetchItems)
         {
-            await OnDropdownStateChanged.InvokeAsync(true);
+            await FetchItems();
         }
 
         IsDropdownOpen = true;
@@ -537,11 +557,14 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
 
     public async Task CloseDropdown(bool clearText = true)
     {
-        // If the dropdown is already closed, do not call the event
-        if (IsDropdownOpen)
+        IShortcutComponent.Remove(Id);
+
+        if (!IsDropdownOpen)
         {
-            await OnDropdownStateChanged.InvokeAsync(false);
+            return;
         }
+
+        await OnDropdownStateChanged.InvokeAsync(false);
 
         IsDropdownOpen = false;
         if (MultiSelect && clearText)
@@ -751,7 +774,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
         {
             if (!IsDropdownOpen)
             {
-                await OpenDropdown(false);
+                await OpenDropdown(false, false);
             }
 
             DebouncedFetchItems(text);
@@ -872,9 +895,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
                     await OpenDropdown();
                 }
 
-                break;
-            case "Escape":
-            await CloseDropdown();
                 break;
         }
 
@@ -1111,5 +1131,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IDisp
             EditContext.OnValidationStateChanged -= OnValidationStateChanged;
         }
         FetchToken.Dispose();
+        IShortcutComponent.Remove(Id);
     }
 }
