@@ -5,7 +5,6 @@ namespace ShiftSoftware.ShiftBlazor.Interfaces
     public interface IShortcutComponent : IDisposable
     {
         public Guid Id { get; }
-        public string Title { get; set; }
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; }
         public ValueTask HandleShortcut(KeyboardKeys actions);
 
