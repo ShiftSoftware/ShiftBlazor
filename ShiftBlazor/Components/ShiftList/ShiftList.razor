@@ -314,6 +314,18 @@
 
                     <ShiftSoftware.ShiftBlazor.Components.ShiftList.Flags.HasDraftColumn T="T" />
 
+                    @if (EnablePrintColumn)
+                    {
+                        var color = PrintConfig?.Color ?? Color.Default;
+                        var icon = PrintConfig?.Icon ?? Icons.Material.Filled.Print;
+                        <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="Print">
+                            <CellTemplate>
+                                <div>
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="@color" StartIcon="@icon" OnClick="() => PrintItem(context.Item.ID!)">Print</MudButton>
+                                </div>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    }
 
                     @if (!DisableActionColumn && ComponentType != null)
                     {
