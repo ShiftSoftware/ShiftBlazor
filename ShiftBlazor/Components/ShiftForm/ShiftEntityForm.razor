@@ -247,7 +247,7 @@
                                         var errorText = EditContext.GetValidationMessages(fieldId).FirstOrDefault();
                                         <ShiftAutocomplete Label="@Loc["BrandAutocompleteLabel"]"
                                                            Value="dtoWithBrand.Brand"
-                                                           ValueChanged="(value) => { dtoWithBrand.Brand = value; EditContext.NotifyFieldChanged(fieldId);}"
+                                                           ValueChanged="(value) => { if (value != dtoWithBrand.Brand) { dtoWithBrand.Brand = value;EditContext.NotifyFieldChanged(fieldId);} }"
                                                            TEntitySet="ShiftSoftware.ShiftIdentity.Core.DTOs.Brand.BrandListDTO"
                                                            EntitySet="IdentityBrand"
                                                            BaseUrlKey="ShiftIdentityApi"
@@ -270,7 +270,7 @@
                                         <MudCheckBoxExtended Label="@Loc["DraftVersionCheckboxLabel"]"
                                                              Value="dtoWithDraftFlag.IsDraft"
                                                              T="bool?"
-                                                             ValueChanged="(value) => { dtoWithDraftFlag.IsDraft = value; EditContext.NotifyFieldChanged(fieldId);}"
+                                                             ValueChanged="(value) => { if (value != dtoWithDraftFlag.IsDraft) { dtoWithDraftFlag.IsDraft = value; EditContext.NotifyFieldChanged(fieldId);} }"
                                                              For="() => dtoWithDraftFlag.IsDraft"
                                                              Error="!EditContext.IsValid(fieldId)"
                                                              ErrorText="@errorText"/>
