@@ -43,7 +43,7 @@ public class ActionButton<T> : MudButtonExtended
     /// Executes before the default confirmation dialog is shown.
     /// </summary>
     [Parameter]
-    public Func<SelectState<T>, ValueTask<bool>>? OnDefaultDiaogOpen { get; set; }
+    public Func<SelectState<T>, ValueTask<bool>>? OnDefaultDialogOpen { get; set; }
 
 
     /// <summary>
@@ -106,6 +106,9 @@ public class ActionButton<T> : MudButtonExtended
     /// </summary>
     [Parameter]
     public MaxWidth DialogWidth { get; set; } = MaxWidth.ExtraSmall;
+
+    [Parameter]
+    public bool NoHeader { get; set; }
 
     /// <summary>
     /// The confirmation dialog body template, this will replace the DialogTextTemplate.
@@ -251,8 +254,15 @@ public class ActionButton<T> : MudButtonExtended
             { "Selected", ShiftListGeneric?.SelectState ?? new() },
         };
 
-        var result = await (DialogService.Show(ComponentType, "", parameters).Result);
-        return !result.Canceled;
+        var dialogOptions = new DialogOptions
+        {
+            MaxWidth = DialogWidth,
+            NoHeader = NoHeader,
+        };
+
+        var dialogReference = await DialogService.ShowAsync(ComponentType, "", parameters);
+        var result = await dialogReference.Result;
+        return !result?.Canceled;
     }
 
     private EventCallback<MouseEventArgs> CreateEvent(Func<ValueTask<bool?>> action)
@@ -306,9 +316,9 @@ public class ActionButton<T> : MudButtonExtended
                         { "CancelText",  cancelText },
                     };
 
-                    if (this.OnDefaultDiaogOpen is not null && ShiftListGeneric is not null)
+                    if (this.OnDefaultDialogOpen is not null && ShiftListGeneric is not null)
                     {
-                        var continueWithShowingTheDialog = await this.OnDefaultDiaogOpen.Invoke(ShiftListGeneric.SelectState);
+                        var continueWithShowingTheDialog = await this.OnDefaultDialogOpen.Invoke(ShiftListGeneric.SelectState);
 
                         if (!continueWithShowingTheDialog)
                         {
@@ -320,20 +330,22 @@ public class ActionButton<T> : MudButtonExtended
                         }
                     }
 
-                    var result = await DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+                    var dialogReference = await DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
                     {
                         MaxWidth = DialogWidth,
                         NoHeader = true,
                         CloseOnEscapeKey = false,
-                    }).Result;
+                    });
 
-                    userCanceled = result.Canceled;
+                    var result = await dialogReference.Result;
+
+                    userCanceled = result?.Canceled == true;
                     // Only reload if user doesn't cancel the confirmation dialog.
                     if (!userCanceled)
                     {
                         success = await action.Invoke();
-                }
                     }
+                }
                 else
                 {
                     success = await action.Invoke();

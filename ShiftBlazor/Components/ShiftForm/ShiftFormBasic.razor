@@ -13,7 +13,7 @@
 
 <CascadingValue Value="this" Name="ShiftForm">
 <article style="height: 100%;" id="@($"Form-{Id}")">
-    <MudFocusTrap Disabled="MudDialog == null">
+    <MudFocusTrap Disabled="MudDialog == null" DefaultFocus="DefaultFocus.Element">
         
         <MudPaper Elevation="25" Style="height: 100%;">
 
@@ -78,7 +78,7 @@
                 }
                 @* <ValidationSummary></ValidationSummary> *@
 
-                <div class="@ContentCssClass">
+                <div @ref="ContentContainerRef" class="@ContentCssClass">
                     <div class="pa-6">
                         <CascadingValue Value="Mode < FormModes.Edit" Name="@FormHelper.ParentReadOnlyName">
                         <CascadingValue Value="TaskInProgress != FormTasks.None" Name="@FormHelper.ParentDisabledName">
@@ -138,7 +138,7 @@
 
                             @if (_RenderSubmitButton)
                             {
-                                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@DisableSubmit">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Color="Color.Primary" ButtonType="ButtonType.Button" OnClick="async () => await Form!.OnSubmit.InvokeAsync(Form.EditContext)" Disabled="@DisableSubmit">
                                     @if (TaskInProgress == FormTasks.Save)
                                     {
                                         <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />

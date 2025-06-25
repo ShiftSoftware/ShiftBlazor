@@ -39,6 +39,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
             services.AddScoped<ODataQuery>();
             services.AddScoped<ShiftModal>();
             services.AddScoped<MessageService>();
+            services.AddScoped<PrintService>();
             services.AddScoped(x =>
             {
                 return new SettingManager(x.GetRequiredService<ISyncLocalStorageService>(),

@@ -3,14 +3,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Components.Print;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
@@ -33,6 +35,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] MessageService MessageService { get; set; } = default!;
         [Inject] NavigationManager NavigationManager { get; set; } = default!;
+        [Inject] PrintService PrintService { get; set; } = default!;
 
         [CascadingParameter]
         protected IMudDialogInstance? MudDialog { get; set; }
@@ -316,6 +319,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public RenderFragment? FilterTemplate {  get; set; }
 
+        [Parameter]
+        public bool EnablePrintColumn { get; set; }
+
+        [Parameter]
+        public PrintFormConfig? PrintConfig { get; set; }
+
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -386,6 +395,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public bool ExportIsInProgress { get; private set; } = false;
 
+        private string GetPath()
+        {
+            string? url = BaseUrl;
+
+            if (url is null && BaseUrlKey is not null)
+                url = SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey);
+
+            if (url is null)
+                return SettingManager.Configuration.BaseAddress;
+
+            return url;
+        }
+
         protected override void OnInitialized()
         {
             dotNetRef = DotNetObjectReference.Create(this);
@@ -407,7 +429,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (EntitySet != null)
             {
-                string? url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
+                string? url = GetPath();
                 
                 QueryBuilder = OData
                     .CreateNewQuery<T>(EntitySet, url)
@@ -1178,6 +1200,24 @@ namespace ShiftSoftware.ShiftBlazor.Components
             else
             {
                 Debouncer.Debounce(100, DataGrid!.ReloadServerData);
+            }
+        }
+
+        private async Task PrintItem(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return;
+            }
+
+            var url = GetPath().AddUrlPath(EntitySet);
+            if (PrintConfig == null)
+            {
+                await PrintService.PrintAsync(url, id);
+            }
+            else
+            {
+                await PrintService.OpenPrintFormAsync(url, id, PrintConfig);
             }
         }
 
