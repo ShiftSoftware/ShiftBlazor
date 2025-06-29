@@ -135,6 +135,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
+    [Parameter]
+    public bool SelectedValueCounter { get; set; }
+
     // ======== Classes and Styles =========
     [Parameter]
     public string? Class { get; set; }
@@ -292,6 +295,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     public bool IsLoading => FetchTokenSource?.IsCancellationRequested == false;
     public bool IsIntitialValueLoading => InitialUpdateTokenSource?.IsCancellationRequested == false;
     public string Text { get; private set; } = string.Empty;
+    private bool IsSelectedValueCounterOpen { get; set; }
 
     internal string _DataValueField = string.Empty;
     internal string _DataTextField = string.Empty;
@@ -386,6 +390,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         {
             case KeyboardKeys.Escape:
                 await CloseDropdown();
+                if (SelectedValueCounter)
+                {
+                    CloseSelectedValueCounter();
+                }
+                StateHasChanged();
                 break;
         }
     }
@@ -586,6 +595,10 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         }
 
         IsFocused = true;
+        if (SelectedValueCounter)
+        {
+            CloseSelectedValueCounter();
+        }
 
         if (OnInputFocus != null && await OnInputFocus.Invoke() == false)
         {
@@ -832,6 +845,10 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
                 if (IsFocused)
                 {
                     await CloseDropdown();
+                }
+                if (SelectedValueCounter)
+                {
+                    CloseSelectedValueCounter();
                 }
                 break;
             case "ArrowDown":
@@ -1087,11 +1104,15 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
         var index = SelectedValuesIndex;
 
+        var chipCounter = SelectedValueCounter
+            ? SelectedValues.Count > 0 ? 1 : 0
+            : SelectedValues.Count;
+
         if (direction < 0 && SelectedValuesIndex > 0)
         {
-            index = int.Min(SelectedValuesIndex, SelectedValues.Count) - 1;
+            index = int.Min(SelectedValuesIndex, chipCounter) - 1;
         }
-        else if (direction > 0 && SelectedValuesIndex < SelectedValues.Count)
+        else if (direction > 0 && SelectedValuesIndex < chipCounter)
         {
             index++;
         }
@@ -1127,6 +1148,26 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             StateHasChanged();
         }
     }
+
+    private void SelectedValueCounterFocusHandler()
+    {
+        if (!IsSelectedValueCounterOpen)
+        {
+            IsSelectedValueCounterOpen = true;
+        }
+    }
+
+    private void CloseSelectedValueCounter()
+    {
+        if (IsSelectedValueCounterOpen)
+        {
+            IsSelectedValueCounterOpen = false;
+        }
+    }
+
+    // we don't wanna do anything on click as the Menu component will handle click
+    // We only add this handler to make the component focusable
+    private void SelectedValueCounterClickHandler() { }
 
     public void AddFilter(Guid id, string field, ODataOperator op, object? value)
     {

@@ -32,37 +32,22 @@
 
             @if (MultiSelect && SelectedValues?.Count > 0)
             {
-                @for (var i = 0; i < SelectedValues.Count; i++)
+                @if (SelectedValueCounter)
                 {
-                    var index = i;
-                    var item = SelectedValues.ElementAt(index);
-                    var isHighlighted = SelectedValuesIndex == index;
-                    var _class = isHighlighted ? ShiftAutocomplete<TEntitySet>.HighlightedClassname : string.Empty;
-                        
-                    @if (SelectedValuesTemplate != null)
-                    {
-                        @SelectedValuesTemplate(new (this, item))
-                    }
-                    else
-                    {
-                        if (IsReadOnly || IsDisabled)
-                        {
-                            <MudChip @key="item"
-                                        Class="@_class"
-                                        Value="@item.Text"
-                                        Disabled="IsDisabled"/>
-                        }
-                        else
-                        {
-                            <MudChip @key="item"
-                                        @ondblclick="@(() => AddEditItem(item.Value))"
-                                        OnClose="() => RemoveSelected(item)"
-                                        OnClick="() => ChangeSelectedValuesIndex(index)"
-                                        Class="@_class"
-                                        Value="@item.Text"
-                                        T="string"/>
-                        }
-                    }
+                    <MudMenu MaxHeight="@MaxHeight" @bind-Open="IsSelectedValueCounterOpen">
+                        <ActivatorContent>
+                            <MudChip T="int" OnClick="SelectedValueCounterClickHandler" @onfocus="SelectedValueCounterFocusHandler" Value="SelectedValues.Count"/>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudStack>
+                                @SelectedValuesRenderFragment
+                            </MudStack>
+                        </ChildContent>
+                    </MudMenu>
+                }
+                else
+                {
+                    @SelectedValuesRenderFragment
                 }
             }
 
@@ -303,3 +288,39 @@
         padding: 18.5px 14px;
     }
 </style>
+
+@code {
+    private RenderFragment SelectedValuesRenderFragment =>@<text>
+
+        @for (var i = 0; i < SelectedValues.Count; i++)
+        {
+            var index = i;
+            var item = SelectedValues.ElementAt(index);
+            var isHighlighted = SelectedValuesIndex == index;
+            var _class = isHighlighted ? ShiftAutocomplete<TEntitySet>.HighlightedClassname : string.Empty;
+                        
+            @if (SelectedValuesTemplate != null)
+            {
+                @SelectedValuesTemplate(new (this, item))
+            }
+            else if (IsReadOnly || IsDisabled)
+            {
+                <MudChip @key="item"
+                            Class="@_class"
+                            Value="@item.Text"
+                            Disabled="IsDisabled"/>
+            }
+            else
+            {
+                <MudChip @key="item"
+                            @ondblclick="@(() => AddEditItem(item.Value))"
+                            OnClose="() => RemoveSelected(item)"
+                            OnClick="() => ChangeSelectedValuesIndex(index)"
+                            Class="@_class"
+                            Value="@item.Text"
+                            T="string"/>
+            }
+        }
+    
+    </text>;
+}
