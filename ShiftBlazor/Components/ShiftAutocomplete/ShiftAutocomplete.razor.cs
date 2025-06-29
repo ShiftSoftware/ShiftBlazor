@@ -45,7 +45,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     public EventCallback<ShiftEntitySelectDTO?> ValueChanged { get; set; }
 
     [Parameter]
-    public List<ShiftEntitySelectDTO> SelectedValues { get; set; } = [];
+    public List<ShiftEntitySelectDTO>? SelectedValues { get; set; } = [];
 
     [Parameter]
     public EventCallback<List<ShiftEntitySelectDTO>> SelectedValuesChanged { get; set; }
@@ -77,9 +77,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     [Parameter]
     public bool MultiSelect { get; set; }
-
-    [Parameter]
-    public bool SimplifyResponseData { get; set; }
 
     [Parameter]
     public int MaxItems { get; set; } = 25;
@@ -271,7 +268,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     protected string InputContainerClassname =>
             new CssBuilder("shift-autocomplete-input-container")
                 .AddClass($"mud-input-{Variant.ToDescriptionString()}-with-label", !string.IsNullOrEmpty(Label))
-                .AddClass("mud-shrink", !string.IsNullOrWhiteSpace(Text) || IsFocused || SelectedValues.Count > 0 || Adornment == Adornment.Start || !string.IsNullOrWhiteSpace(Placeholder))
+                .AddClass("mud-shrink", !string.IsNullOrWhiteSpace(Text) || IsFocused || SelectedValues?.Count > 0 || Adornment == Adornment.Start || !string.IsNullOrWhiteSpace(Placeholder))
                 .Build();
 
     protected string InputClassname =>
@@ -307,9 +304,10 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     private string CurrentIcon => !string.IsNullOrWhiteSpace(AdornmentIcon) ? AdornmentIcon : IsDropdownOpen ? OpenIcon : CloseIcon;
 
-    private List<TEntitySet> DropdownItems { get; set; } = [];
+    public List<TEntitySet> DropdownItems { get; private set; } = [];
 
-    private CancellationTokenSource FetchToken = new CancellationTokenSource();
+    private CancellationTokenSource FetchTokenSource = new CancellationTokenSource();
+    private CancellationTokenSource InitialUpdateTokenSource = new CancellationTokenSource();
 
     private MudTextField<string>? _InputRef;
     private ElementReference ContainerRef = default!;
@@ -318,19 +316,30 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     private bool IsDisabled => ParentDisabled || Disabled;
     private bool IsReadOnly => ParentReadOnly || ReadOnly;
-    private bool DisplayClearable => Clearable && !IsReadOnly && !IsDisabled && ( !string.IsNullOrWhiteSpace(Text) || Value != null || SelectedValues.Count != 0);
+    private bool DisplayClearable => Clearable && !IsReadOnly && !IsDisabled && ( !string.IsNullOrWhiteSpace(Text) || Value != null || SelectedValues?.Count > 0);
     private bool DisplayQuickAdd => QuickAddComponentType != null && (Value != null || Value == null && !IsReadOnly && !IsDisabled);
 
     public override Task SetParametersAsync(ParameterView parameters)
     {
         // Set Text property if Value is changed
         var value = parameters.GetValueOrDefault<ShiftEntitySelectDTO?>(nameof(Value));
-        if ((value?.Value != Value?.Value || value?.Text != Value?.Text) && !MultiSelect)
+        if (!MultiSelect && (value?.Value != Value?.Value || value?.Text != Value?.Text))
         {
             Text = value?.Text ?? string.Empty;
         }
 
         return base.SetParametersAsync(parameters);
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Try reloading items that only have Value set, but no Text
+        if (MultiSelect && SelectedValues?.Any(x => x.Value != null && x.Text == null) == true)
+        {
+            _ = UpdateInitialValue();
+        }
+
+        base.OnParametersSet();
     }
 
     protected override void OnInitialized()
@@ -343,8 +352,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         // If no DataValueField or DataTextField is provided, use the ShiftEntityKeyAndNameAttribute if available
         // these two variables are the names of the properties used for the value and text of the items
         var shiftEntityKeyAndNameAttribute = Misc.GetAttribute<TEntitySet, ShiftEntityKeyAndNameAttribute>();
-        _DataValueField = DataValueField ?? shiftEntityKeyAndNameAttribute?.Value ?? "";
-        _DataTextField = DataTextField ?? shiftEntityKeyAndNameAttribute?.Text ?? "";
+        _DataValueField = DataValueField ?? shiftEntityKeyAndNameAttribute?.Value ?? string.Empty;
+        _DataTextField = DataTextField ?? shiftEntityKeyAndNameAttribute?.Text ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(_DataValueField))
             throw new ArgumentNullException(nameof(DataValueField));
@@ -364,9 +373,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         {
             Text = Value.Text;
         }
-
-        // Try reloading items that only have Value set, but no Text
-        _ = UpdateInitialValue();
 
         base.OnInitialized();
     }
@@ -397,11 +403,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         var builder = OData
                 .CreateNewQuery<TEntitySet>(EntitySet, GetPath());
 
-        if (SimplifyResponseData)
-        {
-            builder = builder.AddQueryOption("$select", $"{_DataValueField},{_DataTextField}");
-        }
-
         var filters = Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         
         if (!string.IsNullOrWhiteSpace(searchQuery))
@@ -430,14 +431,14 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
         var url = builder.Take(MaxItems).ToString();
         
-        FetchToken.Cancel();
-        FetchToken.Dispose();
-        FetchToken = new CancellationTokenSource();
+        FetchTokenSource.Cancel();
+        FetchTokenSource.Dispose();
+        FetchTokenSource = new CancellationTokenSource();
         StateHasChanged();
 
         try
         {
-            using var res = await Http.GetAsync(url, FetchToken.Token);
+            using var res = await Http.GetAsync(url, FetchTokenSource.Token);
             var items = await ParseEntityResponse(res);
             DropdownItems = items ?? [];
         }
@@ -447,7 +448,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         catch (OperationCanceledException)
         {
         }
-        catch (Exception e)
+        catch (Exception)
         {
             Console.WriteLine("fetch error");
         }
@@ -572,7 +573,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             Text = string.Empty;
         }
 
-        FetchToken.Cancel();
+        FetchTokenSource.Cancel();
     }
 
     internal async Task InputFocusHandler()
@@ -642,6 +643,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             // If the item is not selected, add it to the selected values
             if (!await RemoveSelected(item))
             {
+                SelectedValues ??= [];
                 SelectedValues.Add(item);
                 await SelectedValuesChanged.InvokeAsync(SelectedValues);
             }
@@ -655,6 +657,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     public async Task<bool> RemoveSelected(ShiftEntitySelectDTO item)
     {
+        if (SelectedValues == null || SelectedValues.Count == 0)
+        {
+            return false;
+        }
+
         // If the item has no value, compare by text only
         // For when the item is a free input value
         var match = SelectedValues.FirstOrDefault(x =>
@@ -904,7 +911,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     {
         if (MultiSelect)
         {
-            SelectedValues.Clear();
+            SelectedValues?.Clear();
             await SelectedValuesChanged.InvokeAsync(SelectedValues);
         }
         else
@@ -949,7 +956,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     private async Task UpdateInitialValue()
     {
         var values = MultiSelect
-            ? SelectedValues
+            ? SelectedValues ?? []
             : Value != null ? [Value] : [];
 
         var itemsToLoad = values.Where(x => x.Value != null && x.Text == null);
@@ -961,6 +968,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
         var ids = itemsToLoad.Select(x => x.Value).Distinct();
 
+        InitialUpdateTokenSource.Cancel();
+        InitialUpdateTokenSource.Dispose();
+        InitialUpdateTokenSource = new CancellationTokenSource();
         IsIntitialValueLoading = true;
         StateHasChanged();
 
@@ -972,7 +982,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             var url = builder.WhereQuery(x => ids.Contains(x.ID))
                     .ToString();
 
-            using var res = await Http.GetAsync(url, FetchToken.Token);
+            using var res = await Http.GetAsync(url, InitialUpdateTokenSource.Token);
             var items = await ParseEntityResponse(res);
 
             ShiftEntitySelectDTO? itemFound = null;
@@ -991,14 +1001,12 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
             }
 
-            if (MultiSelect)
-            {
-                await SelectedValuesChanged.InvokeAsync(SelectedValues);
-            }
-            else
-            {
-                await SetValue(itemFound);
-            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        catch (OperationCanceledException)
+        {
         }
         catch (Exception e)
         {
@@ -1035,7 +1043,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             return;
         }
 
-        if (index >= 0 && index < SelectedValues.Count)
+        if (index >= 0 && index < SelectedValues?.Count)
         {
             SelectedValuesIndex = index;
         }
@@ -1049,7 +1057,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     private async Task FocusSelectedValue(int index)
     {
-        if (index >= 0 && index < SelectedValues.Count)
+        if (index >= 0 && index < SelectedValues?.Count)
         {
             await CloseDropdown();
             await ContainerRef.MudFocusFirstAsync(index);
@@ -1062,7 +1070,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     public async Task MoveSelectedValuesIndex(int direction)
     {
-        if (!MultiSelect && SelectedValues.Count > 0)
+        if (!MultiSelect && SelectedValues?.Count > 0)
         {
             return;
         }
@@ -1130,7 +1138,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         {
             EditContext.OnValidationStateChanged -= OnValidationStateChanged;
         }
-        FetchToken.Dispose();
+        FetchTokenSource.Dispose();
         IShortcutComponent.Remove(Id);
     }
 }
