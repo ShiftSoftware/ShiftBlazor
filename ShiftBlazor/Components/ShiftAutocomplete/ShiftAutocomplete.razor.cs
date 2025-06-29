@@ -289,8 +289,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     public bool IsDropdownOpen { get; private set; } = false;
     public bool IsFocused { get; private set; } = false;
-    public bool IsLoading { get; private set; } = false;
-    public bool IsIntitialValueLoading { get; private set; } = false;
+    public bool IsLoading => FetchTokenSource?.IsCancellationRequested == false;
+    public bool IsIntitialValueLoading => InitialUpdateTokenSource?.IsCancellationRequested == false;
     public string Text { get; private set; } = string.Empty;
 
     internal string _DataValueField = string.Empty;
@@ -306,8 +306,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     public List<TEntitySet> DropdownItems { get; private set; } = [];
 
-    private CancellationTokenSource FetchTokenSource = new CancellationTokenSource();
-    private CancellationTokenSource InitialUpdateTokenSource = new CancellationTokenSource();
+    private CancellationTokenSource? FetchTokenSource;
+    private CancellationTokenSource? InitialUpdateTokenSource;
 
     private MudTextField<string>? _InputRef;
     private ElementReference ContainerRef = default!;
@@ -398,7 +398,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     private async Task FetchItems(string? searchQuery = null)
     {
         HighlightedListItemIndex = 0; // Reset the selected dropdown item
-        IsLoading = true;
 
         var builder = OData
                 .CreateNewQuery<TEntitySet>(EntitySet, GetPath());
@@ -431,8 +430,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
         var url = builder.Take(MaxItems).ToString();
         
-        FetchTokenSource.Cancel();
-        FetchTokenSource.Dispose();
+        FetchTokenSource?.Cancel();
+        FetchTokenSource?.Dispose();
         FetchTokenSource = new CancellationTokenSource();
         StateHasChanged();
 
@@ -453,9 +452,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             Console.WriteLine("fetch error");
         }
 
-        IsLoading = false;
+        FetchTokenSource.Cancel();
         StateHasChanged();
-
     }
 
     // copy from EnityForm
@@ -553,7 +551,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             await FetchItems();
         }
 
-        IsDropdownOpen = true;
+        // dont open the dropdown if list items are being fetched
+        if (!IsLoading)
+        {
+            IsDropdownOpen = true;
+        }
     }
 
     public async Task CloseDropdown(bool clearText = true)
@@ -573,7 +575,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             Text = string.Empty;
         }
 
-        FetchTokenSource.Cancel();
+        FetchTokenSource?.Cancel();
     }
 
     internal async Task InputFocusHandler()
@@ -826,8 +828,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             case "ArrowRight":
                 await MoveSelectedValuesIndex(+1);
                 break;
-
-
             case "Tab":
                 if (IsFocused)
                 {
@@ -841,7 +841,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
                     {
                         SelectDropdownItem(HighlightedListItemIndex + 1);
                     }
-                    else
+                    // don't attempt to open the dropdown if items are being fetched
+                    // otherwise this will just canceled the current fetch request
+                    else if (!IsLoading)
                     {
                         await OpenDropdown();
                     }
@@ -854,7 +856,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
                     {
                         SelectDropdownItem(HighlightedListItemIndex - 1);
                     }
-                    else
+                    else if (!IsLoading)
                     {
                         await OpenDropdown();
                     }
@@ -968,10 +970,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
         var ids = itemsToLoad.Select(x => x.Value).Distinct();
 
-        InitialUpdateTokenSource.Cancel();
-        InitialUpdateTokenSource.Dispose();
+        InitialUpdateTokenSource?.Cancel();
+        InitialUpdateTokenSource?.Dispose();
         InitialUpdateTokenSource = new CancellationTokenSource();
-        IsIntitialValueLoading = true;
         StateHasChanged();
 
         try
@@ -1010,11 +1011,10 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         }
         catch (Exception e)
         {
-            IsIntitialValueLoading = false;
             MessageService.Error("Failed to load initial data", "Failed to retrieve data", e.Message);
         }
 
-        IsIntitialValueLoading = false;
+        InitialUpdateTokenSource.Cancel();
         StateHasChanged();
     }
 
@@ -1070,7 +1070,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     public async Task MoveSelectedValuesIndex(int direction)
     {
-        if (!MultiSelect && SelectedValues?.Count > 0)
+        if (!MultiSelect || SelectedValues == null || SelectedValues.Count == 0)
         {
             return;
         }
@@ -1138,7 +1138,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         {
             EditContext.OnValidationStateChanged -= OnValidationStateChanged;
         }
-        FetchTokenSource.Dispose();
+        FetchTokenSource?.Dispose();
+        InitialUpdateTokenSource?.Dispose();
         IShortcutComponent.Remove(Id);
     }
 }
