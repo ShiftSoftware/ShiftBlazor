@@ -288,7 +288,7 @@ public class ODataFilterGenerator
             ODataOperator.IsEmpty or FilterOperator.String.Empty => "{0} eq null",
             ODataOperator.IsNotEmpty or FilterOperator.String.NotEmpty => "{0} ne null",
             ODataOperator.In => "{0} in ({1})",
-            ODataOperator.NotIn => "{0} in ({1}) eq false",
+            ODataOperator.NotIn => "not ({0} in ({1}))",
             _ => "{0} eq {1}",
         };
 
