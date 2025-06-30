@@ -57,14 +57,14 @@
             @if (IsIntitialValueLoading && (!SelectedValueCounter || (SelectedValueCounter && !MultiSelect)))
             {
                 <div style="width: 0;">
-                @if (LoadingTemplate != null)
-                {
-                    @LoadingTemplate
-                }
-                else
-                {
+                    @if (LoadingTemplate != null)
+                    {
+                        @LoadingTemplate
+                    }
+                    else
+                    {
                         <MudProgressCircular Indeterminate="true" Size="Size.Small" Style="flex-shrink: 0;"/>
-                }
+                    }
                 </div>
             }
             
@@ -172,8 +172,8 @@
                     var index = i;
                     var item = DropdownItems[index];
                     var isHighlighted = HighlightedListItemIndex == index;
-                    var value = GetProperty(item, _DataValueField);
-                    var text = GetProperty(item, _DataTextField);
+                    var value = GetProperty(item, DataValueField);
+                    var text = GetProperty(item, DataTextField);
                     var isSelected = SelectedValues?.Any(x => x.Value == value) == true;
                     <MudListItem T="TEntitySet"
                                  @key="item"
@@ -311,21 +311,21 @@
             else if (IsReadOnly || IsDisabled)
             {
                 <MudChip @key="item"
-                            Class="@_class"
-                            Value="@item.Text"
+                         Class="@_class"
+                         Value="@item.Text"
                          Size="Size.Small"
-                            Disabled="IsDisabled"/>
+                         Disabled="IsDisabled"/>
             }
             else
             {
                 <MudChip @key="item"
-                            @ondblclick="@(() => AddEditItem(item.Value))"
-                            OnClose="() => RemoveSelected(item)"
-                            OnClick="() => ChangeSelectedValuesIndex(index)"
+                         @ondblclick="@(() => AddEditItem(item.Value))"
+                         OnClose="() => RemoveSelected(item)"
+                         OnClick="() => ChangeSelectedValuesIndex(index)"
                          Size="Size.Small"
-                            Class="@_class"
-                            Value="@item.Text"
-                            T="string"/>
+                         Class="@_class"
+                         Value="@item.Text"
+                         T="string"/>
             }
         }
     

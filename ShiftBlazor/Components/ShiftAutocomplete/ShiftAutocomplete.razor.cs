@@ -61,12 +61,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     public string? BaseUrlKey { get; set; }
 
     [Parameter]
-    public string? DataValueField { get; set; }
-
-    [Parameter]
-    public string? DataTextField { get; set; }
-
-    [Parameter]
     public string? Label { get; set; }
 
     [Parameter]
@@ -210,12 +204,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     [Parameter]
     public string? QuickAddParameterName { get; set; }
 
-    [Parameter]
-    public string? QuickAddDataValueField { get; set; }
-
-    [Parameter]
-    public string? QuickAddDataTextField { get; set; }
-
     // ======== Events Parameters ========
     [Parameter]
     public EventCallback<List<TEntitySet>> OnEntityResponse { get; set; }
@@ -297,8 +285,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     public string Text { get; private set; } = string.Empty;
     private bool IsSelectedValueCounterOpen { get; set; }
 
-    internal string _DataValueField = string.Empty;
-    internal string _DataTextField = string.Empty;
+    internal string DataValueField = string.Empty;
+    internal string DataTextField = string.Empty;
 
     private int HighlightedListItemIndex { get; set; } = 0;
     internal int SelectedValuesIndex { get; set; } = int.MaxValue;
@@ -357,17 +345,16 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             throw new ArgumentException("EntitySet parameter is required.", nameof(EntitySet));
         }
 
-        // If no DataValueField or DataTextField is provided, use the ShiftEntityKeyAndNameAttribute if available
-        // these two variables are the names of the properties used for the value and text of the items
+
         var shiftEntityKeyAndNameAttribute = Misc.GetAttribute<TEntitySet, ShiftEntityKeyAndNameAttribute>();
-        _DataValueField = DataValueField ?? shiftEntityKeyAndNameAttribute?.Value ?? string.Empty;
-        _DataTextField = DataTextField ?? shiftEntityKeyAndNameAttribute?.Text ?? string.Empty;
 
-        if (string.IsNullOrWhiteSpace(_DataValueField))
-            throw new ArgumentNullException(nameof(DataValueField));
+        if (shiftEntityKeyAndNameAttribute == null)
+        {
+            throw new Exception($"The type {typeof(TEntitySet).Name} must be decorated with the [{nameof(ShiftEntityKeyAndNameAttribute)}] attribute.");
+        }
 
-        if (string.IsNullOrWhiteSpace(_DataTextField))
-            throw new ArgumentNullException(nameof(DataTextField));
+        DataValueField = shiftEntityKeyAndNameAttribute.Value;
+        DataTextField = shiftEntityKeyAndNameAttribute.Text;
 
         // Display validation errors if For is set and is inside a form
         if (For != null && EditContext != null)
@@ -420,7 +407,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {
-            var filter = new ODataFilterGenerator().Add(_DataTextField, ODataOperator.Contains, searchQuery);
+            var filter = new ODataFilterGenerator().Add(DataTextField, ODataOperator.Contains, searchQuery);
             filters.Add(filter.ToString());
         }
 
@@ -755,8 +742,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         var keyAndName = Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(quickAddType);
 
         // use the same field names as TEntitySet if QuickAddType doesn't have the attribute
-        var dataValueField = QuickAddDataValueField ?? keyAndName?.Value ?? _DataValueField;
-        var dataTextField = QuickAddDataTextField ?? keyAndName?.Text ?? _DataTextField;
+        var dataValueField = keyAndName?.Value ?? DataValueField;
+        var dataTextField = keyAndName?.Text ?? DataTextField;
 
         var value = quickAddType.GetProperty(dataValueField)?.GetValue(result.Data)?.ToString();
         var text = quickAddType.GetProperty(dataTextField)?.GetValue(result.Data)?.ToString();
@@ -778,8 +765,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     public ShiftEntitySelectDTO? ToSelectDTO(TEntitySet entity)
     {
-        var id = GetProperty(entity, _DataValueField);
-        var text = GetProperty(entity, _DataTextField);
+        var id = GetProperty(entity, DataValueField);
+        var text = GetProperty(entity, DataTextField);
 
         return new ShiftEntitySelectDTO
         {
@@ -1012,8 +999,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             ShiftEntitySelectDTO? itemFound = null;
             foreach (var item in items)
             {
-                var text = GetProperty(item, _DataTextField);
-                var value = GetProperty(item, _DataValueField);
+                var text = GetProperty(item, DataTextField);
+                var value = GetProperty(item, DataValueField);
 
                 itemFound = itemsToLoad.FirstOrDefault(x => x.Value == value);
 
