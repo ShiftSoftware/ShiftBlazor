@@ -318,6 +318,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool EnableFilterPanel { get; set; }
 
         [Parameter]
+        public bool FilterPanelDefaultOpen { get; set; }
+
+        [Parameter]
         public bool FilterImmediate { get; set; }
 
         [Parameter]
@@ -461,7 +464,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
 
-            IsFilterPanelOpen = SettingManager?.SetFilterPanelState() ?? false;
+            IsFilterPanelOpen = SettingManager?.GetFilterPanelState() ?? FilterPanelDefaultOpen;
         }
 
         protected override void OnAfterRender(bool firstRender)
