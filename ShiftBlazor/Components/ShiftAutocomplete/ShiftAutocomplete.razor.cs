@@ -271,7 +271,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     protected string InputContainerClassname =>
             new CssBuilder("shift-autocomplete-input-container")
                 .AddClass($"mud-input-{Variant.ToDescriptionString()}-with-label", !string.IsNullOrEmpty(Label))
-                .AddClass("mud-shrink", !string.IsNullOrWhiteSpace(Text) || IsFocused || SelectedValues?.Count > 0 || Adornment == Adornment.Start || !string.IsNullOrWhiteSpace(Placeholder))
+                .AddClass("mud-shrink", !string.IsNullOrWhiteSpace(Text) || IsFocused || SelectedValues?.Count > 0 || Adornment == Adornment.Start || !string.IsNullOrWhiteSpace(Placeholder) || IsIntitialValueLoading)
                 .Build();
 
     protected string InputClassname =>
@@ -339,6 +339,10 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     {
         // Try reloading items that only have Value set, but no Text
         if (MultiSelect && SelectedValues?.Any(x => x.Value != null && x.Text == null) == true)
+        {
+            _ = UpdateInitialValue();
+        }
+        else if (!MultiSelect && Value?.Value != null &&  Value.Text == null)
         {
             _ = UpdateInitialValue();
         }
@@ -411,6 +415,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         var builder = OData
                 .CreateNewQuery<TEntitySet>(EntitySet, GetPath());
 
+        // Filters components
         var filters = Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         
         if (!string.IsNullOrWhiteSpace(searchQuery))
@@ -419,6 +424,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             filters.Add(filter.ToString());
         }
 
+        // Filter Parameter
         if (Filter != null)
         {
             var filter = new ODataFilterGenerator(true, Id);
@@ -811,7 +817,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         }
         else if (!IsReadOnly && !IsDisabled)
         {
-            await OpenDropdown();
+            await OpenDropdown(selectText: false);
         }
     }
 
@@ -841,16 +847,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             case "ArrowRight":
                 await MoveSelectedValuesIndex(+1);
                 break;
-            case "Tab":
-                if (IsFocused)
-                {
-                    await CloseDropdown();
-                }
-                if (SelectedValueCounter)
-                {
-                    CloseSelectedValueCounter();
-                }
-                break;
             case "ArrowDown":
                 if (IsFocused)
                 {
@@ -877,6 +873,16 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
                     {
                         await OpenDropdown();
                     }
+                }
+                break;
+            case "Tab":
+                if (IsFocused)
+                {
+                    await CloseDropdown();
+                }
+                if (SelectedValueCounter)
+                {
+                    CloseSelectedValueCounter();
                 }
                 break;
         }
@@ -1029,6 +1035,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         catch (Exception e)
         {
             MessageService.Error("Failed to load initial data", "Failed to retrieve data", e.Message);
+        }
+
+        if (!MultiSelect)
+        {
+            Text = Value?.Text ?? string.Empty;
         }
 
         InitialUpdateTokenSource.Cancel();

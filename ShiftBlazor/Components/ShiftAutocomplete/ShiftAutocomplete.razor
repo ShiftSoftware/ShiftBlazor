@@ -36,10 +36,13 @@
                 {
                     <MudMenu MaxHeight="@MaxHeight" @bind-Open="IsSelectedValueCounterOpen">
                         <ActivatorContent>
-                            <MudChip T="int" OnClick="SelectedValueCounterClickHandler" @onfocus="SelectedValueCounterFocusHandler" Value="SelectedValues.Count"/>
+                            <MudChip Size="Size.Small"
+                                     OnClick="SelectedValueCounterClickHandler"
+                                     @onfocus="SelectedValueCounterFocusHandler"
+                                     Value="SelectedValues.Count"/>
                         </ActivatorContent>
                         <ChildContent>
-                            <MudStack>
+                            <MudStack Spacing="1">
                                 @SelectedValuesRenderFragment
                             </MudStack>
                         </ChildContent>
@@ -51,19 +54,21 @@
                 }
             }
 
-            @if (IsIntitialValueLoading)
+            @if (IsIntitialValueLoading && (!SelectedValueCounter || (SelectedValueCounter && !MultiSelect)))
             {
+                <div style="width: 0;">
                 @if (LoadingTemplate != null)
                 {
                     @LoadingTemplate
                 }
                 else
                 {
-                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Style="flex-shrink: 0;"/>
                 }
-                <MudSpacer/>
+                </div>
             }
-            else if (InputTemplate != null)
+            
+            @if (InputTemplate != null)
             {
                 @InputTemplate(new (this))
             }
@@ -292,7 +297,7 @@
 @code {
     private RenderFragment SelectedValuesRenderFragment =>@<text>
 
-        @for (var i = 0; i < SelectedValues.Count; i++)
+        @for (var i = 0; i < SelectedValues!.Count; i++)
         {
             var index = i;
             var item = SelectedValues.ElementAt(index);
@@ -308,6 +313,7 @@
                 <MudChip @key="item"
                             Class="@_class"
                             Value="@item.Text"
+                         Size="Size.Small"
                             Disabled="IsDisabled"/>
             }
             else
@@ -316,6 +322,7 @@
                             @ondblclick="@(() => AddEditItem(item.Value))"
                             OnClose="() => RemoveSelected(item)"
                             OnClick="() => ChangeSelectedValuesIndex(index)"
+                         Size="Size.Small"
                             Class="@_class"
                             Value="@item.Text"
                             T="string"/>
