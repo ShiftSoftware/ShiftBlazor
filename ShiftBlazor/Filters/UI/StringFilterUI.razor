@@ -3,7 +3,7 @@
 @inherits FilterUIBase
 
 <div style="width: 100%;" class="@ClassName">
-	<MudField Label="@Filter.Field" InnerPadding="false">
+	<MudField Label="@Label" InnerPadding="false">
 		<MudStack Row>
 			@if (Filter is StringFilterModel stringFilter && stringFilter.AutocompleteOptions != null)
 			{

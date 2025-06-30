@@ -21,6 +21,8 @@ public class FilterUIBase : ComponentBase
     public string MenuIcon => IsMenuOpen ? Icons.Material.Filled.ArrowDropUp : Icons.Material.Filled.ArrowDropDown;
     public Guid Id => Filter.Id;
 
+    public string? Label => Filter.UIOptions.Label ?? Filter.Field;
+
     protected bool IsMenuOpen = false;
     private Debouncer Debouncer = new();
 

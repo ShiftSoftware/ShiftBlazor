@@ -24,6 +24,9 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     public bool Immediate { get; set; }
 
     [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
     public int xxl { get; set; }
     [Parameter]
     public int xl { get; set; }
@@ -84,6 +87,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
 
         Filter.UIOptions = new FilterUIOptions
         {
+            Label = Label,
             xxl = xxl,
             xl = xl,
             lg = lg,
@@ -111,6 +115,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
                     nameof(Operator) => Operator == parameter.Value as ODataOperator?,
                     nameof(Hidden) => Hidden == parameter.Value as bool?,
                     nameof(Immediate) => Immediate == parameter.Value as bool?,
+                    nameof(Label) => Label == parameter.Value as string,
                     nameof(xxl) => xxl == parameter.Value as int?,
                     nameof(xl) => xl == parameter.Value as int?,
                     nameof(lg) => lg == parameter.Value as int?,
@@ -155,6 +160,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
         Filter.IsImmediate = Immediate;
         Filter.UIOptions = new FilterUIOptions
         {
+            Label = Label,
             xxl = xxl,
             xl = xl,
             lg = lg,
