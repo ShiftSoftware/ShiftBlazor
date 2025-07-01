@@ -629,6 +629,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     await Task.Delay(1000, ReloadBlockTokenSource.Token);
                 }
                 catch (Exception) { }
+
+                ReloadBlockTokenSource = null;
             }
 
             var builder = QueryBuilder;
