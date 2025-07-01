@@ -332,6 +332,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public PrintFormConfig? PrintConfig { get; set; }
 
+        [Parameter]
+        public bool DisableReloadButton { get; set; }
+
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
