@@ -246,12 +246,12 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 SyncLocalStorage.SetItem(Key, Settings);
             }
 
-            return SetFilterPanelState();
+            return GetFilterPanelState() ?? open;
         }
 
-        public bool SetFilterPanelState()
+        public bool? GetFilterPanelState()
         {
-            return Settings.IsDataGridFilterPanelOpen ?? DefaultAppSetting.IsDataGridFilterPanelOpen;
+            return Settings.IsDataGridFilterPanelOpen;
         }
 
         private async Task<DeviceInfo> GetDeviceInfo()

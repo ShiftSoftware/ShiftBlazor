@@ -91,6 +91,9 @@ public partial class FileExplorer : IShortcutComponent
     public RenderFragment? MenuItemsTemplate { get; set; }
 
     [Parameter]
+    public RenderFragment? ToolbarTemplate { get; set; }
+
+    [Parameter]
     public bool OpenDialogOnUpload { get; set; }
 
     [Parameter]

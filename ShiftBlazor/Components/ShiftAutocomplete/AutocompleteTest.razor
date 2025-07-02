@@ -1,0 +1,592 @@
+﻿@typeparam T
+@inherits MudAutocomplete<T>
+
+
+<CascadingValue Name="SubscribeToParentForm" Value="false" IsFixed="true">
+    <div class="@AutocompleteClassname" @onclick:stopPropagation @onmousedown:stopPropagation>
+        <MudInputControl Label="@Label"
+                         Variant="@Variant"
+                         HelperId="@GetHelperId()"
+                         HelperText="@HelperText"
+                         HelperTextOnFocus="@HelperTextOnFocus"
+                         FullWidth="@FullWidth"
+                         Margin="@Margin"
+                         Class="@Classname"
+                         Style="@Style"
+                         Error="@HasErrors"
+                         ErrorText="@GetErrorText()"
+                         ErrorId="@ErrorId"
+                         Disabled="@GetDisabledState()"
+                         Required="@Required"
+                         @onmousedown="@OnInputClickedAsync"
+                         @onfocus="@OnInputFocusedAsync"
+                         ForId="@InputElementId">
+            <InputContent>
+                <MudInput @ref="_elementReference" @key="_elementKey" InputType="InputType.Text"
+                          Class="@InputClassname" Margin="@Margin"
+                          Variant="@Variant"
+                          Typo="@Typo"
+                          Label="@Label"
+                          TextUpdateSuppression="@TextUpdateSuppression"
+                          Value="@Text" Underline="@Underline"
+                          Disabled="@GetDisabledState()"
+                          ReadOnly="@GetReadOnlyState()"
+                          Error="@Error"
+                          ErrorId="@ErrorId"
+                          HelperId="@GetHelperId()"
+                          HelperText="@HelperText"
+                          AdornmentIcon="@CurrentIcon" Adornment="@Adornment" AdornmentColor="@AdornmentColor" IconSize="@IconSize" AdornmentText="@AdornmentText"
+                          OnAdornmentClick="@AdornmentClickHandlerAsync"
+                          AdornmentAriaLabel="@AdornmentAriaLabel"
+                          Clearable="@(Clearable && !GetReadOnlyState())"
+                          OnClearButtonClick="@HandleClearButtonAsync"
+                          ClearIcon="@ClearIcon"
+                          MaxLength="@MaxLength"
+                          autocomplete="@GetAutocomplete()"
+                          @attributes="UserAttributes"
+                          TextChanged="OnTextChangedAsync"
+                          @onfocus="@OnInputFocusedAsync"
+                          OnBlur="OnInputBlurredAsync"
+                          OnKeyDown="@OnInputKeyDownAsync"
+                          OnKeyUp="@OnInputKeyUpAsync" KeyUpPreventDefault="KeyUpPreventDefault"
+                          Placeholder="@Placeholder" Immediate="true"
+                          InputMode="@InputMode" Pattern="@Pattern"
+                          ShrinkLabel="@ShrinkLabel"
+                          Required="@Required"
+                          InputId="@InputElementId" />
+
+                @if (ShowProgressIndicator && IsLoading)
+                {
+                    @if (ProgressIndicatorTemplate is not null)
+                    {
+                        @ProgressIndicatorTemplate
+                    }
+                    else
+                    {
+                        <div class="@CircularProgressClassname">
+                            <MudProgressCircular Color="ProgressIndicatorColor" Indeterminate="true" Size="Size.Small" />
+                        </div>
+                    }
+                }
+
+                <MudPopover Open="@Open">
+                    @if (ProgressIndicatorInPopoverTemplate is not null && IsLoading)
+                    {
+                        @ProgressIndicatorInPopoverTemplate
+                    }
+                    else if (_items != null && _items.Length != 0)
+                    {
+                        <MudList T="T" Class="@ListClass" Dense="@Dense">
+                            @if (BeforeItemsTemplate is not null)
+                            {
+                                <div class="mud-autocomplete-before-items pa-1">
+                                    @BeforeItemsTemplate
+                                </div>
+                            }
+                            @for (var index = 0; index < _items.Length; index++)
+                            {
+                                var item = _items[index];
+                                bool isSelected = index == _selectedListItemIndex;
+                                bool isDisabled = !_enabledItemIndices.Contains(index);
+                                bool showSelectedTemplate = ItemSelectedTemplate is not null && isSelected;
+                                bool showDisabledTemplate = ItemDisabledTemplate is not null && isDisabled;
+                                var captureIndex = index;
+                                <MudListItem T="T" Value="@item" @key="@item" id="@GetListItemId(captureIndex)" Disabled="@(isDisabled)" OnClick="@(async () => await ListItemOnClickAsync(item))" OnClickPreventDefault="true" Class="@GetListItemClassname(isSelected)">
+                                    @if (showDisabledTemplate)
+                                    {
+                                        @ItemDisabledTemplate!(item)
+                                    }
+                                    else if (showSelectedTemplate)
+                                    {
+                                        @ItemSelectedTemplate!(item)
+                                    }
+                                    else if (ItemTemplate is not null)
+                                    {
+                                        @ItemTemplate(item)
+                                    }
+                                    else
+                                    {
+                                        @GetItemString(item)
+                                    }
+                                </MudListItem>
+                            }
+                            @if (MoreItemsTemplate is not null && _returnedItemsCount > MaxItems)
+                            {
+                                <div class="mud-autocomplete-more-items pa-1">
+                                    @MoreItemsTemplate
+                                </div>
+                            }
+                            @if (AfterItemsTemplate is not null)
+                            {
+                                <div class="mud-autocomplete-after-items pa-1">
+                                    @AfterItemsTemplate
+                                </div>
+                            }
+                        </MudList>
+                    }
+                    else if (NoItemsTemplate is not null)
+                    {
+                        <div class="mud-autocomplete-no-items pa-1">
+                            @NoItemsTemplate
+                        </div>
+                    }
+                </MudPopover>
+            </InputContent>
+        </MudInputControl>
+    </div>
+</CascadingValue>
+
+<MudOverlay AutoClose
+            Visible="Open"
+            OnClosed="OnOverlayClosedAsync"
+            LockScroll="@LockScroll"
+            Modal="@Modal" />
+
+@* <div style="border: 1px solid black;">
+    _isCleared: @_isCleared;
+    <br/>
+    _isClearing: @_isClearing;
+    <br/>
+    _isProcessingValue: @_isProcessingValue;
+    <br/>
+    _selectedListItemIndex: @_selectedListItemIndex;
+    <br/>
+    _elementKey : @_elementKey = 0;
+    <br/>
+    _returnedItemsCount: @_returnedItemsCount;
+    <br/>
+    _open: @_open;
+    <br/>
+    _opening: @_opening;
+    <br/>
+    Open: @Open;
+    <br/>
+</div> *@
+
+@code {
+    private readonly string _componentId = Guid.NewGuid().ToString();
+
+
+    private bool _isCleared;
+    private bool _isClearing;
+    private bool _isProcessingValue;
+    private int _selectedListItemIndex;
+    private int _elementKey = 0;
+    private int _returnedItemsCount;
+    private bool _open;
+    private bool _opening;
+    private MudInput<string> _elementReference = null!;
+    private CancellationTokenSource? _cancellationTokenSrc;
+    private Task? _currentSearchTask;
+    private Timer? _debounceTimer;
+    private T[]? _items;
+    private List<int> _enabledItemIndices = [];
+    private Func<T?, string?>? _toStringFunc;
+    private bool _handleNextFocus;
+
+    private bool IsLoading => _currentSearchTask is { IsCompleted: false };
+
+    private string CurrentIcon => !string.IsNullOrWhiteSpace(AdornmentIcon) ? AdornmentIcon : _open ? CloseIcon : OpenIcon;
+
+    private Task OnInputClickedAsync()
+    {
+        if (GetDisabledState())
+        {
+            return Task.CompletedTask;
+        }
+
+        return OnInputActivatedAsync(true);
+    }
+
+    private async Task OnInputActivatedAsync(bool openMenu)
+    {
+        Console.WriteLine($"OnInputActivatedAsync start {openMenu} {!Open} {!_opening} {!GetReadOnlyState()}");
+        // The click event also triggers the focus event so we don't want to unnecessarily handle both.
+        if (openMenu && !Open && !_opening && !GetReadOnlyState())
+        {
+            await OpenMenuAsync();
+        }
+    }
+
+    private async Task OnInputFocusedAsync()
+    {
+        Console.WriteLine("OnInputFocusedAsync start");
+        if (GetDisabledState())
+        {
+            Console.WriteLine("OnInputFocusedAsync GetDisabledState");
+            // This shouldn't be possible through the UI, but could be triggered in code.
+            return;
+        }
+
+        if (GetReadOnlyState())
+        {
+            Console.WriteLine("OnInputFocusedAsync GetReadOnlyState");
+            // A readonly input doesn't trigger onblur later correctly, so we have to disable focus features for it.
+            return;
+        }
+
+        var wasFocused = _isFocused;
+        _isFocused = true;
+
+        // Skip features that are not meant for internal focus events.
+        if (_handleNextFocus)
+        {
+            Console.WriteLine("OnInputFocusedAsync _handleNextFocus");
+            _handleNextFocus = false;
+            return;
+        }
+
+        // Select the input text unless we're already focused or it will interfere with cursor selection.
+        if (!wasFocused && SelectOnActivation)
+        {
+            Console.WriteLine("OnInputFocusedAsync !wasFocused && SelectOnActivation");
+            await SelectAsync();
+        }
+
+        Console.WriteLine("OnInputFocusedAsync End");
+
+        await OnInputActivatedAsync(OpenOnFocus);
+    }
+
+    internal async Task AdornmentClickHandlerAsync()
+    {
+        if (OnAdornmentClick.HasDelegate)
+        {
+
+            await OnAdornmentClick.InvokeAsync();
+        }
+        else
+        {
+            await ToggleMenuAsync();
+        }
+    }
+
+    private Task OnInputBlurredAsync(FocusEventArgs args)
+    {
+        _isFocused = false;
+        _handleNextFocus = false;
+
+        // When Immediate is enabled, then the CoerceValue is set by TextChanged
+        // So only coerce the value on blur when Immediate is disabled
+        if (!Immediate)
+        {
+            return CoerceValueToTextAsync();
+        }
+
+        return OnBlur.InvokeAsync(args);
+        // we should not validate on blur in autocomplete, because the user needs to click out of the input to select a value,
+        // resulting in a premature validation. thus, don't call base
+        //base.OnBlurred(args);
+    }
+
+    private Task CoerceValueToTextAsync()
+    {
+        if (!CoerceValue)
+            return Task.CompletedTask;
+
+        _debounceTimer?.Dispose();
+
+        var value = Converter.Get(Text);
+        return SetValueAsync(value, updateText: false);
+    }
+
+    internal async Task HandleClearButtonAsync(MouseEventArgs e)
+    {
+        // clear button clicked, let's make sure text is cleared and the menu has focus
+        Open = true;
+        await SetValueAsync(default, false);
+        await SetTextAsync(default, false);
+        _selectedListItemIndex = default;
+        await CloseMenuAsync();
+        StateHasChanged();
+        await OnClearButtonClick.InvokeAsync(e);
+        await BeginValidateAsync();
+    }
+
+    private async Task OnTextChangedAsync(string? text)
+    {
+        await base.TextChanged.InvokeAsync(text);
+
+        if (text == null)
+            return;
+
+        await SetTextAsync(text, true);
+    }
+
+    private async Task OnInputKeyDownAsync(KeyboardEventArgs args)
+    {
+        // switch (args.Key)
+        // {
+        //     // We need to catch Tab here because a tab will move focus to the next element and thus we'd never get the tab key in OnInputKeyUpAsync.
+        //     case "Tab":
+        //         if (Open)
+        //         {
+        //             if (SelectValueOnTab)
+        //                 await OnEnterKeyAsync();
+        //         }
+        //         await CloseMenuAsync();
+        //         break;
+        //     case "ArrowDown":
+        //         if (Open)
+        //         {
+        //             await SelectAdjacentItemAsync(+1);
+        //         }
+        //         else
+        //         {
+        //             await OpenMenuAsync();
+        //         }
+        //         break;
+        //     case "ArrowUp":
+        //         if (args.AltKey)
+        //         {
+        //             await CloseMenuAsync();
+        //         }
+        //         else if (!Open)
+        //         {
+        //             await OpenMenuAsync();
+        //         }
+        //         else
+        //         {
+        //             await SelectAdjacentItemAsync(-1);
+        //         }
+        //         break;
+        // }
+
+        await base.InvokeKeyDownAsync(args);
+    }
+
+    private async Task OnInputKeyUpAsync(KeyboardEventArgs args)
+    {
+        // switch (args.Key)
+        // {
+        //     case "Enter":
+        //     case "NumpadEnter":
+        //         if (Open)
+        //         {
+        //             await OnEnterKeyAsync();
+        //         }
+        //         else
+        //         {
+        //             await OpenMenuAsync();
+        //         }
+        //         break;
+        //     case "Escape":
+        //         await CloseMenuAsync();
+        //         break;
+        //     case "Backspace":
+        //         if (args.CtrlKey && args.ShiftKey)
+        //         {
+        //             await ResetAsync();
+        //         }
+        //         break;
+        // }
+
+        await base.InvokeKeyUpAsync(args);
+    }
+
+    private string GetListItemId(in int index)
+    {
+        return $"{_componentId}_item{index}";
+    }
+
+    private async Task ListItemOnClickAsync(T item)
+    {
+        await SelectOptionAsync(item);
+        _handleNextFocus = true; // Let the event handler know it doesn't need to do anything.
+        await FocusAsync();
+    }
+
+    private string? GetItemString(T? item)
+    {
+        if (item is null)
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return Converter.Set(item);
+        }
+        catch (NullReferenceException)
+        {
+            // ignore
+        }
+
+        return "null";
+    }
+
+    private Task OnOverlayClosedAsync()
+    {
+        if (Open)
+        {
+            return CloseMenuAsync();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public override ValueTask SelectAsync()
+    {
+        return _elementReference.SelectAsync();
+    }
+
+
+    // ============== //
+
+    private void CancelToken()
+    {
+        try
+        {
+            _cancellationTokenSrc?.Cancel();
+        }
+        catch { /*ignored*/ }
+        finally
+        {
+            _cancellationTokenSrc = new CancellationTokenSource();
+        }
+    }
+
+    public async Task OpenMenuAsync()
+    {
+        if (MinCharacters > 0 && (string.IsNullOrWhiteSpace(Text) || Text.Length < MinCharacters))
+        {
+            Open = false;
+            StateHasChanged();
+            return;
+        }
+
+        _opening = true;
+
+        var searchedItems = Array.Empty<T>();
+        CancelToken();
+
+        var wasFocused = _isFocused;
+        var searchingWhileSelected = false;
+        try
+        {
+            if (ProgressIndicatorInPopoverTemplate != null)
+            {
+                // Open before searching if a progress indicator is defined.
+                Open = true;
+            }
+
+            // Search while selected if enabled and the Text is equivalent to the Value.
+            searchingWhileSelected = !Strict && Value != null && (Value.ToString() == Text || (ToStringFunc != null && ToStringFunc(Value) == Text));
+            _cancellationTokenSrc ??= new CancellationTokenSource();
+            var searchText = searchingWhileSelected ? string.Empty : Text;
+            var searchTask = SearchFunc?.Invoke(searchText, _cancellationTokenSrc.Token);
+
+            _currentSearchTask = searchTask;
+
+            StateHasChanged();
+            searchedItems = searchTask switch
+            {
+                null => [],
+                _ => (await searchTask).ToArray()
+            };
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception e)
+        {
+            // Logger.LogWarning("The search function failed to return results: " + e.Message);
+        }
+
+        await SetReturnedItemsCountAsync(searchedItems.Length);
+
+        if (MaxItems.HasValue)
+        {
+            // Get range of items based off selected item so the selected item can be scrolled to when strict is set to false
+            if (!Strict && searchedItems.Length != 0 && !EqualityComparer<T>.Default.Equals(Value, default(T)))
+            {
+                int split = (MaxItems.Value / 2) + 1;
+                int valueIndex = Array.IndexOf(searchedItems, Value);
+                int endIndex = Math.Min(valueIndex + split, searchedItems.Length);
+                int startIndex = endIndex - Math.Min(MaxItems.Value, searchedItems.Length);
+
+                searchedItems = searchedItems.Take(new Range(startIndex, endIndex)).ToArray();
+            }
+            else
+            {
+                searchedItems = searchedItems.Take(MaxItems.Value).ToArray();
+            }
+        }
+
+        _items = searchedItems;
+
+        var enabledItems = _items.Select((item, idx) => (item, idx)).Where(tuple => ItemDisabledFunc?.Invoke(tuple.item) != true).ToList();
+        _enabledItemIndices = enabledItems.Select(tuple => tuple.idx).ToList();
+        if (searchingWhileSelected) //compute the index of the currently select value, if it exists
+        {
+            _selectedListItemIndex = Array.IndexOf(_items, Value);
+        }
+        else
+        {
+            _selectedListItemIndex = _enabledItemIndices.Any() ? _enabledItemIndices[0] : -1;
+        }
+
+        if (_isFocused || !wasFocused)
+        {
+            // Open after the search has finished if we're still focused (UI), or were never focused in the first place (programmatically).
+            Open = true;
+        }
+
+        _opening = false;
+        StateHasChanged();
+
+        // If not strict scroll to the selected item
+        if (!Strict && _selectedListItemIndex > 0)
+        {
+            await ScrollToListItemAsync(_selectedListItemIndex);
+        }
+    }
+
+    private Task SetReturnedItemsCountAsync(int value)
+    {
+        _returnedItemsCount = value;
+        return ReturnedItemsCountChanged.InvokeAsync(value);
+    }
+
+    public async Task SelectOptionAsync(T value)
+    {
+        _isProcessingValue = true;
+        try
+        {
+            // needs to close before SetValueAsync so that whatever the user puts in ValueChanged can run without the popover being in front of it
+            Open = false;
+
+            await SetValueAsync(value);
+
+            // needs to be open to run the rest of the code
+            Open = true;
+
+            if (_items != null)
+                _selectedListItemIndex = Array.IndexOf(_items, value);
+
+            var optionText = GetItemString(value);
+
+            if (!_isCleared)
+                await SetTextAsync(optionText, false);
+
+            _debounceTimer?.Dispose();
+
+            await BeginValidateAsync();
+
+            if (!_isCleared)
+            {
+                await _elementReference.SetText(optionText);
+            }
+
+            Open = false;
+            StateHasChanged();
+        }
+        finally
+        {
+            _isProcessingValue = false;
+        }
+    }
+}

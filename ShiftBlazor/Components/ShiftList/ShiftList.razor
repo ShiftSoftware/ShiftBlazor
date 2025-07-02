@@ -115,7 +115,7 @@
                         {
                             @if (RenderAddButton || !DisableGridEditor || !DisableDeleteFilter || EnableExport)
                             {
-                                <MudDivider Vertical="true" Style="height: 60%;align-self: center;margin-inline: 5px;opacity: 0.5;"></MudDivider>
+                                <MudDivider Vertical="true" Class="shift-vertical-divider"></MudDivider>
                             }
 
                             @ToolbarControlsTemplate
@@ -314,6 +314,18 @@
 
                     <ShiftSoftware.ShiftBlazor.Components.ShiftList.Flags.HasDraftColumn T="T" />
 
+                    @if (EnablePrintColumn)
+                    {
+                        var color = PrintConfig?.Color ?? Color.Default;
+                        var icon = PrintConfig?.Icon ?? Icons.Material.Filled.Print;
+                        <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="Print">
+                            <CellTemplate>
+                                <div>
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="@color" StartIcon="@icon" OnClick="() => PrintItem(context.Item.ID!)">Print</MudButton>
+                                </div>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    }
 
                     @if (!DisableActionColumn && ComponentType != null)
                     {

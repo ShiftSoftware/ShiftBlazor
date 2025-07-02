@@ -1,19 +1,20 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Services;
-using ShiftSoftware.ShiftBlazor.Extensions;
+using MudBlazor.Utilities;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Localization;
+using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.TypeAuth.Core;
-using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.TypeAuth.Core.Actions;
-using ShiftSoftware.ShiftBlazor.Interfaces;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using ShiftSoftware.ShiftBlazor.Localization;
-using Microsoft.JSInterop;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -183,6 +184,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool HideSubmit { get; set; }
 
+        [Parameter]
+        public bool AutoFocus { get; set; } = true;
+
         public Guid Id { get; private set; } = Guid.NewGuid();
         public FormTasks TaskInProgress { get; set; }
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -202,15 +206,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool HasReadAccess = true;
         internal bool IsFooterToolbarEmpty;
         internal bool _RenderSubmitButton;
-        internal string ContentCssClass
-        {
-            get
-            {
-                var css = "form-body";
-                if (MudDialog != null) css += " shift-scrollable-content-wrapper";
-                return css;
-            }
-        }
+
+        internal ElementReference ContentContainerRef = default!;
+        internal string ContentCssClass =>
+            new CssBuilder("form-body")
+                .AddClass("shift-scrollable-content-wrapper", MudDialog != null)
+                .Build();
 
         internal bool DisableSubmit => TaskInProgress != FormTasks.None;
 
@@ -252,6 +253,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 && FooterToolbarCenterTemplate == null
                 && FooterToolbarEndTemplate == null
                 && (HideSubmit || !HasWriteAccess);
+        }
+
+        protected override void OnAfterRender(bool firstRender)
+        {
+            if (firstRender && AutoFocus)
+            {
+                Task.Delay(10).ContinueWith(async x =>
+                {
+                    await ContentContainerRef.MudFocusFirstAsync();
+                });
+            }
+            base.OnAfterRender(firstRender);
         }
 
         //internal ValueTask LocationChangingHandler(LocationChangingContext ctx)
@@ -311,14 +324,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     { "CancelText",  Loc["CancelDeclineText"].ToString() },
                 };
 
-                var result = await DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+                var dialogReference = await DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                     NoHeader = true,
                     CloseOnEscapeKey = false,
-                }).Result;
+                });
 
-                return !result.Canceled;
+                var result = await dialogReference.Result;
+
+                return result?.Canceled != true;
             }
 
             return true;

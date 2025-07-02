@@ -17,6 +17,7 @@ using ShiftSoftware.TypeAuth.Core.Actions;
 using ShiftSoftware.TypeAuth.Core;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
+using ShiftSoftware.ShiftBlazor.Components.Print;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -30,6 +31,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
+        [Inject] PrintService PrintService { get; set; } = default!;
 
         [Parameter] public string? BaseUrl { get; set; }
         [Parameter] public string? BaseUrlKey { get; set; }
@@ -121,6 +123,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         [Parameter]
         public bool AllowSaveAsNew { get; set; }
+
+        [Parameter]
+        public PrintFormConfig? PrintConfig { get; set; }
 
         internal string? OriginalValue { get; set; }
         internal bool Maximized { get; set; }
@@ -296,14 +301,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     { "CancelText",  Loc["DeleteDecline"].ToString()}
                 };
 
-                var result = await DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+                var dialogReference = await DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                     NoHeader = true,
                     CloseOnEscapeKey = false,
-                }).Result;
+                });
 
-                if (!result.Canceled)
+                var result = await dialogReference.Result;
+
+                if (result?.Canceled != true)
                 {
                     var url = ItemUrl + "?ignoreGlobalFilters";
                     using (var res = await Http.DeleteAsync(ItemUrl))
@@ -322,19 +329,25 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             await RunTask(FormTasks.Print, async () =>
             {
-                //await OnPrint.InvokeAsync();
-
-                //Get a Signed Token to Authenticate /print end-point
                 var path = GetPath().AddUrlPath(Action);
-                
-                var tokenResult = await Http.GetAsync($"{path}/print-token/{Key?.ToString()}");
+                var id = Key?.ToString();
 
-                var token = await tokenResult.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(id))
+                {
+                    return;
+                }
 
-                var language = SettingManager.GetLanguage();
+                if (PrintConfig == null)
+                {
+                    await PrintService.PrintAsync(path, id);
+                    return;
+                }
 
-                //Open /print endpoint with the obtained token
-                await JsRuntime.InvokeVoidAsync("open", $"{path}/print/{Key?.ToString()}?{token}&culture={language.CultureName}", "_blank");
+                var dialogReference = await PrintService.OpenPrintFormAsync(path, id, PrintConfig);
+
+                // wait until dialog is closed
+                // the print button will keep showing loading indicator
+                await dialogReference.Result;
             });
         }
 
@@ -417,8 +430,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal override async Task SetMode(FormModes mode)
         {
+            var _previousMode = Mode;
             await base.SetMode(mode);
             SetTitle();
+
+            if (AutoFocus && _previousMode <= FormModes.Archive && mode >= FormModes.Edit)
+            {
+                await ContentContainerRef.MudFocusFirstAsync();
+            }
         }
 
         internal async Task SetValue(T? value, bool copyValue = true)
@@ -514,7 +533,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     { "Icon", Icons.Material.Filled.Error },
                 };
 
-                DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+                _ = DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                     NoHeader = true,
@@ -640,8 +659,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     CloseOnEscapeKey = false,
                 };
 
-                var result = await DialogService.Show<RevisionViewer>("", dParams, options).Result;
-                date = (DateTimeOffset?)result.Data;
+                var dialogReference = await DialogService.ShowAsync<RevisionViewer>("", dParams, options);
+                var result = await dialogReference.Result;
+                date = (DateTimeOffset?)result?.Data;
             });
 
             if (date == null)

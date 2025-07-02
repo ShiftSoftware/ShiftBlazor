@@ -1,0 +1,257 @@
+﻿@implements IShortcutComponent
+@using Microsoft.JSInterop
+@using System.Text.Json
+@inject ShiftBlazorLocalizer Loc
+@inject PrintService PrintService
+
+@if (Options != null)
+{
+    <MudPaper>
+        <MudFocusTrap DefaultFocus="DefaultFocus.Element">
+            <MudAppBar Color="@Options.Color" Fixed="false" Dense Elevation="0">
+                <MudIcon Icon="@Options.Icon" />
+                <MudText title="@Options.Title" Class="px-4 text-overflow-ellipsis" Style="margin:0;">@Options.Title</MudText>
+
+                <MudSpacer />
+
+                <MudIconButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                       Size="Size.Medium"
+                                       OnClick="() => Close(true)"
+                                       Icon="@Icons.Material.Filled.Close"
+                                       Edge="Edge.End"
+                                       Color="MudBlazor.Color.Inherit"
+                                       title="@Loc["ClosePopupButtonLabel"]" />
+            </MudAppBar>
+
+            <MudStack Class="pa-6">
+
+                <MudSelectExtended Value="@PrintType"
+                                   ValueChanged="PrintTypeChanged"
+                                   T="string"
+                                   Clearable
+                                   Label="Print Type">
+                    @foreach (var type in Options.Types)
+                    {
+                        <MudSelectItem Value="@type.Key">@type.ToString()</MudSelectItem>
+                    }
+                </MudSelectExtended>
+
+                @foreach (var field in Options.Fields.Where(x => x.Choices.Count > 0))
+                {
+                    var isDisabled = !IsNotDisabled(PrintType, field);
+                    var value = isDisabled ? null : FormValues.GetValueOrDefault(field.Key);
+                    var error = Error && value == null && !isDisabled;
+                    if (field.Input == PrintInputType.Dropdown)
+                    {
+                        <MudSelectExtended T="string"
+                                           ValueChanged="@((x) => ValueChanged(field.Key, x))"
+                                           Label="@field.DisplayName"
+                                           Value="@value"
+                                           Error="error"
+                                           ErrorText="@ErrorMessage"
+                                           Disabled="isDisabled">
+                            @foreach (var choice in field.Choices)
+                            {
+                                <MudSelectItem Value="@choice.Key">@choice.ToString()</MudSelectItem>
+                            }
+                        </MudSelectExtended>
+                    }
+                    else if (field.Input == PrintInputType.Radio)
+                    {
+                        <MudField Label="@field.DisplayName"
+                                  InnerPadding="false"
+                                  Disabled="isDisabled"
+                                  Error="error"
+                                  ErrorText="@ErrorMessage">
+                            <MudRadioGroupExtended T="string"
+                                                   ValueChanged="@((x) => ValueChanged(field.Key, x))"
+                                                   Value="@value"
+                                                   Disabled="isDisabled">
+                                @foreach (var choice in field.Choices)
+                                {
+                                    <MudRadio Value="@choice.Key">@choice.ToString()</MudRadio>
+                                }
+                            </MudRadioGroupExtended>
+                        </MudField>
+                    }
+                    else if (field.Input == PrintInputType.Chips)
+                    {
+                        <MudField Label="@field.DisplayName"
+                                  InnerPadding="false"
+                                  Disabled="isDisabled"
+                                  Error="error"
+                                  ErrorText="@ErrorMessage" >
+                            <MudChipSet T="string"
+                                        SelectedValueChanged="@((x) => ValueChanged(field.Key, x))"
+                                        SelectedValue="@value"
+                                        CheckMark
+                                        SelectionMode="SelectionMode.SingleSelection"
+                                        Disabled="isDisabled">
+                                @foreach (var choice in field.Choices)
+                                {
+                                    <MudChip Value="@choice.Key">@choice.ToString()</MudChip>
+                                }
+                            </MudChipSet>
+                        </MudField>
+                    }
+                }
+
+            </MudStack>
+
+            <MudToolBar Dense>
+                <MudSpacer />
+
+                @if (!string.IsNullOrWhiteSpace(Options.CancelText))
+                {
+                    <MudButtonExtended KeyboardKey="KeyboardKeys.Escape" Variant="Variant.Text" OnClick="() => Close(true)" Class="me-2">@Options.CancelText</MudButtonExtended>
+                }
+
+                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Variant="Variant.Text" Color="@Options.Color" OnClick="() => Print()" Class="me-2">@(Options.ConfirmText ?? "Print")</MudButtonExtended>
+            </MudToolBar>
+        </MudFocusTrap>
+    </MudPaper>
+}
+
+@code {
+    [CascadingParameter]
+    internal IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public PrintFormConfig Options { get; set; } = default!;
+
+    [Parameter]
+    public string Url { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Key { get; set; } = string.Empty;
+
+    public readonly string ErrorMessage = "This field is required";
+
+    public Guid Id { get; private set; } = Guid.NewGuid();
+    public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+
+    private string? PrintType { get; set; }
+
+    private Dictionary<string, string?> FormValues = new();
+
+    private bool Error { get; set; }
+
+    private void ValueChanged(string key, string value)
+    {
+        if (FormValues.ContainsKey(key))
+        {
+            FormValues.Remove(key);
+        }
+
+        FormValues.TryAdd(key, value);
+    }
+
+    private void PrintTypeChanged(string type)
+    {
+        Error = false;
+        PrintType = type;
+    }
+
+    private async Task Print()
+    {
+        Error = false;
+
+        var query = FormValues.Where(IsNotDisabled).ToDictionary();
+
+        if (query.Any(x => x.Value == null))
+        {
+            Error = true;
+            return;
+        }
+
+        if (PrintType != null)
+        {
+            query.Add("type", PrintType);
+        }
+
+        await PrintService.PrintAsync(Url, Key, query!);
+    }
+
+    private bool IsNotDisabled(KeyValuePair<string, string?> value)
+    {
+        var option = Options!.Fields.FirstOrDefault(x => x.Key == value.Key);
+        return IsNotDisabled(PrintType, option);
+    }
+
+    private bool IsNotDisabled(string? type, FormFieldConfig? option)
+    {
+        return type == null
+            ? option?.ApplicableTypeKeys == null
+            : option?.ApplicableTypeKeys?.Contains(type) != false;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrWhiteSpace(Key))
+            throw new ArgumentNullException(nameof(Key));
+
+        if (string.IsNullOrWhiteSpace(Url))
+            throw new ArgumentNullException(nameof(Url));
+
+        if (Options == null)
+            throw new ArgumentNullException(nameof(Options));
+
+        IShortcutComponent.Register(this);
+
+        if (Options == null)
+        {
+            return;
+        }
+
+        if (Options.DefaultTypeKey != null)
+        {
+            PrintType = Options.DefaultTypeKey;
+        }
+
+        FormValues = Options.Fields.ToDictionary(x => x.Key, x => x.DefaultChoiceKey ?? null);
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (Options == null)
+        {
+            await PrintService.PrintAsync(Url, Key);
+            // Close();
+        }
+
+    }
+
+    public ValueTask HandleShortcut(KeyboardKeys key)
+    {
+        switch (key)
+        {
+            case KeyboardKeys.Escape:
+                Close(true);
+                break;
+        }
+
+        return new ValueTask();
+    }
+
+    private void Close(bool cancel = false)
+    {
+        IShortcutComponent.Remove(Id);
+
+        if (cancel)
+        {
+            MudDialog?.Cancel();
+        }
+        else
+        {
+            MudDialog?.Close();
+        }
+
+    }
+
+    public void Dispose()
+    {
+        IShortcutComponent.Remove(Id);
+    }
+}

@@ -12,6 +12,12 @@
 
         <MudSpacer></MudSpacer>
 
+        @if (ToolbarTemplate != null)
+        {
+            @ToolbarTemplate
+            <MudDivider Vertical Class="shift-vertical-divider"/>
+        }
+
         @if (DisplayNewFolderButton)
         {
             <MudTooltip Text="@Loc["NewFolderTooltip"]">

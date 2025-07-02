@@ -338,7 +338,6 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 }
 
 /* ============== File Explorer end ============== */
-}
 
 
 .filter-input .percent-input {
@@ -359,4 +358,11 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 
 .custom-date-range-picker > .mud-input-control-input-container > .mud-input > .mud-input-adornment {
     margin-left: -14px !important;
+}
+
+.mud-divider-vertical.shift-vertical-divider {
+    height: 60%;
+    align-self: center;
+    margin-inline: 5px;
+    opacity: 0.5;
 }

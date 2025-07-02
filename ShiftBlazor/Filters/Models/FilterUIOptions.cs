@@ -4,6 +4,7 @@ namespace ShiftSoftware.ShiftBlazor.Filters.Models;
 
 public class FilterUIOptions
 {
+    public string? Label { get; set; }
     public int xxl { get; set; }
     public int xl { get; set; }
     public int lg { get; set; }
