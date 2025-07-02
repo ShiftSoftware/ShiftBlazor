@@ -8,7 +8,6 @@ using ShiftSoftware.ShiftBlazor.Components.Print;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
-using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
@@ -27,6 +26,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
     [CascadingTypeParameter(nameof(T))]
     public partial class ShiftList<T> : IODataComponent, IShortcutComponent, ISortableComponent, IFilterableComponent, IShiftList where T : ShiftEntityDTOBase, new()
     {
+        [Inject] ISnackbar Snackbar { get; set; } = default!;
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
@@ -1061,7 +1061,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             name = ExportTitleRegex().Replace(name, "");
             var date = DateTime.Now.ToString("yyyy-MM-dd");
-            var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}_{date}.csv";
+            var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}.csv";
 
             var urlValue = CurrentUri == null ? "" : ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
             var values = CurrentUri == null ? Values : new List<T>();
@@ -1122,6 +1122,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             var payload = new
             {
+                name,
                 isRTL,
                 values,
                 columns,
@@ -1133,20 +1134,35 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 foreignColumns,
             };
 
+            Snackbar.RemoveByKey($"export_table_{name}");
+            MessageService.Show($"📦 '{name}' export started", severity: Severity.Info, modalColor: Color.Info, icon: Icons.Material.TwoTone.FileCopy, key: $"export_table_{name}");
+
             await JsRuntime.InvokeVoidAsync("tableExport", payload, dotNetRef);
             
         }
 
-        [JSInvokable]
-        public void OnExportProcessed(bool isSuccess, string message)
-        {
 
+        [JSInvokable]
+        public void OnExportProcessing(string name)
+        {
+            Snackbar.RemoveByKey($"export_table_{name}");
+            MessageService.Show($"'{name}' export is still processing... This might take a while.", severity: Severity.Warning, modalColor: Color.Warning, icon: Icons.Material.Filled.MoreTime, key: $"export_table_{name}");
+        }
+
+        [JSInvokable]
+        public void OnExportProcessed(bool isSuccess, string message, string name)
+        {
             this.ExportIsInProgress = false;
 
             try
             {
-                if (!isSuccess) throw new InvalidOperationException(message);
-
+                if (isSuccess)
+                {
+                    Snackbar.RemoveByKey($"export_table_{name}");
+                    MessageService.Show($"'{name}' export completed successfully!", severity: Severity.Success, modalColor: Color.Success, icon: Icons.Material.TwoTone.CheckCircle, key: $"export_table_{name}");
+                }
+                else throw new InvalidOperationException(message);
+                
             }
             catch (Exception e)
             {

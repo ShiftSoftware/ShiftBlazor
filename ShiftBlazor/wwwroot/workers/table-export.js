@@ -334,9 +334,16 @@ function generateCSVContent(rows, columns, language, dateFormat, timeFormat, for
 }
 
 self.onmessage = async (event) => {
+
+    const longExportToastTimer = setTimeout(() => {
+        self.postMessage({ messageType: "export processing" })
+    }, 8000)
+
     const { payload, headers, origin } = event.data;
 
     const { urlValue, values, columns, fileName, language, foreignColumns, dateFormat, timeFormat, isRTL } = payload;
+
+
 
     try {
         const rows = Array.isArray(values) && values.length ? values : await fetchRows(urlValue, headers);
@@ -357,10 +364,14 @@ self.onmessage = async (event) => {
 
         const csvURL = URL.createObjectURL(new Blob([csvContent], { type: "text/csv" }))
 
-        self.postMessage({ csvURL, fileName, message: "", isSuccess: true })
+        clearTimeout(longExportToastTimer)
+
+        self.postMessage({ csvURL, fileName, message: "", isSuccess: true, messageType: "export ended" })
     } catch (error) {
+        clearTimeout(longExportToastTimer)
+
         console.error(error)
         self.postMessage({ isSuccess: false, message: error?.message || "Please try again later." })
-    }
+    } 
 
 };
