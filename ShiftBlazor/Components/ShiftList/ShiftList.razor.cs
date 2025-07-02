@@ -1,15 +1,13 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Components.Print;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
-using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
@@ -18,10 +16,8 @@ using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
-using System.Linq.Expressions;
 using System.Net.Http.Json;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -30,6 +26,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
     [CascadingTypeParameter(nameof(T))]
     public partial class ShiftList<T> : IODataComponent, IShortcutComponent, ISortableComponent, IFilterableComponent, IShiftList where T : ShiftEntityDTOBase, new()
     {
+        [Inject] ISnackbar Snackbar { get; set; } = default!;
         [Inject] ODataQuery OData { get; set; } = default!;
         [Inject] HttpClient HttpClient { get; set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
@@ -359,6 +356,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsModalOpen = false;
         private bool IsGridEditorOpen = false;
         private bool IsDeleteColumnHidden = true;
+        private DotNetObjectReference<ShiftList<T>> dotNetRef;
         private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
         public Dictionary<Guid, FilterModelBase> Filters { get; set; } = [];
         private Debouncer Debouncer { get; set; } = new Debouncer();
@@ -416,6 +414,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override void OnInitialized()
         {
+            dotNetRef = DotNetObjectReference.Create(this);
+
             IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
             if (!IsEmbed)
@@ -1007,163 +1007,48 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await InvokeAsync(StateHasChanged);
         }
 
-        private async Task ProcessForeignColumns<TForeign>(List<TForeign> items)
+        #region Export  
+
+        public static Dictionary<string, string>? GetEnumMap(Type? enumType)
         {
-            var foreignColumns = DataGrid!
-                    .RenderedColumns
-                    .Where(x => x.Class?.Contains("foreign-column") == true)
-                    .Select(x => x as IForeignColumn);
+            if (enumType == null || !enumType.IsEnum)
+                return null;
 
+            var result = new Dictionary<string, string>();
 
-            var entityType = typeof(T);
-
-            var lockObject = new object();
-
-            var tasks = foreignColumns
-            .Where(column => column != null)
-            .Select(async column =>
+            foreach (Enum val in Enum.GetValues(enumType))
             {
-                if (column is null)
-                    return;
+                var description = val.Describe(); //description ?? name;
 
-                var itemIds = IForeignColumn.GetForeignIds(column, items);
-                var foreignData = await IForeignColumn.GetForeignColumnValues(column, itemIds, OData, HttpClient);
-                var field = IForeignColumn.GetDataValueFieldName(column);
+                // Add both string and int representations of the enum value
+                // This is useful for cases where the enum value is used as a string in some contexts and as an integer in others.
 
-                var columnProperty = entityType.GetProperty(field);
-                var foreignType = column.GetType().GetGenericArguments().Last();
+                //The Name property of the enum value is used as the key for the string representation.
+                result[val.ToString()] = description;
+                // ["SomeEnum"] = "Some Description"
 
-                var attr = Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(foreignType);
-                var foreignTextField = column.ForeignTextField ?? attr?.Text ?? "";
 
-                var idProp = foreignType.GetProperty(nameof(ShiftEntityDTOBase.ID));
-                var textProp = foreignType.GetProperty(foreignTextField);
+                //The integer value of the enum is converted to a string and used as the key for the integer representation.
+                result[Convert.ToInt32(val).ToString()] = description;
+                // ["1"] = "Some Description"
+            }
 
-                PropertyInfo? foriegnEntityProp = null;
-
-                if (column.ForeignEntiyField is not null)
-                {
-                    foriegnEntityProp = entityType.GetProperty(column.ForeignEntiyField);
-                }
-
-                if (idProp == null || textProp == null || foreignData == null || columnProperty == null)
-                    return;
-
-                foreach (var row in items)
-                {
-                    var id = columnProperty.GetValue(row);
-
-                    var foriegnDataMatch = foreignData.FirstOrDefault(x => idProp.GetValue(x)?.ToString() == id?.ToString());
-
-                    if (foriegnDataMatch != null)
-                    {
-                        lock (lockObject)
-                        {
-                            columnProperty.SetValue(row, textProp.GetValue(foriegnDataMatch));
-
-                            if (foriegnEntityProp is not null)
-                            {
-                                foriegnEntityProp.SetValue(row, foriegnDataMatch);
-                            }
-                        }
-                    }
-                }
-            });
-
-            await Task.WhenAll(tasks);
+            return result;
         }
 
-        #region Export
-        private async Task<Stream> GetStream(string url)
+        string? ExtractPropertyName(string? expression)
         {
-            var res = await HttpClient.GetFromJsonAsync<ODataDTO<T>>(url,
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new LocalDateTimeOffsetJsonConverter() }
-                });
+            if (string.IsNullOrWhiteSpace(expression))
+                return null;
 
-            try
-            {
-                if (res?.Value == null || !res.Value.Any())
-                    throw new InvalidOperationException("No Items found");
+            var start = expression.IndexOf("x.") + 2;
+            if (start < 2 || start >= expression.Length)
+                return null;
 
-                await ProcessForeignColumns(res.Value);
-            }
-            catch (Exception e)
-            {
-                MessageService.Error(Loc["ShiftListForeignColumnError"], Loc["ShiftListForeignColumnError"], e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
-            }
+            var end = expression.IndexOf(',', start);
+            if (end == -1) end = expression.Length;
 
-            return GetStream(res?.Value);
-        }
-
-        private Stream GetStream(List<T>? items)
-        {
-            var stream = new MemoryStream();
-
-            var config = new CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture);
-
-            if (items != null && items.Count > 0)
-            {
-                using (var streamWriter = new StreamWriter(stream, new UTF8Encoding(true), leaveOpen: true))
-                {
-                    var csvWriter = new CsvWriter(streamWriter, config);
-
-                    var columns = DataGrid!
-                        .RenderedColumns
-                        .Where(x => !x.Hidden)
-                        .Where(x => x.GetType().GetProperty("Property") != null);
-
-                    // Write headers
-                    foreach (var column in columns)
-                    {
-                        csvWriter.WriteField(column.Title);
-                    }
-                    csvWriter.NextRecord();
-
-                    // Write rows
-                    foreach (var item in items)
-                    {
-                        foreach (var column in columns)
-                        {
-                            // Get the column's Property parameter
-                            var ColumnExpression = column.GetType().GetProperty("Property")?.GetValue(column);
-                            if (ColumnExpression is LambdaExpression lambdaExpression)
-                            {
-                                // Compile and invoke the method so we can replicate the result shown on the DataGrid
-                                var compiled = lambdaExpression.Compile();
-                                try
-                                {
-                                    object? result = compiled.DynamicInvoke(item);
-
-                                    if (result is DateTime dtValue)
-                                    {
-                                        csvWriter.WriteField(dtValue.ToString("yyyy-MM-dd HH:mm:ss"));
-                                    }
-                                    else if (result is DateTimeOffset dtoValue)
-                                    {
-                                        csvWriter.WriteField(dtoValue.DateTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                                    }
-                                    else
-                                    {
-                                        csvWriter.WriteField(result);
-                                    }
-                                }
-                                catch (Exception)
-                                {
-                                    csvWriter.WriteField(null);
-                                }
-                            }
-                        }
-
-                        csvWriter.NextRecord();
-                    }
-                }
-
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-
-            return stream;
+            return expression.Substring(start, end - start);
         }
 
         internal async Task ExportList()
@@ -1176,27 +1061,118 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             name = ExportTitleRegex().Replace(name, "");
             var date = DateTime.Now.ToString("yyyy-MM-dd");
-            var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}_{date}.csv";
+            var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}.csv";
 
-            Stream stream;
+            var urlValue = CurrentUri == null ? "" : ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
+            var values = CurrentUri == null ? Values : new List<T>();
 
-            if (CurrentUri == null)
+            var foreignColumns = DataGrid!
+                    .RenderedColumns
+                    .Where(x => x.Class?.Contains("foreign-column") == true)
+                    .Select(x =>
+                    {
+                        var foreignColumn = x as IForeignColumn;
+
+                        var fullName = foreignColumn.GetType().GetGenericArguments().Last().FullName;
+                        var parts = fullName.Split('.');
+                        var tableName = parts.Length >= 2 ? parts[^2] : fullName;
+
+                        foreignColumn.ForeignEntiyField = tableName;
+
+                        return foreignColumn;
+                    });
+
+            var columns = DataGrid!
+                .RenderedColumns
+                .Where(x => x.GetType().GetProperty("Property") != null)
+                .Select(x =>
+                {
+                    var propertyExpression = x.GetType().GetProperty("Property")?.GetValue(x)?.ToString();
+
+                    var key = ExtractPropertyName(propertyExpression) ?? x.PropertyName;
+
+                    var property = typeof(T).GetProperty(key) ?? null;
+
+                    var format = property?.GetCustomAttribute<ShiftListNumberFormatterExportAttribute>()?.Format;
+                    var customColumn = property?.GetCustomAttribute<ShiftListCustomColumnExportAttribute>()?.ToList();
+
+                    var enumValues = property == null
+                        ? null
+                        : GetEnumMap(Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType);
+
+
+                    return new
+                    {
+                        key,
+                        format,
+                        enumValues,
+                        customColumn,
+                        title = x.Title,
+                        hidden = x.Hidden,
+                    };
+                });
+
+            var language = SettingManager.GetCulture().TwoLetterISOLanguageName;
+
+            var isRTL = SettingManager.GetLanguage().RTL;
+
+            var dateFormat= SettingManager.GetDateFormat();
+
+            var timeFormat = SettingManager.GetTimeFormat();
+
+            var payload = new
             {
-                stream = GetStream(Values);
-            }
-            else
-            {
-                var url = ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
-                stream = await GetStream(url);
-            }
+                name,
+                isRTL,
+                values,
+                columns,
+                fileName,
+                language,
+                urlValue,
+                dateFormat,
+                timeFormat,
+                foreignColumns,
+            };
 
-            if (stream.Length > 0)
-            {
-                using var streamRef = new DotNetStreamReference(stream: stream);
-                await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
-            }
+            Snackbar.RemoveByKey($"export_table_{name}");
+            MessageService.Show($"📦 '{name}' export started", severity: Severity.Info, modalColor: Color.Info, icon: Icons.Material.TwoTone.FileCopy, key: $"export_table_{name}");
 
+            await JsRuntime.InvokeVoidAsync("tableExport", payload, dotNetRef);
+            
+        }
+
+
+        [JSInvokable]
+        public void OnExportProcessing(string name)
+        {
+            Snackbar.RemoveByKey($"export_table_{name}");
+            MessageService.Show($"'{name}' export is still processing... This might take a while.", severity: Severity.Warning, modalColor: Color.Warning, icon: Icons.Material.Filled.MoreTime, key: $"export_table_{name}");
+        }
+
+        [JSInvokable]
+        public void OnExportProcessed(bool isSuccess, string message, string name)
+        {
             this.ExportIsInProgress = false;
+
+            try
+            {
+                if (isSuccess)
+                {
+                    Snackbar.RemoveByKey($"export_table_{name}");
+                    MessageService.Show($"'{name}' export completed successfully!", severity: Severity.Success, modalColor: Color.Success, icon: Icons.Material.TwoTone.CheckCircle, key: $"export_table_{name}");
+                }
+                else throw new InvalidOperationException(message);
+                
+            }
+            catch (Exception e)
+            {
+                MessageService.Error(Loc["ShiftListForeignColumnError"], Loc["ShiftListForeignColumnError"], e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
+            }
+
+
+            StateHasChanged();
+
+
         }
 
         #endregion

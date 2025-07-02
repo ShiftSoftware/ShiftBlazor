@@ -21,7 +21,7 @@ public interface IForeignColumn : IODataComponent
     public string? Url { get; }
     public string? TEntityValueField { get; }
     public string? TEntityTextField { get; }
-    public string? ForeignEntiyField { get; }
+    public string? ForeignEntiyField { get; set; }
 
     internal static string GetDataValueFieldName(IForeignColumn column)
     {
@@ -76,7 +76,7 @@ public interface IForeignColumn : IODataComponent
         {
             try
             {
-                var TEntity = column.GetType().GetGenericArguments().Last();
+                var TEntity = column.GetType().GetGenericArguments().Last(); 
                 Type oDataType = typeof(ODataDTO<>).MakeGenericType(TEntity);
 
                 var query = GetODataUrl<ShiftEntityDTOBase>(column, oDataQuery);
