@@ -583,6 +583,11 @@ public partial class FileExplorer : IShortcutComponent
 
     private async Task GoToPath(string path)
     {
+        if (Root != null && path.StartsWith(Root))
+        {
+            path = path.Substring(Root.Length).TrimStart('/');
+        }
+
         var i = path.LastIndexOf('/');
         var filterPath = path.Substring(0, i + 1);
         var name = path.Substring(i + 1);
