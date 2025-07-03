@@ -223,10 +223,17 @@
                           OnSubmit="@(async() => await SubmitHandler(this.EditContext))"
                           style="height: 100%;">
 
-                    <FluentValidationValidator DisableAssemblyScanning="Validator != null" Validator="Validator" />
-                    @if (Validator == null)
+                    @if(OnlyValidateOnSubmit)
                     {
-                        <DataAnnotationsValidator />
+                        <ShiftValidator EnableFluentValidation Validator="Validator"/>
+                    }
+                    else
+                    {
+                        <FluentValidationValidator DisableAssemblyScanning="Validator != null" Validator="Validator" />
+                        @if (Validator == null)
+                        {
+                            <DataAnnotationsValidator />
+                        }
                     }
 
                     <div @ref="ContentContainerRef" class="@ContentCssClass">

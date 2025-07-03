@@ -187,6 +187,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool AutoFocus { get; set; } = true;
 
+        [Parameter]
+        public bool OnlyValidateOnSubmit { get; set;  }
+
         public Guid Id { get; private set; } = Guid.NewGuid();
         public FormTasks TaskInProgress { get; set; }
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
