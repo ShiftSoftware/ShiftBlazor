@@ -65,8 +65,8 @@
 
 @FilterTempalte
 
-<MudStack Row>
+<MudStack Row Class="mt-3">
     <MudSpacer/>
-    <MudButton OnClick="Reset">Reset</MudButton>
-    <MudButton OnClick="@(() => ReloadList(true))" Color="Color.Primary">Filter</MudButton>
+    <MudButton StartIcon="@Icons.Material.Filled.PlaylistRemove" Size="Size.Small" Variant="Variant.Filled" OnClick="Reset">Reset</MudButton>
+    <MudButton StartIcon="@Icons.Material.Filled.Search" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => ReloadList(true))" Color="Color.Primary">Filter</MudButton>
 </MudStack>
