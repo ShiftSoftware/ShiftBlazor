@@ -967,6 +967,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     private async Task UpdateInitialValue()
     {
+        if (InitialUpdateTokenSource is not null)
+            return;
+
         var values = MultiSelect
             ? SelectedValues ?? []
             : Value != null ? [Value] : [];
