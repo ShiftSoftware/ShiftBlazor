@@ -255,8 +255,25 @@
                          RowsPerPage="@SelectedPageSize"
                          ServerData="ServerData"
                          FixedHeader="!DisableStickyHeader"
-                         RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
+                         RowClassFunc="GetRowClassname"
                          T="T">
+
+                <ColGroup>
+                    @if (HighlightSortedColumn && DataGrid != null && DataGrid.SortDefinitions.Count > 0)
+                    {
+                        foreach (var column in DataGrid.RenderedColumns.Where(x => !x.Hidden))
+                        {
+                            @if (DataGrid.SortDefinitions.Keys.Contains(column.PropertyName))
+                            {
+                                <col style="@SortedColgroupStylename" />
+                            }
+                            else
+                            {
+                                <col />
+                            }
+                        }
+                    }
+                </ColGroup>
 
                 <NoRecordsContent>
                     @if (!string.IsNullOrWhiteSpace(ErrorMessage))

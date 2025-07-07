@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
+using MudBlazor.Utilities;
 using ShiftSoftware.ShiftBlazor.Components.Print;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
@@ -335,6 +336,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool DisableReloadButton { get; set; }
 
+        [Parameter]
+        public string? SortedColgroupStyle { get; set; }
+
+        [Parameter]
+        public bool HighlightSortedColumn { get; set; }
+
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -368,6 +375,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsFilterPanelOpen { get; set; }
         public HashSet<Guid> ActiveOperations { get; set; } = [];
         private CancellationTokenSource? ReloadBlockTokenSource;
+
+        protected string GetRowClassname(T item, int colIndex) =>
+            new CssBuilder()
+                .AddClass("is-deleted", item.IsDeleted)
+                .Build();
+
+        protected string SortedColgroupStylename =>
+            new StyleBuilder()
+                .AddStyle("background", "rgba(var(--mud-palette-primary-rgb), 0.25)", string.IsNullOrWhiteSpace(SortedColgroupStyle))
+                .AddStyle(SortedColgroupStyle)
+                .Build();
 
         private List<Column<T>> DraggableColumns
         {
