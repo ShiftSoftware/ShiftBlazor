@@ -14,5 +14,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool NavIconFlatColor { get; set; }
         public Dictionary<string, EditContext> ChildContexts { get; set; }
         public EditContext EditContext { get; set; }
+
+        public bool AddSection(FormSection section);
+        public bool RemoveSection(FormSection section);
+
+        public List<FormSection> GetSections();
+
+        public bool Validate();
+
+        public bool Validate(List<FieldIdentifier> fields);
+
     }
 }

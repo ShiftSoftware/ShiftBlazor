@@ -444,6 +444,33 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await OnTaskFinished.InvokeAsync(Task);
         }
 
+        public bool Validate()
+        {
+            return EditContext.Validate();
+        }
+
+        public bool Validate(List<FieldIdentifier> fields)
+        {
+            return EditContext?.Validate(fields, Validator) ?? true;
+        }
+
+        private HashSet<FormSection> Sections { get; set; } = new HashSet<FormSection>();
+
+        public bool AddSection(FormSection section)
+        {
+            return Sections.Add(section);
+        }
+
+        public List<FormSection> GetSections()
+        {
+            return Sections.ToList();
+        }
+
+        public bool RemoveSection(FormSection section)
+        {
+            return Sections.Remove(section);
+        }
+
         public void Dispose()
         {
             IShortcutComponent.Remove(Id);
