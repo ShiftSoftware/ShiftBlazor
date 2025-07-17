@@ -12,11 +12,13 @@ public class BooleanFilterModel : FilterModelBase
         if (Value != null)
         {
             filter.Add(new ODataFilter
-             {
-                 Field = Field,
-                 Operator = ODataOperator.Equal,
-                 Value = Value,
-             });
+            {
+                Field = Field,
+                Operator = ODataOperator.Equal,
+                Value = Value,
+                Prefix = Prefix,
+                IsCollection = IsCollection,
+            });
         }
 
         return filter;

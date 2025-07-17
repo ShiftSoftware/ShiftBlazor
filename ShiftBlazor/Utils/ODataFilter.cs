@@ -9,6 +9,8 @@ public class ODataFilter
     public ODataOperator Operator { get; set; }
     public object? Value { get; set; }
     public string? CastToType { get; set; }
+    public string? Prefix { get; set; }
+    public bool IsCollection { get; set; }
 }
 
 

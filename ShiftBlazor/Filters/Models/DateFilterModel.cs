@@ -23,14 +23,18 @@ public class DateFilterModel : FilterModelBase
                 {
                     Field = Field,
                     Operator = ODataOperator.GreaterThanOrEqual,
-                    Value = valueStart
+                    Value = valueStart,
+                    Prefix = Prefix,
+                    IsCollection = IsCollection,
                 };
 
                 var filterEnd = new ODataFilter
                 {
                     Field = Field,
                     Operator = ODataOperator.LessThan,
-                    Value = valueEnd
+                    Value = valueEnd,
+                    Prefix = Prefix,
+                    IsCollection = IsCollection,
                 };
 
 
@@ -49,6 +53,8 @@ public class DateFilterModel : FilterModelBase
             {
                 Field = Field,
                 Operator = Operator,
+                Prefix = Prefix,
+                IsCollection = IsCollection,
             });
         }
 

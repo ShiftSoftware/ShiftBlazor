@@ -31,7 +31,9 @@ public class EnumFilterModel : FilterModelBase
             {
                 Field = Field,
                 Operator = Operator == ODataOperator.NotIn ? Operator : ODataOperator.In,
-                Value = Value
+                Value = Value,
+                Prefix = Prefix,
+                IsCollection = IsCollection,
             });
         }
 

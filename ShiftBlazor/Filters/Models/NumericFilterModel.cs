@@ -33,7 +33,9 @@ public class NumericFilterModel : FilterModelBase
             Field = Field,
             Operator = Operator,
             Value = value,
-            CastToType = castType
+            CastToType = castType,
+            Prefix = Prefix,
+            IsCollection = IsCollection,
         });
 
         return filter;

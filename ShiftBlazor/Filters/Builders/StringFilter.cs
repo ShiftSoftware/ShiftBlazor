@@ -13,9 +13,9 @@ public class StringFilter<T, TProperty> : FilterBuilder<T, TProperty>
     [Parameter]
     public string? Value { get; set; }
 
-    protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
+    protected override FilterModelBase CreateFilter(string path, Type propertyType)
     {
-        var filter = FilterModelBase.CreateFilter(propertyInfo, DTOType, true);
+        var filter = FilterModelBase.CreateFilter(path, propertyType, DTOType, true);
         filter.Value = Value;
         return filter;
     }

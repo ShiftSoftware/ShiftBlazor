@@ -1,7 +1,6 @@
 ﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 
 namespace ShiftSoftware.ShiftBlazor.Utils;
@@ -39,7 +38,7 @@ public class ODataFilterGenerator
         return generator.Filters.Count + generator.RawFilters.Count + count;
     }
 
-    public readonly static Dictionary<char, string> SpecialCharaters = new()
+    public readonly static Dictionary<char, string> SpecialCharacters = new()
     {
         {'%', "%25"},
         {'+', "%2B"},
@@ -191,9 +190,29 @@ public class ODataFilterGenerator
         {
             if (!string.IsNullOrWhiteSpace(filter.Field))
             {
-                var field =  string.IsNullOrWhiteSpace(filter.CastToType) ? filter.Field : $"cast({filter.Field}, '{filter.CastToType}')";
+                var field = filter.Field;
                 var template = CreateFilterTemplate(filter.Operator);
                 var value = GetValueString(filter.Value);
+
+                var hasPrefix = !string.IsNullOrWhiteSpace(filter.Prefix);
+
+                if (filter.IsCollection)
+                {
+                    var prefix = hasPrefix ? filter.Prefix : filter.Field;
+                    field = hasPrefix ? $"item/{filter.Field}" : "item"; 
+                    template = $"{prefix}/any(item: {template})";
+                }
+                else if (hasPrefix)
+                {
+                    field = $"{filter.Prefix}/{field}";
+                }
+
+                // add the odata type casting method
+                if (filter.CastToType != null)
+                {
+                    field = CastToType(field, filter.CastToType);
+                }
+
                 filters.Add(string.Format(template, field, value));
             }
         }
@@ -256,7 +275,7 @@ public class ODataFilterGenerator
 
         foreach (char x in valString)
         {
-            if (SpecialCharaters.TryGetValue(x, out string? escaped))
+            if (SpecialCharacters.TryGetValue(x, out string? escaped))
             {
                 stringBuilder.Append(escaped);
             }
@@ -267,6 +286,11 @@ public class ODataFilterGenerator
         }
 
         return stringBuilder.ToString();
+    }
+
+    internal static string CastToType(string field, string type)
+    {
+        return string.IsNullOrWhiteSpace(type) ? field : $"cast({field}, '{type}')";
     }
 
     internal static string CreateFilterTemplate(object? filterOperator)

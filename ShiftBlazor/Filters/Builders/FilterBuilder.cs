@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
 using ShiftSoftware.ShiftBlazor.Components;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Utils;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -27,6 +29,9 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     public string? Label { get; set; }
 
     [Parameter]
+    public List<string>? CollectionPrefix { get; set; }
+
+    [Parameter]
     public int xxl { get; set; }
     [Parameter]
     public int xl { get; set; }
@@ -48,8 +53,6 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
 
     protected FilterModelBase? Filter { get; set; }
 
-    private readonly Dictionary<string, object?> _previousParameters = new();
-
     protected bool HasInitialized = false;
     protected bool HasChanged = false;
 
@@ -62,10 +65,13 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
 
         var memberExpression = Property.Body as MemberExpression;
         var field = memberExpression?.Member;
+        var isCollection = CollectionPrefix?.Count > 0;
+        var path = Misc.GetPropertyPath(Property, "/");
 
         if (field is PropertyInfo propertyInfo)
         {
-            Filter = CreateFilter(propertyInfo);
+            isCollection = isCollection || propertyInfo.PropertyType.IsEnumerable();
+            Filter = CreateFilter(path, propertyInfo.PropertyType);
         }
         else
         {
@@ -84,6 +90,11 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
         Filter.Id = Id;
         Filter.IsHidden = Hidden;
         Filter.IsImmediate = Immediate;
+        if (CollectionPrefix?.Count > 0)
+        {
+            Filter.Prefix = string.Join('/', CollectionPrefix);
+        }
+        Filter.IsCollection = isCollection;
 
         Filter.UIOptions = new FilterUIOptions
         {
@@ -104,7 +115,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
         HasInitialized = true;
     }
 
-    public override async Task SetParametersAsync(ParameterView parameters)
+    public override async Task SetParametersAsync(ParameterView parameters) 
     {
         if (HasInitialized)
         {
@@ -174,9 +185,9 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
         UpdateFilter();
     }
 
-    protected virtual FilterModelBase CreateFilter(PropertyInfo propertyInfo)
+    protected virtual FilterModelBase CreateFilter(string path, Type propertyType)
     {
-        return FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
+        return FilterModelBase.CreateFilter(path, propertyType, isDefault: true);
     }
 
     public void UpdateFilter()
