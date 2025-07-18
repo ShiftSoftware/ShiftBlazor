@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.Extensions.DependencyInjection
 @using ShiftSoftware.ShiftIdentity.Blazor.Components
 @using ShiftSoftware.ShiftIdentity.Blazor.Services
 @using ShiftSoftware.ShiftIdentity.Core
@@ -41,8 +42,10 @@
 <RedirectToChangePassword />
 
 @code {
+    [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
+
     [Inject] NavigationManager NavManager { get; set; } = default!;
-    [Inject] ShiftIdentityService ShiftIdentityService { get; set; } = default!;
+    ShiftIdentityService? ShiftIdentityService { get; set; }
     [Inject] SettingManager SettingManager { get; set; } = default!;
 
     [CascadingParameter]
@@ -85,6 +88,8 @@
 
     protected override void OnInitialized()
     {
+        ShiftIdentityService = ServiceProvider.GetService<ShiftIdentityService>();
+
         AppContext = new AppLayoutContext(SettingManager)
         {
             Title = AppTitle,
@@ -119,7 +124,8 @@
             }
             else
             {
-                await ShiftIdentityService.LoginAsync(returnUrl);
+                if (ShiftIdentityService is not null)
+                    await ShiftIdentityService.LoginAsync(returnUrl);
             }
         }
 
