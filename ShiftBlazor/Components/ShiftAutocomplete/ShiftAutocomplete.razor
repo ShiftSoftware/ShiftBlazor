@@ -32,13 +32,17 @@
 
             @if (MultiSelect && SelectedValues?.Count > 0)
             {
-                @if (SelectedValueCounter)
+                @if (GroupSelectedValues && SelectedValuesGroupTemplate != null)
                 {
-                    <MudMenu MaxHeight="@MaxHeight" @bind-Open="IsSelectedValueCounterOpen">
+                    @SelectedValuesGroupTemplate(new(this))
+                }
+                else if (GroupSelectedValues)
+                {
+                    <MudMenu MaxHeight="@MaxHeight" @bind-Open="IsSelectedValuesGroupOpen">
                         <ActivatorContent>
                             <MudChip Size="Size.Small"
-                                     OnClick="SelectedValueCounterClickHandler"
-                                     @onfocus="SelectedValueCounterFocusHandler"
+                                     OnClick="SelectedValuesGroupClickHandler"
+                                     @onfocus="OpenSelectedValuesGroup"
                                      Value="SelectedValues.Count"/>
                         </ActivatorContent>
                         <ChildContent>
@@ -54,7 +58,7 @@
                 }
             }
 
-            @if (IsIntitialValueLoading && (!SelectedValueCounter || (SelectedValueCounter && !MultiSelect)))
+            @if (IsIntitialValueLoading && (!GroupSelectedValues || (GroupSelectedValues && !MultiSelect)))
             {
                 <div style="width: 0;">
                     @if (LoadingTemplate != null)
@@ -295,7 +299,7 @@
 </style>
 
 @code {
-    private RenderFragment SelectedValuesRenderFragment =>@<text>
+    internal RenderFragment SelectedValuesRenderFragment =>@<text>
 
         @for (var i = 0; i < SelectedValues!.Count; i++)
         {
