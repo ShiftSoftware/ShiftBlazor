@@ -661,6 +661,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             await SetValue(item);
             await CloseDropdown();
         }
+
+        if (EditContext != null && For != null)
+        {
+            EditContext.NotifyFieldChanged(FieldIdentifier.Create(For));
+        }
     }
 
     public async Task<bool> RemoveSelected(ShiftEntitySelectDTO item)
@@ -685,7 +690,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         {
             await SelectedValuesChanged.InvokeAsync(SelectedValues);
         }
-
 
         if (SelectedValuesIndex <= SelectedValues.Count && !IsFocused)
         {
