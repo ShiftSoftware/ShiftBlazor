@@ -31,6 +31,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     [Parameter]
     public List<string>? CollectionPrefix { get; set; }
 
+#pragma warning disable IDE1006 // Naming Styles
     [Parameter]
     public int xxl { get; set; }
     [Parameter]
@@ -43,6 +44,8 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     public int sm { get; set; }
     [Parameter]
     public int xs { get; set; }
+#pragma warning restore IDE1006 // Naming Styles
+
     [Parameter]
     public int Order { get; set; } = int.MaxValue;
     [Parameter]
