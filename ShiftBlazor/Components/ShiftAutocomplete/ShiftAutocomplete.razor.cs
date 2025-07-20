@@ -1077,6 +1077,12 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     {
         if (index >= 0 && index < SelectedValues?.Count)
         {
+            var focusableElementsCount = await JsRuntime.InvokeAsync<int>("GetFocusableElementCount", ContainerRef);
+            if (focusableElementsCount <= 1)
+            {
+                return;
+            }
+
             await CloseDropdown();
             await ContainerRef.MudFocusFirstAsync(index);
         }
