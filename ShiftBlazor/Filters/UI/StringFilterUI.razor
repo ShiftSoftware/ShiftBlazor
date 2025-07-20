@@ -96,15 +96,14 @@
 
 			var options = stringFilter.AutocompleteOptions;
 			AutocompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(stringFilter.DtoType);
-			AutocompleteParameters = new()
-			{
-				["Adornment"] = Adornment.None,
-				["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged),
-				["MultiSelect"] = true,
-				["Clearable"] = true,
-				["Underline"] = false,
-				["SelectedValueCounter"] = true,
-			};
+
+			AutocompleteParameters = stringFilter.AutocompleteOptions?.AdditionalParameters ?? new();
+			AutocompleteParameters["Adornment"] = Adornment.None;
+			AutocompleteParameters["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged);
+			AutocompleteParameters["MultiSelect"] = true;
+			AutocompleteParameters["Clearable"] = true;
+			AutocompleteParameters["Underline"] = false;
+			AutocompleteParameters["SelectedValueCounter"] = true;
 
 			if (stringFilter.AutocompleteOptions != null)
 			{
