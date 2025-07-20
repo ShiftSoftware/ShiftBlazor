@@ -216,7 +216,7 @@ public class ActionButton<T> : MudButtonExtended
                     { "Icon", Icons.Material.Filled.Error },
                 };
 
-                DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+                await DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
                 {
                     MaxWidth = MaxWidth.ExtraSmall,
                     NoHeader = true,

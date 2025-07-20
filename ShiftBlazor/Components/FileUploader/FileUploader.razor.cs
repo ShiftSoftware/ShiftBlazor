@@ -243,7 +243,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             { "Files", Items },
         };
 
-        DialogService.Show<ImageViewer>("", parameters, options);
+        DialogService.ShowAsync<ImageViewer>("", parameters, options);
     }
 
     private async Task OnInputFileChanged(InputFileChangeEventArgs e)

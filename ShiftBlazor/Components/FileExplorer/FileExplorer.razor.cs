@@ -438,7 +438,9 @@ public partial class FileExplorer : IShortcutComponent
             MaxWidth = MaxWidth.ExtraSmall,
         };
 
-        var result = await DialogService.Show<CreateFolderDialog>("", options).Result;
+
+        var dialogRef = await DialogService.ShowAsync<CreateFolderDialog>("", options);
+        var result = await dialogRef.Result;
 
         try
         {

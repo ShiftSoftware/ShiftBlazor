@@ -215,7 +215,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     { "Icon", Icons.Material.Filled.Error },
                 };
 
-            DialogService.Show<PopupMessage>("", parameters, new DialogOptions
+            DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
             {
                 MaxWidth = MaxWidth.Medium,
                 NoHeader = true,
