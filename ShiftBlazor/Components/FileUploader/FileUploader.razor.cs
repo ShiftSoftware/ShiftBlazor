@@ -2,6 +2,7 @@
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
@@ -28,7 +29,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] internal ShiftBlazorLocalizer Loc { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
-    [Inject] IIdentityStore? TokenStore { get; set; }
+    [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
 
     [Parameter]
     public string? Capture { get; set; }
@@ -127,7 +128,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     private bool DisplayUploadDialog { get; set; }
     private Dictionary<string, object> AdditionalAttributes { get; set; } = new();
 
-    [Inject] internal TypeAuth.Core.ITypeAuthService TypeAuthService { get; set; } = default!;
+    internal TypeAuth.Core.ITypeAuthService? TypeAuthService { get; set; }
     [Parameter]
     public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
     internal string InputAccept
@@ -180,6 +181,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     protected override void OnInitialized()
     {
+        TypeAuthService = ServiceProvider.GetService<TypeAuth.Core.ITypeAuthService>();
+
         _ShowThumbnail = ShowThumbnail;
 
         OnGridSort += HandleGridSort;
@@ -449,9 +452,11 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
                 { Constants.FileExplorerSizesMetadataKey, string.Join("|", thumbnailSizes)},
             };
 
-            if (TokenStore != null)
+            var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+
+            if (tokenStore != null)
             {
-                var loggedInUser = (await TokenStore.GetTokenAsync())?.UserData;
+                var loggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
                 if (loggedInUser != null)
                 {
                     metadata.Add(Constants.FileExplorerCreatedByMetadataKey, loggedInUser.ID);
@@ -499,7 +504,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     internal async Task Remove(UploaderItem item)
     {
-        if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))
+        if (TypeAuthAction is null || TypeAuthService?.Can(TypeAuthAction, TypeAuth.Core.Access.Delete) == true)
         {
             item.CancellationTokenSource?.Cancel();
             Items.Remove(item);

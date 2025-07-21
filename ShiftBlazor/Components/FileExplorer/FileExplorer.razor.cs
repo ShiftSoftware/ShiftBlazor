@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
@@ -21,11 +22,11 @@ public partial class FileExplorer : IShortcutComponent
     [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
     [Inject] SettingManager SettingManager { get; set; } = default!;
     [Inject] HttpClient HttpClient { get; set; } = default!;
-    [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] ISnackbar Snackbar { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
-    [Inject] IIdentityStore? TokenStore { get; set; }
+    [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
+
 
     [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
     public bool? ParentReadOnly { get; set; }
@@ -207,9 +208,11 @@ public partial class FileExplorer : IShortcutComponent
         objRef = DotNetObjectReference.Create(this);
         await JsRuntime.InvokeVoidAsync("addCustomUrlChangeListener", objRef, Id);
 
-        if (TokenStore != null)
+        var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+
+        if (tokenStore != null)
         {
-            LoggedInUser = (await TokenStore.GetTokenAsync())?.UserData;
+            LoggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
         }
 
         var userSettings = SettingManager.GetFileExplorerSetting(SettingKey);
