@@ -139,7 +139,7 @@ public partial class FileExplorer : IShortcutComponent
         ".jpg",
         ".jpeg",
         ".png",
-        ".png",
+        ".gif",
         ".webp",
     };
 
@@ -607,40 +607,85 @@ public partial class FileExplorer : IShortcutComponent
         await FetchData(data);
     }
 
-    private KeyValuePair<string, string> GetFileIcon(FileExplorerDirectoryContent file)
+    private (string icon, string color) GetFileIcon(FileExplorerDirectoryContent file)
     {
         if (file.IsFile)
         {
             var extension = Path.GetExtension(file.Name)?.ToLower();
             
             if (ImageExtensions.Contains(extension))
-                return new(@Icons.Material.Filled.Image, "#dddddd");
+                return ("image", "#d14b4b");
 
             switch (extension)
             {
                 case ".pdf":
-                    return new(@Icons.Material.Filled.TextSnippet, "#de2429");
+                    return ("picture_as_pdf", "#de2429");
                 case ".doc":
                 case ".docx":
-                    return new(@Icons.Material.Filled.TextSnippet, "#295294");
+                    return ("docs", "#295294");
                 case ".txt":
-                    return new(@Icons.Material.Filled.TextSnippet, "#dddddd");
+                case ".rtf":
+                    return ("description", "#777777");
                 case ".xls":
                 case ".xlsx":
-                    return new(@Icons.Material.Filled.ListAlt, "#3b885a");
+                    return ("table", "#3b885a");
+                case ".ppt":
+                case ".pptx":
+                    return ("wallpaper_slideshow", "#d14b4b");
                 case ".csv":
-                    return new(@Icons.Material.Filled.Archive, "#dddddd");
+                    return ("csv", "#3b885a");
                 case ".zip":
                 case ".rar":
                 case ".7z":
-                    return new(@Icons.Material.Filled.Archive, "#f9ca40");
+                    return ("archive", "#f9ca40");
+                case ".mp3":
+                case ".wav":
+                case ".ogg":
+                case ".flac":
+                case ".aac":
+                case ".m4a":
+                    return ("audio_file", "#6dabfb");
+                case ".mp4":
+                case ".avi":
+                case ".mkv":
+                case ".mov":
+                case ".wmv":
+                case ".flv":
+                case ".webm":
+                case ".mpeg":
+                case ".mpg":
+                    return ("video_file", "#d15eff");
+                case ".html":
+                case ".htm":
+                case ".css":
+                case ".js":
+                case ".php":
+                case ".ts":
+                case ".py":
+                case ".java":
+                case ".c":
+                case ".cpp":
+                case ".cs":
+                    return ("code", "#001234");
+                case ".json":
+                case ".xml":
+                    return ("data_array", "#777777");
+                case ".exe":
+                case ".dll":
+                case ".msi":
+                    return ("terminal", "#001234");
+                case ".sh":
+                case ".bat":
+                case ".cmd":
+                case ".ps1":
+                    return ("terminal", "#001234");
                 default:
-                    return new(Icons.Material.Filled.InsertDriveFile, "#dddddd");
+                    return ("draft", "#777777");
             }
         }
         else
         {
-            return new (Icons.Material.Filled.Folder, "#f1ce69");
+            return ("folder", "#f1ce69");
         }
 
     }

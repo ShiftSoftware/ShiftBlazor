@@ -223,7 +223,7 @@
                                         </div>
                                     </HeaderTemplate>
                                     <CellTemplate>
-                                        <MudIcon Icon="@GetFileIcon(context.Item).Key" Style=@($"color: {@GetFileIcon(context.Item).Value};") />
+                                        <div class="material-symbols-outlined" style="color: @GetFileIcon(context.Item).color;">@GetFileIcon(context.Item).icon</div>
                                         <span>@context.Item.Name</span>
                                     </CellTemplate>
                                 </TemplateColumn>
@@ -300,7 +300,7 @@
                                         }
                                         else
                                         {
-                                            <MudIcon Icon="@GetFileIcon(file).Key" Style=@($"color: {@GetFileIcon(file).Value};") />
+                                            <div class="material-symbols-outlined" style="color: @GetFileIcon(file).color;">@GetFileIcon(file).icon</div>
                                         }
 
                                         <MudText>@file.Name</MudText>

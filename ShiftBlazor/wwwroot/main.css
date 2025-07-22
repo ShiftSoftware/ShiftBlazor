@@ -168,6 +168,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .file-explorer {
     --file-box-size: 150px;
     --file-icon-size: 100px;
+    --file-icon-font-size: 96px;
 }
 
 .file-explorer .main-window {
@@ -209,16 +210,19 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     .file-explorer .file-listing.small {
         --file-box-size: 400px;
         --file-icon-size: 25px;
+        --file-icon-font-size: 24px;
     }
 
     .file-explorer .file-listing.medium {
         --file-box-size: 100px;
         --file-icon-size: 70px;
+        --file-icon-font-size: 56px;
     }
 
     .file-explorer .file-listing.extra-large {
         --file-box-size: 200px;
         --file-icon-size: 150px;
+        --file-icon-font-size: 146px;
     }
 
 .file-explorer-item {
@@ -241,17 +245,23 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     gap: 6px;
 }
 
-    .file-listing.icons .file-explorer-item .mud-icon-root,
-    .file-listing.icons .file-explorer-item .mud-image {
-        height: var(--file-icon-size);
-        width: var(--file-icon-size);
-    }
+.file-listing.icons .file-explorer-item .mud-icon-root,
+.file-listing.icons .file-explorer-item .mud-image,
+.file-listing.icons .file-explorer-item .material-symbols-outlined {
+    height: var(--file-icon-size);
+    width: var(--file-icon-size);
+    font-size: var(--file-icon-size);
+    user-select: none;
+}
 
 .file-explorer .mud-table tbody td:first-child .mud-icon-root,
-.file-explorer .mud-table tbody td:first-child .mud-image {
+.file-explorer .mud-table tbody td:first-child .mud-image,
+.file-explorer .mud-table tbody td:first-child .material-symbols-outlined {
     height: 25px;
     width: 25px;
+    font-size: 24px;
     vertical-align: middle;
+    user-select: none;
 }
 
 .file-explorer-item p {
