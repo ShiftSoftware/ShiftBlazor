@@ -204,7 +204,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
             var underlyingType = Nullable.GetUnderlyingType(type);
 
-            return underlyingType is not null && (underlyingType == typeof(DateTime) || type == typeof(DateTimeOffset));
+            return underlyingType is not null && (underlyingType == typeof(DateTime) || underlyingType == typeof(DateTimeOffset));
         }
     }
 }
