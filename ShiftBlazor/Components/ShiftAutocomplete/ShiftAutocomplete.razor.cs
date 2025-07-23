@@ -900,7 +900,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             case "NumpadEnter":
                 // When trying fast and adding items,
                 // the search might not be finished yet,
-                // so we only select an item if search is finished.
+                // so we only select an item if search is finished (IsLoading == false).
                 if (IsDropdownOpen && !IsLoading)
                 {
                     if (FreeInput && MultiSelect && HighlightedListItemIndex >= DropdownItems.Count)
