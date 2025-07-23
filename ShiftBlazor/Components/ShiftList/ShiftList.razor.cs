@@ -1134,7 +1134,22 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                     var columns = DataGrid!
                         .RenderedColumns
-                        .Where(x => !x.Hidden)
+                        .Where(x =>
+                        {
+                            if (!x.Hidden)
+                                return true;
+
+                            var forceExportProp = x.GetType().GetProperty(nameof(PropertyColumnExtended<T, object>.ForceExportIfHidden));
+
+                            if (forceExportProp != null)
+                            {
+                                var forceExportValue = forceExportProp.GetValue(x) as bool?;
+
+                                return forceExportValue == true;
+                            }
+
+                            return false;
+                        })
                         .Where(x => x.GetType().GetProperty("Property") != null);
 
                     // Write headers
