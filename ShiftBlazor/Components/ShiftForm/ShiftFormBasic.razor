@@ -6,11 +6,6 @@
 @implements IShortcutComponent
 @implements IShiftForm
 
-@if (!string.IsNullOrWhiteSpace(DocumentTitle))
-{
-    <PageTitle>@DocumentTitle</PageTitle>
-}
-
 <CascadingValue Value="this" Name="ShiftForm">
 <article style="height: 100%;" id="@($"Form-{Id}")">
     <MudFocusTrap Disabled="MudDialog == null" DefaultFocus="DefaultFocus.Element">

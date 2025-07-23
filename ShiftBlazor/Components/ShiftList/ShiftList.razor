@@ -7,11 +7,6 @@
 
 @if (TypeAuthAction == null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
 {
-    @if (!string.IsNullOrWhiteSpace(Title) && !IsEmbed)
-    {
-        <PageTitle>@Title</PageTitle>
-    }
-
     <MudPaper Elevation="25" Outlined="Outlined" id="@($"Grid-{Id}")">
         <CascadingValue Value="this" IsFixed="true">
             <header>

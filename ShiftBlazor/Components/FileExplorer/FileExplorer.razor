@@ -1,10 +1,5 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 
-@if (!string.IsNullOrWhiteSpace(Title) && !IsEmbed)
-{
-    <PageTitle>@Title</PageTitle>
-}
-
 <MudPaper Class="file-explorer" Elevation="25" Outlined="Outlined" id="@FileExplorerId">
     <MudToolBar Style="@ToolbarStyle" Dense="@Dense" Class="light-toolbar shift-toolbar-header">
         <MudIcon Size="@IconSize" Icon="@IconSvg"></MudIcon>

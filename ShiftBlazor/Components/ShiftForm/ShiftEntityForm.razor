@@ -8,11 +8,6 @@
 @using ShiftSoftware.ShiftEntity.Core.Flags
 @using ShiftSoftware.TypeAuth.Core
 
-@if (!string.IsNullOrWhiteSpace(DocumentTitle))
-{
-    <PageTitle>@DocumentTitle</PageTitle>
-}
-
 <CascadingValue Value="this" Name="ShiftForm">
 
 <article style="height: 100%;" id="@($"Form-{Id}")">
