@@ -1,5 +1,6 @@
 ﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 using System.Collections;
 using System.Text;
 
@@ -50,9 +51,9 @@ public class ODataFilterGenerator
 
     public ODataFilterGenerator Add(ODataFilterGenerator generator)
     {
+        Remove(generator.Id);
         if (generator.Count > 0)
         {
-            Remove(generator.Id);
             ChildFilters.Add(generator);
         }
         return this;
@@ -97,6 +98,33 @@ public class ODataFilterGenerator
     public ODataFilterGenerator Add(string rawFilter)
     {
         RawFilters.Add(rawFilter);
+        return this;
+    }
+
+    public ODataFilterGenerator Add(FilterModelBase? filter)
+    {
+        if (filter == null)
+        {
+            return this;
+        }
+
+        if (filter.Value == null || filter.Value is IEnumerable list && list.Cast<object>().Count() == 0)
+        {
+            Remove(filter.Id);
+        }
+        else if (filter.Value != null)
+        {
+            return Add(x =>
+            {
+                x.Id = filter.Id;
+                x.Field = filter.Field;
+                x.Operator = filter.Operator;
+                x.Value = filter.Value;
+                x.IsCollection = filter.IsCollection;
+                x.Prefix = filter.Prefix;
+            });
+        }
+
         return this;
     }
 

@@ -1,8 +1,8 @@
-﻿using System.Reflection;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
+using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Filters.Builders;
 using ShiftSoftware.ShiftBlazor.Filters.Models;
-using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -27,12 +27,21 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
     [Parameter]
     public Type? DTOType { get; set; }
 
+    [Parameter]
+    public Action<ODataFilterGenerator>? AutocompleteFilter { get; set; }
+
     protected override FilterModelBase CreateFilter(string path, Type propertyType)
     {
         var filter = FilterModelBase.CreateFilter(path, propertyType, DTOType, true);
         
         Operator ??= ODataOperator.In;
         filter.Value = Value; 
+
+        if (AutocompleteFilter != null)
+        {
+            AdditionalParameters ??= new Dictionary<string, object>();
+            AdditionalParameters["Filter"] = AutocompleteFilter;
+        }
 
         if (filter is StringFilterModel stringFilter)
         {

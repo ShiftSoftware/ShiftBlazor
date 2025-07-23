@@ -54,7 +54,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     [CascadingParameter]
     public IFilterableComponent? Parent { get; set; }
 
-    protected FilterModelBase? Filter { get; set; }
+    public FilterModelBase? Filter { get; private set; }
 
     protected bool HasInitialized = false;
     protected bool HasChanged = false;
