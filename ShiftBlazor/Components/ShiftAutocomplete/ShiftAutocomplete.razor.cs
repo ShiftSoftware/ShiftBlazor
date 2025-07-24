@@ -253,14 +253,14 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     // ======== Classnames =========
     protected string Classname =>
-            new CssBuilder("shift-autocomplete")
+            new CssBuilder("shift-autocomplete shift-input")
                 .AddClass("mud-input-required", when: () => Required)
                 .AddClass($"mud-input-{Variant.ToDescriptionString()}-with-label", !string.IsNullOrEmpty(Label))
                 .AddClass(Class)
                 .Build();
 
     protected string InputContainerClassname =>
-            new CssBuilder("shift-autocomplete-input-container")
+            new CssBuilder("shift-input-wrapper")
                 .AddClass($"mud-input-{Variant.ToDescriptionString()}-with-label", !string.IsNullOrEmpty(Label))
                 .AddClass("mud-shrink", !string.IsNullOrWhiteSpace(Text) || IsFocused || SelectedValues?.Count > 0 || Adornment == Adornment.Start || !string.IsNullOrWhiteSpace(Placeholder) || IsIntitialValueLoading)
                 .Build();

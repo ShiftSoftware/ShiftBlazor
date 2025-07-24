@@ -1,163 +1,136 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Linq.Expressions
+@using Microsoft.JSInterop
+@using MudBlazor.Utilities
 
-@inject SettingManager SettingManager
-@inject ShiftBlazorLocalizer Loc
+<MudField InnerPadding="false"
+          Class="@Classname"
+          Style="@Stylename"
+          Disabled="@IsDisabled"
+          Variant="@Variant"
+          Error="@Error"
+          Underline="@Underline"
+          @onclick="FieldClickHandler"
+          ErrorText="@ErrorText">
+    
+    <MudStack Row Spacing="0" Class="@InputContainerClassname">
 
-<MudItem lg="DateLg" md="DateMd" sm="DateSm" xs="DateXs">
-    <MudDatePickerExtended DateFormat="@(SettingManager.GetDateFormat())"
-                           Date="DateTimeOffset?.Date"
-                           DateChanged="DateChanged"
-                           Label="@DateLabel"
-                           Required="_IsRequired" />
-</MudItem>
-
-<MudItem lg="TimeLg" md="TimeMd" sm="TimeSm" xs="TimeXs">
-    <MudTimePickerExtended AmPm="@(SettingManager.GetTimeFormat().Contains("tt"))"
-                           TimeFormat="@(SettingManager.GetTimeFormat())"
-                           Time="DateTimeOffset?.TimeOfDay"
-                           TimeChanged="TimeChanged"
-                           Label="@TimeLabel"
-                           Disabled="DateTimeOffset == null"
-                           Required="_IsRequired"
-                           />
-</MudItem>
-
-@if (For != null)
-{
-    <ValidationMessage For="For"/>
-}
-
-@code {
-    [CascadingParameter]
-    public EditContext? EditContext { get; set; }
-
-    [Parameter]
-    public string? DateLabel { get; set; }
-
-    [Parameter]
-    public string? TimeLabel { get; set; }
-
-    [Parameter]
-    public int DateLg { get; set; }
-
-    [Parameter]
-    public int DateMd { get; set; }
-
-    [Parameter]
-    public int DateSm { get; set; }
-
-    [Parameter]
-    public int DateXs { get; set; }
-
-    [Parameter]
-    public int TimeLg { get; set; }
-
-    [Parameter]
-    public int TimeMd { get; set; }
-
-    [Parameter]
-    public int TimeSm { get; set; }
-
-    [Parameter]
-    public int TimeXs { get; set; }
-
-    [Parameter]
-    public DateTimeOffset? DateTimeOffset { get; set; }
-
-    [Parameter]
-    public EventCallback<DateTimeOffset?> DateTimeOffsetChanged { get; set; }
-
-    [Parameter]
-    public Expression<Func<DateTimeOffset?>>? For { get; set; }
-
-    // [CascadingParameter(Name = "ShiftForm")]
-    // public IShiftForm? ShiftForm { get; set; }
-
-    internal bool _IsRequired = false;
-
-    protected override void OnInitialized()
-    {
-        if (For != null)
+        @if (Adornment == Adornment.Start)
         {
-            _IsRequired = FormHelper.IsRequired(For);
+            <div class="mud-input-adornment">
+                <MudIconButton Class="mud-input-adornment-icon-button mud-no-activator"
+                               Icon="@AdornmentIcon"
+                               OnClick="@OnAdornmentClick"
+                               Edge="@Edge.Start"
+                               Size="@AdornmentSize"
+                               Color="@AdornmentColor"
+                               aria-label="@AdornmentAriaLabel"
+                               tabindex="-1"
+                               @onmousedown:stopPropagation />
+            </div>
         }
 
-        if (string.IsNullOrWhiteSpace(DateLabel)){
-            DateLabel = Loc["DateTimePickerTimeLabel"];
-        }
+        <MudTextField T="string"
+                      @onfocus="InputFocusHandler"
+                      OnBlur="InputBlurHandler"
+                      Value="@DateTimeOffset?.DateTime.ToString()"
+                      ValueChanged="SetDateTimeFromString"
+                      Underline="false"
+                      Class="@InputClassname"
+                      Style="@InputStyle"
+                      OnKeyDown="KeyDownHandler"
+                      OnKeyUp="KeyUpHandler"
+                      Required="Required" />
 
-        if (string.IsNullOrWhiteSpace(TimeLabel))
+
+        <div style="height: 0;">
+            <div class="mud-input-adornment">
+                @if (DisplayClearable)
+                {
+                    <MudIconButton OnClick="ClearDateTime"
+                                   Icon="@Icons.Material.Filled.Clear"
+                                   Size="Size.Small"
+                                   Edge="@Edge.End"
+                                   tabindex="-1" />
+                }
+
+                @if (Adornment == Adornment.End)
+                {
+                    <MudIconButton Class="mud-input-adornment-icon-button mud-no-activator"
+                                   Icon="@AdornmentIcon"
+                                   OnClick="@OnAdornmentClick"
+                                   Edge="@Edge.End"
+                                   Size="@AdornmentSize"
+                                   Color="@AdornmentColor"
+                                   aria-label="@AdornmentAriaLabel"
+                                   tabindex="-1"
+                                   @onmousedown:stopPropagation />
+                }
+            </div>
+        </div>
+    </MudStack>
+
+    <MudInputLabel Class="shift-label mud-input-label-inputcontrol"
+                   Disabled="@IsDisabled"
+                   Variant="@Variant"
+                   ForId="@InputId">
+        @Label
+    </MudInputLabel>
+
+
+    <MudPopover Open="IsPickerOpen"
+                AnchorOrigin="@AnchorOrigin"
+                TransformOrigin="@TransformOrigin"
+                OverflowBehavior="@OverflowBehavior"
+                Fixed="@DropdownFixed"
+                Class="@DropdownClassname">
+        <MudStack Row Spacing="0">
+            <MudDatePicker PickerVariant="PickerVariant.Static"
+                           Elevation="0"
+                           MaxDate="MaxDate"
+                           MinDate="MinDate"
+                           Date="this.DateTimeOffset?.Date"
+                           DateChanged="SetDate" />
+            <MudTimePicker PickerVariant="PickerVariant.Static"
+                           Elevation="0"
+                           Time="this.DateTimeOffset?.TimeOfDay"
+                           TimeChanged="SetTime" />
+        </MudStack>
+
+        @if (PickerActionsTemplate == null)
         {
-            TimeLabel = Loc["DateTimePickerDateLabel"];
-        }
-    }
-
-    public async Task DateChanged(DateTime? dateTime)
-    {
-        var oldDateTime = this.DateTimeOffset;
-
-        if (dateTime == null)
-        {
-            this.DateTimeOffset = null;
+            <MudToolBar>
+                <MudSpacer/>
+                <MudButton OnClick="ClosePicker">Close</MudButton>
+            </MudToolBar>
         }
         else
         {
-            if (this.DateTimeOffset == null)
-            {
-                this.DateTimeOffset = new DateTime(dateTime.Value.Year, dateTime.Value.Month, dateTime.Value.Day, 0, 0, 0);
-            }
-            else
-            {
-                this.DateTimeOffset = new DateTime(dateTime.Value.Year, dateTime.Value.Month, dateTime.Value.Day, this.DateTimeOffset.Value.Hour, this.DateTimeOffset.Value.Minute, 0);
-            }
+            @PickerActionsTemplate
         }
+    </MudPopover>
+</MudField>
 
-        if (EditContext != null && For != null && !DateTimeOffset.Equals(oldDateTime))
-        {
-            EditContext.NotifyFieldChanged(FieldIdentifier.Create(For));
-        }
 
-        await this.DateTimeOffsetChanged.InvokeAsync(this.DateTimeOffset);
+<MudOverlay Visible="IsPickerOpen" LockScroll="@LockScroll" AutoClose OnClosed="ClosePicker">
+    <div @ref="OverlayChildReference" style="display: none;"></div>
+</MudOverlay>
+
+<style>
+    .shift-datetime-picker-popover .mud-picker-static > .mud-elevation-1 {
+        box-shadow: none !important;
     }
 
-    public async Task TimeChanged(TimeSpan? timeSpan)
-    {
-        var oldDateTime = this.DateTimeOffset;
-
-        if (timeSpan == null)
-        {
-            if (this.DateTimeOffset != null)
-            {
-                this.DateTimeOffset = new DateTime(this.DateTimeOffset.Value.Year, this.DateTimeOffset.Value.Month, this.DateTimeOffset.Value.Day, 0, 0, 0);
-                if (For != null)
-                {
-                    EditContext?.NotifyFieldChanged(FieldIdentifier.Create(For));
-                }
-            }
-        }
-        else
-        {
-            if (this.DateTimeOffset == null)
-            {
-
-            }
-            else
-            {
-                this.DateTimeOffset = new DateTime(this.DateTimeOffset.Value.Year, this.DateTimeOffset.Value.Month, this.DateTimeOffset.Value.Day, timeSpan.Value.Hours, timeSpan.Value.Minutes, 0);
-                if (For != null)
-                {
-                    EditContext?.NotifyFieldChanged(FieldIdentifier.Create(For));
-                }
-            }
-        }
-
-        if (EditContext != null && For != null && !DateTimeOffset.Equals(oldDateTime))
-        {
-            EditContext.NotifyFieldChanged(FieldIdentifier.Create(For));
-        }
-
-        await this.DateTimeOffsetChanged.InvokeAsync(this.DateTimeOffset);
+    .shift-datetime-picker .mud-input-slot-nopadding {
+        padding: 0 !important;
     }
-}
+
+    .shift-datetime-picker .mud-input-filled .shift-datetime-picker-input input.mud-input-root {
+        padding: 27px 12px 10px;
+    }
+
+    .shift-datetime-picker .mud-input-outlined .shift-datetime-picker-input input.mud-input-root {
+        padding: 18.5px 14px;
+    }
+</style>

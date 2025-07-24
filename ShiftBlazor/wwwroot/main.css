@@ -349,6 +349,40 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 
 /* ============== File Explorer end ============== */
 
+/* ================= Shift Input ================= */
+
+.shift-input .shift-input-wrapper {
+    align-items: center;
+}
+
+.shift-input .shift-input-wrapper.mud-input-text-with-label {
+    margin-top: 16px;
+}
+
+.shift-input .shift-label {
+    color: var(--mud-palette-text-secondary);
+    padding: 0;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.15rem;
+    letter-spacing: .00938em;
+    z-index: 1;
+    pointer-events: none;
+}
+
+    .shift-input .shift-label.mud-input-label-outlined {
+        background-color: #fff;
+    }
+
+    .shift-input .shift-label.mud-disabled {
+        color: var(--mud-palette-text-disabled) !important;
+    }
+
+.shift-input .shift-input-wrapper:focus-within ~ label.shift-label {
+    color: var(--mud-palette-primary);
+}
+
+/* =============== Shift Input End =============== */
 
 .filter-input .percent-input {
     flex-grow: 0;
