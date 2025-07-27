@@ -23,4 +23,25 @@
 
         return base.SetParametersAsync(parameters);
     }
+
+    protected override void OnInitialized()
+    {
+        var type = Nullable.GetUnderlyingType(typeof(T));
+        type ??= typeof(T);
+
+        if (ChildContent == null && type.IsEnum)
+        {
+            ChildContent = RenderEnumItems(type);
+        }
+        base.OnInitialized();
+    }
+
+    private RenderFragment<Type> RenderEnumItems = (type) => @<text>
+
+        @foreach (T x in Enum.GetValues(type))
+        {
+            <MudSelectItem Value="@x">@((x as Enum)?.Describe())</MudSelectItem>
+        }
+
+    </text>;
 }
