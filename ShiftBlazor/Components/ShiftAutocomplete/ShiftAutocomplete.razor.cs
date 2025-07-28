@@ -227,12 +227,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     public Func<KeyboardEventArgs, ValueTask<bool>>? OnFieldKeyUp { get; set; }
 
     [Parameter]
-    public Func<KeyboardEventArgs, ValueTask<bool>>? OnInputKeyDown { get; set; }
-
-    [Parameter]
-    public Func<KeyboardEventArgs, ValueTask<bool>>? OnInputKeyUp { get; set; }
-
-    [Parameter]
     public EventCallback<object> OnQuickAddClick { get; set; }
 
     [Parameter]
@@ -336,6 +330,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         else if (!MultiSelect && Value?.Value != null &&  Value.Text == null)
         {
             _ = UpdateInitialValue();
+        }
+
+        if (For != null && EditContext != null)
+        {
+            _fieldIdentifier = FieldIdentifier.Create(For);
         }
 
         base.OnParametersSet();
@@ -889,7 +888,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             return;
         }
 
-        if (OnInputKeyUp != null && await OnInputKeyUp.Invoke(args) == false)
+        if (OnFieldKeyUp != null && await OnFieldKeyUp.Invoke(args) == false)
         {
             return;
         }
@@ -928,6 +927,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     private async Task ClearSelected()
     {
+        await OnClearClick.InvokeAsync();
+
         if (MultiSelect)
         {
             SelectedValues?.Clear();
@@ -937,8 +938,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         {
             await SetValue(null);
         }
-
-        await OnClearClick.InvokeAsync();
     }
 
     private async Task AddFreeInputValue(string? text = null)
