@@ -352,7 +352,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool IsAllSelected => SelectState.All;
         public readonly SelectState<T> SelectState = new();
 
-        internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
         internal Size IconSize = Size.Medium;
         internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
         internal bool RenderAddButton = false;
@@ -375,6 +374,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsFilterPanelOpen { get; set; }
         public HashSet<Guid> ActiveOperations { get; set; } = [];
         private CancellationTokenSource? ReloadBlockTokenSource;
+        public bool IsLoading { get; set; }
 
         protected string GetRowClassname(T item, int colIndex) =>
             new CssBuilder()
@@ -654,6 +654,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 ReloadBlockTokenSource = null;
             }
 
+            IsLoading = true;
+            StateHasChanged();
+
             var builder = QueryBuilder;
             ErrorMessage = null;
 
@@ -748,15 +751,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 gridData = new GridData<T>
                 {
-                    Items = content.Value.ToList(),
+                    Items = content.Value,
                     TotalItems = (int)content.Count.Value,
                 };
 
                 SelectState.Total = gridData.TotalItems;
 
                 await OnFetch.InvokeAsync(content.Value);
-                ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, content.Value.ToList<object>()));
-                _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(Id, content.Value));
             }
             catch (JsonException e)
             {
@@ -769,8 +770,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 ErrorMessage = Loc["DataReadError"];
                 MessageService.Error(Loc["DataReadError"], e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
+            finally
+            {
+                ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, gridData.Items.ToList<object>()));
+            }
 
             ReadyToRender = true;
+            IsLoading = false;
+            StateHasChanged();
 
             return gridData;
         }

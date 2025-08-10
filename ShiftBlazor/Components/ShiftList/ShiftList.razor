@@ -28,6 +28,7 @@
                                 <MudIconButtonExtended Size="@IconSize"
                                                        Icon="@Icons.Material.Outlined.Refresh"
                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                       Disabled="IsLoading"
                                                        OnClick="() => DataGrid!.ReloadServerData()" />
                             </MudTooltip>
                         }

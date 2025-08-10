@@ -3,9 +3,9 @@
 
 <div style="width: 100%;" class="@ClassName">
 
-	<MudField Label="@Label" InnerPadding="false">
+	<MudField Label="@Label" InnerPadding="false" Disabled="ParentDisabled">
 		<MudStack Row>
-			<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+			<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
 				<ActivatorContent>
 					<MudText>@Filter.Operator.Describe()</MudText>
 					<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />

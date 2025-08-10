@@ -11,10 +11,11 @@
 		  AdornmentIcon="@Icons.Material.Filled.FilterAlt"
 		  InnerPadding="false"
 		  Label="@Label"
+		  Disabled="ParentDisabled"
 		  @onkeydown="FieldKeyDownHandler"
 		  OnAdornmentClick="OpenMenu">
 
-	<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+	<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
 		<ActivatorContent>
 			<MudText>@Filter.Operator.Describe()</MudText>
 			<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
@@ -59,8 +60,8 @@
 	<MudPopover Open="IsPickerOpen" AnchorOrigin="Origin.BottomLeft" >
 		<MudDateRangePicker DateRange="_dateRangeValue"
 							DateRangeChanged="RangeChangedHandler"
-							PickerVariant="PickerVariant.Static">
-		</MudDateRangePicker>
+							Elevation="0"
+							PickerVariant="PickerVariant.Static" />
 	</MudPopover>
 
 	<MudPopover Open="_IsMenuOpen" RelativeWidth="DropdownWidth.Relative" AnchorOrigin="Origin.BottomLeft" Paper Class="pa-5">
