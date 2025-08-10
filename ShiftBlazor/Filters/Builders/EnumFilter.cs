@@ -11,6 +11,9 @@ public class EnumFilter<T, TProperty> : FilterBuilder<T, TProperty>
     [Parameter]
     public IEnumerable<TProperty>? Value { get; set; }
 
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
     private IEnumerable<TProperty>? OldValue { get; set; }
 
     protected override FilterModelBase CreateFilter(string path, Type propertyType)
@@ -20,6 +23,11 @@ public class EnumFilter<T, TProperty> : FilterBuilder<T, TProperty>
         Operator ??= ODataOperator.In;
 
         filter.Value = Value;
+
+        if (filter is EnumFilterModel enumFilter)
+        {
+            enumFilter.ChildContent = ChildContent;
+        }
 
         return filter;
     }

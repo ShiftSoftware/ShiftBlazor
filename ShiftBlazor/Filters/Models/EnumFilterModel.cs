@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Microsoft.AspNetCore.Components;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
 
@@ -7,6 +8,8 @@ namespace ShiftSoftware.ShiftBlazor.Filters.Models;
 public class EnumFilterModel : FilterModelBase
 {
     public Type? EnumType { get; set; }
+    public RenderFragment? ChildContent { get; set; }
+
     public Type? EnumTypeToUse
     {
         get
