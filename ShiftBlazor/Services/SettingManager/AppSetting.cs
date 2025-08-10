@@ -37,7 +37,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         public static bool EnableFormClone = false;
         public static FileExplorerSettings FileExplorerSettings = new FileExplorerSettings
         {
-            View = FileView.Large,
+            View = FileView.Detailed,
             Sort = FileSort.Date,
             SortDescending = true,
         };
