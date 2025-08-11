@@ -114,6 +114,8 @@ public partial class FileExplorer : IShortcutComponent
     private bool DisableSidebar => DisableQuickAccess && DisableRecents;
     private FileExplorerDirectoryContent? CWD { get; set; } = null;
     private List<FileExplorerDirectoryContent> Files { get; set; } = new();
+    private List<FileExplorerDirectoryContent>? FilteredFiles { get; set; }
+    private List<FileExplorerDirectoryContent> DisplayedFiles => FilteredFiles ?? Files;
     private UploadEventArgs? UploadingFiles { get; set; }
     private bool IsLoading { get; set; } = true;
     private string Url = "";
@@ -149,6 +151,7 @@ public partial class FileExplorer : IShortcutComponent
     private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
     TokenUserDataDTO? LoggedInUser;
     private Dictionary<string, string> Usernames = [];
+    private string SearchQuery { get; set; } = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -345,6 +348,7 @@ public partial class FileExplorer : IShortcutComponent
         }
         else
         {
+            ClearSearch();
             await FetchData(file);
         }
     }
@@ -891,6 +895,27 @@ public partial class FileExplorer : IShortcutComponent
         {
             DisplayError(Loc["Uploading Failed."]);
         }
+    }
+
+    public void LocalSearch(string q)
+    {
+        var filtered = Files.Where(x => x.Name?.Contains(q, StringComparison.CurrentCultureIgnoreCase) == true);
+        SearchQuery = q;
+
+        if (q.Length > 0)
+        {
+            FilteredFiles = filtered.ToList();
+        }
+        else
+        {
+            FilteredFiles = null;
+        }
+    }
+
+    public void ClearSearch()
+    {
+        SearchQuery = string.Empty;
+        FilteredFiles = null;
     }
 
     public void Dispose()

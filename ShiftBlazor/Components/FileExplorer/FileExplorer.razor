@@ -178,17 +178,22 @@
                 }
 
                 <MudButton Size="Size.Small" Disabled>@PathParts.Last()</MudButton>
+
+                <MudSpacer />
+                <div style="min-width: 250px;">
+                    <MudTextField Placeholder="Search Current Directory" T="string" ValueChanged="LocalSearch" Immediate Clearable/>
+                </div>
             </MudToolBar>
 
             <MudDivider Style="flex-grow: initial;" />
 
             <div class="file-listing @GetViewClass()" @onclick="() => {if (IsIconsView) DeselectAllFiles();} " @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
 
-                @if (Files.Count > 0)
+                @if (DisplayedFiles.Count > 0)
                 {
                     if (Settings.View == FileView.Detailed)
                     {
-                        <MudDataGrid Items="Files"
+                        <MudDataGrid Items="DisplayedFiles"
                                      Dense
                                      Filterable="false"
                                      SortMode="SortMode.None"
@@ -265,7 +270,7 @@
                     }
                     else if (IsIconsView)
                     {
-                        @foreach (var file in Files)
+                        @foreach (var file in DisplayedFiles)
                         {
                             <MudTooltip>
                                 <TooltipContent>
@@ -313,7 +318,14 @@
                 {
                     <div class="no-files">
                         <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Large"/>
-                        <MudText>@Loc["NoFiles"]</MudText>
+                        @if (string.IsNullOrEmpty(SearchQuery))
+                        {
+                            <MudText>@Loc["NoFiles"]</MudText>
+                        }
+                        else
+                        {
+                            <MudText>No files found with the "@SearchQuery" query</MudText>
+                        }
                     </div>
                     @* <MudAlert Severity="Severity.Info">@Loc["NoFiles"]</MudAlert> *@
                 }
