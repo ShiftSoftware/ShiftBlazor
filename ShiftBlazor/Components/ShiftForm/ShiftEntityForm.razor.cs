@@ -527,6 +527,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (result.Message != null)
             {
+                var serverSideErrors = result.Message.SubMessages
+                    ?.Where(x => !string.IsNullOrWhiteSpace(x.For))
+                    .ToDictionary(x => x.For!, x => x.SubMessages?.Select(x => x.Title).ToList());
+
+                if (serverSideErrors != null && serverSideErrors.Count != 0)
+                {
+                    EditContext?.DisplayErrors(serverSideErrors!);
+                    return null;
+                }
+
                 var parameters = new DialogParameters {
                     { "Message", result.Message },
                     { "Color", Color.Error },
