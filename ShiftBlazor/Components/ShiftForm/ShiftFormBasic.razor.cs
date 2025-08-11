@@ -65,7 +65,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? Title { get; set; }
 
         [Parameter]
-        public RenderFragment? ChildContent { get; set; }
+        public RenderFragment<FormChildContext<T>>? ChildContent { get; set; }
 
         /// <summary>
         ///     The icon displayed before the Form Title, in a string in SVG format.
@@ -207,8 +207,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool HasWriteAccess = true;
         internal bool HasDeleteAccess = true;
         internal bool HasReadAccess = true;
-        internal bool IsFooterToolbarEmpty;
-        internal bool _RenderSubmitButton;
+        internal virtual bool IsFooterToolbarEmpty => FooterToolbarStartTemplate == null
+                                                      && FooterToolbarCenterTemplate == null
+                                                      && FooterToolbarEndTemplate == null
+                                                      && (HideSubmit || !HasWriteAccess);
+        internal bool _RenderSubmitButton => Mode >= FormModes.Edit && !HideSubmit && HasWriteAccess;
 
         internal ElementReference ContentContainerRef = default!;
         internal string ContentCssClass =>
@@ -246,16 +249,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             await SetMode(FormModes.Create);
             DocumentTitle = Title;
-        }
-
-        protected override void OnParametersSet()
-        {
-            _RenderSubmitButton = Mode >= FormModes.Edit && !HideSubmit && HasWriteAccess;
-
-            IsFooterToolbarEmpty = FooterToolbarStartTemplate == null
-                && FooterToolbarCenterTemplate == null
-                && FooterToolbarEndTemplate == null
-                && (HideSubmit || !HasWriteAccess);
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -346,6 +339,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             Mode = mode;
             await ModeChanged.InvokeAsync(Mode);
+            StateHasChanged();
         }
 
         internal virtual async Task SetValue(T? value)
@@ -356,6 +350,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 await ValueChanged.InvokeAsync(Value);
                 EditContext = new EditContext(Value);
                 EditContext.MarkAsUnmodified();
+                StateHasChanged();
             }
         }
 

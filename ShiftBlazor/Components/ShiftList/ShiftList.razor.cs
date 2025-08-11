@@ -241,7 +241,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback<List<T>> OnFetch { get; set; }
 
         [Parameter]
-        public RenderFragment? ChildContent { get; set; }
+        public RenderFragment<ListChildContext<T>>? ChildContent { get; set; }
 
         /// <summary>
         /// Whether to render or not render 'Entity ID' column
@@ -1327,4 +1327,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             IShortcutComponent.Remove(Id);
         }
     }
+
+    
 }

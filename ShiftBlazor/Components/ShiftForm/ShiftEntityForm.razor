@@ -259,7 +259,11 @@
 
                                     }
 
-                                    @ChildContent
+                                    @if (ChildContent != null)
+                                    {
+                                        @ChildContent(new(this))
+                                    }
+
 
                                     @if (Value is ShiftSoftware.ShiftEntity.Core.Flags.IHasDraftCheckBox<T> dtoWithDraftFlag)
                                     {

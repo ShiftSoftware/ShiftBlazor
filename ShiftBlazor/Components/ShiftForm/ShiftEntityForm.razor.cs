@@ -21,6 +21,7 @@ using ShiftSoftware.ShiftBlazor.Components.Print;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
+    [CascadingTypeParameter(nameof(T))]
     public partial class ShiftEntityForm<T> : ShiftFormBasic<T> where T : ShiftEntityViewAndUpsertDTO, new()
     {
         [Inject] private HttpClient Http { get; set; } = default!;
@@ -138,6 +139,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool _RenderHeaderControlsDivider;
         internal bool IsTemporal = false;
 
+        internal override bool IsFooterToolbarEmpty => FooterToolbarStartTemplate == null
+                                                       && FooterToolbarCenterTemplate == null
+                                                       && FooterToolbarEndTemplate == null
+                                                       && !_RenderSubmitButton
+                                                       && Mode != FormModes.Edit
+                                                       && Mode != FormModes.Archive;
+
         internal string ItemUrl
         {
             get
@@ -234,13 +242,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
             _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton;
-
-            IsFooterToolbarEmpty = FooterToolbarStartTemplate == null
-                && FooterToolbarCenterTemplate == null
-                && FooterToolbarEndTemplate == null
-                && !_RenderSubmitButton
-                && Mode != FormModes.Edit
-                && Mode != FormModes.Archive;
         }
 
         public override async ValueTask HandleShortcut(KeyboardKeys key)

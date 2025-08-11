@@ -1,6 +1,7 @@
 ﻿@using ShiftSoftware.ShiftBlazor.Enums
 @using Blazored.FluentValidation
 @using Microsoft.AspNetCore.Components.Forms
+@using ShiftSoftware.TypeAuth.Core
 @typeparam T where T : class, new()
 @namespace ShiftSoftware.ShiftBlazor.Components
 @implements IShortcutComponent
@@ -84,34 +85,21 @@
                     <div class="pa-6">
                         <CascadingValue Value="Mode < FormModes.Edit" Name="@FormHelper.ParentReadOnlyName">
                         <CascadingValue Value="TaskInProgress != FormTasks.None" Name="@FormHelper.ParentDisabledName">
-                            @if (TypeAuthAction is null)
+                            @if (TypeAuthAction == null
+                                || TypeAuthService == null
+                                || (Mode >= FormModes.Edit && TypeAuthService.Can(TypeAuthAction, Access.Write))
+                                || (Mode <= FormModes.Archive && TypeAuthService.Can(TypeAuthAction, Access.Read)))
                             {
-                                @ChildContent
+                                if (ChildContent != null)
+                                {           
+                                    @ChildContent(new(this))
+                                }
                             }
                             else
                             {
-                                if (Mode == FormModes.Create || Mode == FormModes.Edit)
-                                {
-                                    if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write))
-                                    {
-                                        @ChildContent
-                                    }
-                                    else
-                                    {
-                                        <MudAlert Severity="Severity.Error">@Loc["WriteAccessDenied", Title]</MudAlert>
-                                    }
-                                }
-                                else if (Mode == FormModes.View || Mode == FormModes.Archive)
-                                {
-                                    if (TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
-                                    {
-                                        @ChildContent
-                                    }
-                                    else
-                                    {
-                                        <MudAlert Severity="Severity.Error">@Loc["ReadAccessDenied", Title]</MudAlert>
-                                    }
-                                }
+                                <MudAlert Severity="Severity.Error">
+                                    @(Mode >= FormModes.Edit ? Loc["WriteAccessDenied", Title] : Loc["ReadAccessDenied", Title])
+                                </MudAlert>
                             }
                         </CascadingValue>
                         </CascadingValue>
