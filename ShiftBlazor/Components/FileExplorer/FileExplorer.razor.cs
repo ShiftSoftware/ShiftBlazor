@@ -136,14 +136,6 @@ public partial class FileExplorer : IShortcutComponent
     private double ContextTop { get; set; }
     private DotNetObjectReference<FileExplorer>? objRef;
     private readonly string URLPathKey = "path";
-    private IEnumerable<string> ImageExtensions = new List<string>
-    {
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".gif",
-        ".webp",
-    };
 
     private bool IsIconsView => Settings.View >= FileView.Small && Settings.View <= FileView.ExtraLarge;
     private string SettingKey => $"FileExplorer_{LoggedInUser?.ID}_{AccountName}_{ContainerName}_{Root}";
@@ -152,6 +144,40 @@ public partial class FileExplorer : IShortcutComponent
     TokenUserDataDTO? LoggedInUser;
     private Dictionary<string, string> Usernames = [];
     private string SearchQuery { get; set; } = string.Empty;
+    private static readonly IEnumerable<string> ImageExtensions = new List<string>
+    {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".webp",
+    };
+    private static readonly Dictionary<string, (string icon, string color)> FileIcons =
+    new[]
+    {
+        (Extensions: new[] { ".pdf" }, Value: ("picture_as_pdf", "#de2429")),
+        (Extensions: new[] { ".doc", ".docx" }, Value: ("docs", "#295294")),
+        (Extensions: new[] { ".txt", ".rtf" }, Value: ("description", "#777777")),
+        (Extensions: new[] { ".xls", ".xlsx" }, Value: ("table", "#3b885a")),
+        (Extensions: new[] { ".ppt", ".pptx" }, Value: ("wallpaper_slideshow", "#d14b4b")),
+        (Extensions: new[] { ".csv" }, Value: ("csv", "#3b885a")),
+        (Extensions: new[] { ".zip", ".rar", ".7z" }, Value: ("archive", "#f9ca40")),
+        (Extensions: new[] { ".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a" }, Value: ("audio_file", "#6dabfb")),
+        (Extensions: new[] { ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm", ".mpeg", ".mpg" }, Value: ("video_file", "#d15eff")),
+        (Extensions: new[] { ".html", ".htm", ".css", ".js", ".php", ".ts", ".py", ".java", ".c", ".cpp", ".cs" }, Value: ("code", "#001234")),
+        (Extensions: new[] { ".json", ".xml" }, Value: ("data_array", "#777777")),
+        (Extensions: new[] { ".exe", ".dll", ".msi" }, Value: ("terminal", "#001234")),
+        (Extensions: new[] { ".sh", ".bat", ".cmd", ".ps1" }, Value: ("terminal", "#001234")),
+        (Extensions: [..ImageExtensions], Value: ("image", "#d14b4b")),
+        (Extensions: new[] { "" }, Value: ("draft", "#777777")),
+        (Extensions: new [] { "folder" }, Value: ("folder", "#f1ce69")),
+
+    }
+    .SelectMany(group => group.Extensions.Select(ext => (ext, group.Value)))
+    .ToDictionary(x => x.ext, x => x.Value);
+
+    // the list needs to be sorted alphabetically for the Google Fonts icons to work properly
+    private static readonly string GoogleFontsIconNames = string.Join(",", FileIcons.Values.Select(static x => x.icon).Distinct().OrderBy(x => x));
 
     protected override void OnInitialized()
     {
@@ -615,83 +641,19 @@ public partial class FileExplorer : IShortcutComponent
     {
         if (file.IsFile)
         {
-            var extension = Path.GetExtension(file.Name)?.ToLower();
+            var extension = Path.GetExtension(file.Name)?.ToLower() ?? string.Empty;
             
-            if (ImageExtensions.Contains(extension))
-                return ("image", "#d14b4b");
-
-            switch (extension)
+            if (FileIcons.TryGetValue(extension, out var value))
             {
-                case ".pdf":
-                    return ("picture_as_pdf", "#de2429");
-                case ".doc":
-                case ".docx":
-                    return ("docs", "#295294");
-                case ".txt":
-                case ".rtf":
-                    return ("description", "#777777");
-                case ".xls":
-                case ".xlsx":
-                    return ("table", "#3b885a");
-                case ".ppt":
-                case ".pptx":
-                    return ("wallpaper_slideshow", "#d14b4b");
-                case ".csv":
-                    return ("csv", "#3b885a");
-                case ".zip":
-                case ".rar":
-                case ".7z":
-                    return ("archive", "#f9ca40");
-                case ".mp3":
-                case ".wav":
-                case ".ogg":
-                case ".flac":
-                case ".aac":
-                case ".m4a":
-                    return ("audio_file", "#6dabfb");
-                case ".mp4":
-                case ".avi":
-                case ".mkv":
-                case ".mov":
-                case ".wmv":
-                case ".flv":
-                case ".webm":
-                case ".mpeg":
-                case ".mpg":
-                    return ("video_file", "#d15eff");
-                case ".html":
-                case ".htm":
-                case ".css":
-                case ".js":
-                case ".php":
-                case ".ts":
-                case ".py":
-                case ".java":
-                case ".c":
-                case ".cpp":
-                case ".cs":
-                    return ("code", "#001234");
-                case ".json":
-                case ".xml":
-                    return ("data_array", "#777777");
-                case ".exe":
-                case ".dll":
-                case ".msi":
-                    return ("terminal", "#001234");
-                case ".sh":
-                case ".bat":
-                case ".cmd":
-                case ".ps1":
-                    return ("terminal", "#001234");
-                default:
-                    return ("draft", "#777777");
+                return value;
             }
+
+            return FileIcons[string.Empty];
         }
         else
         {
-            return ("folder", "#f1ce69");
+            return FileIcons["folder"];
         }
-
     }
 
     private async Task ViewDeletedFiles()
