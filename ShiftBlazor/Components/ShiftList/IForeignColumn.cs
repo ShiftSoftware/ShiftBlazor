@@ -1,19 +1,14 @@
-﻿using MudBlazor;
+﻿using Microsoft.OData.Client;
+using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using ShiftSoftware.ShiftEntity.Model;
-using Newtonsoft.Json.Linq;
-using Microsoft.OData.Client;
-using System.Data.Common;
 using System.Net.Http.Json;
-using System.Text.Json;
-using System.Net.Sockets;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public interface IForeignColumn : IODataComponent
+public interface IForeignColumn : IODataRequest, IRequestComponent
 {
     public string? DataValueField { get; set; }
     public string? ForeignTextField { get; set; }
@@ -60,14 +55,14 @@ public interface IForeignColumn : IODataComponent
         return oDataQuery.CreateNewQuery<TEntity>(column.EntitySet, column.Url);
     }
 
-    public static async Task<IEnumerable<T>?> GetForeignColumnValues<T>(IForeignColumn column, IEnumerable<string> itemIds, ODataQuery oDataQuery, HttpClient httpClient)
+    public static async Task<ODataDTO<T>?> GetForeignColumnValues<T>(IForeignColumn column, IEnumerable<string> itemIds, ODataQuery oDataQuery, HttpClient httpClient)
     {
-        return (IEnumerable<T>?) await _GetForeignColumnValues(column, itemIds, oDataQuery, httpClient);
+        return (ODataDTO<T>?) await _GetForeignColumnValues(column, itemIds, oDataQuery, httpClient);
     }
 
-    public static async Task<IEnumerable<object>?> GetForeignColumnValues(IForeignColumn column, IEnumerable<string> itemIds, ODataQuery oDataQuery, HttpClient httpClient)
+    public static async Task<ODataDTO<object>?> GetForeignColumnValues(IForeignColumn column, IEnumerable<string> itemIds, ODataQuery oDataQuery, HttpClient httpClient)
     {
-        return (IEnumerable<object>?) await _GetForeignColumnValues(column, itemIds, oDataQuery, httpClient);
+        return (ODataDTO<object>?) await _GetForeignColumnValues(column, itemIds, oDataQuery, httpClient);
     }
 
     private static async Task<object?> _GetForeignColumnValues(IForeignColumn column, IEnumerable<string> itemIds, ODataQuery oDataQuery, HttpClient httpClient)
@@ -90,23 +85,26 @@ public interface IForeignColumn : IODataComponent
                     .WhereQuery(x => itemIds.Contains(x.ID))
                     .ToString();
 
-                var res = await httpClient.GetAsync(url);
+                using var requestMessage = httpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url));
 
-                //Type te = typeof(ODataDTO<>);
+                if (column.OnBeforeRequest != null && await column.OnBeforeRequest.Invoke(requestMessage))
+                    return null;
+
+                using var res = await httpClient.SendAsync(requestMessage);
+
+                if (column.OnResponse != null && await column.OnResponse.Invoke(res))
+                    return null;
 
                 if (res.IsSuccessStatusCode)
                 {
-                    var result = await res.Content.ReadFromJsonAsync(oDataType);
-
-                    if (result != null)
-                    {
-                        return result.GetType().GetProperty(nameof(ODataDTO<object>.Value))?.GetValue(result);
-                    }
+                    return await res.Content.ReadFromJsonAsync(oDataType);
                 }
 
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                if (column.OnError != null && await column.OnError.Invoke(e))
+                    return null;
                 throw;
             }
         }

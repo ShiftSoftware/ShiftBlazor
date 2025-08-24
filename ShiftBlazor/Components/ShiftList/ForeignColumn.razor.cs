@@ -4,227 +4,245 @@ using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 
-namespace ShiftSoftware.ShiftBlazor.Components
+namespace ShiftSoftware.ShiftBlazor.Components;
+
+// TODO
+// - Add loading indicator when data is being fetched
+// - Add caching mechanism to avoid redundant data fetches
+// - refactor RequestForeignData
+
+public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtended<T, TProperty>, IDisposable, IForeignColumn, IODataRequestComponent<TEntity>
+    where T : ShiftEntityDTOBase, new()
+    where TEntity : ShiftEntityDTOBase, new()
 {
+    [Inject] public HttpClient HttpClient { get; private set; } = default!;
+    [Inject] public ShiftBlazorLocalizer Loc  { get; private set; } = default!;
+    [Inject] IDialogService DialogService { get; set; } = default!;
+    [Inject] ODataQuery OData { get; set; } = default!;
+    [Inject] public SettingManager SettingManager { get; private set; } = default!;
 
-    public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtended<T, TProperty>, IDisposable, IForeignColumn
-        where T : ShiftEntityDTOBase, new()
-        where TEntity : ShiftEntityDTOBase, new()
+    [Parameter]
+    [EditorRequired]
+    public string EntitySet { get; set; }
+
+    [Parameter]
+    public string? Endpoint { get; set; }
+
+    [Parameter]
+    public string? BaseUrl { get; set; }
+
+    [Parameter]
+    public string? BaseUrlKey { get; set; }
+    
+    [Parameter]
+    public string? DataValueField { get; set; }
+
+    [Parameter]
+    public string? ForeignTextField { get; set; }
+
+    [Parameter]
+    public string? ForeignEntiyField { get; set; }
+
+    [Parameter]
+    public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
+    [Parameter]
+    public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
+    [Parameter]
+    public Func<Exception, ValueTask<bool>>? OnError { get; set; }
+    [Parameter]
+    public Func<ODataDTO<TEntity>?, ValueTask<bool>>? OnResult { get; set; }
+
+    public string? Url { get; private set; }
+    public string TEntityTextField { get; private set; } = string.Empty;
+    public string TEntityValueField { get; private set; } = nameof(ShiftEntityDTOBase.ID);
+
+    internal bool IsReady = false;
+    internal List<TEntity> RemoteData { get; set; } = new();
+    internal bool IsFilterOpen = false;
+    internal string FilterIcon => FilterItems.Count > 0 ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt;
+    internal List<ShiftEntitySelectDTO> FilterItems { get; set; } = new();
+
+    private string? TValueField = null;
+    // IsForbiddenStatusCode is not being used currently, should be reimplemented with the refactor
+    private bool IsForbiddenStatusCode;
+    private bool FailedToLoadData;
+    private string? ErrorMessage = null;
+
+    protected override void OnInitialized()
     {
-        [Inject] HttpClient Http { get; set; } = default!;
-        [Inject] IDialogService DialogService { get; set; } = default!;
-        [Inject] ODataQuery OData { get; set; } = default!;
-        [Inject] SettingManager SettingManager { get; set; } = default!;
+        if (string.IsNullOrWhiteSpace(EntitySet))
+            throw new ArgumentNullException(nameof(EntitySet));
 
-        [Parameter]
-        [EditorRequired]
-        public string EntitySet { get; set; }
+        var attr = Misc.GetAttribute<TEntity, ShiftEntityKeyAndNameAttribute>();
+        TEntityTextField = ForeignTextField ?? attr?.Text ?? "";
 
-        [Parameter]
-        public string? BaseUrl { get; set; }
+        if (string.IsNullOrWhiteSpace(TEntityTextField))
+            throw new ArgumentNullException(nameof(ForeignTextField));
 
-        [Parameter]
-        public string? BaseUrlKey { get; set; }
-        
-        [Parameter]
-        public string? DataValueField { get; set; }
+        Title ??= EntitySet;
 
-        [Parameter]
-        public string? ForeignTextField { get; set; }
+        ShiftBlazorEvents.OnBeforeGridDataBound += OnBeforeDataBound;
 
-        [Parameter]
-        public string? ForeignEntiyField { get; set; }
+        Url = IODataRequestComponent<T>.GetPath(this);
 
-        public string? Url { get; private set; }
-        public string TEntityTextField { get; private set; } = string.Empty;
-        public string TEntityValueField { get; private set; } = nameof(ShiftEntityDTOBase.ID);
+        base.OnInitialized();
+    }
 
-        internal bool IsReady = false;
-        internal List<TEntity> RemoteData { get; set; } = new();
-        internal bool IsFilterOpen = false;
-        internal string FilterIcon => FilterItems.Count > 0 ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt;
-        internal List<ShiftEntitySelectDTO> FilterItems { get; set; } = new();
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
 
-        private DataServiceQuery<TEntity> QueryBuilder { get; set; }
-        private string? TValueField = null;
-        private bool IsForbiddenStatusCode = false;
-        private bool FailedToLoadData = false;
-        private string? ErrorMessage = null;
+        TValueField ??= IForeignColumn.GetDataValueFieldName(this);
+        KeyPropertyName ??= TValueField;
 
-        protected override void OnInitialized()
+        ShowFilterIcon = false;
+
+        if (Class?.Contains("foreign-column") != true)
         {
-            if (string.IsNullOrWhiteSpace(EntitySet))
-                throw new ArgumentNullException(nameof(EntitySet));
-
-            var attr = Misc.GetAttribute<TEntity, ShiftEntityKeyAndNameAttribute>();
-            TEntityTextField = ForeignTextField ?? attr?.Text ?? "";
-
-            if (string.IsNullOrWhiteSpace(TEntityTextField))
-                throw new ArgumentNullException(nameof(ForeignTextField));
-
-            Title ??= EntitySet;
-
-            ShiftBlazorEvents.OnBeforeGridDataBound += OnBeforeDataBound;
-
-            Url = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
-            QueryBuilder = OData.CreateNewQuery<TEntity>(EntitySet, Url);
-
-            base.OnInitialized();
+            Class ??= "";
+            Class += " foreign-column";
         }
 
-        protected override void OnParametersSet()
+        HeaderTemplate = _HeaderTemplate;
+        CellTemplate = _CellTemplate;
+    }
+
+    internal void OnBeforeDataBound(object? sender, KeyValuePair<Guid, List<object>> data)
+    {
+        if (ShiftList.Id != data.Key)
         {
-            base.OnParametersSet();
-
-            TValueField ??= IForeignColumn.GetDataValueFieldName(this);
-            KeyPropertyName ??= TValueField;
-
-            ShowFilterIcon = false;
-
-            if (Class?.Contains("foreign-column") != true)
-            {
-                Class ??= "";
-                Class += " foreign-column";
-            }
-
-            HeaderTemplate = _HeaderTemplate;
-            CellTemplate = _CellTemplate;
+            return;
         }
 
-        internal void OnBeforeDataBound(object? sender, KeyValuePair<Guid, List<object>> data)
-        {
-            if (ShiftList.Id != data.Key)
+        FilterItems = DataGrid.FilterDefinitions
+            .Where(x => !string.IsNullOrWhiteSpace(x.Column?.PropertyName) && x.Column.PropertyName == PropertyName)
+            .Select(x => new ShiftEntitySelectDTO
             {
-                return;
-            }
+                Value = (string)x.Value!,
+                Text = x.Title,
 
-            FilterItems = DataGrid.FilterDefinitions
-                .Where(x => !string.IsNullOrWhiteSpace(x.Column?.PropertyName) && x.Column.PropertyName == PropertyName)
-                .Select(x => new ShiftEntitySelectDTO
+            }).ToList();
+
+        _ = RequestForeignData(data);
+    }
+
+    internal async Task RequestForeignData(KeyValuePair<Guid, List<object>> data)
+    {
+        var items = data.Value;
+
+        if (items != null && items.Any())
+        {
+            FailedToLoadData = false;
+
+            try
+            {
+                var itemIds = IForeignColumn.GetForeignIds(this, items);
+                var foreignData = await IForeignColumn.GetForeignColumnValues<TEntity>(this, itemIds, OData, HttpClient);
+
+                if (OnResult != null && await OnResult.Invoke(foreignData))
+                    return;
+
+                if (foreignData != null)
                 {
-                    Value = (string)x.Value!,
-                    Text = x.Title,
+                    RemoteData = foreignData.Value;
 
-                }).ToList();
-
-            RequestForeignData(data);
-        }
-
-        internal async void RequestForeignData(KeyValuePair<Guid, List<object>> data)
-        {
-            var items = data.Value;
-
-            if (items != null && items.Any())
-            {
-                FailedToLoadData = false;
-
-                try
-                {
-                    var itemIds = IForeignColumn.GetForeignIds(this, items);
-                    var foreignData = await IForeignColumn.GetForeignColumnValues<TEntity>(this, itemIds, OData, Http);
-                    if (foreignData != null)
+                    if (ForeignEntiyField is not null)
                     {
-                        RemoteData = foreignData.ToList();
-
-                        if (ForeignEntiyField is not null)
+                        foreach (var item in items)
                         {
-                            foreach (var item in items)
+                            var property = item.GetType().GetProperty(ForeignEntiyField);
+
+                            if (property is not null && property.CanWrite)
                             {
-                                var property = item.GetType().GetProperty(ForeignEntiyField);
+                                var id = Misc.GetValueFromPropertyPath(item, TValueField!)?.ToString();
+                                var thisData = RemoteData.FirstOrDefault(x => x.ID == id);
 
-                                if (property is not null && property.CanWrite)
+                                if (!IsForbiddenStatusCode && thisData is not null)
                                 {
-                                    var id = Misc.GetValueFromPropertyPath(item, TValueField!)?.ToString();
-
-                                    var thisData = RemoteData.FirstOrDefault(x => x.ID == id);
-
-                                    if (!IsForbiddenStatusCode && thisData is not null)
-                                    {
-                                        property.SetValue(item, foreignData.FirstOrDefault(x => x.ID == id));
-                                    }
+                                    property.SetValue(item, foreignData.Value.FirstOrDefault(x => x.ID == id));
                                 }
                             }
                         }
                     }
                 }
-                catch (Exception e)
-                {
-                    ErrorMessage = e.ToString();
-                    FailedToLoadData = true;
-                }
             }
-            IsReady = true;
-            ShiftList.GridStateHasChanged();
-        }
-
-        private async Task ClearFilterAsync()
-        {
-            DataGrid.FilterDefinitions.RemoveAll(x => x.Column!.Identifier == Identifier);
-            FilterItems.Clear();
-            await DataGrid.ReloadServerData();
-            CloseFilter();
-        }
-
-        private async Task ApplyFilterAsync()
-        {
-            var filterDefinitions = FilterItems.Select(x => new FilterDefinition<T>
+            catch (Exception e)
             {
-                Column = this,
-                Operator = FilterOperator.String.Equal,
-                Title = x.Text,
-                Value = x.Value,
-            });
-
-
-            DataGrid.FilterDefinitions.RemoveAll(x => x.Column!.Identifier == Identifier);
-            DataGrid.FilterDefinitions.AddRange(filterDefinitions);
-            FilterItems.Clear();
-            await DataGrid!.ReloadServerData();
-            CloseFilter();
+                ErrorMessage = e.ToString();
+                FailedToLoadData = true;
+            }
         }
+        IsReady = true;
+        ShiftList.GridStateHasChanged();
+    }
 
-        private void OpenFilter()
-        {
-            IsFilterOpen = true;
-            ShiftList.GridStateHasChanged();
-        }
+    private async Task ClearFilterAsync()
+    {
+        DataGrid.FilterDefinitions.RemoveAll(x => x.Column!.Identifier == Identifier);
+        FilterItems.Clear();
+        await DataGrid.ReloadServerData();
+        CloseFilter();
+    }
 
-        private void CloseFilter()
+    private async Task ApplyFilterAsync()
+    {
+        var filterDefinitions = FilterItems.Select(x => new FilterDefinition<T>
         {
-            IsFilterOpen = false;
-            ShiftList.GridStateHasChanged();
-        }
+            Column = this,
+            Operator = FilterOperator.String.Equal,
+            Title = x.Text,
+            Value = x.Value,
+        });
 
-        private void ShowErrorMessage()
+
+        DataGrid.FilterDefinitions.RemoveAll(x => x.Column!.Identifier == Identifier);
+        DataGrid.FilterDefinitions.AddRange(filterDefinitions);
+        FilterItems.Clear();
+        await DataGrid!.ReloadServerData();
+        CloseFilter();
+    }
+
+    private void OpenFilter()
+    {
+        IsFilterOpen = true;
+        ShiftList.GridStateHasChanged();
+    }
+
+    private void CloseFilter()
+    {
+        IsFilterOpen = false;
+        ShiftList.GridStateHasChanged();
+    }
+
+    private void ShowErrorMessage()
+    {
+        var message = new Message
         {
-            var message = new Message
-            {
-                Title = $"{Title} Column Failed to Load",
-                Body = ErrorMessage,
+            Title = $"{Title} Column Failed to Load",
+            Body = ErrorMessage,
+        };
+
+        var parameters = new DialogParameters {
+                { "Message", message },
+                { "Color", Color.Error },
+                { "Icon", Icons.Material.Filled.Error },
             };
 
-            var parameters = new DialogParameters {
-                    { "Message", message },
-                    { "Color", Color.Error },
-                    { "Icon", Icons.Material.Filled.Error },
-                };
-
-            DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
-            {
-                MaxWidth = MaxWidth.Medium,
-                NoHeader = true,
-            });
-        }
-
-        public override void Dispose()
+        DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
         {
-            ShiftBlazorEvents.OnBeforeGridDataBound -= OnBeforeDataBound;
-        }
+            MaxWidth = MaxWidth.Medium,
+            NoHeader = true,
+        });
+    }
+
+    public override void Dispose()
+    {
+        ShiftBlazorEvents.OnBeforeGridDataBound -= OnBeforeDataBound;
     }
 }

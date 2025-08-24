@@ -9,10 +9,12 @@ using ShiftSoftware.ShiftBlazor.Components.ShiftAutocomplete;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using System;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http.Json;
@@ -20,10 +22,11 @@ using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShortcutComponent, IDisposable where TEntitySet : ShiftEntityDTOBase
+public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEntitySet>, IFilterableComponent, IShortcutComponent, IDisposable where TEntitySet : ShiftEntityDTOBase
 {
-    [Inject] private SettingManager SettingManager { get; set; } = default!;
-    [Inject] private HttpClient Http { get; set; } = default!;
+    [Inject] public SettingManager SettingManager { get; private set; } = default!;
+    [Inject] public HttpClient HttpClient { get; private set; } = default!;
+    [Inject] public ShiftBlazorLocalizer Loc  { get; private set; } = default!;
     [Inject] private ODataQuery OData { get; set; } = default!;
     [Inject] private ShiftModal ShiftModal { get; set; } = default!;
     [Inject] private MessageService MessageService { get; set; } = default!;
@@ -53,6 +56,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     [Parameter]
     [EditorRequired]
     public string EntitySet { get; set; }
+
+    [Parameter]
+    public string? Endpoint { get; set; }
 
     [Parameter]
     public string? BaseUrl { get; set; }
@@ -208,11 +214,15 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     public string? QuickAddParameterName { get; set; }
 
     // ======== Events Parameters ========
+
     [Parameter]
-    public EventCallback<List<TEntitySet>> OnEntityResponse { get; set; }
-    
+    public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
     [Parameter]
-    public EventCallback<HttpResponseMessage> OnResponse { get; set; }
+    public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
+    [Parameter]
+    public Func<Exception, ValueTask<bool>>? OnError { get; set; }
+    [Parameter]
+    public Func<ODataDTO<TEntitySet>?, ValueTask<bool>>? OnResult { get; set; }
 
     [Parameter]
     public Func<ValueTask<bool>>? OnInputFocus { get; set; }
@@ -400,16 +410,56 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     private async Task FetchItems(string? searchQuery = null)
     {
         HighlightedListItemIndex = 0; // Reset the selected dropdown item
+        
+        FetchTokenSource?.Cancel();
+        FetchTokenSource?.Dispose();
+        FetchTokenSource = new CancellationTokenSource();
+        var cts = FetchTokenSource;
+        StateHasChanged();
 
+        try
+        {
+            var url = BuildODataUrl(searchQuery);
+            //if (string.IsNullOrWhiteSpace(url))
+                //throw new Exception(Loc["DataReadUrlError"]);
+            var uri = new Uri(url!);
+
+            var items = await IODataRequestComponent<TEntitySet>.GetFromJsonAsync(this, uri, cts.Token);
+
+            if (items == null)
+                return;
+
+            DropdownItems = items.Value;
+            // the cancelation token is also used to indicate loading state
+            FetchTokenSource?.Cancel();
+            StateHasChanged();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception e)
+        {
+            if (OnError != null && await OnError.Invoke(e))
+                return;
+
+            Console.WriteLine($"fetch error {e}");
+            StateHasChanged();
+
+        }
+    }
+
+    private string? BuildODataUrl(string? query)
+    {
+        var url = IRequestComponent.GetPath(this);
         var builder = OData
-                .CreateNewQuery<TEntitySet>(EntitySet, GetPath());
+                .CreateNewQuery<TEntitySet>(EntitySet, url);
 
         // Filters components
         var filters = Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
-        
-        if (!string.IsNullOrWhiteSpace(searchQuery))
+
+        if (!string.IsNullOrWhiteSpace(query))
         {
-            var filter = new ODataFilterGenerator().Add(DataTextField, ODataOperator.Contains, searchQuery);
+            var filter = new ODataFilterGenerator().Add(DataTextField, ODataOperator.Contains, query);
             filters.Add(filter.ToString());
         }
 
@@ -432,107 +482,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             builder = builder.AddQueryOption("$filter", filterQueryString);
         }
 
-        var url = builder.Take(MaxItems).ToString();
-        
-        FetchTokenSource?.Cancel();
-        FetchTokenSource?.Dispose();
-        FetchTokenSource = new CancellationTokenSource();
-        StateHasChanged();
-
-        try
-        {
-            using var res = await Http.GetAsync(url, FetchTokenSource.Token);
-            var items = await ParseEntityResponse(res);
-            DropdownItems = items ?? [];
-        }
-        catch (TaskCanceledException)
-        {
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception)
-        {
-            Console.WriteLine("fetch error");
-        }
-
-        FetchTokenSource.Cancel();
-        StateHasChanged();
-    }
-
-    // copy from EnityForm
-    internal async Task<List<TEntitySet>> ParseEntityResponse(HttpResponseMessage res)
-    {
-        await OnResponse.InvokeAsync(res);
-
-        if (res.StatusCode == HttpStatusCode.NoContent)
-        {
-            return [];
-        }
-
-        ODataDTO<TEntitySet>? result = null;
-
-        try
-        {
-            result = await res.Content.ReadFromJsonAsync<ODataDTO<TEntitySet>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
-            {
-                Converters = { new LocalDateTimeOffsetJsonConverter() }
-            });
-        }
-        catch (Exception ex)
-        {
-            var resBody = await res.Content.ReadAsStringAsync();
-            throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(resBody, ex));
-        }
-
-        if (result == null)
-        {
-            throw new Exception("Could not get response from server");
-        }
-
-        //if (result.Message != null)
-        //{
-        //    var parameters = new DialogParameters {
-        //            { "Message", result.Message },
-        //            { "Color", Color.Error },
-        //            { "Icon", Icons.Material.Filled.Error },
-        //        };
-
-        //    await DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
-        //    {
-        //        MaxWidth = MaxWidth.ExtraSmall,
-        //        NoHeader = true,
-        //        CloseOnEscapeKey = false,
-        //    });
-
-        //    if (!res.IsSuccessStatusCode)
-        //    {
-        //        return null;
-        //    }
-        //}
-
-        if (res.IsSuccessStatusCode)
-        {
-            var value = result.Value;
-            await OnEntityResponse.InvokeAsync(value);
-            return value;
-        }
-
-        throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(await res.Content.ReadAsStringAsync()));
-    }
-
-    // copy from EnityForm
-    private string GetPath()
-    {
-        string? url = BaseUrl;
-
-        if (url is null && BaseUrlKey is not null)
-            url = SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey);
-
-        if (url is null)
-            return SettingManager.Configuration.BaseAddress;
-
-        return url;
+        return builder.Take(MaxItems).ToString();
     }
 
     public async Task OpenDropdown(bool selectText = true, bool fetchItems = true)
@@ -973,8 +923,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     private async Task UpdateInitialValue()
     {
-        if (InitialUpdateTokenSource is not null)
-            return;
+        //if (InitialUpdateTokenSource is not null)
+        //    return;
 
         var values = MultiSelect
             ? SelectedValues ?? []
@@ -992,21 +942,25 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         InitialUpdateTokenSource?.Cancel();
         InitialUpdateTokenSource?.Dispose();
         InitialUpdateTokenSource = new CancellationTokenSource();
+        var cts = InitialUpdateTokenSource;
         StateHasChanged();
 
         try
         {
+            var _url = IRequestComponent.GetPath(this);
             var builder = OData
-                .CreateNewQuery<TEntitySet>(EntitySet, GetPath());
+                .CreateNewQuery<TEntitySet>(EntitySet, _url);
 
             var url = builder.WhereQuery(x => ids.Contains(x.ID))
                     .ToString();
 
-            using var res = await Http.GetAsync(url, InitialUpdateTokenSource.Token);
-            var items = await ParseEntityResponse(res);
+            var items = await IODataRequestComponent<TEntitySet>.GetFromJsonAsync(this, new Uri(url), cts.Token);
+
+            if (items == null)
+                return;
 
             ShiftEntitySelectDTO? itemFound = null;
-            foreach (var item in items)
+            foreach (var item in items.Value)
             {
                 var text = GetProperty(item, DataTextField);
                 var value = GetProperty(item, DataValueField);
@@ -1038,7 +992,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             Text = Value?.Text ?? string.Empty;
         }
 
-        InitialUpdateTokenSource.Cancel();
+        cts.Cancel();
         StateHasChanged();
     }
 

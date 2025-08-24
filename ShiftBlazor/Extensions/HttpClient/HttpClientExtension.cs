@@ -11,15 +11,21 @@ public static class HttpClientExtension
         method ??= HttpMethod.Post;
 
         JsonContent content = JsonContent.Create(value, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
-        return new HttpRequestMessage(method, url)
+        var uri = new Uri(url);
+        var request = CreateRequestMessage(httpClient, method, uri);
+        request.Content = content;
+        request.Headers.Add("Idempotency-Key", idempotencyToken.ToString());
+
+        return request;
+
+    }
+
+    public static HttpRequestMessage CreateRequestMessage(this HttpClient httpClient, HttpMethod method, Uri? uri)
+    {
+        return new HttpRequestMessage(method, uri)
         {
             Version = httpClient.DefaultRequestVersion,
             VersionPolicy = httpClient.DefaultVersionPolicy,
-            Content = content,
-            Headers =
-            {
-                { "Idempotency-Key", idempotencyToken.ToString() },
-            },
         };
     }
 }

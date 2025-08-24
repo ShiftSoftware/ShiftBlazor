@@ -129,7 +129,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         {
             ShiftBlazorEvents.TriggerOnModalClosed(data);
 
-            RemoveFrontModalFromUrl();
+            _ = RemoveFrontModalFromUrl();
             if (data == null)
             {
                 mudDialog.Cancel();
@@ -143,7 +143,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <summary>
         ///     Checks whether the url has any modal info in the URL query, if found, open them.
         /// </summary>
-        public async void UpdateModals()
+        public async Task UpdateModals()
         {
             var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
 
@@ -172,10 +172,10 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// <param name="key"></param>
         public void UpdateKey(object? key)
         {
-            UpdateModalQueryUrl(null, key);
+            _ = UpdateModalQueryUrl(null, key);
         }
 
-        private async void UpdateModalQueryUrl(string? name, object? key, Dictionary<string, object>? parameters = null)
+        private async Task UpdateModalQueryUrl(string? name, object? key, Dictionary<string, object>? parameters = null)
         {
             var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
 
@@ -286,7 +286,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return uri.AbsolutePath + queryString;
         }
 
-        private async void RemoveFrontModalFromUrl()
+        private async Task RemoveFrontModalFromUrl()
         {
             var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
 

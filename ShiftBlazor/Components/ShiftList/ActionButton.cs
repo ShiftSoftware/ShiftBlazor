@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.Net.Http.Json;
@@ -13,14 +12,14 @@ using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public class ActionButton<T> : MudButtonExtended
+public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<T>>
     where T : ShiftEntityDTOBase, new()
 {
     [Inject] private IDialogService DialogService { get; set; } = default!;
-    [Inject] private HttpClient Http { get; set; } = default!;
+    [Inject] public HttpClient HttpClient { get; private set; } = default!;
     [Inject] MessageService MessageService { get; set; } = default!;
-    [Inject] private SettingManager SettingManager { get; set; } = default!;
-    [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
+    [Inject] public SettingManager SettingManager { get; private set; } = default!;
+    [Inject] public ShiftBlazorLocalizer Loc { get; private set; } = default!;
 
 
     [CascadingParameter]
@@ -56,7 +55,7 @@ public class ActionButton<T> : MudButtonExtended
     /// The URL endpoint path that the SelectState will be sent to on button click.
     /// </summary>
     [Parameter]
-    public string? Action { get; set; }
+    public string? Endpoint { get; set; }
 
     [Parameter]
     public string? BaseUrl { get; set; }
@@ -129,10 +128,18 @@ public class ActionButton<T> : MudButtonExtended
     public string? TaskFailMessage { get; set; }
 
     [Parameter]
-    public EventCallback<ShiftEvent<ShiftEntityResponse<List<T>>>> OnResponse { get; set; }
+    public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
+    [Parameter]
+    public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
+    [Parameter]
+    public Func<Exception, ValueTask<bool>>? OnError { get; set; }
+    [Parameter]
+    public Func<ShiftEntityResponse<IList<T>>?, ValueTask<bool>>? OnResult { get; set; }
+
 
     internal Guid IdempotencyToken = Guid.NewGuid();
     internal bool HasOnClickDelegate;
+    public object? Key { get; }
 
     public override Task SetParametersAsync(ParameterView parameters)
     {
@@ -179,7 +186,7 @@ public class ActionButton<T> : MudButtonExtended
         {
             OnClick = CreateEvent(RunFuncOnClick);
         }
-        else if (!string.IsNullOrWhiteSpace(Action))
+        else if (!string.IsNullOrWhiteSpace(Endpoint))
         {
             OnClick = CreateEvent(SendRequest);
         }
@@ -189,23 +196,37 @@ public class ActionButton<T> : MudButtonExtended
 
     private async ValueTask<bool?> SendRequest()
     {
-        if (!string.IsNullOrWhiteSpace(Action))
+        try
         {
-            string? baseUrl = BaseUrl ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "");
-            baseUrl = baseUrl?.AddUrlPath(Action) ?? SettingManager.Configuration.BaseAddress.AddUrlPath(Action);
+            if (string.IsNullOrWhiteSpace(Endpoint))
+            {
+                throw new ArgumentNullException(nameof(Endpoint), $"{nameof(Endpoint)} cannot be null or empty.");
+            }
 
-            using var request = Http.CreateIdempotencyRequest(ShiftListGeneric?.SelectState ?? new(), baseUrl, IdempotencyToken);
-            using var response = await Http.SendAsync(request);
+            var url = IRequestComponent.GetPath(this);
 
-            var result = await response.Content.ReadFromJsonAsync<ShiftEntityResponse<List<T>>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            using var request = HttpClient.CreateIdempotencyRequest(ShiftListGeneric?.SelectState ?? new(), url, IdempotencyToken);
+
+            if (OnBeforeRequest != null && await OnBeforeRequest.Invoke(request))
+            {
+                return null;
+            }
+
+            using var response = await HttpClient.SendAsync(request);
+
+            if (OnResponse != null && await OnResponse.Invoke(response))
+            {
+                return null;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<ShiftEntityResponse<IList<T>>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
             {
                 Converters = { new LocalDateTimeOffsetJsonConverter() }
             });
 
-            if (OnResponse.HasDelegate && result != null)
+            if (OnResult != null && await OnResult.Invoke(result))
             {
-                var preventDefault = await OnResponse.PreventableInvokeAsync(result);
-                if (preventDefault) { return null; }
+                return null;
             }
 
             if (result?.Message != null)
@@ -225,6 +246,13 @@ public class ActionButton<T> : MudButtonExtended
             }
 
             return response.IsSuccessStatusCode;
+        }
+        catch (Exception e)
+        {
+            if (OnError != null && await OnError.Invoke(e))
+            {
+                return false;
+            }
         }
 
         return false;
@@ -273,7 +301,7 @@ public class ActionButton<T> : MudButtonExtended
             var originalChildContent = ChildContent;
             ChildContent = builder =>
             {
-                var color = ShiftListGeneric?.NavIconFlatColor == true ? Color.Inherit : Color.Default;
+                var color = ShiftListGeneric?.NavIconFlatColor == true ? Color.Inherit : Color;
                 builder.OpenComponent<MudProgressCircular>(0);
                 builder.AddAttribute(1, "Color", color);
                 builder.AddAttribute(2, "Indeterminate", true);
