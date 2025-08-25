@@ -1,7 +1,7 @@
 @typeparam T where T : ShiftEntityViewAndUpsertDTO, new()
 @inject ShiftBlazorLocalizer Loc
 
-@if (Value is ShiftSoftware.ShiftEntity.Core.Flags.IHasBrandSelection<T> dtoWithBrand)
+@if (Value is ShiftSoftware.ShiftEntity.Model.Flags.IHasBrandSelection<T> dtoWithBrand)
 {
     <ShiftAutocomplete Label="@Loc["BrandAutocompleteLabel"]"
                        @bind-Value="dtoWithBrand.Brand"
