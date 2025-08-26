@@ -3,6 +3,13 @@
 @inherits Events.EventComponentBase
 @implements IDisposable
 
+@if (!HideUI)
+{
+    <HeadContent>
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    </HeadContent>
+}
+
 @if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))
 {
     <MudField id="@UploaderId"
