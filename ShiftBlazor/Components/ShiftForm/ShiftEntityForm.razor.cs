@@ -537,7 +537,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 if (serverSideErrors != null && serverSideErrors.Count != 0)
                 {
-                    EditContext?.DisplayErrors(serverSideErrors!);
+                    messageStore ??= new ValidationMessageStore(EditContext!);
+                    EditContext?.DisplayErrors(serverSideErrors!, messageStore);
                     return null;
                 }
 

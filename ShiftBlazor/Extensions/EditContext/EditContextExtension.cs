@@ -11,17 +11,18 @@ namespace Microsoft.AspNetCore.Components.Forms;
 
 public static class EditContextExtension
 {
+    // TODO
+    // Validate list of complex objects
+
     private static readonly char[] Separators = { '.', '[' };
 
     private static readonly ConcurrentDictionary<(Type ModelType, string FieldName), PropertyInfo?> _propertyInfoCache = new();
 
     public static bool Validate(this EditContext editContext, in List<FieldIdentifier> fields, IValidator? validator = null, ValidationMessageStore? messageStore = null)
     {
-        var isValid = true;
-
         messageStore ??= new ValidationMessageStore(editContext);
 
-        isValid = editContext.ValidateDataAnnotation(fields, messageStore);
+        var isValid = editContext.ValidateDataAnnotation(fields, messageStore);
 
         // if the DataAnnotation validator returns false,
         // then don't run the FluentValidation validator 
@@ -139,14 +140,13 @@ public static class EditContextExtension
         return isValid;
     }
 
-    public static void ClearErrors(this EditContext editContext, ValidationMessageStore? messageStore = null)
+    public static void ClearErrors(this EditContext editContext, ValidationMessageStore messageStore)
     {
         editContext.ClearErrors(null, messageStore);
     }
 
-    public static void ClearErrors(this EditContext editContext, in List<FieldIdentifier>? fields, ValidationMessageStore? messageStore = null)
+    public static void ClearErrors(this EditContext editContext, in List<FieldIdentifier>? fields, ValidationMessageStore messageStore)
     {
-        messageStore ??= new ValidationMessageStore(editContext);
         if (fields == null)
         {
             messageStore.Clear();
