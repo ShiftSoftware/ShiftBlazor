@@ -38,7 +38,7 @@
 					{
 						@foreach (var item in Enum.GetValues(EnumTypeToUse))
 						{
-							<MudSelectItem Value="@item">@(item is Enum _enum && !string.IsNullOrWhiteSpace(_enum.Describe()) ? _enum.Describe() : item)</MudSelectItem>
+							<MudSelectItem Value="@item">@(item is Enum _enum ? _enum.Describe() : item)</MudSelectItem>
 						}
 					}
 				</MudSelectExtended>
