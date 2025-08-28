@@ -259,9 +259,11 @@ public partial class FileExplorer : IShortcutComponent
         switch (key)
         {
             case KeyboardKeys.KeyN:
+                if (DisplayNewFolderButton)
                 await CreateNewFolder();
                 break;
             case KeyboardKeys.KeyU:
+                if (DisplayUploadButton)
                 await Upload();
                 break;
             case KeyboardKeys.KeyS:
@@ -271,6 +273,7 @@ public partial class FileExplorer : IShortcutComponent
                 await Refresh(true);
                 break;
             case KeyboardKeys.KeyD:
+                if (DisplayDeleteButton)
                 await Delete();
                 break;
             case KeyboardKeys.KeyT:

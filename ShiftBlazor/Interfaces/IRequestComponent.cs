@@ -104,16 +104,3 @@ public interface IODataRequestComponent<T> : IODataRequest, IRequestComponent
         return content;
     }
 }
-
-//public interface IODataFilterComponent
-//{
-//    public ODataFilterGenerator ODataFilters { get; }
-//    public Dictionary<Guid, FilterModelBase> Filters { get; set; }
-//    public Action<ODataFilterGenerator>? Filter { get; set; }
-//    public string? StringFilter { get; set; }
-
-
-//    public bool FilterImmediate { get; set; }
-//    public RenderFragment? FilterTemplate { get; set; }
-//    public void AddFilter(Guid id, string field, ODataOperator op = ODataOperator.Equal, object? value = null);
-//}

@@ -624,13 +624,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     CloseDialog();
                     break;
                 case KeyboardKeys.KeyA:
-                    await ViewAddItem();
+                    if (RenderAddButton)
+                        await ViewAddItem();
                     break;
                 case KeyboardKeys.KeyE:
-                    await ExportList();
+                    if (EnableExport)
+                        await ExportList();
                     break;
                 case KeyboardKeys.KeyC:
-                    OpenGridEditor();
+                    if (!DisableGridEditor)
+                        OpenGridEditor();
                     break;
             }
         }
@@ -1259,6 +1262,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task ExportList()
         {
+            if (ExportIsInProgress)
+            {
+                return;
+            }
+
             this.ExportIsInProgress = true;
 
             var name = Title != null && ExportTitleRegex().IsMatch(Title)
