@@ -3,11 +3,11 @@
 @inherits FilterUIBase
 
 <div style="width: 100%;" class="@ClassName">
-	<MudField Label="@Label" InnerPadding="false">
+	<MudField Label="@Label" InnerPadding="false" Disabled="ParentDisabled">
 		<MudStack Row>
 			@if (Filter is StringFilterModel stringFilter && stringFilter.AutocompleteOptions != null)
 			{
-				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
 					<ActivatorContent>
 						<MudText>@Filter.Operator.Describe()</MudText>
 						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
@@ -22,7 +22,7 @@
 			}
 			else
 			{
-				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
 					<ActivatorContent>
 						<MudText>@Filter.Operator.Describe()</MudText>
 						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon"/>
@@ -96,32 +96,39 @@
 
 			var options = stringFilter.AutocompleteOptions;
 			AutocompleteType = typeof(ShiftAutocomplete<>).MakeGenericType(stringFilter.DtoType);
-			AutocompleteParameters = new()
-			{
-				["Adornment"] = Adornment.None,
-				["SelectedValuesChanged"] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged),
-				["MultiSelect"] = true,
-				["Clearable"] = true,
-				["Underline"] = false,
-				["SelectedValueCounter"] = true,
-			};
+
+			AutocompleteParameters = new();
+
+			AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.Adornment)] = Adornment.None;
+			AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValuesChanged)] = new EventCallback<List<ShiftEntitySelectDTO>>(this, AutocompleteMultiChanged);
+			AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.MultiSelect)] = true;
+			AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.Clearable)] = true;
+			AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.Underline)] = false;
+			AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.GroupSelectedValues)] = true;
+
+            if (stringFilter.AutocompleteOptions?.AdditionalParameters is not null)
+            {
+                foreach (var key in stringFilter.AutocompleteOptions!.AdditionalParameters!.Keys)
+                {
+                    AutocompleteParameters[key] = stringFilter.AutocompleteOptions!.AdditionalParameters![key];
+                }
+            }
 
 			if (stringFilter.AutocompleteOptions != null)
 			{
-				AutocompleteParameters["BaseUrl"] = options.BaseUrl;
-				AutocompleteParameters["BaseUrlKey"] = options.BaseUrlKey;
-				AutocompleteParameters["EntitySet"] = options.EntitySet;
-				AutocompleteParameters["SelectedValues"] = (stringFilter.Value as IEnumerable<string>)?.Select(ValueToSelectDTO).ToList();
+				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.BaseUrl)] = options.BaseUrl;
+				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.BaseUrlKey)] = options.BaseUrlKey;
+				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.EntitySet)] = options.EntitySet;
+				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValues)] = (stringFilter.Value as IEnumerable<string>)?.Select(ValueToSelectDTO).ToList();
 			}
 			else if (Misc.GetAttribute<ShiftEntityKeyAndNameAttribute>(stringFilter.DtoType) != null &&
 					!string.IsNullOrWhiteSpace(ShiftList?.EntitySet))
 			{
 				AllowAutocomplete = true;
-				AutocompleteParameters["EntitySet"] = ShiftList.EntitySet;
-				AutocompleteParameters["DataTextField"] = stringFilter.Field;
+				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.EntitySet)] = ShiftList.EntitySet;
 				if (IsMultiSelectOperator(stringFilter.Operator))
 				{
-					AutocompleteParameters["SelectedValues"] = (stringFilter.Value as IEnumerable<string>)?.Select(ValueToSelectDTO).ToList();
+					AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValues)] = (stringFilter.Value as IEnumerable<string>)?.Select(ValueToSelectDTO).ToList();
 				}
 			}
 		}
@@ -138,7 +145,7 @@
 			// temp fix to Filter Reset
 			if (stringFilter.Value == null)
 			{
-				AutocompleteParameters["SelectedValues"] = null!;
+				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValues)] = null!;
 			}
 		}
 
@@ -178,7 +185,7 @@
 
 	private void AutocompleteMultiChanged(List<ShiftEntitySelectDTO>? dto)
 	{
-		AutocompleteParameters["SelectedValues"] = dto!;
+		AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValues)] = dto!;
 		IEnumerable<string>? newValue;
 		var oldValue = Filter.Value as IEnumerable<string>;
 		if (Filter is StringFilterModel filter && filter.AutocompleteOptions != null)

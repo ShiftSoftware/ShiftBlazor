@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
+using MudBlazor.Utilities;
 using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Components.Print;
 using ShiftSoftware.ShiftBlazor.Enums;
@@ -24,15 +25,15 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components
 {
     [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> : IODataComponent, IShortcutComponent, ISortableComponent, IFilterableComponent, IShiftList where T : ShiftEntityDTOBase, new()
+    public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponent, ISortableComponent, IFilterableComponent, IShiftList where T : ShiftEntityDTOBase, new()
     {
         [Inject] ISnackbar Snackbar { get; set; } = default!;
         [Inject] ODataQuery OData { get; set; } = default!;
-        [Inject] HttpClient HttpClient { get; set; } = default!;
+        [Inject] public HttpClient HttpClient { get; private set; } = default!;
         [Inject] ShiftModal ShiftModal { get; set; } = default!;
-        [Inject] ShiftBlazorLocalizer Loc  { get; set; } = default!;
+        [Inject] public ShiftBlazorLocalizer Loc  { get; private set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
-        [Inject] SettingManager SettingManager { get; set; } = default!;
+        [Inject] public SettingManager SettingManager { get; private set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] MessageService MessageService { get; set; } = default!;
         [Inject] NavigationManager NavigationManager { get; set; } = default!;
@@ -67,6 +68,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         public string? EntitySet { get; set; }
+
+        [Parameter]
+        public string? Endpoint { get; set; }
 
         /// <summary>
         /// The OData api endpoint.
@@ -234,10 +238,16 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback<SelectState<T>> OnSelectStateChanged { get; set; }
 
         [Parameter]
-        public EventCallback<List<T>> OnFetch { get; set; }
+        public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
+        [Parameter]
+        public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
+        [Parameter]
+        public Func<Exception, ValueTask<bool>>? OnError { get; set; }
+        [Parameter]
+        public Func<ODataDTO<T>?, ValueTask<bool>>? OnResult { get; set; }
 
         [Parameter]
-        public RenderFragment? ChildContent { get; set; }
+        public RenderFragment<ListChildContext<T>>? ChildContent { get; set; }
 
         /// <summary>
         /// Whether to render or not render 'Entity ID' column
@@ -329,6 +339,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public PrintFormConfig? PrintConfig { get; set; }
 
+        [Parameter]
+        public bool DisableReloadButton { get; set; }
+
+        [Parameter]
+        public string? SortedColgroupStyle { get; set; }
+
+        [Parameter]
+        public bool HighlightSortedColumn { get; set; }
+
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -339,7 +358,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public bool IsAllSelected => SelectState.All;
         public readonly SelectState<T> SelectState = new();
 
-        internal event EventHandler<KeyValuePair<Guid, List<T>>>? _OnBeforeDataBound;
         internal Size IconSize = Size.Medium;
         internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
         internal bool RenderAddButton = false;
@@ -363,6 +381,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsFilterPanelOpen { get; set; }
         public HashSet<Guid> ActiveOperations { get; set; } = [];
         private CancellationTokenSource? ReloadBlockTokenSource;
+        public bool IsLoading { get; set; }
+
+        private TaskCompletionSource<GridData<T>> IndefiniteReloadTask = new();
+        private CancellationTokenSource? ReloadCancellationTokenSource { get; set; }
+
+        protected string GetRowClassname(T item, int colIndex) =>
+            new CssBuilder()
+                .AddClass("is-deleted", item.IsDeleted)
+                .Build();
+
+        protected string SortedColgroupStylename =>
+            new StyleBuilder()
+                .AddStyle("background", "rgba(var(--mud-palette-primary-rgb), 0.25)", string.IsNullOrWhiteSpace(SortedColgroupStyle))
+                .AddStyle(SortedColgroupStyle)
+                .Build();
 
         private List<Column<T>> DraggableColumns
         {
@@ -399,19 +432,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public bool ExportIsInProgress { get; private set; } = false;
 
-        private string GetPath()
-        {
-            string? url = BaseUrl;
-
-            if (url is null && BaseUrlKey is not null)
-                url = SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey);
-
-            if (url is null)
-                return SettingManager.Configuration.BaseAddress;
-
-            return url;
-        }
-
         protected override void OnInitialized()
         {
             dotNetRef = DotNetObjectReference.Create(this);
@@ -433,7 +453,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (EntitySet != null)
             {
-                string? url = GetPath();
+                string? url = IRequestComponent.GetPath(this);
                 
                 QueryBuilder = OData
                     .CreateNewQuery<T>(EntitySet, url)
@@ -463,7 +483,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
 
             SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
-
             IsFilterPanelOpen = SettingManager?.GetFilterPanelState() ?? FilterPanelDefaultOpen;
         }
 
@@ -605,41 +624,136 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     CloseDialog();
                     break;
                 case KeyboardKeys.KeyA:
-                    await ViewAddItem();
+                    if (RenderAddButton)
+                        await ViewAddItem();
                     break;
                 case KeyboardKeys.KeyE:
-                    await ExportList();
+                    if (EnableExport)
+                        await ExportList();
                     break;
                 case KeyboardKeys.KeyC:
-                    OpenGridEditor();
+                    if (!DisableGridEditor)
+                        OpenGridEditor();
                     break;
             }
         }
 
         private async Task<GridData<T>> ServerReload(GridState<T> state)
         {
+            IsLoading = true;
+            StateHasChanged();
+
             // Check if there are any active operations,
-            // if so, wait for them to finish before proceeding.
+            // if so, wait for them to finish before proceeding,
+            // only if it is the first request.
             // Operations could be things like Filter, Sort...
-            if (ActiveOperations.Count > 0)
+            if (!ReadyToRender && ActiveOperations.Count > 0)
             {
                 try
                 {
                     ReloadBlockTokenSource = new CancellationTokenSource();
-                    await Task.Delay(1000, ReloadBlockTokenSource.Token);
+                    await Task.Delay(300, ReloadBlockTokenSource.Token);
                 }
                 catch (Exception) { }
+
+                ReloadBlockTokenSource?.Dispose();
+                ReloadBlockTokenSource = null;
             }
 
-            var builder = QueryBuilder;
+            ReloadCancellationTokenSource?.Cancel();
+            ReloadCancellationTokenSource?.Dispose();
+            ReloadCancellationTokenSource = new CancellationTokenSource();
+            var cts = ReloadCancellationTokenSource;
+            
+            GridData<T> gridData = new();
+            bool preventDefault = false;
             ErrorMessage = null;
 
-            // Save current PageSize as user preference 
-            if (state.PageSize != SelectedPageSize)
+            try
             {
-                SettingManager.SetListPageSize(state.PageSize);
+                // Save current PageSize as user preference 
+                if (state.PageSize != SelectedPageSize)
+                {
+                    SettingManager.SetListPageSize(state.PageSize);
+                    SelectedPageSize = state.PageSize;
+                }
+
+                var url = BuildODataUrl(state);
+                if (string.IsNullOrWhiteSpace(url))
+                    throw new Exception(Loc["DataReadUrlError"]);
+
+                CurrentUri = new Uri(url!);
+                var content = await IODataRequestComponent<T>.GetFromJsonAsync(this, CurrentUri, cts.Token);
+
+                if (content == null)
+                {
+                    preventDefault = true;
+                    return gridData;
+                }
+
+                gridData = new GridData<T>
+                {
+                    Items = content.Value ?? [],
+                    TotalItems = (int?)content.Count ?? content.Value?.Count ?? 0,
+                };
+
+                SelectState.Total = gridData.TotalItems;
+
+                //await OnFetch.InvokeAsync(content.Value);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested)
+            {
+                // the only way to cancel the request is when the user calls another
+                // ServerReload method while the previous request is still in progress.
+                // We return an indefinite task to prevent MudBlazor from stopping the loading animation.
+                // We later resolve this task when the request is completed.
+                return await IndefiniteReloadTask.Task;
+            }
+            catch (JsonException e)
+            {
+                if (OnError != null && await OnError.Invoke(e))
+                {
+                    return gridData;
+                }
+
+                ErrorMessage = Loc["DataParseError"];
+                MessageService.Error(Loc["DataReadError"], e.InnerException?.Message, e.Message, buttonText: Loc["DropdownViewButtonText"]);
+            }
+            catch (Exception e)
+            {
+                if (OnError != null && await OnError.Invoke(e))
+                {
+                    return gridData;
+                }
+
+                ErrorMessage = e.Message;
+                MessageService.Error(e.Message, e.Message, e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
+            }
+            finally
+            {
+                ReadyToRender = true;
+
+                if (ReferenceEquals(cts, ReloadCancellationTokenSource))
+                {
+                    IndefiniteReloadTask.SetResult(gridData);
+                    IndefiniteReloadTask = new();
+                    IsLoading = false;
+
+                    if (!preventDefault)
+                    {
+                        ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, gridData.Items.ToList<object>()));
+                    }
+                    StateHasChanged();
+                }
+
+
             }
 
+            return gridData;
+        }
+
+        private DataServiceQuery<T> BuildSort(GridState<T> state, DataServiceQuery<T> builder)
+        {
             // Convert MudBlazor's SortDefinitions to OData query
             if (state.SortDefinitions.Count > 0)
             {
@@ -647,11 +761,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 builder = builder.AddQueryOption("$orderby", string.Join(',', sortList));
             }
 
+            return builder;
+        }
+
+        private DataServiceQuery<T> BuildFilter(GridState<T> state, DataServiceQuery<T> builder)
+        {
             // Remove multiple empty filters but keep the last added empty filter
-            var emptyFields = state.FilterDefinitions.Where(x => x.Value == null && x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty);
-            for (var i = 0; i < emptyFields.Count() - 1; i++)
+            // state.FilterDefinitions is same as DataGrid!.FilterDefinitions
+            var emptyFields = state.FilterDefinitions
+                .Where(x => x.Value == null && x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty)
+                .ToList();
+
+            for (var i = 0; i < Math.Max(0, emptyFields.Count - 1); i++)
             {
-                DataGrid!.FilterDefinitions.Remove(emptyFields.ElementAt(i));
+                DataGrid!.FilterDefinitions.Remove(emptyFields[i]);
             }
 
             try
@@ -681,9 +804,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             catch (Exception e)
             {
-                ErrorMessage = $"An error has occured";
+                ErrorMessage = $"An error has occurred";
                 MessageService.Error(Loc["ShiftListFilterParseError"], e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
+
+            return builder;
+        }
+
+        private string? BuildODataUrl(GridState<T> state)
+        {
+            var builder = QueryBuilder;
+
+            builder = BuildSort(state, builder);
+            builder = BuildFilter(state, builder);
 
             var builderQueryable = builder.AsQueryable();
 
@@ -695,61 +828,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     .Take(state.PageSize);
             }
 
-            var url = builderQueryable.ToString();
-            GridData<T> gridData = new();
-            HttpResponseMessage? res = default;
-
-            try
-            {
-                CurrentUri = new Uri(url!);
-                res = await HttpClient.GetAsync(url);
-
-                if (!res!.IsSuccessStatusCode)
-                {
-                    ErrorMessage = Loc["DataReadStatusError", (int)res!.StatusCode];
-                    ReadyToRender = true;
-                    return gridData;
-                }
-
-                var content = await res.Content.ReadFromJsonAsync<ODataDTO<T>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new LocalDateTimeOffsetJsonConverter() }
-                });
-
-                if (content == null || content.Count == null)
-                {
-                    ErrorMessage = Loc["DataReadEmptyError"];
-                    ReadyToRender = true;
-                    return gridData;
-                }
-
-                gridData = new GridData<T>
-                {
-                    Items = content.Value.ToList(),
-                    TotalItems = (int)content.Count.Value,
-                };
-
-                SelectState.Total = gridData.TotalItems;
-
-                await OnFetch.InvokeAsync(content.Value);
-                ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, content.Value.ToList<object>()));
-                _OnBeforeDataBound?.Invoke(this, new KeyValuePair<Guid, List<T>>(Id, content.Value));
-            }
-            catch (JsonException e)
-            {
-                var body = await res!.Content.ReadAsStringAsync();
-                ErrorMessage = Loc["DataParseError"];
-                MessageService.Error(Loc["DataReadError"], e.Message, body, buttonText: Loc["DropdownViewButtonText"]);
-            }
-            catch (Exception e)
-            {
-                ErrorMessage = Loc["DataReadError"];
-                MessageService.Error(Loc["DataReadError"], e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
-            }
-
-            ReadyToRender = true;
-
-            return gridData;
+            return builderQueryable.ToString();
         }
 
         private void ShiftBlazorEvents_OnModalClosed(object? sender, object? data)
@@ -1230,7 +1309,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return;
             }
 
-            var url = GetPath().AddUrlPath(EntitySet);
+            var url = IRequestComponent.GetPath(this).AddUrlPath(EntitySet);
             if (PrintConfig == null)
             {
                 await PrintService.PrintAsync(url, id);
@@ -1258,4 +1337,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             IShortcutComponent.Remove(Id);
         }
     }
+
+    
 }

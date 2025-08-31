@@ -1,0 +1,72 @@
+﻿@inherits MudExpansionPanels
+
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@{
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+    [CascadingParameter(Name = "ShiftForm")]
+    public IShiftForm? ShiftForm { get; set; }
+
+    private string TabErrorColor = "rgba(var(--mud-palette-error-rgb), 0.3)";
+
+    protected override void OnParametersSet()
+    {
+        if (ShiftForm != null)
+        {
+            ShiftForm.EditContext.OnValidationRequested += (sender, args) =>
+            {
+                foreach (var section in ShiftForm.GetSections().Where(x => x.For != null))
+                {
+                    var panel = this.Panels.FirstOrDefault(x => x.Text == section.For);
+                    if (panel == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var field in section.Fields)
+                    {
+                        var hasErrors = ShiftForm.EditContext.GetValidationMessages(field).Any();
+
+                        SetError(panel, hasErrors);
+
+                        if (hasErrors)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                var errPanel = this.Panels.FirstOrDefault(x => x.Tag != null);
+                if (errPanel != null)
+                {
+                    errPanel.ExpandAsync().GetAwaiter().GetResult();
+                }
+            };
+
+        }
+
+        base.OnParametersSet();
+    }
+
+    private void SetError(MudExpansionPanel panel, bool error = true)
+    {
+        if (error && panel.Tag == null)
+        {
+            // Store the current style in the Tag property
+            panel.Tag = panel.Style ?? string.Empty;
+            panel.Style = $"background-color: {TabErrorColor};";
+        }
+        else if (!error && panel.Tag != null)
+        {
+            // Reset background color
+            panel.Style = (string)panel.Tag;
+            panel.Tag = null;
+        }
+
+    }
+
+
+}

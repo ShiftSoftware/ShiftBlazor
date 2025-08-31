@@ -10,9 +10,9 @@ public class NumberFilter<T, TProperty> : FilterBuilder<T, TProperty>
     [Parameter]
     public TProperty? Value { get; set; }
 
-    protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
+    protected override FilterModelBase CreateFilter(string path, Type propertyType)
     {
-        var filter = FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
+        var filter = FilterModelBase.CreateFilter(path, propertyType, isDefault: true);
         filter.Value = Value;
         return filter;
     }

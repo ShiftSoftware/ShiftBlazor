@@ -1,0 +1,134 @@
+﻿@inherits MudTabs
+
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using System.Text.Json
+
+@{
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+    [CascadingParameter(Name = "ShiftForm")]
+    public IShiftForm? ShiftForm { get; set; }
+
+    [Parameter]
+    public bool AllowPreviousOnInvalid { get; set; } = false;
+
+    [Parameter]
+    public bool ValidateOnTabChange { get; set; } = false;
+
+    [Obsolete]
+    public new bool KeepPanelsAlive { get; set; }
+
+    private string TabErrorColor = "rgba(var(--mud-palette-error-rgb), 0.3)";
+    private bool DontResetErrorState { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        base.KeepPanelsAlive = true;
+
+        if (ValidateOnTabChange)
+        {
+            this.OnPreviewInteraction = ValidateBeforeTabChange;
+        }
+        else
+        {
+            this.OnPreviewInteraction = OnBeforeTabChange;
+        }
+
+        if (ShiftForm != null)
+        {
+            ShiftForm.EditContext.OnValidationRequested += (sender, args) =>
+            {
+                foreach (var section in ShiftForm.GetSections().Where(x => x.For != null))
+                {
+                    var panel = this.Panels.FirstOrDefault(x => x.Text == section.For);
+                    if (panel == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var field in section.Fields)
+                    {
+                        var hasErrors = ShiftForm.EditContext.GetValidationMessages(field).Any();
+
+                        SetError(panel, hasErrors);
+
+                        if (hasErrors)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                var errPanel = this.Panels.FirstOrDefault(x => x.Tag != null);
+                if (errPanel != null)
+                {
+                    DontResetErrorState = true;
+                    this.ActivatePanel(errPanel);
+                }
+            };
+
+        }
+
+        base.OnInitialized();
+    }
+
+    private Task ValidateBeforeTabChange(TabInteractionEventArgs args)
+    {
+        if (ShiftForm == null || args.PanelIndex == this.ActivePanelIndex || AllowPreviousOnInvalid && args.PanelIndex < this.ActivePanelIndex)
+        {
+            return Task.CompletedTask;
+        }
+
+        var panel = this.Panels[this.ActivePanelIndex];
+        var section = ShiftForm.GetSections().Where(x => x.For != null).FirstOrDefault(x => x.For == panel.Text);
+
+        if (section != null)
+        {
+            if (section.Validate())
+            {
+                SetError(panel, false);
+            }
+            else
+            {
+                args.Cancel = true;
+                SetError(panel);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnBeforeTabChange(TabInteractionEventArgs args)
+    {
+        // Reset error state when Tab is changed
+        if (!DontResetErrorState
+            && ShiftForm != null
+            && this.ActivePanelIndex != args.PanelIndex
+            && this.ActivePanel?.Tag != null)
+        {
+            SetError(this.ActivePanel, false);
+        }
+
+        DontResetErrorState = false;
+
+        return Task.CompletedTask;
+    }
+
+    private void SetError(MudTabPanel panel, bool error = true)
+    {
+        if (error && panel.Tag == null)
+        {
+            // Store the current style in the Tag property
+            panel.Tag = panel.Style ?? string.Empty;
+            panel.Style = $"background-color: {TabErrorColor};";
+        }
+        else if (!error && panel.Tag != null)
+        {
+            // Reset background color
+            panel.Style = (string)panel.Tag;
+            panel.Tag = null;
+        }
+    }
+}

@@ -270,6 +270,11 @@ window.getCursorPosition = function (inputId) {
     return [-1, -1]; // Return -1 if the input is not found or selectionStart is not supported
 }
 
+window.GetFocusableElementCount = function (element)
+{
+    return getTabbableElements(element).length;
+}
+
 window.addEventListener("keydown", handleKeydown);
 window.addEventListener("keyup", releaseAltKey);
 window.addEventListener("blur", releaseAltKey);

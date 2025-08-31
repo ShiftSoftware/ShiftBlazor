@@ -9,10 +9,12 @@ using ShiftSoftware.ShiftBlazor.Components.ShiftAutocomplete;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using System;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http.Json;
@@ -20,10 +22,11 @@ using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShortcutComponent, IDisposable where TEntitySet : ShiftEntityDTOBase
+public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEntitySet>, IFilterableComponent, IShortcutComponent, IDisposable where TEntitySet : ShiftEntityDTOBase
 {
-    [Inject] private SettingManager SettingManager { get; set; } = default!;
-    [Inject] private HttpClient Http { get; set; } = default!;
+    [Inject] public SettingManager SettingManager { get; private set; } = default!;
+    [Inject] public HttpClient HttpClient { get; private set; } = default!;
+    [Inject] public ShiftBlazorLocalizer Loc  { get; private set; } = default!;
     [Inject] private ODataQuery OData { get; set; } = default!;
     [Inject] private ShiftModal ShiftModal { get; set; } = default!;
     [Inject] private MessageService MessageService { get; set; } = default!;
@@ -53,6 +56,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     [Parameter]
     [EditorRequired]
     public string EntitySet { get; set; }
+
+    [Parameter]
+    public string? Endpoint { get; set; }
 
     [Parameter]
     public string? BaseUrl { get; set; }
@@ -130,7 +136,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     public RenderFragment? ChildContent { get; set; }
 
     [Parameter]
-    public bool SelectedValueCounter { get; set; }
+    public bool GroupSelectedValues { get; set; }
 
     // ======== Classes and Styles =========
     [Parameter]
@@ -177,6 +183,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     [Parameter]
     public RenderFragment? BeforeItemsTemplate { get; set; }
 
+    [Parameter]
+    public RenderFragment<SelectedValuesGroupContext<TEntitySet>>? SelectedValuesGroupTemplate { get; set; }
+
     // ======== Adornment Parameters ========
 
     [Parameter]
@@ -205,11 +214,15 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     public string? QuickAddParameterName { get; set; }
 
     // ======== Events Parameters ========
+
     [Parameter]
-    public EventCallback<List<TEntitySet>> OnEntityResponse { get; set; }
-    
+    public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
     [Parameter]
-    public EventCallback<HttpResponseMessage> OnResponse { get; set; }
+    public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
+    [Parameter]
+    public Func<Exception, ValueTask<bool>>? OnError { get; set; }
+    [Parameter]
+    public Func<ODataDTO<TEntitySet>?, ValueTask<bool>>? OnResult { get; set; }
 
     [Parameter]
     public Func<ValueTask<bool>>? OnInputFocus { get; set; }
@@ -222,12 +235,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     [Parameter]
     public Func<KeyboardEventArgs, ValueTask<bool>>? OnFieldKeyUp { get; set; }
-
-    [Parameter]
-    public Func<KeyboardEventArgs, ValueTask<bool>>? OnInputKeyDown { get; set; }
-
-    [Parameter]
-    public Func<KeyboardEventArgs, ValueTask<bool>>? OnInputKeyUp { get; set; }
 
     [Parameter]
     public EventCallback<object> OnQuickAddClick { get; set; }
@@ -250,14 +257,14 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     // ======== Classnames =========
     protected string Classname =>
-            new CssBuilder("shift-autocomplete")
+            new CssBuilder("shift-autocomplete shift-input")
                 .AddClass("mud-input-required", when: () => Required)
                 .AddClass($"mud-input-{Variant.ToDescriptionString()}-with-label", !string.IsNullOrEmpty(Label))
                 .AddClass(Class)
                 .Build();
 
     protected string InputContainerClassname =>
-            new CssBuilder("shift-autocomplete-input-container")
+            new CssBuilder("shift-input-wrapper")
                 .AddClass($"mud-input-{Variant.ToDescriptionString()}-with-label", !string.IsNullOrEmpty(Label))
                 .AddClass("mud-shrink", !string.IsNullOrWhiteSpace(Text) || IsFocused || SelectedValues?.Count > 0 || Adornment == Adornment.Start || !string.IsNullOrWhiteSpace(Placeholder) || IsIntitialValueLoading)
                 .Build();
@@ -283,7 +290,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     public bool IsLoading => FetchTokenSource?.IsCancellationRequested == false;
     public bool IsIntitialValueLoading => InitialUpdateTokenSource?.IsCancellationRequested == false;
     public string Text { get; private set; } = string.Empty;
-    private bool IsSelectedValueCounterOpen { get; set; }
+    internal bool IsSelectedValuesGroupOpen { get; set; }
 
     internal string DataValueField = string.Empty;
     internal string DataTextField = string.Empty;
@@ -335,6 +342,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             _ = UpdateInitialValue();
         }
 
+        if (For != null && EditContext != null)
+        {
+            _fieldIdentifier = FieldIdentifier.Create(For);
+        }
+
         base.OnParametersSet();
     }
 
@@ -381,9 +393,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         {
             case KeyboardKeys.Escape:
                 await CloseDropdown();
-                if (SelectedValueCounter)
+                if (GroupSelectedValues)
                 {
-                    CloseSelectedValueCounter();
+                    CloseSelectedValuesGroup();
                 }
                 StateHasChanged();
                 break;
@@ -398,16 +410,56 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     private async Task FetchItems(string? searchQuery = null)
     {
         HighlightedListItemIndex = 0; // Reset the selected dropdown item
+        
+        FetchTokenSource?.Cancel();
+        FetchTokenSource?.Dispose();
+        FetchTokenSource = new CancellationTokenSource();
+        var cts = FetchTokenSource;
+        StateHasChanged();
 
+        try
+        {
+            var url = BuildODataUrl(searchQuery);
+            //if (string.IsNullOrWhiteSpace(url))
+                //throw new Exception(Loc["DataReadUrlError"]);
+            var uri = new Uri(url!);
+
+            var items = await IODataRequestComponent<TEntitySet>.GetFromJsonAsync(this, uri, cts.Token);
+
+            if (items == null)
+                return;
+
+            DropdownItems = items.Value;
+            // the cancelation token is also used to indicate loading state
+            FetchTokenSource?.Cancel();
+            StateHasChanged();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception e)
+        {
+            if (OnError != null && await OnError.Invoke(e))
+                return;
+
+            Console.WriteLine($"fetch error {e}");
+            StateHasChanged();
+
+        }
+    }
+
+    private string? BuildODataUrl(string? query)
+    {
+        var url = IRequestComponent.GetPath(this);
         var builder = OData
-                .CreateNewQuery<TEntitySet>(EntitySet, GetPath());
+                .CreateNewQuery<TEntitySet>(EntitySet, url);
 
         // Filters components
         var filters = Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
-        
-        if (!string.IsNullOrWhiteSpace(searchQuery))
+
+        if (!string.IsNullOrWhiteSpace(query))
         {
-            var filter = new ODataFilterGenerator().Add(DataTextField, ODataOperator.Contains, searchQuery);
+            var filter = new ODataFilterGenerator().Add(DataTextField, ODataOperator.Contains, query);
             filters.Add(filter.ToString());
         }
 
@@ -430,107 +482,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             builder = builder.AddQueryOption("$filter", filterQueryString);
         }
 
-        var url = builder.Take(MaxItems).ToString();
-        
-        FetchTokenSource?.Cancel();
-        FetchTokenSource?.Dispose();
-        FetchTokenSource = new CancellationTokenSource();
-        StateHasChanged();
-
-        try
-        {
-            using var res = await Http.GetAsync(url, FetchTokenSource.Token);
-            var items = await ParseEntityResponse(res);
-            DropdownItems = items ?? [];
-        }
-        catch (TaskCanceledException)
-        {
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception)
-        {
-            Console.WriteLine("fetch error");
-        }
-
-        FetchTokenSource.Cancel();
-        StateHasChanged();
-    }
-
-    // copy from EnityForm
-    internal async Task<List<TEntitySet>> ParseEntityResponse(HttpResponseMessage res)
-    {
-        await OnResponse.InvokeAsync(res);
-
-        if (res.StatusCode == HttpStatusCode.NoContent)
-        {
-            return [];
-        }
-
-        ODataDTO<TEntitySet>? result = null;
-
-        try
-        {
-            result = await res.Content.ReadFromJsonAsync<ODataDTO<TEntitySet>>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
-            {
-                Converters = { new LocalDateTimeOffsetJsonConverter() }
-            });
-        }
-        catch (Exception ex)
-        {
-            var resBody = await res.Content.ReadAsStringAsync();
-            throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(resBody, ex));
-        }
-
-        if (result == null)
-        {
-            throw new Exception("Could not get response from server");
-        }
-
-        //if (result.Message != null)
-        //{
-        //    var parameters = new DialogParameters {
-        //            { "Message", result.Message },
-        //            { "Color", Color.Error },
-        //            { "Icon", Icons.Material.Filled.Error },
-        //        };
-
-        //    await DialogService.ShowAsync<PopupMessage>("", parameters, new DialogOptions
-        //    {
-        //        MaxWidth = MaxWidth.ExtraSmall,
-        //        NoHeader = true,
-        //        CloseOnEscapeKey = false,
-        //    });
-
-        //    if (!res.IsSuccessStatusCode)
-        //    {
-        //        return null;
-        //    }
-        //}
-
-        if (res.IsSuccessStatusCode)
-        {
-            var value = result.Value;
-            await OnEntityResponse.InvokeAsync(value);
-            return value;
-        }
-
-        throw new Exception($"{(int)res.StatusCode} {res.StatusCode}", new Exception(await res.Content.ReadAsStringAsync()));
-    }
-
-    // copy from EnityForm
-    private string GetPath()
-    {
-        string? url = BaseUrl;
-
-        if (url is null && BaseUrlKey is not null)
-            url = SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey);
-
-        if (url is null)
-            return SettingManager.Configuration.BaseAddress;
-
-        return url;
+        return builder.Take(MaxItems).ToString();
     }
 
     public async Task OpenDropdown(bool selectText = true, bool fetchItems = true)
@@ -588,9 +540,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         }
 
         IsFocused = true;
-        if (SelectedValueCounter)
+        if (GroupSelectedValues)
         {
-            CloseSelectedValueCounter();
+            CloseSelectedValuesGroup();
         }
 
         if (OnInputFocus != null && await OnInputFocus.Invoke() == false)
@@ -661,6 +613,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             await SetValue(item);
             await CloseDropdown();
         }
+
+        if (EditContext != null && For != null)
+        {
+            EditContext.NotifyFieldChanged(FieldIdentifier.Create(For));
+        }
     }
 
     public async Task<bool> RemoveSelected(ShiftEntitySelectDTO item)
@@ -685,7 +642,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         {
             await SelectedValuesChanged.InvokeAsync(SelectedValues);
         }
-
 
         if (SelectedValuesIndex <= SelectedValues.Count && !IsFocused)
         {
@@ -867,9 +823,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
                 {
                     await CloseDropdown();
                 }
-                if (SelectedValueCounter)
+                if (GroupSelectedValues)
                 {
-                    CloseSelectedValueCounter();
+                    CloseSelectedValuesGroup();
                 }
                 break;
         }
@@ -882,7 +838,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             return;
         }
 
-        if (OnInputKeyUp != null && await OnInputKeyUp.Invoke(args) == false)
+        if (OnFieldKeyUp != null && await OnFieldKeyUp.Invoke(args) == false)
         {
             return;
         }
@@ -893,7 +849,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             case "NumpadEnter":
                 // When trying fast and adding items,
                 // the search might not be finished yet,
-                // so we only select an item if search is finished.
+                // so we only select an item if search is finished (IsLoading == false).
                 if (IsDropdownOpen && !IsLoading)
                 {
                     if (FreeInput && MultiSelect && HighlightedListItemIndex >= DropdownItems.Count)
@@ -921,6 +877,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     private async Task ClearSelected()
     {
+        await OnClearClick.InvokeAsync();
+
         if (MultiSelect)
         {
             SelectedValues?.Clear();
@@ -930,8 +888,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         {
             await SetValue(null);
         }
-
-        await OnClearClick.InvokeAsync();
     }
 
     private async Task AddFreeInputValue(string? text = null)
@@ -967,6 +923,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
     private async Task UpdateInitialValue()
     {
+        //if (InitialUpdateTokenSource is not null)
+        //    return;
+
         var values = MultiSelect
             ? SelectedValues ?? []
             : Value != null ? [Value] : [];
@@ -983,21 +942,25 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         InitialUpdateTokenSource?.Cancel();
         InitialUpdateTokenSource?.Dispose();
         InitialUpdateTokenSource = new CancellationTokenSource();
+        var cts = InitialUpdateTokenSource;
         StateHasChanged();
 
         try
         {
+            var _url = IRequestComponent.GetPath(this);
             var builder = OData
-                .CreateNewQuery<TEntitySet>(EntitySet, GetPath());
+                .CreateNewQuery<TEntitySet>(EntitySet, _url);
 
             var url = builder.WhereQuery(x => ids.Contains(x.ID))
                     .ToString();
 
-            using var res = await Http.GetAsync(url, InitialUpdateTokenSource.Token);
-            var items = await ParseEntityResponse(res);
+            var items = await IODataRequestComponent<TEntitySet>.GetFromJsonAsync(this, new Uri(url), cts.Token);
+
+            if (items == null)
+                return;
 
             ShiftEntitySelectDTO? itemFound = null;
-            foreach (var item in items)
+            foreach (var item in items.Value)
             {
                 var text = GetProperty(item, DataTextField);
                 var value = GetProperty(item, DataValueField);
@@ -1029,7 +992,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
             Text = Value?.Text ?? string.Empty;
         }
 
-        InitialUpdateTokenSource.Cancel();
+        cts.Cancel();
         StateHasChanged();
     }
 
@@ -1074,6 +1037,12 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
     {
         if (index >= 0 && index < SelectedValues?.Count)
         {
+            var focusableElementsCount = await JsRuntime.InvokeAsync<int>("GetFocusableElementCount", ContainerRef);
+            if (focusableElementsCount <= 1)
+            {
+                return;
+            }
+
             await CloseDropdown();
             await ContainerRef.MudFocusFirstAsync(index);
         }
@@ -1102,7 +1071,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
 
         var index = SelectedValuesIndex;
 
-        var chipCounter = SelectedValueCounter
+        var chipCounter = GroupSelectedValues
             ? SelectedValues.Count > 0 ? 1 : 0
             : SelectedValues.Count;
 
@@ -1147,25 +1116,25 @@ public partial class ShiftAutocomplete<TEntitySet> : IFilterableComponent, IShor
         }
     }
 
-    private void SelectedValueCounterFocusHandler()
+    internal void OpenSelectedValuesGroup()
     {
-        if (!IsSelectedValueCounterOpen)
+        if (!IsSelectedValuesGroupOpen)
         {
-            IsSelectedValueCounterOpen = true;
+            IsSelectedValuesGroupOpen = true;
         }
     }
 
-    private void CloseSelectedValueCounter()
+    internal void CloseSelectedValuesGroup()
     {
-        if (IsSelectedValueCounterOpen)
+        if (IsSelectedValuesGroupOpen)
         {
-            IsSelectedValueCounterOpen = false;
+            IsSelectedValuesGroupOpen = false;
         }
     }
 
     // we don't wanna do anything on click as the Menu component will handle click
     // We only add this handler to make the component focusable
-    private void SelectedValueCounterClickHandler() { }
+    private void SelectedValuesGroupClickHandler() { }
 
     public void AddFilter(Guid id, string field, ODataOperator op, object? value)
     {

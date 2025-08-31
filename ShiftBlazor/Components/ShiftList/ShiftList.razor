@@ -1,19 +1,14 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using ShiftSoftware.ShiftBlazor.Events
 @using ShiftSoftware.ShiftBlazor.Filters
-@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@using ShiftSoftware.ShiftEntity.Core.Flags
+@using ShiftSoftware.ShiftEntity.Model.Flags
 @typeparam T where T : ShiftEntityDTOBase, new()
 @inherits EventComponentBase
 @implements IODataComponent
-@inject IWebAssemblyHostEnvironment Env
 
 @if (TypeAuthAction == null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
 {
-    @if (!string.IsNullOrWhiteSpace(Title) && !IsEmbed)
-    {
-        <PageTitle>@Title</PageTitle>
-    }
-
     <MudPaper Elevation="25" Outlined="Outlined" id="@($"Grid-{Id}")">
         <CascadingValue Value="this" IsFixed="true">
             <header>
@@ -29,12 +24,13 @@
 
                         @ToolbarEndTemplate
 
-                        @if (Env.IsDevelopment())
+                        @if (!DisableReloadButton)
                         {
                             <MudTooltip Text="Refresh">
                                 <MudIconButtonExtended Size="@IconSize"
                                                        Icon="@Icons.Material.Outlined.Refresh"
                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                       Disabled="IsLoading"
                                                        OnClick="() => DataGrid!.ReloadServerData()" />
                             </MudTooltip>
                         }
@@ -257,8 +253,25 @@
                          RowsPerPage="@SelectedPageSize"
                          ServerData="ServerData"
                          FixedHeader="!DisableStickyHeader"
-                         RowClassFunc="@((item, index) => item.IsDeleted ? "is-deleted" : "")"
+                         RowClassFunc="GetRowClassname"
                          T="T">
+
+                <ColGroup>
+                    @if (HighlightSortedColumn && DataGrid != null && DataGrid.SortDefinitions.Count > 0)
+                    {
+                        foreach (var column in DataGrid.RenderedColumns.Where(x => !x.Hidden))
+                        {
+                            @if (DataGrid.SortDefinitions.Keys.Contains(column.PropertyName))
+                            {
+                                <col style="@SortedColgroupStylename" />
+                            }
+                            else
+                            {
+                                <col />
+                            }
+                        }
+                    }
+                </ColGroup>
 
                 <NoRecordsContent>
                     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -306,13 +319,12 @@
                                                 HeaderStyle="width: 0;" />
                     }
 
-                    @ChildContent
+                    @if (ChildContent != null)
+                    {
+                        @ChildContent(new(this))
+                    }
 
                     <PropertyColumnExtended Property="x => x.IsDeleted" Title="@Loc["IsDeletedColumnHeaderText"]" Hidden="IsDeleteColumnHidden" />
-
-                    <ShiftSoftware.ShiftBlazor.Components.ShiftList.Flags.HasBrandForeignColumn T="T" />
-
-                    <ShiftSoftware.ShiftBlazor.Components.ShiftList.Flags.HasDraftColumn T="T" />
 
                     @if (EnablePrintColumn)
                     {
@@ -376,5 +388,61 @@
     internal void DropContainerHasChanged()
     {
         _columnsPanelDropContainer?.Refresh();
+    }
+
+    internal RenderFragment? GetDraftColumn()
+    {
+        @if (Array.Exists(typeof(T).GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHasDraftColumn<>)))
+        {
+            return
+            @<TemplateColumn T="T" Title="Draft">
+                <CellTemplate>
+                    @if ((context.Item as IHasDraftColumn<T>)!.IsDraft)
+                    {
+                        <MudChip T="string" Icon="@Icons.Material.Filled.Edit"
+                                 Variant="Variant.Text"
+                                 Color="Color.Warning">
+                            @Loc["DraftColumnStateDraft"]
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle"
+                                 Variant="Variant.Text"
+                                 Color="Color.Success">
+                            @Loc["DraftColumnStateFinal"]
+                        </MudChip>
+                    }
+                </CellTemplate>
+            </TemplateColumn>;
+        }
+
+        return null;
+    }
+
+    internal RenderFragment? GetBrandForeignColumn()
+    {
+        @if (Array.Exists(typeof(T).GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHasBrandForeignColumn<>)))
+        {
+            @* 
+                Setting Property='x => ""' works fine for viewing and loading the foreign data. But the filtering does not work correctly, it uses the Title for the filter ((Brand eq 'Dr8dr'))
+                This is why the FakeDTO is used, just so that it generates the filter correctly ((BrandID eq 'Dr8dr'))
+            *@
+            return@<ForeignColumn Property="x => new FakeDTO().BrandID"
+                                  T="T"
+                                  Title="@Loc["BrandColumnTitle"]"
+                                  DataValueField="BrandID"
+                                  TEntity="ShiftIdentity.Core.DTOs.Brand.BrandListDTO"
+                                  TProperty="string"
+                                  BaseUrlKey="ShiftIdentityApi"
+                                  EntitySet="IdentityBrand" />;
+        }
+
+        return null;
+    }
+
+    private class FakeDTO
+    {
+        public string? BrandID { get; set; }
     }
 }

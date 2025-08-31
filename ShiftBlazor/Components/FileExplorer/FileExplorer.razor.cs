@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
@@ -21,11 +22,11 @@ public partial class FileExplorer : IShortcutComponent
     [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
     [Inject] SettingManager SettingManager { get; set; } = default!;
     [Inject] HttpClient HttpClient { get; set; } = default!;
-    [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] ISnackbar Snackbar { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
-    [Inject] IIdentityStore? TokenStore { get; set; }
+    [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
+
 
     [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
     public bool? ParentReadOnly { get; set; }
@@ -113,6 +114,8 @@ public partial class FileExplorer : IShortcutComponent
     private bool DisableSidebar => DisableQuickAccess && DisableRecents;
     private FileExplorerDirectoryContent? CWD { get; set; } = null;
     private List<FileExplorerDirectoryContent> Files { get; set; } = new();
+    private List<FileExplorerDirectoryContent>? FilteredFiles { get; set; }
+    private List<FileExplorerDirectoryContent> DisplayedFiles => FilteredFiles ?? Files;
     private UploadEventArgs? UploadingFiles { get; set; }
     private bool IsLoading { get; set; } = true;
     private string Url = "";
@@ -133,14 +136,6 @@ public partial class FileExplorer : IShortcutComponent
     private double ContextTop { get; set; }
     private DotNetObjectReference<FileExplorer>? objRef;
     private readonly string URLPathKey = "path";
-    private IEnumerable<string> ImageExtensions = new List<string>
-    {
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".png",
-        ".webp",
-    };
 
     private bool IsIconsView => Settings.View >= FileView.Small && Settings.View <= FileView.ExtraLarge;
     private string SettingKey => $"FileExplorer_{LoggedInUser?.ID}_{AccountName}_{ContainerName}_{Root}";
@@ -148,6 +143,41 @@ public partial class FileExplorer : IShortcutComponent
     private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
     TokenUserDataDTO? LoggedInUser;
     private Dictionary<string, string> Usernames = [];
+    private string SearchQuery { get; set; } = string.Empty;
+    private static readonly IEnumerable<string> ImageExtensions = new List<string>
+    {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".webp",
+    };
+    private static readonly Dictionary<string, (string icon, string color)> FileIcons =
+    new[]
+    {
+        (Extensions: new[] { ".pdf" }, Value: ("picture_as_pdf", "#de2429")),
+        (Extensions: new[] { ".doc", ".docx" }, Value: ("docs", "#295294")),
+        (Extensions: new[] { ".txt", ".rtf" }, Value: ("description", "#777777")),
+        (Extensions: new[] { ".xls", ".xlsx" }, Value: ("table", "#3b885a")),
+        (Extensions: new[] { ".ppt", ".pptx" }, Value: ("wallpaper_slideshow", "#d14b4b")),
+        (Extensions: new[] { ".csv" }, Value: ("csv", "#3b885a")),
+        (Extensions: new[] { ".zip", ".rar", ".7z" }, Value: ("archive", "#f9ca40")),
+        (Extensions: new[] { ".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a" }, Value: ("audio_file", "#6dabfb")),
+        (Extensions: new[] { ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm", ".mpeg", ".mpg" }, Value: ("video_file", "#d15eff")),
+        (Extensions: new[] { ".html", ".htm", ".css", ".js", ".php", ".ts", ".py", ".java", ".c", ".cpp", ".cs" }, Value: ("code", "#001234")),
+        (Extensions: new[] { ".json", ".xml" }, Value: ("data_array", "#777777")),
+        (Extensions: new[] { ".exe", ".dll", ".msi" }, Value: ("terminal", "#001234")),
+        (Extensions: new[] { ".sh", ".bat", ".cmd", ".ps1" }, Value: ("terminal", "#001234")),
+        (Extensions: [..ImageExtensions], Value: ("image", "#d14b4b")),
+        (Extensions: new[] { "" }, Value: ("draft", "#777777")),
+        (Extensions: new [] { "folder" }, Value: ("folder", "#f1ce69")),
+
+    }
+    .SelectMany(group => group.Extensions.Select(ext => (ext, group.Value)))
+    .ToDictionary(x => x.ext, x => x.Value);
+
+    // the list needs to be sorted alphabetically for the Google Fonts icons to work properly
+    private static readonly string GoogleFontsIconNames = string.Join(",", FileIcons.Values.Select(static x => x.icon).Distinct().OrderBy(x => x));
 
     protected override void OnInitialized()
     {
@@ -207,9 +237,11 @@ public partial class FileExplorer : IShortcutComponent
         objRef = DotNetObjectReference.Create(this);
         await JsRuntime.InvokeVoidAsync("addCustomUrlChangeListener", objRef, Id);
 
-        if (TokenStore != null)
+        var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+
+        if (tokenStore != null)
         {
-            LoggedInUser = (await TokenStore.GetTokenAsync())?.UserData;
+            LoggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
         }
 
         var userSettings = SettingManager.GetFileExplorerSetting(SettingKey);
@@ -227,9 +259,11 @@ public partial class FileExplorer : IShortcutComponent
         switch (key)
         {
             case KeyboardKeys.KeyN:
+                if (DisplayNewFolderButton)
                 await CreateNewFolder();
                 break;
             case KeyboardKeys.KeyU:
+                if (DisplayUploadButton)
                 await Upload();
                 break;
             case KeyboardKeys.KeyS:
@@ -239,6 +273,7 @@ public partial class FileExplorer : IShortcutComponent
                 await Refresh(true);
                 break;
             case KeyboardKeys.KeyD:
+                if (DisplayDeleteButton)
                 await Delete();
                 break;
             case KeyboardKeys.KeyT:
@@ -342,6 +377,7 @@ public partial class FileExplorer : IShortcutComponent
         }
         else
         {
+            ClearSearch();
             await FetchData(file);
         }
     }
@@ -438,7 +474,9 @@ public partial class FileExplorer : IShortcutComponent
             MaxWidth = MaxWidth.ExtraSmall,
         };
 
-        var result = await DialogService.Show<CreateFolderDialog>("", options).Result;
+
+        var dialogRef = await DialogService.ShowAsync<CreateFolderDialog>("", options);
+        var result = await dialogRef.Result;
 
         try
         {
@@ -583,6 +621,11 @@ public partial class FileExplorer : IShortcutComponent
 
     private async Task GoToPath(string path)
     {
+        if (Root != null && path.StartsWith(Root))
+        {
+            path = path.Substring(Root.Length).TrimStart('/');
+        }
+
         var i = path.LastIndexOf('/');
         var filterPath = path.Substring(0, i + 1);
         var name = path.Substring(i + 1);
@@ -597,42 +640,23 @@ public partial class FileExplorer : IShortcutComponent
         await FetchData(data);
     }
 
-    private KeyValuePair<string, string> GetFileIcon(FileExplorerDirectoryContent file)
+    private (string icon, string color) GetFileIcon(FileExplorerDirectoryContent file)
     {
         if (file.IsFile)
         {
-            var extension = Path.GetExtension(file.Name)?.ToLower();
+            var extension = Path.GetExtension(file.Name)?.ToLower() ?? string.Empty;
             
-            if (ImageExtensions.Contains(extension))
-                return new(@Icons.Material.Filled.Image, "#dddddd");
-
-            switch (extension)
+            if (FileIcons.TryGetValue(extension, out var value))
             {
-                case ".pdf":
-                    return new(@Icons.Material.Filled.TextSnippet, "#de2429");
-                case ".doc":
-                case ".docx":
-                    return new(@Icons.Material.Filled.TextSnippet, "#295294");
-                case ".txt":
-                    return new(@Icons.Material.Filled.TextSnippet, "#dddddd");
-                case ".xls":
-                case ".xlsx":
-                    return new(@Icons.Material.Filled.ListAlt, "#3b885a");
-                case ".csv":
-                    return new(@Icons.Material.Filled.Archive, "#dddddd");
-                case ".zip":
-                case ".rar":
-                case ".7z":
-                    return new(@Icons.Material.Filled.Archive, "#f9ca40");
-                default:
-                    return new(Icons.Material.Filled.InsertDriveFile, "#dddddd");
+                return value;
             }
+
+            return FileIcons[string.Empty];
         }
         else
         {
-            return new (Icons.Material.Filled.Folder, "#f1ce69");
+            return FileIcons["folder"];
         }
-
     }
 
     private async Task ViewDeletedFiles()
@@ -836,6 +860,27 @@ public partial class FileExplorer : IShortcutComponent
         {
             DisplayError(Loc["Uploading Failed."]);
         }
+    }
+
+    public void LocalSearch(string q)
+    {
+        var filtered = Files.Where(x => x.Name?.Contains(q, StringComparison.CurrentCultureIgnoreCase) == true);
+        SearchQuery = q;
+
+        if (q.Length > 0)
+        {
+            FilteredFiles = filtered.ToList();
+        }
+        else
+        {
+            FilteredFiles = null;
+        }
+    }
+
+    public void ClearSearch()
+    {
+        SearchQuery = string.Empty;
+        FilteredFiles = null;
     }
 
     public void Dispose()

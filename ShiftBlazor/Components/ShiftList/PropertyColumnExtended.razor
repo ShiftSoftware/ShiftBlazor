@@ -36,6 +36,10 @@
 
     protected Type? FormComponent => ComponentType ?? ShiftList.ComponentType;
 
+
+    [Parameter]
+    public bool ForceExportIfHidden { get; set; }
+
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
@@ -68,10 +72,8 @@
         {
             return datetime.DateTime;
         }
-		else
-		{
-			return content;
-		}
+
+		return content;
     }
 
     protected string? GetKey(T item)

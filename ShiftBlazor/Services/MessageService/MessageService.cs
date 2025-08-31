@@ -152,7 +152,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 { "ReportButton", true },
             };
 
-            DialogService.Show<PopupMessage>("", dialogParams, dialogOptions);
+            DialogService.ShowAsync<PopupMessage>("", dialogParams, dialogOptions);
         }
 
     }

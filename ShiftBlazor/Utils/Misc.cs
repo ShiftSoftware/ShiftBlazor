@@ -30,6 +30,20 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             return propertyPath?.Split(".").ElementAt(0);
         }
 
+        internal static string GetPropertyPath<T, TProperty>(Expression<Func<T, TProperty>> expression, string delimiter = ".")
+        {
+            var paths = new List<string>();
+            Expression? current = expression.Body;
+
+            while (current is MemberExpression member)
+            {
+                paths.Insert(0, member.Member.Name);
+                current = member.Expression;
+            }
+
+            return string.Join(delimiter, paths);
+        }
+
         public static Expression<Func<T, object>> CreateExpression<T>(string propertyName)
         {
             // Fetch the property from the type
@@ -190,7 +204,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
 
             var underlyingType = Nullable.GetUnderlyingType(type);
 
-            return underlyingType is not null && (underlyingType == typeof(DateTime) || type == typeof(DateTimeOffset));
+            return underlyingType is not null && (underlyingType == typeof(DateTime) || underlyingType == typeof(DateTimeOffset));
         }
     }
 }

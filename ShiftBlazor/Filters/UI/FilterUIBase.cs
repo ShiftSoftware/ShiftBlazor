@@ -17,6 +17,9 @@ public class FilterUIBase : ComponentBase
     [CascadingParameter]
     public IFilterableComponent? Parent { get; set; }
 
+    [CascadingParameter(Name = FormHelper.ParentDisabledName)]
+    public bool ParentDisabled { get; set; }
+
     public string ClassName => $"filter-input {this.GetType().Name.ToLower().Replace("filter", "")}-filter";
     public string MenuIcon => IsMenuOpen ? Icons.Material.Filled.ArrowDropUp : Icons.Material.Filled.ArrowDropDown;
     public Guid Id => Filter.Id;

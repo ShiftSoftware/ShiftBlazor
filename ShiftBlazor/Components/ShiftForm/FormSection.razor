@@ -1,0 +1,51 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.AspNetCore.Components.Forms
+
+@implements IFormSection
+@implements IDisposable
+
+<CascadingValue Value="this" IsFixed>
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [CascadingParameter(Name = "ShiftForm")]
+    public IShiftForm? ShiftForm { get; set; }
+
+    [Parameter]
+    public string? For { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    public HashSet<FieldIdentifier> Fields { get; set; } = new();
+
+    public bool IsValid { get; set; } = true;
+
+    protected override void OnInitialized()
+    {
+        ShiftForm?.AddSection(this);
+        base.OnInitialized();
+    }
+
+    public void Add(FieldIdentifier formControl)
+    {
+        Fields.Add(formControl);
+    }
+
+    public void Remove(FieldIdentifier formControl)
+    {
+        Fields.Remove(formControl);
+    }
+
+    public bool Validate()
+    {
+        IsValid = ShiftForm?.Validate(Fields.ToList()) ?? true;
+        return IsValid;
+    }
+
+    public void Dispose()
+    {
+        ShiftForm?.RemoveSection(this);
+    }
+}

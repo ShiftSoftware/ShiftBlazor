@@ -32,13 +32,17 @@
 
             @if (MultiSelect && SelectedValues?.Count > 0)
             {
-                @if (SelectedValueCounter)
+                @if (GroupSelectedValues && SelectedValuesGroupTemplate != null)
                 {
-                    <MudMenu MaxHeight="@MaxHeight" @bind-Open="IsSelectedValueCounterOpen">
+                    @SelectedValuesGroupTemplate(new(this))
+                }
+                else if (GroupSelectedValues)
+                {
+                    <MudMenu MaxHeight="@MaxHeight" @bind-Open="IsSelectedValuesGroupOpen">
                         <ActivatorContent>
                             <MudChip Size="Size.Small"
-                                     OnClick="SelectedValueCounterClickHandler"
-                                     @onfocus="SelectedValueCounterFocusHandler"
+                                     OnClick="SelectedValuesGroupClickHandler"
+                                     @onfocus="OpenSelectedValuesGroup"
                                      Value="SelectedValues.Count"/>
                         </ActivatorContent>
                         <ChildContent>
@@ -54,7 +58,7 @@
                 }
             }
 
-            @if (IsIntitialValueLoading && (!SelectedValueCounter || (SelectedValueCounter && !MultiSelect)))
+            @if (IsIntitialValueLoading && (!GroupSelectedValues || (GroupSelectedValues && !MultiSelect)))
             {
                 <div style="width: 0;">
                     @if (LoadingTemplate != null)
@@ -148,7 +152,7 @@
 
     </div>
 
-    <MudInputLabel Class="shift-autocomplete-label mud-input-label-inputcontrol"
+    <MudInputLabel Class="shift-label mud-input-label-inputcontrol"
                    Disabled="@IsDisabled"
                    Variant="@Variant"
                    ForId="@InputId">
@@ -249,38 +253,6 @@
         padding: 0 !important;
     }
 
-    .shift-autocomplete .shift-autocomplete-input-container {
-        align-items: center;
-    }
-
-    .shift-autocomplete .shift-autocomplete-input-container.mud-input-text-with-label {
-        margin-top: 16px;
-    }
-
-    .shift-autocomplete .shift-autocomplete-label {
-        color: var(--mud-palette-text-secondary);
-        padding: 0;
-        font-size: 1rem;
-        font-weight: 400;
-        line-height: 1.15rem;
-        letter-spacing: .00938em;
-        z-index: 1;
-        pointer-events: none;
-    }
-
-    .shift-autocomplete .shift-autocomplete-label.mud-input-label-outlined {
-        background-color: #fff;
-    }
-
-    .shift-autocomplete .shift-autocomplete-label.mud-disabled
-    {
-        color: var(--mud-palette-text-disabled) !important;
-    }
-
-    .shift-autocomplete .shift-autocomplete-input-container:focus-within ~ label.shift-autocomplete-label {
-        color: var(--mud-palette-primary);
-    }
-
     .highlighted-selected-value {
         background-color: var(--mud-palette-action-disabled);
     }
@@ -295,7 +267,7 @@
 </style>
 
 @code {
-    private RenderFragment SelectedValuesRenderFragment =>@<text>
+    internal RenderFragment SelectedValuesRenderFragment =>@<text>
 
         @for (var i = 0; i < SelectedValues!.Count; i++)
         {

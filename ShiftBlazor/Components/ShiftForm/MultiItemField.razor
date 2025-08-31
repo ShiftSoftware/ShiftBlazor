@@ -1,0 +1,184 @@
+﻿@using System.Linq.Expressions
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Collections
+@using System.Text.Json
+
+@typeparam T where T : IList
+@typeparam TItem
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<MudCard Elevation="2" Class="mt-3">
+    <MudCardHeader Class="pt-1 pb-1 background-gray">
+        <CardHeaderContent>
+            @if (TitleTemplate == null)
+            {
+                <MudStack Row>
+                    <MudText Typo="Typo.subtitle2">@Title</MudText>
+                    <ValidationMessage For="ValueExpression" />
+                </MudStack>
+            }
+            else
+            {
+                @TitleTemplate
+            }
+        </CardHeaderContent>
+    </MudCardHeader>
+
+    <MudCardContent Class="pt-2 pb-2">
+        <MudGrid Spacing="3">
+
+            @if (FieldHeader != null)
+            {
+                <MudItem lg="11" md="11" sm="11" xs="11">
+                    @FieldHeader(this)
+                </MudItem>
+
+                <MudItem lg="1" md="1" sm="1" xs="1"></MudItem>
+            }
+
+            @if (FieldBody != null)
+            {
+                @foreach (var item in Value)
+                {
+                    <MudItem lg="11" md="11" sm="11" xs="11">
+                        @FieldBody((TItem)item)
+                    </MudItem>
+                    <MudItem lg="1" md="1" sm="1" xs="1">
+                        @if (RemoveButtonTempalte == null)
+                        {
+                            @GetRemoveButton((TItem)item)
+                        }
+                        else
+                        {
+                            @RemoveButtonTempalte(new(this, (TItem)item))
+                        }
+                    </MudItem>
+                }
+            }
+
+            @if (Mode > FormModes.Archive && (!UseLimits || Value.Count < Max))
+            {
+                if (FieldFooter == null)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Info"
+                               Style="margin:auto; margin-top:15px;"
+                               Size="Size.Small"
+                               OnClick="CreateNew"
+                               StartIcon="@Icons.Material.Filled.Add">
+                        Add Line
+                    </MudButton>
+                }
+                else
+                {
+                    @FieldFooter(this)
+                }
+            }
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
+
+@code {
+
+    [CascadingParameter]
+    public FormModes? Mode { get; set; }
+
+    [CascadingParameter]
+    public EditContext? EditContext { get; set; }
+
+    [Parameter] public T Value { get; set; } = default!;
+    [Parameter] public Expression<Func<T>> ValueExpression { get; set; } = default!;
+    [Parameter] public EventCallback<T> ValueChanged { get; set; } = default!;
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public int Min { get; set; }
+
+    [Parameter]
+    public int Max { get; set; }
+
+    // ========= Template Parameters =========
+    [Parameter]
+    public RenderFragment<MultiItemField<T, TItem>>? FieldHeader { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? FieldBody { get; set; }
+
+    [Parameter]
+    public RenderFragment<MultiItemField<T, TItem>>? FieldFooter { get; set; }
+
+    [Parameter]
+    public RenderFragment<RemoveContext>? RemoveButtonTempalte { get; set; }
+
+    [Parameter]
+    public RenderFragment? TitleTemplate { get; set; }
+
+    private Type DTOType;
+    private bool UseLimits = false;
+    private FieldIdentifier fieldIdentifier;
+
+    public MultiItemField()
+    {
+        DTOType = typeof(T).GetGenericArguments().First();
+    }
+
+    protected override void OnInitialized()
+    {
+        UseLimits = Max > 0 && Min <= Max;
+        fieldIdentifier = FieldIdentifier.Create(ValueExpression);
+
+        if (UseLimits)
+        {
+            var minItemCount = Min;
+            while (minItemCount-- > 0)
+            {
+                Value.Add(Activator.CreateInstance(DTOType));
+            }
+            ValueChanged.InvokeAsync(Value);
+        }
+
+        base.OnInitialized();
+    }
+
+    public void CreateNew()
+    {
+        if (!UseLimits || Value.Count < Max)
+        {
+            Value.Add(Activator.CreateInstance(DTOType));
+            ValueChanged.InvokeAsync(Value);
+        }
+    }
+
+    public void Remove(TItem item)
+    {
+        Value.Remove(item);
+        ValueChanged.InvokeAsync(Value);
+    }
+
+    private RenderFragment GetRemoveButton(TItem item)
+    {
+        return @<text>
+            <MudIconButton ButtonType="ButtonType.Button"
+                           Style="margin:10px;"
+                           Variant="Variant.Text"
+                           Color="Color.Default"
+                           Size="Size.Small"
+                           OnClick="() => Remove(item)"
+                           Icon="@Icons.Material.Filled.Delete" />
+        </text>;
+    }
+
+    public class RemoveContext
+    {
+        public TItem Item { get; set; }
+        public Action Remove;
+
+        public RemoveContext(MultiItemField<T, TItem> multiItemField, TItem item)
+        {
+            Item = item;
+            Remove = () => multiItemField.Remove(item);
+        }
+    }
+}

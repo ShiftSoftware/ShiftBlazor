@@ -8,7 +8,7 @@ namespace ShiftSoftware.ShiftBlazor.Interfaces
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; }
         public ValueTask HandleShortcut(KeyboardKeys actions);
 
-        public static Dictionary<Guid, IShortcutComponent> Components { get; set; } = new();
+        public static OrderedDictionary<Guid, IShortcutComponent> Components { get; set; } = new();
 
         public static bool Register(IShortcutComponent component)
         {

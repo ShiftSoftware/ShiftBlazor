@@ -23,7 +23,9 @@ public class StringFilterModel : FilterModelBase
             {
                 Field = Field,
                 Operator = Operator,
-                Value = Value
+                Value = Value,
+                Prefix = Prefix,
+                IsCollection = IsCollection,
             });
         }
 

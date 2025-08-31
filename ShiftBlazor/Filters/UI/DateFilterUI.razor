@@ -2,14 +2,20 @@
 @using ShiftSoftware.ShiftBlazor.Filters.Models
 @inherits FilterUIBase
 
+@* 
+	TODO:
+	Use TextField instead of DatePicker as base input
+*@
 <MudField Class="@("custom-date-range-picker " + ClassName)"
 		  Adornment="Adornment.End"
 		  AdornmentIcon="@Icons.Material.Filled.FilterAlt"
 		  InnerPadding="false"
 		  Label="@Label"
+		  Disabled="ParentDisabled"
+		  @onkeydown="FieldKeyDownHandler"
 		  OnAdornmentClick="OpenMenu">
 
-	<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened">
+	<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
 		<ActivatorContent>
 			<MudText>@Filter.Operator.Describe()</MudText>
 			<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
@@ -29,7 +35,8 @@
 					   Underline="false"
 					   DateChanged="DateStartChanged"
 					   Date="_dateRangeValue.Start"
-					   @onfocus="OpenPicker" />
+					   @onblur="StartInputBlurHandler"
+					   @onfocus="StartInputFocusHandler" />
 
 		@if (IsPickerOpen || _dateRangeValue.Start != null || _dateRangeValue.End != null)
 		{
@@ -41,7 +48,8 @@
 					   DateChanged="DateEndChanged"
 					   Date="_dateRangeValue.End"
 					   Editable
-					   @onfocus="OpenPicker" />
+					   @onblur="EndInputBlurHandler"
+					   @onfocus="EndInputFocusHandler" />
 
 		@if (_dateRangeValue.Start != null || _dateRangeValue.End != null)
 		{
@@ -49,11 +57,11 @@
 		}
 	}
 
-	<MudPopover Open="IsPickerOpen" AnchorOrigin="Origin.BottomLeft">
+	<MudPopover Open="IsPickerOpen" AnchorOrigin="Origin.BottomLeft" >
 		<MudDateRangePicker DateRange="_dateRangeValue"
 							DateRangeChanged="RangeChangedHandler"
-							PickerVariant="PickerVariant.Static">
-		</MudDateRangePicker>
+							Elevation="0"
+							PickerVariant="PickerVariant.Static" />
 	</MudPopover>
 
 	<MudPopover Open="_IsMenuOpen" RelativeWidth="DropdownWidth.Relative" AnchorOrigin="Origin.BottomLeft" Paper Class="pa-5">
@@ -95,12 +103,37 @@
 	private bool IsPickerOpen { get; set; }
 	private bool _IsMenuOpen { get; set; }
 
+	private bool IsStartInputFocused;
+	private bool IsEndInputFocused;
+
 	private DateRange _dateRangeValue => Filter.Value as DateRange ?? new(null, null);
 
 	private DateFilterOperator DateOperator { get; set; }
 	private TimeUnit TimeUnit { get; set; } = TimeUnit.Day;
 	private int UnitValue { get; set; } = 1;
 	private DateTime? DateTimeValue { get; set; } = DateTime.Now;
+
+	private void StartInputFocusHandler()
+	{
+		IsStartInputFocused = true;
+		OpenPicker();
+	}
+
+	private void StartInputBlurHandler()
+	{
+		IsStartInputFocused = false;
+	}
+
+	private void EndInputFocusHandler()
+	{
+		OpenPicker();
+		IsEndInputFocused = true;
+	}
+
+	private void EndInputBlurHandler()
+	{
+		IsEndInputFocused = false;
+	}
 
 	private void OpenPicker()
 	{
@@ -184,5 +217,25 @@
 
 		Filter.Value = test;
 		UpdateFilter();
+	}
+
+	private void FieldKeyDownHandler(KeyboardEventArgs args)
+	{
+		switch (args.Key)
+		{
+			case "Escape":
+				ClosePicker();
+				break;
+			case "Tab":
+				if (args.ShiftKey && IsStartInputFocused)
+				{
+					ClosePicker();
+				}
+				else if (!args.ShiftKey && IsEndInputFocused)
+				{
+					ClosePicker();
+				}
+				break;
+		}
 	}
 }

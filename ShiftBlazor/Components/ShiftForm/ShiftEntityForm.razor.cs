@@ -21,14 +21,15 @@ using ShiftSoftware.ShiftBlazor.Components.Print;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public partial class ShiftEntityForm<T> : ShiftFormBasic<T> where T : ShiftEntityViewAndUpsertDTO, new()
+    [CascadingTypeParameter(nameof(T))]
+    public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestComponent<T> where T : ShiftEntityViewAndUpsertDTO, new()
     {
-        [Inject] private HttpClient Http { get; set; } = default!;
+        [Inject] public HttpClient HttpClient { get; private set; } = default!;
         [Inject] private IDialogService DialogService { get; set; } = default!;
         [Inject] private NavigationManager NavManager { get; set; } = default!;
         [Inject] private ShiftModal ShiftModal { get; set; } = default!;
-        [Inject] private SettingManager SettingManager { get; set; } = default!;
-        [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
+        [Inject] public SettingManager SettingManager { get; private set; } = default!;
+        [Inject] public ShiftBlazorLocalizer Loc { get; private set; } = default!;
         [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
         [Inject] IJSRuntime JsRuntime { get; set; } = default!;
         [Inject] PrintService PrintService { get; set; } = default!;
@@ -41,7 +42,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// </summary>
         [Parameter]
         [EditorRequired]
-        public string Action { get; set; } = default!;
+        public string Endpoint { get; set; } = default!;
 
         /// <summary>
         ///     The item ID, it is also used for the CRUD operations.
@@ -112,11 +113,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// <summary>
         ///     An event triggered after getting a response from API.
         /// </summary>
-        [Parameter]
-        public EventCallback<HttpResponseMessage> OnResponse { get; set; }
 
         [Parameter]
-        public EventCallback<T> OnEntityResponse { get; set; }
+        public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
+        [Parameter]
+        public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
+        [Parameter]
+        public Func<Exception, ValueTask<bool>>? OnError { get; set; }
+        [Parameter]
+        public Func<ShiftEntityResponse<T>?, ValueTask<bool>>? OnResult { get; set; }
 
         [Parameter]
         public bool AllowClone { get; set; }
@@ -138,26 +143,21 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool _RenderHeaderControlsDivider;
         internal bool IsTemporal = false;
 
+        internal override bool IsFooterToolbarEmpty => FooterToolbarStartTemplate == null
+                                                       && FooterToolbarCenterTemplate == null
+                                                       && FooterToolbarEndTemplate == null
+                                                       && !_RenderSubmitButton
+                                                       && Mode != FormModes.Edit
+                                                       && Mode != FormModes.Archive;
+        bool IsCreateMode => Mode == FormModes.Create || (Mode == FormModes.Edit && TaskInProgress == FormTasks.SaveAsNew);
+
         internal string ItemUrl
         {
             get
             {
-                var path = GetPath().AddUrlPath(Action);
+                var path = IRequestComponent.GetPath(this);
                 return IsCreateMode ? path : path.AddUrlPath(Key?.ToString());
             }
-        }
-
-        private string GetPath()
-        {
-            string? url = BaseUrl;
-
-            if (url is null && BaseUrlKey is not null)
-                url = SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey);
-
-            if (url is null)
-                return SettingManager.Configuration.BaseAddress;
-
-            return url;
         }
 
         internal override string _SubmitText
@@ -193,9 +193,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         protected override async Task OnInitializedAsync()
         {
-            if (string.IsNullOrWhiteSpace(Action))
+            if (string.IsNullOrWhiteSpace(Endpoint))
             {
-                throw new ArgumentNullException(nameof(Action));
+                throw new ArgumentNullException(nameof(Endpoint));
             }
 
             if (Key == null && Mode != FormModes.Create)
@@ -234,13 +234,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
             _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton;
-
-            IsFooterToolbarEmpty = FooterToolbarStartTemplate == null
-                && FooterToolbarCenterTemplate == null
-                && FooterToolbarEndTemplate == null
-                && !_RenderSubmitButton
-                && Mode != FormModes.Edit
-                && Mode != FormModes.Archive;
         }
 
         public override async ValueTask HandleShortcut(KeyboardKeys key)
@@ -313,7 +306,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (result?.Canceled != true)
                 {
                     var url = ItemUrl + "?ignoreGlobalFilters";
-                    using (var res = await Http.DeleteAsync(ItemUrl))
+                    using (var res = await HttpClient.DeleteAsync(ItemUrl))
                     {
                         await SetValue(await ParseEntityResponse(res));
                     }
@@ -329,7 +322,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             await RunTask(FormTasks.Print, async () =>
             {
-                var path = GetPath().AddUrlPath(Action);
+                var path = IRequestComponent.GetPath(this);
                 var id = Key?.ToString();
 
                 if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(id))
@@ -383,15 +376,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 Value.ID = null;
 
-                var request = Http.CreateIdempotencyRequest(Value, ItemUrl, Guid.NewGuid());
+                var request = HttpClient.CreateIdempotencyRequest(Value, ItemUrl, Guid.NewGuid());
 
-                res = await Http.SendAsync(request);
+                res = await HttpClient.SendAsync(request);
 
                 message = Loc["ItemCreated"];
             }
             else
             {
-                res = await Http.PutAsJsonAsync(ItemUrl, Value, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                res = await HttpClient.PutAsJsonAsync(ItemUrl, Value, new JsonSerializerOptions(JsonSerializerDefaults.Web));
                 message = Loc["ItemSaved"];
             }
 
@@ -479,17 +472,26 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 try
                 {
                     var url = asOf == null ? ItemUrl : ItemUrl + "?asOf=" + Uri.EscapeDataString((asOf.Value).ToString("O"));
+                    using var requestMessage = HttpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url));
 
-                    using (var res = await Http.GetAsync(url))
+                    if (OnBeforeRequest != null && await OnBeforeRequest.Invoke(requestMessage))
+                        return;
+
+                    using (var res = await HttpClient.SendAsync(requestMessage))
                     {
+                        if (OnResponse != null && await OnResponse.Invoke(res))
+                            return;
+
                         //res.Headers.TryGetValues(Constants.HttpHeaderVersioning, out IEnumerable<string>? versioning);
                         IsTemporal = true; //versioning?.Contains("Temporal") == true;
                         await SetValue(await ParseEntityResponse(res), asOf == null);
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     EditContext = new EditContext(Value);
+                    if (OnError != null && await OnError.Invoke(e))
+                        return;
                     throw;
                 }
                 
@@ -498,8 +500,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         internal async Task<T?> ParseEntityResponse(HttpResponseMessage res)
         {
-            await OnResponse.InvokeAsync(res);
-
             if (res.StatusCode == HttpStatusCode.NoContent)
             {
                 return new T();
@@ -513,6 +513,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 {
                     Converters = { new LocalDateTimeOffsetJsonConverter() }
                 });
+
+                if (OnResult != null && await OnResult.Invoke(result))
+                    return null;
+
             }
             catch (Exception ex)
             {
@@ -527,6 +531,17 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (result.Message != null)
             {
+                var serverSideErrors = result.Message.SubMessages
+                    ?.Where(x => !string.IsNullOrWhiteSpace(x.For))
+                    .ToDictionary(x => x.For!, x => x.SubMessages?.Select(x => x.Title).ToList());
+
+                if (serverSideErrors != null && serverSideErrors.Count != 0)
+                {
+                    messageStore ??= new ValidationMessageStore(EditContext!);
+                    EditContext?.DisplayErrors(serverSideErrors!, messageStore);
+                    return null;
+                }
+
                 var parameters = new DialogParameters {
                     { "Message", result.Message },
                     { "Color", Color.Error },
@@ -549,7 +564,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
             if (res.IsSuccessStatusCode)
             {
                 var value = result.Entity;
-                await OnEntityResponse.InvokeAsync(value);
                 return value;
             }
 
@@ -580,9 +594,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
         }
 
-        bool IsCreateMode => Mode == FormModes.Create || (Mode == FormModes.Edit && TaskInProgress == FormTasks.SaveAsNew);
-
-        internal async Task UpdateUrl(object? key)
+        internal async Task UpdateUrl(string? key)
         {
             if (key == null || key == default)
                 return;
@@ -645,7 +657,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             {
                 var dParams = new DialogParameters
                 {
-                    {"EntitySet", Action.AddUrlPath(Key?.ToString(), "revisions")},
+                    {"EntitySet", Endpoint.AddUrlPath(Key?.ToString(), "revisions")},
                 };
 
                 if (!string.IsNullOrWhiteSpace(Title))

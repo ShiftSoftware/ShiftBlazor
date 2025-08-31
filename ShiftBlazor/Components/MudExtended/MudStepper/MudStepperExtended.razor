@@ -1,0 +1,149 @@
+﻿@inherits MudStepper
+
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using System.Text.Json
+
+@{
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+    [CascadingParameter(Name = "ShiftForm")]
+    public IShiftForm? ShiftForm { get; set; }
+
+    [Parameter]
+    public bool ValidateOnStepChange { get; set; } = true;
+
+    private bool _hasError = false;
+
+    protected override void OnInitialized()
+    {
+        if (ValidateOnStepChange)
+        {
+            this.OnPreviewInteraction = ValidateBeforeStep;
+        }
+        else
+        {
+            this.OnPreviewInteraction = OnBeforeStep;
+        }
+
+        if (ShiftForm != null)
+        {
+            ShiftForm.EditContext.OnValidationRequested += (sender, args) =>
+            {
+                foreach (var section in ShiftForm.GetSections().Where(x => x.For != null))
+                {
+                    var step = this.Steps.FirstOrDefault(x => x.Title == section.For);
+                    if (step == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var field in section.Fields)
+                    {
+                        var hasErrors = ShiftForm.EditContext.GetValidationMessages(field).Any();
+
+                        // store step error state in the step's Tag property
+                        // since we can't use the step.HasError property directly
+                        if (hasErrors)
+                        {
+                            step.Tag = true;
+                            step.SetHasErrorAsync(true);
+                            break;
+                        }
+                        else if (step.Tag != null && step.Tag.Equals(true))
+                        {
+                            step.Tag = null;
+                            step.SetHasErrorAsync(false);
+                        }
+                    }
+                }
+            };
+
+        }
+
+        base.OnInitialized();
+    }
+
+    private async Task ValidateBeforeStep(StepperInteractionEventArgs args)
+    {
+        if (ShiftForm == null || args.Action == StepAction.Reset || args.Action == StepAction.Skip)
+        {
+            return;
+        }
+
+        // this.ActiveIndex is not the current step index
+        // so we need to find the current step index
+        var currentIndex = this.Steps.FindLastIndex(x => x == this.ActiveStep);
+        var desiredIndex = args.StepIndex;
+
+        // args.StepIndex returns the current index when the action is StepAction.Complete
+        if (args.Action == StepAction.Complete)
+            desiredIndex++;
+
+        // Allow going to previous steps
+        if (desiredIndex <= currentIndex)
+        {
+            return;
+        }
+
+        var step = this.Steps[currentIndex];
+
+        if (args.Action == StepAction.Activate)
+        {
+            // on click, we prevent the default action and try to validate each step
+            // until we get to the desired step or we find an error
+            args.Cancel = true;
+
+            if (_hasError)
+            {
+                await this.NextStepAsync();
+                currentIndex++;
+            }
+
+            for (var i = currentIndex; i < desiredIndex; i++)
+            {
+                if (!_hasError)
+                {
+                    await this.NextStepAsync();
+                }
+            }
+
+            return;
+        }
+
+        // only if the action is StepAction.Complete
+        // and the step has a form section associated with it
+        // we validate the section
+        var section = ShiftForm.GetSections().Where(x => x.For != null).FirstOrDefault(x => x.For == step.Title);
+
+        if (section != null)
+        {
+            if (section.Validate())
+            {
+                await step.SetHasErrorAsync(false);
+                _hasError = false;
+            }
+            else
+            {
+                args.Cancel = true;
+                await step.SetHasErrorAsync(true);
+                _hasError = true;
+            }
+        }
+
+        return;
+    }
+
+    private async Task OnBeforeStep(StepperInteractionEventArgs args)
+    {
+        // Reset error state when Next is clicked
+        if (ShiftForm != null
+            && args.Action == StepAction.Complete
+            && this.ActiveStep?.Tag != null
+            && this.ActiveStep.Tag.Equals(true))
+        {
+            await this.ActiveStep.SetHasErrorAsync(false);
+        }
+    }
+}

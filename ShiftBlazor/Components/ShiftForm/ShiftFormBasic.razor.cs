@@ -65,7 +65,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public string? Title { get; set; }
 
         [Parameter]
-        public RenderFragment? ChildContent { get; set; }
+        public RenderFragment<FormChildContext<T>>? ChildContent { get; set; }
 
         /// <summary>
         ///     The icon displayed before the Form Title, in a string in SVG format.
@@ -187,6 +187,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter]
         public bool AutoFocus { get; set; } = true;
 
+        [Parameter]
+        public bool OnlyValidateOnSubmit { get; set;  }
+
         public Guid Id { get; private set; } = Guid.NewGuid();
         public FormTasks TaskInProgress { get; set; }
         public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -204,8 +207,12 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal bool HasWriteAccess = true;
         internal bool HasDeleteAccess = true;
         internal bool HasReadAccess = true;
-        internal bool IsFooterToolbarEmpty;
-        internal bool _RenderSubmitButton;
+        internal ValidationMessageStore? messageStore; // used to display server side errors
+        internal virtual bool IsFooterToolbarEmpty => FooterToolbarStartTemplate == null
+                                                      && FooterToolbarCenterTemplate == null
+                                                      && FooterToolbarEndTemplate == null
+                                                      && (HideSubmit || !HasWriteAccess);
+        internal bool _RenderSubmitButton => Mode >= FormModes.Edit && !HideSubmit && HasWriteAccess;
 
         internal ElementReference ContentContainerRef = default!;
         internal string ContentCssClass =>
@@ -243,16 +250,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             await SetMode(FormModes.Create);
             DocumentTitle = Title;
-        }
-
-        protected override void OnParametersSet()
-        {
-            _RenderSubmitButton = Mode >= FormModes.Edit && !HideSubmit && HasWriteAccess;
-
-            IsFooterToolbarEmpty = FooterToolbarStartTemplate == null
-                && FooterToolbarCenterTemplate == null
-                && FooterToolbarEndTemplate == null
-                && (HideSubmit || !HasWriteAccess);
         }
 
         protected override void OnAfterRender(bool firstRender)
@@ -343,6 +340,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             Mode = mode;
             await ModeChanged.InvokeAsync(Mode);
+            StateHasChanged();
         }
 
         internal virtual async Task SetValue(T? value)
@@ -353,6 +351,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 await ValueChanged.InvokeAsync(Value);
                 EditContext = new EditContext(Value);
                 EditContext.MarkAsUnmodified();
+                StateHasChanged();
             }
         }
 
@@ -371,6 +370,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
             await RunTask(formTask, async () =>
             {
                 if (await OnSubmit.PreventableInvokeAsync(context)) return;
+
+                // because we use a different message store than the default one in
+                // DataAnnotationsValidator, changing the input value doesn't clear
+                // the error messages, we clear all of them manually when user clicks submit again
+                if (messageStore != null)
+                {
+                    context.ClearErrors(messageStore);
+                }
 
                 var childContextsValid = ChildContexts.Values.All(x => x.Validate());
                 var mainContextValid = context.Validate();
@@ -439,6 +446,33 @@ namespace ShiftSoftware.ShiftBlazor.Components
             TaskInProgress = FormTasks.None;
             await _OnTaskFinished.InvokeAsync(Task);
             await OnTaskFinished.InvokeAsync(Task);
+        }
+
+        public bool Validate()
+        {
+            return EditContext.Validate();
+        }
+
+        public bool Validate(List<FieldIdentifier> fields)
+        {
+            return EditContext?.Validate(fields, Validator) ?? true;
+        }
+
+        private HashSet<FormSection> Sections { get; set; } = new HashSet<FormSection>();
+
+        public bool AddSection(FormSection section)
+        {
+            return Sections.Add(section);
+        }
+
+        public List<FormSection> GetSections()
+        {
+            return Sections.ToList();
+        }
+
+        public bool RemoveSection(FormSection section)
+        {
+            return Sections.Remove(section);
         }
 
         public void Dispose()

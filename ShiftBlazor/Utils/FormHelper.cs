@@ -21,8 +21,6 @@ namespace ShiftSoftware.ShiftBlazor.Utils
                 
                 if (isRequired) return isRequired;
 
-                var scan = AssemblyScanner.FindValidatorsInAssemblyContaining(type).First();
-
                 var assemblyScanner = AssemblyScanner
                     .FindValidatorsInAssembly(type?.Assembly)
                     .FirstOrDefault(x => x.InterfaceType.GenericTypeArguments.First() == type);

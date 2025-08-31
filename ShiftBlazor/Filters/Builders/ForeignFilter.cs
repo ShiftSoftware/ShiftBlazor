@@ -1,8 +1,8 @@
-﻿using System.Reflection;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
+using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Filters.Builders;
 using ShiftSoftware.ShiftBlazor.Filters.Models;
-using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -22,26 +22,26 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
     public string? BaseUrlKey { get; set; }
 
     [Parameter]
-    public string? DataValueField { get; set; }
-
-    [Parameter]
-    public string? DataTextField { get; set; }
-
-    [Parameter]
-    public string? ForeignTextField { get; set; }
-
-    [Parameter]
-    public string? ForeignEntiyField { get; set; }
+    public Dictionary<string, object>? AdditionalParameters { get; set; }
 
     [Parameter]
     public Type? DTOType { get; set; }
 
-    protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
+    [Parameter]
+    public Action<ODataFilterGenerator>? AutocompleteFilter { get; set; }
+
+    protected override FilterModelBase CreateFilter(string path, Type propertyType)
     {
-        var filter = FilterModelBase.CreateFilter(propertyInfo, DTOType, true);
+        var filter = FilterModelBase.CreateFilter(path, propertyType, DTOType, true);
         
         Operator ??= ODataOperator.In;
         filter.Value = Value; 
+
+        if (AutocompleteFilter != null)
+        {
+            AdditionalParameters ??= new Dictionary<string, object>();
+            AdditionalParameters["Filter"] = AutocompleteFilter;
+        }
 
         if (filter is StringFilterModel stringFilter)
         {
@@ -50,10 +50,7 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
                 BaseUrl = BaseUrl,
                 BaseUrlKey = BaseUrlKey,
                 EntitySet = EntitySet,
-                DataTextField = DataTextField,
-                DataValueField = DataValueField,
-                ForeignTextField = ForeignTextField,
-                ForeignEntiyField = ForeignEntiyField,
+                AdditionalParameters = AdditionalParameters,
             };
         }
         return filter;
@@ -70,10 +67,6 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
                     nameof(BaseUrl) => BaseUrl == parameter.Value as string,
                     nameof(BaseUrlKey) => BaseUrlKey == parameter.Value as string,
                     nameof(EntitySet) => EntitySet == parameter.Value as string,
-                    nameof(DataTextField) => DataTextField == parameter.Value as string,
-                    nameof(DataValueField) => DataValueField == parameter.Value as string,
-                    nameof(ForeignTextField) => ForeignTextField == parameter.Value as string,
-                    nameof(ForeignEntiyField) => ForeignEntiyField == parameter.Value as string,
                     _ => true,
                 };
 
@@ -107,10 +100,7 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
                 BaseUrl = BaseUrl,
                 BaseUrlKey = BaseUrlKey,
                 EntitySet = EntitySet,
-                DataTextField = DataTextField,
-                DataValueField = DataValueField,
-                ForeignTextField = ForeignTextField,
-                ForeignEntiyField = ForeignEntiyField,
+                AdditionalParameters = AdditionalParameters,
             };
         }
     }

@@ -15,9 +15,9 @@ public class DateTimeFilter<T, TProperty> : FilterBuilder<T, TProperty>
     [Parameter]
     public DateTime? DateEnd { get; set; }
 
-    protected override FilterModelBase CreateFilter(PropertyInfo propertyInfo)
+    protected override FilterModelBase CreateFilter(string path, Type propertyType)
     {
-        var filter = FilterModelBase.CreateFilter(propertyInfo, isDefault: true);
+        var filter = FilterModelBase.CreateFilter(path, propertyType, isDefault: true);
 
         if (DateStart != null || DateEnd != null)
         {
