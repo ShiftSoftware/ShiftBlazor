@@ -17,10 +17,10 @@ using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
-using System.Net.Http.Json;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Linq.Expressions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -1115,23 +1115,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
             return result;
         }
 
-        string? ExtractPropertyName(string? expression)
-        {
-            if (string.IsNullOrWhiteSpace(expression))
-                return null;
-
-            var start = expression.IndexOf("x.") + 2;
-            if (start < 2 || start >= expression.Length)
-                return null;
-
-            var end = expression.IndexOf(',', start);
-            if (end == -1) end = expression.Length;
-
-            return expression.Substring(start, end - start);
-        }
-
         internal async Task ExportList()
         {
+            if (ExportIsInProgress)
+            {
+                return;
+            }
+
             this.ExportIsInProgress = true;
 
             var name = Title != null && ExportTitleRegex().IsMatch(Title)
@@ -1142,18 +1132,20 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var date = DateTime.Now.ToString("yyyy-MM-dd");
             var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}.csv";
 
-            var urlValue = CurrentUri == null ? "" : ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
-            var values = CurrentUri == null ? Values : new List<T>();
+            var urlValue = CurrentUri == null ? string.Empty : ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
+            var values = CurrentUri == null ? Values : [];
+            var propertyName = nameof(PropertyColumn<object, object>.Property);
 
             var foreignColumns = DataGrid!
                     .RenderedColumns
-                    .Where(x => x.Class?.Contains("foreign-column") == true)
+                    .Where(x => x is IForeignColumn)
                     .Select(x =>
                     {
                         var foreignColumn = x as IForeignColumn;
 
-                        var fullName = foreignColumn.GetType().GetGenericArguments().Last().FullName;
-                        var parts = fullName.Split('.');
+                        var fullName = foreignColumn!.GetType().GetGenericArguments().Last().FullName;
+
+                        var parts = fullName!.Split('.');
                         var tableName = parts.Length >= 2 ? parts[^2] : fullName;
 
                         foreignColumn.ForeignEntiyField = tableName;
@@ -1163,12 +1155,15 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             var columns = DataGrid!
                 .RenderedColumns
-                .Where(x => x.GetType().GetProperty("Property") != null)
+                .Where(x => x.GetType().GetProperty(propertyName) != null)
                 .Select(x =>
                 {
-                    var propertyExpression = x.GetType().GetProperty("Property")?.GetValue(x)?.ToString();
+                    var key = x.PropertyName;
 
-                    var key = ExtractPropertyName(propertyExpression) ?? x.PropertyName;
+                    if (x.GetType().GetProperty(propertyName)?.GetValue(x) is LambdaExpression propertyValue)
+                    {
+                        key = Misc.GetPropertyPath(propertyValue).Split(".").First();
+                    }
 
                     var property = typeof(T).GetProperty(key) ?? null;
 
@@ -1178,7 +1173,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     var enumValues = property == null
                         ? null
                         : GetEnumMap(Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType);
-
 
                     return new
                     {
@@ -1192,11 +1186,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 });
 
             var language = SettingManager.GetCulture().TwoLetterISOLanguageName;
-
             var isRTL = SettingManager.GetLanguage().RTL;
-
             var dateFormat= SettingManager.GetDateFormat();
-
             var timeFormat = SettingManager.GetTimeFormat();
 
             var payload = new
@@ -1233,25 +1224,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             this.ExportIsInProgress = false;
 
-            try
-            {
-                if (isSuccess)
-                {
-                    Snackbar.RemoveByKey($"export_table_{name}");
-                    MessageService.Show($"'{name}' export completed successfully!", severity: Severity.Success, modalColor: Color.Success, icon: Icons.Material.TwoTone.CheckCircle, key: $"export_table_{name}");
-                }
-                else throw new InvalidOperationException(message);
-                
-            }
-            catch (Exception e)
-            {
-                MessageService.Error(Loc["ShiftListForeignColumnError"], Loc["ShiftListForeignColumnError"], e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
-            }
+            Snackbar.RemoveByKey($"export_table_{name}");
 
-
+            if (isSuccess)
+                MessageService.Show($"'{name}' export completed successfully!", severity: Severity.Success, modalColor: Color.Success, icon: Icons.Material.TwoTone.CheckCircle, key: $"export_table_{name}");
+            else
+                MessageService.Show(Loc["Export failed"], Loc["Export failed"], message, severity: Severity.Error, buttonText: Loc["DropdownViewButtonText"], modalColor: Color.Error, key: $"export_table_{name}");
+            
             StateHasChanged();
-
-
         }
 
         #endregion

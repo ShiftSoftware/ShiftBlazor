@@ -15,7 +15,7 @@ function buildForeignColumnsMapper(columns, foreignColumns, origin) {
         // if the foreign is not in the columns ( hidden ) then skip it
         if (!columns.some((column) => column.key === col.propertyName)) return
 
-        if (!foreignTables[col.foreignEntiyField]) foreignTables[col.foreignEntiyField] = {
+        foreignTables[col.foreignEntiyField] ??= {
             items: [],
             itemsMapper: {},
             filterValues: {},
@@ -76,6 +76,7 @@ function fetchForeignEntries(foreignTables, headers) {
 
         const url = v.url + createODataQuery(v.filterValues)
 
+        // this number can be increased as modern browsers and server support large URLs
         if (url.length > 2000) {
             console.error(`For foregign column: ${tableName}, URL exceeds maximum allowed length of 2000 characters. Actual length: ${url.length}`)
             return
@@ -371,7 +372,7 @@ self.onmessage = async (event) => {
         clearTimeout(longExportToastTimer)
 
         console.error(error)
-        self.postMessage({ isSuccess: false, message: error?.message || "Please try again later." })
+        self.postMessage({ isSuccess: false, message: error?.message || "Please try again later.", messageType: "export ended" })
     } 
 
 };

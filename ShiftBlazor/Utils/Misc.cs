@@ -30,7 +30,7 @@ namespace ShiftSoftware.ShiftBlazor.Utils
             return propertyPath?.Split(".").ElementAt(0);
         }
 
-        internal static string GetPropertyPath<T, TProperty>(Expression<Func<T, TProperty>> expression, string delimiter = ".")
+        internal static string GetPropertyPath(LambdaExpression expression, string delimiter = ".")
         {
             var paths = new List<string>();
             Expression? current = expression.Body;
