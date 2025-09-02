@@ -6,15 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ShiftSoftware.ShiftBlazor.Events
-{
-    public class EventComponentBase : ComponentBase
-    {
-        public static event EventHandler<KeyValuePair<string, List<Guid>>>? OnGridSort;
+namespace ShiftSoftware.ShiftBlazor.Events;
 
-        public static void TriggerGridSort(KeyValuePair<string, List<Guid>> order)
-        {
-            OnGridSort?.Invoke(null, order);
-        }
+public class EventComponentBase : ComponentBase
+{
+    public static event EventHandler<KeyValuePair<string, List<Guid>>>? OnGridSort;
+
+    public static void TriggerGridSort(KeyValuePair<string, List<Guid>> order)
+    {
+        OnGridSort?.Invoke(null, order);
     }
 }

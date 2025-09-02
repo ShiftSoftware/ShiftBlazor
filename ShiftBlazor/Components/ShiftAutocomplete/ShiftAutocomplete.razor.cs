@@ -14,11 +14,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using System;
 using System.Linq.Expressions;
-using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 

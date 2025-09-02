@@ -1,7 +1,6 @@
 ﻿using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Components.Print;
-using System.IO;
 
 namespace ShiftSoftware.ShiftBlazor.Services;
 

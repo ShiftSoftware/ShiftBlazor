@@ -1,6 +1,4 @@
-﻿using ShiftSoftware.ShiftBlazor.Extensions;
-using ShiftSoftware.ShiftEntity.Core.Extensions;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace ShiftSoftware.ShiftBlazor.Services;
 
