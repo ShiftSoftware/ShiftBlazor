@@ -19,7 +19,7 @@ public class SelectedValueContext<T> where T : ShiftEntityDTOBase
     {
         Item = item;
         ShiftAutocomplete = shiftAutocomplete;
-        Index = shiftAutocomplete.SelectedValues.IndexOf(item);
+        Index = shiftAutocomplete.SelectedValues?.IndexOf(item) ?? -1;
         IsHighlighted = shiftAutocomplete.SelectedValuesIndex == Index;
         ClassName = IsHighlighted ? ShiftAutocomplete<T>.HighlightedClassname : string.Empty;
     }

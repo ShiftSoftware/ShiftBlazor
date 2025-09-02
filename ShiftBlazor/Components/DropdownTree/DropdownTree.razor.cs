@@ -87,10 +87,10 @@ public partial class DropdownTree
     public EventCallback<bool> IsOpenChanged { get; set; }
 
     [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object?> UserAttributes { get; set; } = new Dictionary<string, object?>();
+    public Dictionary<string, object?> UserAttributes { get; set; } = [];
 
     [Parameter]
-    public List<ShiftEntitySelectDTO> Value { get; set; }
+    public List<ShiftEntitySelectDTO> Value { get; set; } = [];
 
     [Parameter]
     public SelectionMode SelectionMode { get; set; } = SelectionMode.SingleSelection;

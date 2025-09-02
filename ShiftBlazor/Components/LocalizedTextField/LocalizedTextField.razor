@@ -16,7 +16,11 @@
         @foreach (var prop in MultiLangValue.GetType().GetProperties())
         {
             var langLabel = LanguageInfo[prop.Name].FirstOrDefault()?.Label;
-            var label = Label == null ? langLabel : $"{Label} ({Loc[langLabel].Value})";
+            var label = Label == null
+                ? langLabel
+                : string.IsNullOrWhiteSpace(langLabel)
+                    ? $"{Label}"
+                    : $"{Label} ({Loc[langLabel].Value})";
             var value = prop.GetValue(MultiLangValue) as string;
             var field = EditContext.Field(prop.Name);
             var errorMessage = EditContext.GetValidationMessages(field).FirstOrDefault();

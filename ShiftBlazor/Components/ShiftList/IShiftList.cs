@@ -1,12 +1,13 @@
 ﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
-    public interface IShiftList
+    public interface IShiftList : IODataRequest
     {
         public Guid Id { get; }
-        public string? Title { get; set; }
+        public string? Title { get; }
         public bool? ParentReadOnly { get; set; }
         public bool? ParentDisabled { get; set; }
         public Type? ComponentType { get; set; }
@@ -22,7 +23,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public int? PageSize { get; set; }
         public bool Outlined { get; set; }
         public bool IsEmbed { get; }
-        public string? EntitySet { get; set; }
         public HashSet<Guid> ActiveOperations { get; set; }
 
         public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null);

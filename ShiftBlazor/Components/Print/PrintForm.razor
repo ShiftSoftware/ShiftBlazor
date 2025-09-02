@@ -29,7 +29,7 @@
                                    ValueChanged="PrintTypeChanged"
                                    T="string"
                                    Clearable
-                                   Label="Print Type">
+                                   Label="@(Loc["Print Type"])">
                     @foreach (var type in Options.Types)
                     {
                         <MudSelectItem Value="@type.Key">@type.ToString()</MudSelectItem>
@@ -106,7 +106,7 @@
                     <MudButtonExtended KeyboardKey="KeyboardKeys.Escape" Variant="Variant.Text" OnClick="() => Close(true)" Class="me-2">@Options.CancelText</MudButtonExtended>
                 }
 
-                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Variant="Variant.Text" Color="@Options.Color" OnClick="() => Print()" Class="me-2">@(Options.ConfirmText ?? "Print")</MudButtonExtended>
+                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Variant="Variant.Text" Color="@Options.Color" OnClick="() => Print()" Class="me-2">@(Options.ConfirmText ?? Loc["Print"])</MudButtonExtended>
             </MudToolBar>
         </MudFocusTrap>
     </MudPaper>
@@ -125,7 +125,7 @@
     [Parameter]
     public string Key { get; set; } = string.Empty;
 
-    public readonly string ErrorMessage = "This field is required";
+    public string ErrorMessage => Loc["fieldRequiredError"];
 
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();

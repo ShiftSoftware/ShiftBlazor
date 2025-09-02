@@ -194,7 +194,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         /// When true, the Column Chooser will not be rendered.
         /// </summary>
         [Parameter]
-        [Obsolete]
+        [Obsolete("ColumnChooser is replaced with GridEditor")]
         public bool DisableColumnChooser { get; set; }
 
         /// <summary>
@@ -234,7 +234,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public EventCallback OnLoad { get; set; }
 
         [Parameter]
-        [Obsolete]
+        [Obsolete("Use OnSelectStateChanged instead")]
         public EventCallback<HashSet<T>> OnSelectedItemsChanged { get; set; }
         
         [Parameter]
@@ -353,11 +353,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         public Uri? CurrentUri { get; set; }
         public Guid Id { get; private set; } = Guid.NewGuid();
-        public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+        public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = [];
         public bool IsEmbed { get; private set; } = false;
-        [Obsolete]
+        [Obsolete("Use SelectState.Items instead")]
         public HashSet<T> SelectedItems => SelectState.Items.ToHashSet();
-        [Obsolete]
+        [Obsolete("Use SelectState.All instead")]
         public bool IsAllSelected => SelectState.All;
         public readonly SelectState<T> SelectState = new();
 
@@ -365,7 +365,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
         internal bool RenderAddButton = false;
         internal int SelectedPageSize;
-        internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
+        internal int[] PageSizes = [ 5, 10, 50, 100, 250, 500 ];
         internal bool? deleteFilter = false;
         internal string? ErrorMessage;
         private ITypeAuthService? TypeAuthService;
@@ -498,9 +498,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
                     ReorderColumns(columnStates);
                 }
             }
-
-            _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
         }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender) => await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
 
         protected override bool ShouldRender()
         {
@@ -516,9 +516,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 ODataFilters.Add(filter);
             }
 
-            if (Filters.ToString() != PreviousFilters)
+            var currentFilters = ODataFilters.ToString();
+
+            if (currentFilters != PreviousFilters)
             {
-                PreviousFilters = Filters.ToString();
+                PreviousFilters = currentFilters;
                 SelectState.Clear();
                 DataGrid?.ReloadServerData();
             }
@@ -754,11 +756,19 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         private DataServiceQuery<T> BuildSort(GridState<T> state, DataServiceQuery<T> builder)
         {
-            // Convert MudBlazor's SortDefinitions to OData query
-            if (state.SortDefinitions.Count > 0)
+            try
             {
-                var sortList = state.SortDefinitions.ToODataFilter();
-                builder = builder.AddQueryOption("$orderby", string.Join(',', sortList));
+                // Convert MudBlazor's SortDefinitions to OData query
+                if (state.SortDefinitions.Count > 0)
+                {
+                    var sortList = state.SortDefinitions.ToODataFilter();
+                    builder = builder.AddQueryOption("$orderby", string.Join(',', sortList));
+                }
+            }
+            catch (Exception e)
+            {
+                ErrorMessage = Loc["GridSortError"];
+                MessageService.Error(ErrorMessage, e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
 
             return builder;
@@ -791,7 +801,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 if (ODataFilters.Count > 0)
                     filterList.Add(ODataFilters.ToString());
 
-                if (filterList.Any())
+                if (filterList.Count > 0)
                 {
                     var filterQueryString = $"({string.Join(") and (", filterList)})";
                     builder = builder.AddQueryOption("$filter", filterQueryString);
@@ -804,7 +814,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             }
             catch (Exception e)
             {
-                ErrorMessage = $"An error has occurred";
+                ErrorMessage = Loc["GridFilterError"];
                 MessageService.Error(Loc["ShiftListFilterParseError"], e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
 
@@ -924,11 +934,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
         #region Columns
 
-        private void ColumnHiddenStateChanged(string name, bool hidden)
+#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
+        private async Task ColumnHiddenStateChanged(string name, bool hidden)
         {
             var col = DataGrid?.RenderedColumns.FirstOrDefault(x => (x.Hideable ?? DataGrid?.Hideable) == true && x.Title == name);
-            col.Hidden = hidden;
-            SaveColumnState();
+            if (col != null)
+                col.Hidden = hidden;
+            await SaveColumnState();
         }
 
         private void HideDisabledColumns(List<ColumnState> columnStates)
@@ -939,7 +951,6 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 return;
             }
 
-#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
             try
             {
                 foreach (var item in columnStates)
@@ -961,14 +972,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 foreach (var item in columns)
                 {
-                    item.HiddenChanged = new EventCallback<bool>(this, delegate (bool value) { ColumnHiddenStateChanged(item.Title, value); });
+                    item.HiddenChanged = new EventCallback<bool>(this, async delegate(bool value) { await ColumnHiddenStateChanged(item.Title, value); });
                 }
             }
             catch (Exception e)
             {
                 MessageService.Error(Loc["HideDisabledColumnError"], e.Message, e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
             }
-#pragma warning restore BL0005
         }
 
         private void MakeColumnsSticky(List<ColumnState> columnStates)
@@ -987,6 +997,14 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 }
             }
         }
+
+        private async Task ToggleSticky(Column<T> column, bool sticky)
+        {
+            column.StickyLeft = sticky;
+            column.StickyRight = sticky;
+            await SaveColumnState();
+        }
+#pragma warning restore BL0005
 
         private void ReorderColumns(List<ColumnState> columnStates)
         {
@@ -1016,16 +1034,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
             DataGrid.RenderedColumns.AddRange(reorderedColumns);
         }
 
-        private void ToggleSticky(Column<T> column, bool sticky)
-        {
-#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
-            column.StickyLeft = sticky;
-            column.StickyRight = sticky;
-            SaveColumnState();
-#pragma warning restore BL0005
-        }
-
-        private Task ColumnOrderUpdated(MudItemDropInfo<Column<T>> dropItem)
+        private async Task ColumnOrderUpdated(MudItemDropInfo<Column<T>> dropItem)
         {
             if (DataGrid != null)
             {
@@ -1034,13 +1043,13 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
                 DropContainerHasChanged();
 
-                SaveColumnState();
+                await SaveColumnState();
             }
 
-            return Task.CompletedTask;
+            return;
         }
 
-        private void SaveColumnState()
+        private async ValueTask SaveColumnState()
         {
             var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
             if (columns == null || !columns.Any())
@@ -1057,7 +1066,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             if (columnStates.Any(x => x.Sticky))
             {
-                _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+                await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
             }
 
             SettingManager.SetColumnState(GetListIdentifier(), columnStates);
@@ -1139,11 +1148,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
                         lock (lockObject)
                         {
                             columnProperty.SetValue(row, textProp.GetValue(foriegnDataMatch));
-
-                            if (foriegnEntityProp is not null)
-                            {
-                                foriegnEntityProp.SetValue(row, foriegnDataMatch);
-                            }
+                            foriegnEntityProp?.SetValue(row, foriegnDataMatch);
                         }
                     }
                 }
@@ -1163,7 +1168,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
 
             try
             {
-                if (res?.Value == null || !res.Value.Any())
+                if (!(res?.Value.Count > 1))
                     throw new InvalidOperationException("No Items found");
 
                 await ProcessForeignColumns(res.Value);
@@ -1379,6 +1384,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         {
             ShiftBlazorEvents.OnModalClosed -= ShiftBlazorEvents_OnModalClosed;
             IShortcutComponent.Remove(Id);
+            GC.SuppressFinalize(this);
         }
     }
 

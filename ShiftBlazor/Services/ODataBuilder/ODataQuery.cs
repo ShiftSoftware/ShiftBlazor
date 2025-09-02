@@ -30,19 +30,5 @@ namespace ShiftSoftware.ShiftBlazor.Services
             var builder = baseUrl == null ? this : new ODataQuery(baseUrl);
             return builder.CreateQuery<T>(entitySetName);
         }
-
-        public ODataParameters<T> CreateODataParameterObject<T>(string entitySetName, string? DataValueField = null, string? DataTextField = null, string? baseUrl = null) where T : ShiftEntityDTOBase
-        {
-            var url = baseUrl ?? ODataPath;
-
-            var builder = baseUrl == null ? this : new ODataQuery(baseUrl);
-
-            return new ODataParameters<T>(entitySetName, url)
-            {
-                DataValueField = DataValueField,
-                DataTextField = DataTextField,
-                ODataQuery = builder,
-            };
-        }
     }
 }

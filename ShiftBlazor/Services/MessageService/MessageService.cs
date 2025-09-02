@@ -95,7 +95,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             );
         }
 
-        public void Show(string text, string? title = null, string? detail = null, Severity severity = Severity.Normal, string? buttonText = null, Variant? buttonVariant = null, Color buttonColor = Color.Inherit, Color modalColor = Color.Inherit, string? icon = Icons.Material.Outlined.Info)
+        public void Show(string text, string? title = null, string? detail = null, Severity severity = Severity.Normal, string? buttonText = null, Variant? buttonVariant = null, Color buttonColor = Color.Inherit, Color modalColor = Color.Inherit, string icon = Icons.Material.Outlined.Info)
         {
 
             Show(text, severity, config =>

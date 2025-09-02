@@ -48,7 +48,7 @@ namespace ShiftSoftware.ShiftBlazor.Extensions
                                    x.GetRequiredService<IJSRuntime>(),
                                    config =>
                                    {
-                                       options.ShiftConfiguration.Invoke(config);
+                                       options.ShiftConfiguration?.Invoke(config);
                                    });
             });
 

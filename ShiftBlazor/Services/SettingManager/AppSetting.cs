@@ -21,27 +21,27 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
     public static class DefaultAppSetting
     {
-        public static string DateFormat = "yyyy-MM-dd";
-        public static string TimeFormat = "HH:mm";
-        public static int ListPageSize = 10;
-        public static DialogPosition ModalPosition = DialogPosition.Center;
-        public static MaxWidth ModalWidth = MaxWidth.Large;
-        public static FormOnSaveAction FormOnSaveAction = FormOnSaveAction.ViewFormOnSave;
-        public static Dictionary<string, List<string>> HiddenColumns = new();
-        public static LanguageInfo Language = new LanguageInfo
+        public readonly static string DateFormat = "yyyy-MM-dd";
+        public readonly static string TimeFormat = "HH:mm";
+        public readonly static int ListPageSize = 10;
+        public readonly static DialogPosition ModalPosition = DialogPosition.Center;
+        public readonly static MaxWidth ModalWidth = MaxWidth.Large;
+        public readonly static FormOnSaveAction FormOnSaveAction = FormOnSaveAction.ViewFormOnSave;
+        public readonly static Dictionary<string, List<string>> HiddenColumns = [];
+        public readonly static LanguageInfo Language = new()
         {
             CultureName = "en-US",
             Label = "English",
             RTL = false,
         };
-        public static bool EnableFormClone = false;
-        public static FileExplorerSettings FileExplorerSettings = new FileExplorerSettings
+        public readonly static bool EnableFormClone = false;
+        public readonly static FileExplorerSettings FileExplorerSettings = new()
         {
             View = FileView.Detailed,
             Sort = FileSort.Date,
             SortDescending = true,
         };
-        public static bool IsDrawerOpen = false;
-        public static bool IsDataGridFilterPanelOpen = false;
+        public readonly static bool IsDrawerOpen = false;
+        public readonly static bool IsDataGridFilterPanelOpen = false;
     }
 }

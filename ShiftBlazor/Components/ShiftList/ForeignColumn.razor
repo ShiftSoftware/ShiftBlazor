@@ -13,7 +13,7 @@
 @code {
     internal RenderFragment<CellContext<T>> _CellTemplate => context =>
     @<text>
-        @if (IsReady && !FailedToLoadData)
+        @if (IsReady && !FailedToLoadData && TValueField != null)
         {
             try
             {

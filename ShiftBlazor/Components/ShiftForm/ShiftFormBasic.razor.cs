@@ -62,7 +62,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         ///     The title to render on the form header.
         /// </summary>
         [Parameter]
-        public string? Title { get; set; }
+        public string? Title { get; set; } = string.Empty;
 
         [Parameter]
         public RenderFragment<FormChildContext<T>>? ChildContent { get; set; }
@@ -196,7 +196,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         public Dictionary<string, EditContext> ChildContexts { get; set; } = new();
         public EditForm? Form { get; set; }
         public EditContext EditContext { get; set; } = default!;
-        internal virtual string _SubmitText { get; set; }
+        internal virtual string _SubmitText { get; set; } = "Submit";
         internal bool AlertEnabled { get; set; } = false;
         internal MudBlazor.Severity AlertSeverity { get; set; }
         internal string AlertMessage { get; set; } = default!;

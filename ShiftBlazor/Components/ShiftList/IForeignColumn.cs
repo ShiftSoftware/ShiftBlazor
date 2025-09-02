@@ -38,7 +38,7 @@ public interface IForeignColumn : IODataRequest, IRequestComponent
     internal static IEnumerable<string> GetForeignIds<T>(string field, List<T> items)
     {
         return items
-            .Select(x => Misc.GetValueFromPropertyPath(x, field)?.ToString()!) //The ?.ToString() translates to an empty string if null is returned
+            .Select(x => Misc.GetValueFromPropertyPath(x!, field)?.ToString()!) //The ?.ToString() translates to an empty string if null is returned
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct();
     }

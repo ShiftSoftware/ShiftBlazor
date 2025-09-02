@@ -29,7 +29,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             SettingManager = settingManager;
             MessageService = messageService;
 
-            Assemblies = new List<Assembly> { Assembly.GetEntryAssembly()! };
+            Assemblies = [Assembly.GetEntryAssembly()];
 
             if (SettingManager.Configuration.AdditionalAssemblies != null)
             {
@@ -92,11 +92,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 foreach (var assembly in Assemblies)
                 {
                     var assemblyName = assembly.GetName().Name!;
-                    if (ComponentType!.FullName!.Contains(assemblyName))
+                    if (ComponentType.FullName?.Contains(assemblyName) == true)
                     {
-                        var fullname = ComponentType!.FullName!.Substring(assemblyName.Length + 1);
+                        var fullname = ComponentType.FullName.Substring(assemblyName.Length + 1);
                         var queryParams = skipQueryParamUpdate ? null : parameters;
-                        UpdateModalQueryUrl(fullname, key, queryParams);
+                        await UpdateModalQueryUrl(fullname, key, queryParams);
                     }
                 }
                 
@@ -111,7 +111,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// </summary>
         /// <param name="parameters">A Dictionary of query options</param>
         /// <returns>A query string that start with '?'</returns>
-        public string GenerateQueryString(Dictionary<string, object>? parameters)
+        public static string GenerateQueryString(in Dictionary<string, object>? parameters)
         {
             if (parameters == null || parameters.Count == 0)
                 return string.Empty;
@@ -145,11 +145,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
         /// </summary>
         public async Task UpdateModals()
         {
-            var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
+            var (success, url) = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
 
-            if (!url.success) return;
+            if (!success) return;
 
-            var modals = ParseModalUrl(url.value);
+            var modals = ParseModalUrl(url);
 
             if (modals.Count == 0)
             {
@@ -177,11 +177,11 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         private async Task UpdateModalQueryUrl(string? name, object? key, Dictionary<string, object>? parameters = null)
         {
-            var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
+            var (success, url) = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
 
-            if (!url.success) return;
+            if (!success) return;
 
-            var modals = ParseModalUrl(url.value);
+            var modals = ParseModalUrl(url);
 
             if (name == null)
             {
@@ -197,7 +197,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 modals.Add(new ModalInfo { Name = name, Key = key, Parameters = parameters });
             }
 
-            var newUrl = CreateModalUrlQuery(modals, url.value);
+            var newUrl = CreateModalUrlQuery(modals, url);
             await JsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
         }
 
@@ -217,7 +217,7 @@ namespace ShiftSoftware.ShiftBlazor.Services
             return null;
         }
 
-        private async Task<DialogResult> OpenDialog(Type TComponent, object? key = null, Dictionary<string, object>? parameters = null)
+        private async Task<DialogResult?> OpenDialog(Type TComponent, object? key = null, Dictionary<string, object>? parameters = null)
         {
             var dParams = new DialogParameters();
 
@@ -251,12 +251,12 @@ namespace ShiftSoftware.ShiftBlazor.Services
                 var decodedString = Uri.UnescapeDataString(modalString);
                 try
                 {
-                    return JsonSerializer.Deserialize<List<ModalInfo>>(decodedString) ?? new List<ModalInfo>();
+                    return JsonSerializer.Deserialize<List<ModalInfo>>(decodedString) ?? [];
                 }
                 catch (Exception) { }
             }
 
-            return new List<ModalInfo>();
+            return [];
         }
 
         private string CreateModalUrlQuery(List<ModalInfo> modals, string url)
@@ -288,16 +288,16 @@ namespace ShiftSoftware.ShiftBlazor.Services
 
         private async Task RemoveFrontModalFromUrl()
         {
-            var url = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
+            var (success, url) = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
 
-            if (!url.success) return;
+            if (!success) return;
 
-            var modals = ParseModalUrl(url.value);
+            var modals = ParseModalUrl(url);
             if (modals.Count > 0)
             {
                 modals.RemoveAt(modals.Count - 1);
             }
-            var newUrl = CreateModalUrlQuery(modals, url.value);
+            var newUrl = CreateModalUrlQuery(modals, url);
             await JsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
         }
     }

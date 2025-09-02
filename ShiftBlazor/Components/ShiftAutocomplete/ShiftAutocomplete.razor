@@ -91,7 +91,7 @@
                               Placeholder="@Placeholder"
                               Style="@InputStyle"
                               Class="@InputClassname"
-                              Value="Text" />
+                              Value="@Text" />
             }
 
         </MudStack>
@@ -213,7 +213,7 @@
                 @if (MultiSelect && FreeInput && !string.IsNullOrWhiteSpace(Text))
                 {
                     <MudListItem id="@GetItemId(DropdownItems.Count)" OnClick="() => AddFreeInputValue()" Class="@GetListItemClassname(HighlightedListItemIndex >= DropdownItems.Count)">
-                        Add New
+                    @Loc["AddNewItem"]
                     </MudListItem>
                 }
             </MudList>
@@ -228,7 +228,7 @@
             }
             else
             {
-                <MudAlert>No Items found</MudAlert>
+                <MudAlert>@Loc["NoItemsFound"]</MudAlert>
             }
         }
 

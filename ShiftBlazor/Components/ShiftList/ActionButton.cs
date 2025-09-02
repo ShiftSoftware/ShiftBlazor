@@ -277,6 +277,9 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
 
     private async ValueTask<bool?> OpenComponentOnClick()
     {
+        if (ComponentType == null)
+            return false;
+
         var parameters = new DialogParameters
         {
             { "Selected", ShiftListGeneric?.SelectState ?? new() },

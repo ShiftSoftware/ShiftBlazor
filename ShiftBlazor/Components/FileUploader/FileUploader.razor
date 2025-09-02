@@ -10,7 +10,7 @@
     </HeadContent>
 }
 
-@if (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))
+@if (TypeAuthAction is null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write) || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))
 {
     <MudField id="@UploaderId"
               Label="@FieldLabel"
@@ -29,17 +29,17 @@
                         <MudItem @key="item.Id" Style="cursor: grab;" data-guid="@item.Id">
                             @if (_ShowThumbnail)
                             {
-                                <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize" />
+                                <UploaderItemThumbnail CanDelete="@(TypeAuthAction is null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" Height="@ThumbnailSize" Width="@ThumbnailSize" />
                             }
                             else
                             {
-                                <UploaderItemChip CanDelete="@(TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" />
+                                <UploaderItemChip CanDelete="@(TypeAuthAction is null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Delete))" Item="@item" />
                             }
                         </MudItem>
                     }
                 </CascadingValue>
 
-                @if (Items.Count < MaxFileCount && !ReadOnly && (TypeAuthAction is null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)))
+                @if (Items.Count < MaxFileCount && !ReadOnly && (TypeAuthAction is null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Write)))
                 {
                     <MudItem @key="@("add-file")" Class="add-file">
                         @if (_ShowThumbnail)

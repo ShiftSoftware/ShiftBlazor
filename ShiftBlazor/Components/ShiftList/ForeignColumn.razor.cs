@@ -63,10 +63,10 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
     public string TEntityValueField { get; private set; } = nameof(ShiftEntityDTOBase.ID);
 
     internal bool IsReady = false;
-    internal List<TEntity> RemoteData { get; set; } = new();
+    internal List<TEntity> RemoteData { get; set; } = [];
     internal bool IsFilterOpen = false;
     internal string FilterIcon => FilterItems.Count > 0 ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt;
-    internal List<ShiftEntitySelectDTO> FilterItems { get; set; } = new();
+    internal List<ShiftEntitySelectDTO> FilterItems { get; set; } = [];
 
     private string? TValueField = null;
     // IsForbiddenStatusCode is not being used currently, should be reimplemented with the refactor
@@ -136,7 +136,7 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
     {
         var items = data.Value;
 
-        if (items != null && items.Any())
+        if (items?.Count > 0)
         {
             FailedToLoadData = false;
 
@@ -244,5 +244,6 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
     public override void Dispose()
     {
         ShiftBlazorEvents.OnBeforeGridDataBound -= OnBeforeDataBound;
+        GC.SuppressFinalize(this);
     }
 }

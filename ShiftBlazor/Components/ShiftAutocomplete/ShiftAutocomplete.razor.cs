@@ -588,7 +588,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         var _item = ToSelectDTO(item);
         if (_item == null)
         {
-            MessageService.Error("Could not select item");
+            MessageService.Error(Loc["CouldNotSelectItemError"]);
             return;
         }
         await SelectItem(_item);
@@ -984,7 +984,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         }
         catch (Exception e)
         {
-            MessageService.Error("Failed to load initial data", "Failed to retrieve data", e.Message);
+            MessageService.Error(Loc["Failed to load initial data"], Loc["Failed to retrieve data"], e.Message);
         }
 
         if (!MultiSelect)

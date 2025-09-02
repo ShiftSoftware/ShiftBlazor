@@ -33,7 +33,7 @@
                         <MudSelect Margin="Margin.Dense" T="LanguageInfo" Value="@Language" ValueChanged="LanguageChangedHandler" ToStringFunc="(lang) => lang.Label">
                             @foreach (var lang in SettingManager.Configuration.Languages)
                             {
-                                <MudSelectItem Value="@lang">@Loc[lang.Label]</MudSelectItem>
+                                <MudSelectItem Value="@lang">@Loc[lang.Label ?? lang.CultureName]</MudSelectItem>
                             }
 
                         </MudSelect>

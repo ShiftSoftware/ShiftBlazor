@@ -36,6 +36,8 @@ namespace System.Collections.Generic
 
             var fieldType = definition.FieldType.InnerType == null && definition.Value != null ? FieldType.Identify(definition.Value.GetType()) : definition.FieldType;
 
+            if (field == null)
+                return string.Empty;
             return GetFilterString(field, definition.Operator!, definition.Value, fieldType);
         }
 

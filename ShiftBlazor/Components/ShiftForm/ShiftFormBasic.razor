@@ -98,7 +98,7 @@
                             else
                             {
                                 <MudAlert Severity="Severity.Error">
-                                    @(Mode >= FormModes.Edit ? Loc["WriteAccessDenied", Title] : Loc["ReadAccessDenied", Title])
+                                    @(Mode >= FormModes.Edit ? Loc["WriteAccessDenied", Title!] : Loc["ReadAccessDenied", Title!])
                                 </MudAlert>
                             }
                         </CascadingValue>

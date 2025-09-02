@@ -50,8 +50,6 @@ public class PrintService
             CloseOnEscapeKey = false,
         };
 
-        var dialogReference = await DialogService.ShowAsync<PrintForm>("", parameters, dialogOptions);
-
-        return dialogReference;
+        return await DialogService.ShowAsync<PrintForm>("", parameters, dialogOptions);
     }
 }

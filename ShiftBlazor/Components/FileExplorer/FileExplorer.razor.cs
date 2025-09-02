@@ -105,15 +105,15 @@ public partial class FileExplorer : IShortcutComponent
 
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
-    public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
+    public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = [];
     public List<FileExplorerDirectoryContent> SelectedFiles { get; set; } = [];
 
-    private string FileExplorerId { get; set; }
+    private string FileExplorerId => "FileExplorer" + Id.ToString().Replace("-", string.Empty);
     private string ToolbarStyle = string.Empty;
     private Size IconSize = Size.Medium;
     private bool DisableSidebar => DisableQuickAccess && DisableRecents;
     private FileExplorerDirectoryContent? CWD { get; set; } = null;
-    private List<FileExplorerDirectoryContent> Files { get; set; } = new();
+    private List<FileExplorerDirectoryContent> Files { get; set; } = [];
     private List<FileExplorerDirectoryContent>? FilteredFiles { get; set; }
     private List<FileExplorerDirectoryContent> DisplayedFiles => FilteredFiles ?? Files;
     private UploadEventArgs? UploadingFiles { get; set; }
@@ -170,7 +170,7 @@ public partial class FileExplorer : IShortcutComponent
         (Extensions: new[] { ".sh", ".bat", ".cmd", ".ps1" }, Value: ("terminal", "#001234")),
         (Extensions: [..ImageExtensions], Value: ("image", "#d14b4b")),
         (Extensions: new[] { "" }, Value: ("draft", "#777777")),
-        (Extensions: new [] { "folder" }, Value: ("folder", "#f1ce69")),
+        (Extensions: new[] { "folder" }, Value: ("folder", "#f1ce69")),
 
     }
     .SelectMany(group => group.Extensions.Select(ext => (ext, group.Value)))
@@ -193,8 +193,6 @@ public partial class FileExplorer : IShortcutComponent
             ?? SettingManager.Configuration.BaseAddress;
 
         Url = apiUrl.AddUrlPath("FileExplorer", "FileOperations");
-
-        FileExplorerId = "FileExplorer" + Id.ToString().Replace("-", string.Empty);
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
         IconSize = Dense ? Size.Medium : Size.Large;
         SetBreadcrumb();
@@ -329,7 +327,7 @@ public partial class FileExplorer : IShortcutComponent
 
             var userIds = files
                 .Where(x => !string.IsNullOrWhiteSpace(x.CreatedBy))
-                .Select(x => x.CreatedBy)
+                .Select(x => x.CreatedBy!)
                 .Distinct()
                 .ToList();
 
@@ -343,6 +341,7 @@ public partial class FileExplorer : IShortcutComponent
                     Usernames.TryAdd(user.ID, user.Name);
                 }
             }
+            
 
             SetBreadcrumb(crumbPath);
             SetSort();

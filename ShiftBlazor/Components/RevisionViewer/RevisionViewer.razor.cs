@@ -20,8 +20,8 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [Parameter, EditorRequired]
         public string? EntitySet { get; set; }
 
-        internal string UserListBaseUrl { get; set; }
-        internal string UserListEntitySet { get; set; }
+        internal string? UserListBaseUrl { get; set; }
+        internal string? UserListEntitySet { get; set; }
 
         protected override void OnInitialized()
         {

@@ -35,11 +35,15 @@
         }
     }
 
-    public void Dispose()
+    private bool _disposed;
+    public new void Dispose()
     {
+        if (_disposed) return;
         if (KeyboardKey != null && ShiftEntityForm is IShortcutComponent comp && ShiftList == null)
         {
             comp?.Shortcuts.Remove(KeyboardKey.Value);
         }
+        _disposed = true;
+        base.Dispose();
     }
 }
