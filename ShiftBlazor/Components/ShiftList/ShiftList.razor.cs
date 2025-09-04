@@ -934,7 +934,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     #region Columns
 
-#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
+    #pragma warning disable BL0005 // Component parameter should not be set outside of its component.
     private async Task ColumnHiddenStateChanged(string name, bool hidden)
     {
         var col = DataGrid?.RenderedColumns.FirstOrDefault(x => (x.Hideable ?? DataGrid?.Hideable) == true && x.Title == name);
@@ -1004,7 +1004,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         column.StickyRight = sticky;
         await SaveColumnState();
     }
-#pragma warning restore BL0005
+    #pragma warning restore BL0005
 
     private void ReorderColumns(List<ColumnState> columnStates)
     {
