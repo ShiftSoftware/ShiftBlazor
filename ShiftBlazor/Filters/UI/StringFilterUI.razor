@@ -145,7 +145,7 @@
 			// temp fix to Filter Reset
 			if (stringFilter.Value == null)
 			{
-				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValues)] = null!;
+				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValues)] = new List<ShiftEntitySelectDTO>();
 			}
 		}
 
