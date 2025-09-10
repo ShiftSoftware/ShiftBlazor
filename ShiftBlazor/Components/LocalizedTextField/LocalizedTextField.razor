@@ -49,6 +49,9 @@
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftEntityForm { get; set; }
 
+    [CascadingParameter]
+    public IFormSection? FormSection { get; set; }
+
     /// <summary>
     /// The value of this input element.
     /// </summary>
@@ -99,6 +102,11 @@
 
     protected override void OnInitialized()
     {
+        if (For != null && FormSection != null)
+        {
+            FormSection.Add(FieldIdentifier.Create(For));
+        }
+
         this.LanguageInfo = SettingManager.Configuration.Languages
             .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
 
