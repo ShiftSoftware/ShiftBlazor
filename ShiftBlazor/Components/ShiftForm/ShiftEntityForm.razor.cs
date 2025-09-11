@@ -537,7 +537,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
             if (serverSideErrors != null && serverSideErrors.Count != 0)
             {
-                messageStore ??= new ValidationMessageStore(EditContext!);
+                var messageStore = shiftValidator?.MessageStore ?? new ValidationMessageStore(EditContext!);
                 EditContext?.DisplayErrors(serverSideErrors!, messageStore);
                 return null;
             }

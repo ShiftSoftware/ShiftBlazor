@@ -3,7 +3,6 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 @using ShiftSoftware.ShiftBlazor.Enums
-@using Blazored.FluentValidation
 @using Microsoft.AspNetCore.Components.Forms
 @using ShiftSoftware.ShiftEntity.Model.Flags
 @using ShiftSoftware.TypeAuth.Core
@@ -218,18 +217,9 @@
                           OnSubmit="@(async() => await SubmitHandler(this.EditContext))"
                           style="height: 100%;">
 
-                    @if(OnlyValidateOnSubmit)
-                    {
-                        <ShiftValidator EnableFluentValidation Validator="Validator"/>
-                    }
-                    else
-                    {
-                        <FluentValidationValidator DisableAssemblyScanning="Validator != null" Validator="Validator" />
-                        @if (Validator == null)
-                        {
-                            <DataAnnotationsValidator />
-                        }
-                    }
+                    <ShiftValidator @ref="shiftValidator" DisableValidationOnFieldChange="OnlyValidateOnSubmit" EnableFluentValidation Validator="Validator" />
+                    @* <DataAnnotationsValidator /> *@
+                    @* <FluentValidationValidator ></FluentValidationValidator> *@
 
                     <div @ref="ContentContainerRef" class="@ContentCssClass">
                         <div class="pa-6">

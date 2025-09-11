@@ -1,12 +1,17 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using System.Reflection.Metadata;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public class ShiftValidator : ComponentBase
+public class ShiftValidator : ComponentBase, IDisposable
 {
-    private ValidationMessageStore? MessageStore;
+    // TODO
+    // - Add ValidationOptions support
+    // Validate list of complex objects
+
+    internal ValidationMessageStore? MessageStore;
 
     [CascadingParameter]
     private EditContext? CurrentEditContext { get; set; }
@@ -16,6 +21,9 @@ public class ShiftValidator : ComponentBase
 
     [Parameter]
     public bool DisableDataAnnotation { get; set; }
+
+    [Parameter]
+    public bool DisableValidationOnFieldChange { get; set; }
 
     [Parameter]
     public IValidator? Validator { get; set; }
@@ -39,27 +47,51 @@ public class ShiftValidator : ComponentBase
 
     private void FieldChangedHandler(object? sender, FieldChangedEventArgs e)
     {
-        MessageStore?.Clear(e.FieldIdentifier);
-        CurrentEditContext?.NotifyValidationStateChanged();
+        if (DisableValidationOnFieldChange)
+        {
+            MessageStore?.Clear(e.FieldIdentifier);
+            CurrentEditContext!.NotifyValidationStateChanged();
+        }
+        else
+        {
+            Validate(e.FieldIdentifier);
+        }
     }
 
     private void ValidationRequestHandler(object? sender, ValidationRequestedEventArgs e)
     {
-        if (CurrentEditContext == null)
-        {
-            return;
-        }
+        Validate();
+    }
+
+    private void Validate(in FieldIdentifier? field = null)
+    {
+        ArgumentNullException.ThrowIfNull(CurrentEditContext);
+
+        var fields = field.HasValue ? new List<FieldIdentifier> { field.Value } : null;
 
         var isValid = true;
 
         if (!DisableDataAnnotation)
         {
-            isValid = CurrentEditContext.ValidateDataAnnotation(null, MessageStore);
+            isValid = CurrentEditContext.ValidateDataAnnotation(fields, MessageStore);
         }
 
         if (EnableFluentValidation && isValid)
         {
-            CurrentEditContext.ValidateFluentValidation(null, Validator, MessageStore);
+            CurrentEditContext.ValidateFluentValidation(fields, Validator, MessageStore);
         }
+
+        CurrentEditContext.NotifyValidationStateChanged();
+    }
+
+    public void Dispose()
+    {
+        if (CurrentEditContext is not null)
+        {
+            CurrentEditContext.OnValidationRequested -= ValidationRequestHandler;
+            CurrentEditContext.OnFieldChanged -= FieldChangedHandler;
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

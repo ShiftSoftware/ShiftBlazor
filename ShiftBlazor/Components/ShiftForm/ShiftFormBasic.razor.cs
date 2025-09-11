@@ -207,7 +207,7 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     internal bool HasWriteAccess = true;
     internal bool HasDeleteAccess = true;
     internal bool HasReadAccess = true;
-    internal ValidationMessageStore? messageStore; // used to display server side errors
+    internal ShiftValidator? shiftValidator;
     internal virtual bool IsFooterToolbarEmpty => FooterToolbarStartTemplate == null
                                                   && FooterToolbarCenterTemplate == null
                                                   && FooterToolbarEndTemplate == null
@@ -370,14 +370,6 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
         await RunTask(formTask, async () =>
         {
             if (await OnSubmit.PreventableInvokeAsync(context)) return;
-
-            // because we use a different message store than the default one in
-            // DataAnnotationsValidator, changing the input value doesn't clear
-            // the error messages, we clear all of them manually when user clicks submit again
-            if (messageStore != null)
-            {
-                context.ClearErrors(messageStore);
-            }
 
             var childContextsValid = ChildContexts.Values.All(x => x.Validate());
             var mainContextValid = context.Validate();

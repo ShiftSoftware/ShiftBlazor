@@ -6,13 +6,12 @@ using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.AspNetCore.Components.Forms;
 
 public static class EditContextExtension
 {
-    // TODO
-    // Validate list of complex objects
 
     private static readonly char[] Separators = { '.', '[' };
 
@@ -31,6 +30,7 @@ public static class EditContextExtension
             isValid = editContext.ValidateFluentValidation(fields, validator, messageStore);
         }
 
+        editContext.NotifyValidationStateChanged();
         return isValid;
     }
 
@@ -39,8 +39,6 @@ public static class EditContextExtension
         messageStore ??= new ValidationMessageStore(editContext);
         var isValid = true;
         var results = new List<ValidationResult>();
-
-        editContext.ClearErrors(fields, messageStore);
 
         if (fields == null)
         {
@@ -53,14 +51,8 @@ public static class EditContextExtension
             {
                 if (TryGetValidatableProperty(field, out var propertyInfo))
                 {
-                    var propertyValue = propertyInfo?.GetValue(editContext.Model);
-
-                    if (propertyInfo == null)
-                    {
-                        throw new Exception($"Property '{field.FieldName}' not found on model type '{editContext.Model.GetType().FullName}'.");
-                    }
-
-                    var validationContext = new ValidationContext(editContext.Model)
+                    var propertyValue = propertyInfo.GetValue(field.Model);
+                    var validationContext = new ValidationContext(field.Model)
                     {
                         MemberName = propertyInfo.Name
                     };
@@ -69,24 +61,17 @@ public static class EditContextExtension
                     {
                         isValid = false;
                     }
+
+                    messageStore.Clear(field);
+                    foreach (var result in CollectionsMarshal.AsSpan(results))
+                    {
+                        messageStore.Add(field, result.ErrorMessage!);
+                    }
                 }
 
             }
         }
 
-        foreach (var error in results)
-        {
-            if (!string.IsNullOrWhiteSpace(error.ErrorMessage))
-            {
-                foreach (var name in error.MemberNames)
-                {
-                    var field = editContext.ToFieldIdentifier(name);
-                    messageStore.Add(field, error.ErrorMessage);
-                }
-            }
-        }
-
-        editContext.NotifyValidationStateChanged();
         return isValid;
     }
 
@@ -136,7 +121,6 @@ public static class EditContextExtension
             isValid = result.IsValid;
         }
 
-        editContext.NotifyValidationStateChanged();
         return isValid;
     }
 
@@ -289,7 +273,11 @@ public static class EditContextExtension
 
             var nonPrimitiveProperties = currentModelObject?.GetType()
                 .GetProperties()
-                .Where(prop => !prop.PropertyType.IsPrimitive || prop.PropertyType.IsArray) ?? new List<PropertyInfo>();
+                .Where(prop =>
+                {
+                    var type = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                    return type.IsArray || (!type.IsPrimitive && type.IsClass && type != typeof(string));
+                }) ?? new List<PropertyInfo>();
 
             foreach (var nonPrimitiveProperty in nonPrimitiveProperties)
             {
