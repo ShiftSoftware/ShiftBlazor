@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace Microsoft.AspNetCore.Components.Forms;
 
@@ -32,6 +31,19 @@ public static class EditContextExtension
 
         editContext.NotifyValidationStateChanged();
         return isValid;
+    }
+
+    public static List<string> ValidateDataAnnotationValue(this EditContext editContext, object value, IEnumerable<ValidationAttribute> validationAttributes)
+    {
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(editContext.Model);
+
+        Validator.TryValidateValue(value, context, results, validationAttributes);
+
+        return results
+            .Where(result => !string.IsNullOrWhiteSpace(result.ErrorMessage))
+            .Select(result => result.ErrorMessage!)
+            .ToList();
     }
 
     public static bool ValidateDataAnnotation(this EditContext editContext, in List<FieldIdentifier>? fields, ValidationMessageStore? messageStore = null)
@@ -63,9 +75,9 @@ public static class EditContextExtension
                     }
                 }
 
-                    messageStore.Clear(field);
-                    }
-                }
+                messageStore.Clear(field);
+            }
+        }
 
         var validationResults = results
             .SelectMany(result => result.MemberNames.Select(name => (name, result.ErrorMessage)))
@@ -154,10 +166,10 @@ public static class EditContextExtension
     {
         messageStore ??= new ValidationMessageStore(context);
 
-        foreach (var err in errors)
+        foreach (var (propPath, error) in errors)
         {
-            var field = ToFieldIdentifier(context, err.Key);
-            messageStore.Add(field, err.Value);
+            var field = context.ToFieldIdentifier(propPath);
+            messageStore.Add(field, error);
         }
 
         context.NotifyValidationStateChanged();
