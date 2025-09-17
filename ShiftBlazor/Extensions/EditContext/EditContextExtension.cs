@@ -61,15 +61,20 @@ public static class EditContextExtension
                     {
                         isValid = false;
                     }
+                }
 
                     messageStore.Clear(field);
-                    foreach (var result in CollectionsMarshal.AsSpan(results))
-                    {
-                        messageStore.Add(field, result.ErrorMessage!);
                     }
                 }
 
-            }
+        var validationResults = results
+            .SelectMany(result => result.MemberNames.Select(name => (name, result.ErrorMessage)))
+            .Where(result => !string.IsNullOrWhiteSpace(result.name) && !string.IsNullOrWhiteSpace(result.ErrorMessage));
+
+        foreach (var (name, errorMessage) in validationResults)
+        {
+            var field = editContext.ToFieldIdentifier(name);
+            messageStore.Add(field, errorMessage!);
         }
 
         return isValid;
