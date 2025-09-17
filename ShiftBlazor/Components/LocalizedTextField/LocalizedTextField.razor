@@ -3,47 +3,41 @@
 @using System.Linq.Expressions
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Reflection
+@using System.ComponentModel.DataAnnotations
 
-@inject IServiceProvider ServiceProvidor
 @inject SettingManager SettingManager
-@inject MessageService MessageService
 @inject ShiftBlazorLocalizer Loc
-@implements IDisposable
 
-@if (EditContext != null && MultiLangValue != null)
-{
-    <MudGrid>
-        @foreach (var prop in MultiLangValue.GetType().GetProperties())
-        {
-            var langLabel = LanguageInfo[prop.Name].FirstOrDefault()?.Label;
-            var label = Label == null
-                ? langLabel
-                : string.IsNullOrWhiteSpace(langLabel)
-                    ? $"{Label}"
-                    : $"{Label} ({Loc[langLabel].Value})";
-            var value = prop.GetValue(MultiLangValue) as string;
-            var field = EditContext.Field(prop.Name);
-            var errorMessage = EditContext.GetValidationMessages(field).FirstOrDefault();
-            var showErrors = !string.IsNullOrWhiteSpace(errorMessage);
-            var onBlur = () => OnBlurHandler(field);
-            var textChanged = async (string value) => await this.TextChanged(prop, value);
+<MudGrid>
+    @foreach (var (lang, value) in Values)
+    {
+        var langLabel = languageInfo[lang].FirstOrDefault()?.Label;
+        var label = Label == null
+            ? langLabel
+            : string.IsNullOrWhiteSpace(langLabel)
+                ? $"{Label}"
+                : $"{Label} ({Loc[langLabel].Value})";
 
-            <MudItem xs="XsColSize" sm="SmColSize" md="MdColSize" lg="LgColSize">
-                <MudTextFieldExtended T="string"
-                                      OnlyValidateIfDirty="@OnlyValidateIfDirty"
-                                      Value="@value"
-                                      Error="@showErrors"
-                                      ErrorText="@errorMessage"
-                                      Lines="Lines"
-                                      MaxLines="MaxLines"
-                                      AutoGrow="AutoGrow"
-                                      OnBlur="@onBlur"
-                                      ValueChanged="@textChanged"
-                                      Label="@label" />
-            </MudItem>
-        }
-    </MudGrid>
-}
+        Errors.TryGetValue(lang, out var errorMessage);
+        errorMessage = string.IsNullOrWhiteSpace(errorMessage) ? null : errorMessage.Replace(modelName, fieldName);
+        var showErrors = errorMessage != null;
+
+        var textChanged = async (string value) => await this.TextChanged(lang, value);
+
+        <MudItem @key="lang" xs="xsColSize" sm="smColSize" md="mdColSize" lg="lgColSize">
+            <MudTextFieldExtended T="string"
+                                    OnlyValidateIfDirty="@OnlyValidateIfDirty"
+                                    Value="@value"
+                                    Error="@showErrors"
+                                    ErrorText="@errorMessage"
+                                    Lines="Lines"
+                                    MaxLines="MaxLines"
+                                    AutoGrow="AutoGrow"
+                                    ValueChanged="@textChanged"
+                                    Label="@label" />
+        </MudItem>
+    }
+</MudGrid>
 
 @code {
     [CascadingParameter(Name = "ShiftForm")]
@@ -89,105 +83,115 @@
     [Parameter]
     public bool AutoGrow { get; set; } = false;
 
-    private ILookup<string, LanguageInfo> LanguageInfo = default!;
+    private int xsColSize;
+    private int smColSize;
+    private int mdColSize;
+    private int lgColSize;
 
-    private int XsColSize;
-    private int SmColSize;
-    private int MdColSize;
-    private int LgColSize;
-
-    private EditContext? EditContext = null;
-    private object? MultiLangValue = null;
-    private IDisposable? DataAnnotation = null;
+    [CascadingParameter]
+    private EditContext? EditContext { get; set; }
+    private Dictionary<string, string> Values { get; set; } = new();
+    private Dictionary<string, string> Errors { get; set; } = new();
+    private IEnumerable<ValidationAttribute>? validationAttributes;
+    private string modelName = string.Empty;
+    private string? fieldName;
+    private ILookup<string, LanguageInfo> languageInfo = default!;
 
     protected override void OnInitialized()
     {
-        if (For != null && FormSection != null)
-        {
-            FormSection.Add(FieldIdentifier.Create(For));
-        }
-
-        this.LanguageInfo = SettingManager.Configuration.Languages
+        this.languageInfo = SettingManager.Configuration.Languages
             .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
 
-        var langCodes = this.LanguageInfo.Select(x => x.Key).Distinct().ToList();
+        var langCodes = this.languageInfo.Select(x => x.Key).Distinct().ToList();
         var langCount = langCodes.Count;
+        Values = langCodes.ToDictionary(lang => lang, lang => string.Empty);
 
-        XsColSize = 12;
-        SmColSize = Math.Max(12 / langCount, 6);
-        MdColSize = Math.Max(12 / langCount, 4);
-        LgColSize = Math.Max(12 / langCount, 3);
-
-        try
-        {
-            var expression = (MemberExpression?)For?.Body;
-            var propertyInfo = expression?.Expression?.Type.GetProperty(expression.Member.Name);
-            var fields = langCodes.ToDictionary(lang => lang, x => typeof(string));
-            MultiLangValue = Misc.CreateClassObject("MyRuntimeClass", fields, propertyInfo?.CustomAttributes);
-        }
-        catch (Exception)
-        {
-            MessageService.Error(Loc["LocalizedTextFieldError"]);
-            return;
-        }
+        xsColSize = 12;
+        smColSize = Math.Max(12 / langCount, 6);
+        mdColSize = Math.Max(12 / langCount, 4);
+        lgColSize = Math.Max(12 / langCount, 3);
 
         try
         {
-            var json = JsonDocument.Parse(Value);
-            var localizedText = json.Deserialize<Dictionary<string, string>>()!;
-
-            foreach (var lang in langCodes)
+            if (!string.IsNullOrWhiteSpace(Value))
             {
-                if (localizedText.TryGetValue(lang, out var localizedValue))
-                {
-                    SetValue(lang, localizedValue);
-                }
+                // LocalizedTextField expects a JSON string in the format {"en":"Hello","fr":"Bonjour"}
+                var json = JsonDocument.Parse(Value);
+                Values = json.Deserialize<Dictionary<string, string>>() ?? new();
             }
         }
         catch
         {
+            // if Value is not a valid json, we ignore the error and use the raw value
             var lang = new System.Globalization.CultureInfo(DefaultAppSetting.Language.CultureName).TwoLetterISOLanguageName;
-            SetValue(lang, Value);
+            Values[lang] = Value;
         }
-        finally
-        {
-            DataAnnotation?.Dispose();
-            EditContext = new EditContext(MultiLangValue!);
-            EditContext.MarkAsUnmodified();
-            DataAnnotation = EditContext.EnableDataAnnotationsValidation(ServiceProvidor);
 
-            if (For != null)
+        // From here we deal with validations
+        // If For is null, we skip validations
+        if (For == null || EditContext == null)
+        {
+            return;
+        }
+
+        FormSection?.Add(FieldIdentifier.Create(For));
+
+        // get the model name for error message replacement
+        // e.g. "The ProductDTO field is required." => "The [Label] field is required."
+        modelName = EditContext.Model.GetType().Name;
+
+        var expression = (MemberExpression?)For.Body;
+        if (expression?.Member != null)
+        {
+            // get validation attributes for this field
+            // so that we can validate the value for each language input separately
+            validationAttributes = expression.Member.GetCustomAttributes<ValidationAttribute>();
+            fieldName = expression.Member.Name;
+        }
+
+        // Display errors when the form is submitted
+        EditContext.OnValidationRequested += (sender, eventArgs) =>
+        {
+            foreach (var (lang, value) in Values)
             {
-                var field = FieldIdentifier.Create(For);
-                ShiftEntityForm?.ChildContexts.Remove(field.FieldName);
-                ShiftEntityForm?.ChildContexts.TryAdd(field.FieldName, EditContext);
+                ValidateField(lang, value);
+            };
+
+            // Add the error to the form's EditContext/MessageStore
+            // so that we can prevent the form from being submitted
+            if (Errors.Count != 0 && fieldName != null && ShiftEntityForm != null)
+            {
+                ShiftEntityForm.DisplayError(fieldName, Errors.First().Value);
+            }
+        };
+    }
+
+    public async Task TextChanged(string lang, string newValue)
+    {
+        Values[lang] = newValue;
+        ValidateField(lang, newValue);
+
+        Value = JsonSerializer.Serialize(Values);
+        await this.ValueChanged.InvokeAsync(Value);
+    }
+
+    private void ValidateField(string lang, string value)
+    {
+        if (validationAttributes != null && EditContext != null)
+        {
+            var errors = EditContext.ValidateDataAnnotationValue(value, validationAttributes);
+
+            if (errors.Count == 0 && fieldName != null)
+                errors = EditContext.ValidateFluentValidationValue(value, fieldName, ShiftEntityForm?.Validator);
+        
+            if (errors.Count == 0)
+            {
+                Errors.Remove(lang);
+            }
+            else
+            {
+                Errors[lang] = errors.First();
             }
         }
-    }
-
-    public async Task TextChanged(PropertyInfo prop, string value)
-    {
-        prop.SetValue(MultiLangValue, value);
-        var field = EditContext!.Field(prop.Name);
-        EditContext.NotifyFieldChanged(field);
-        await this.ValueChanged.InvokeAsync(System.Text.Json.JsonSerializer.Serialize(MultiLangValue));
-    }
-
-    private void SetValue(string field, string value)
-    {
-        MultiLangValue?.GetType().GetProperty(field)?.SetValue(MultiLangValue, value);
-    }
-
-    private void OnBlurHandler(FieldIdentifier field)
-    {
-        if (!OnlyValidateIfDirty)
-        {
-            EditContext?.NotifyFieldChanged(field);
-        }
-    }
-
-    public void Dispose()
-    {
-        DataAnnotation?.Dispose();
     }
 }

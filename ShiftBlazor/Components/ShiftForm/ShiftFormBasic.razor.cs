@@ -79,7 +79,7 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     ///     Otherwise if it is set, reflection will be disabled and DataAnnotationsValidator will also be disabled.
     /// </summary>
     [Parameter]
-    public AbstractValidator<T>? Validator { get; set; }
+    public IValidator? Validator { get; set; }
 
     /// <summary>
     ///     Used to add custom elements to the header.
@@ -449,6 +449,16 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     {
         var messageStore = shiftValidator?.MessageStore ?? new ValidationMessageStore(EditContext!);
         return EditContext?.Validate(fields, Validator, messageStore) ?? true;
+    }
+
+    public void DisplayError(string field, string message)
+    {
+        var messageStore = shiftValidator?.MessageStore ?? new ValidationMessageStore(EditContext!);
+        var fieldId = EditContext?.ToFieldIdentifier(field);
+        if (fieldId != null)
+        {
+            messageStore?.Add(fieldId.Value, message);
+        }
     }
 
     private HashSet<FormSection> Sections { get; set; } = new HashSet<FormSection>();
