@@ -46,6 +46,28 @@ public static class EditContextExtension
             .ToList();
     }
 
+    public static List<string> ValidateFluentValidationValue(this EditContext editContext, object value, string field, IValidator? validator = null)
+    {
+        var modelType = editContext.Model.GetType();
+        var parentValidator = ScanValidator(modelType);
+        var instance = Activator.CreateInstance(modelType);
+
+        if (instance == null)
+            return [];
+
+        instance.GetType().GetProperty(field)!.SetValue(instance, value);
+        var compositeSelector = editContext.GetFluentSelector([editContext.Field(field)], instance);
+        validator ??= ScanValidator(editContext.Model.GetType());
+
+        if (validator == null || compositeSelector == null)
+            return [];
+
+        var context = new ValidationContext<object>(instance, new PropertyChain(), compositeSelector);
+        var result = validator.Validate(context);
+
+        return result.Errors.Select(x => x.ErrorMessage).ToList();
+    }
+
     public static bool ValidateDataAnnotation(this EditContext editContext, in List<FieldIdentifier>? fields, ValidationMessageStore? messageStore = null)
     {
         messageStore ??= new ValidationMessageStore(editContext);
@@ -102,21 +124,12 @@ public static class EditContextExtension
         IntersectingCompositeValidatorSelector? compositeSelector = null;
         if (fields != null)
         {
-            var propertyPaths = fields.Select(editContext.ToFluentPropertyPath).Where(x => !string.IsNullOrWhiteSpace(x));
+            compositeSelector = editContext.GetFluentSelector(fields);
 
-            if (!propertyPaths.Any())
+            if (compositeSelector == null)
             {
                 return isValid;
             }
-
-            var context = new ValidationContext<object>(editContext.Model);
-            var fluentValidationValidatorSelector = context.Selector;
-            var changedPropertySelector = ValidationContext<object>.CreateWithOptions(editContext.Model, strategy =>
-            {
-                strategy.IncludeProperties(propertyPaths.ToArray());
-            }).Selector;
-
-            compositeSelector = new([fluentValidationValidatorSelector, changedPropertySelector]);
         }
 
         validator ??= ScanValidator(editContext.Model.GetType());
@@ -353,6 +366,27 @@ public static class EditContextExtension
         }
 
         return null;
+    }
+
+    private static IntersectingCompositeValidatorSelector? GetFluentSelector(this EditContext editContext, in List<FieldIdentifier> fields, object? model = null)
+    {
+        model ??= editContext.Model;
+
+        var propertyPaths = fields.Select(editContext.ToFluentPropertyPath).Where(x => !string.IsNullOrWhiteSpace(x));
+
+        if (!propertyPaths.Any())
+        {
+            return null;
+        }
+
+        var context = new ValidationContext<object>(model);
+        var fluentValidationValidatorSelector = context.Selector;
+        var changedPropertySelector = ValidationContext<object>.CreateWithOptions(model, strategy =>
+        {
+            strategy.IncludeProperties(propertyPaths.ToArray());
+        }).Selector;
+
+        return new([fluentValidationValidatorSelector, changedPropertySelector]);
     }
 
     private static bool TryGetValidatableProperty(in FieldIdentifier fieldIdentifier, [NotNullWhen(true)] out PropertyInfo? propertyInfo)
