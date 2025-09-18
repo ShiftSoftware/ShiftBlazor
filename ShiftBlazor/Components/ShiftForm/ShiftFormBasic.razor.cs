@@ -192,7 +192,6 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     public Guid Id { get; private set; } = Guid.NewGuid();
     public FormTasks TaskInProgress { get; set; }
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
-    public Dictionary<string, EditContext> ChildContexts { get; set; } = new();
     public EditForm? Form { get; set; }
     public EditContext EditContext { get; set; } = default!;
     internal virtual string _SubmitText { get; set; } = "Submit";
@@ -310,10 +309,7 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
 
     internal async Task<bool> ConfirmClose(string? messageBody = null)
     {
-        var childContextsModified = ChildContexts.Any(x => x.Value.IsModified());
-        var mainContextModified = EditContext?.IsModified() == true;
-
-        if (mainContextModified || childContextsModified)
+        if (EditContext?.IsModified() == true)
         {
             var message = new Message
             {
@@ -379,10 +375,7 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
         {
             if (await OnSubmit.PreventableInvokeAsync(context)) return;
 
-            var childContextsValid = ChildContexts.Values.All(x => x.Validate());
-            var mainContextValid = context.Validate();
-
-            if (mainContextValid && childContextsValid)
+            if (context.Validate())
             {
                 await ValidSubmitHandler(context);
             }

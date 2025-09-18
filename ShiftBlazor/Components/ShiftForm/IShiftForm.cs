@@ -13,7 +13,6 @@ public interface IShiftForm
     public string IconSvg { get; set; }
     public string? NavColor { get; set; }
     public bool NavIconFlatColor { get; set; }
-    public Dictionary<string, EditContext> ChildContexts { get; set; }
     public EditContext EditContext { get; set; }
     public IValidator? Validator { get; }
 
