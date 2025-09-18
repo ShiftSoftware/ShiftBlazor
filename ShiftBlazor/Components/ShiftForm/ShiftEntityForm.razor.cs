@@ -142,6 +142,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     internal bool _RenderEditButton;
     internal bool _RenderHeaderControlsDivider;
     internal bool IsTemporal = false;
+    internal bool InitialRequestCompleted = false;
 
     internal override bool IsFooterToolbarEmpty => FooterToolbarStartTemplate == null
                                                    && FooterToolbarCenterTemplate == null
@@ -493,6 +494,14 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                 if (OnError != null && await OnError.Invoke(e))
                     return;
                 throw;
+            }
+            finally
+            {
+                if (!InitialRequestCompleted)
+                {
+                    InitialRequestCompleted = true;
+                    await OnReady.InvokeAsync();
+                }
             }
             
         });

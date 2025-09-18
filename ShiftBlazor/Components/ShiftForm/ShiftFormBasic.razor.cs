@@ -28,7 +28,6 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
     [Inject] IWebAssemblyHostEnvironment Env { get; set; } = default!;
-    [Inject] IJSRuntime JsRuntime { get; set; } = default!;
 
     [CascadingParameter]
     internal IMudDialogInstance? MudDialog { get; set; }
@@ -154,11 +153,11 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     public EventCallback<ShiftEvent<EditContext>> OnValidSubmit { get; set; }
     [Parameter]
     public EventCallback<ShiftEvent<EditContext>> OnSubmit { get; set; }
-
     [Parameter]
     public EventCallback<ShiftEvent<FormTasks>> OnTaskStart { get; set; }
     [Parameter]
     public EventCallback<FormTasks> OnTaskFinished { get; set; }
+    public EventCallback OnReady { get; set; }
 
     public EventCallback<FormTasks> _OnTaskStart { get; set; }
     public EventCallback<FormTasks> _OnTaskFinished { get; set; }
@@ -262,6 +261,15 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
             });
         }
         base.OnAfterRender(firstRender);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Mode == FormModes.Create)
+        {
+            await OnReady.InvokeAsync();
+        }
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     //internal ValueTask LocationChangingHandler(LocationChangingContext ctx)
