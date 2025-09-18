@@ -11,6 +11,10 @@ public class ShiftValidator : ComponentBase, IDisposable
     // - Add ValidationOptions support
     // Validate list of complex objects
 
+    [Inject]
+    private IServiceProvider serviceProvider { get; set; } = default!;
+
+
     internal ValidationMessageStore? MessageStore;
 
     [CascadingParameter]
@@ -78,7 +82,7 @@ public class ShiftValidator : ComponentBase, IDisposable
 
         if (EnableFluentValidation && isValid)
         {
-            CurrentEditContext.ValidateFluentValidation(fields, Validator, MessageStore);
+            CurrentEditContext.ValidateFluentValidation(fields, serviceProvider, Validator, MessageStore);
         }
 
         CurrentEditContext.NotifyValidationStateChanged();

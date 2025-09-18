@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using FluentValidation.Internal;
+using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.ShiftBlazor.Extensions.EditContext;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -16,7 +17,7 @@ public static class EditContextExtension
 
     private static readonly ConcurrentDictionary<(Type ModelType, string FieldName), PropertyInfo?> _propertyInfoCache = new();
 
-    public static bool Validate(this EditContext editContext, in List<FieldIdentifier> fields, IValidator? validator = null, ValidationMessageStore? messageStore = null)
+    public static bool Validate(this EditContext editContext, in List<FieldIdentifier> fields, IServiceProvider serviceProvider, IValidator? validator = null, ValidationMessageStore? messageStore = null)
     {
         messageStore ??= new ValidationMessageStore(editContext);
 
@@ -26,7 +27,7 @@ public static class EditContextExtension
         // then don't run the FluentValidation validator 
         if (isValid)
         {
-            isValid = editContext.ValidateFluentValidation(fields, validator, messageStore);
+            isValid = editContext.ValidateFluentValidation(fields, serviceProvider, validator, messageStore);
         }
 
         editContext.NotifyValidationStateChanged();
@@ -46,10 +47,9 @@ public static class EditContextExtension
             .ToList();
     }
 
-    public static List<string> ValidateFluentValidationValue(this EditContext editContext, object value, string field, IValidator? validator = null)
+    public static List<string> ValidateFluentValidationValue(this EditContext editContext, object value, string field, IServiceProvider serviceProvider, IValidator? validator = null)
     {
         var modelType = editContext.Model.GetType();
-        var parentValidator = ScanValidator(modelType);
         var instance = Activator.CreateInstance(modelType);
 
         if (instance == null)
@@ -57,7 +57,7 @@ public static class EditContextExtension
 
         instance.GetType().GetProperty(field)!.SetValue(instance, value);
         var compositeSelector = editContext.GetFluentSelector([editContext.Field(field)], instance);
-        validator ??= ScanValidator(editContext.Model.GetType());
+        validator ??= ScanValidator(editContext.Model.GetType(), serviceProvider);
 
         if (validator == null || compositeSelector == null)
             return [];
@@ -114,7 +114,7 @@ public static class EditContextExtension
         return isValid;
     }
 
-    public static bool ValidateFluentValidation(this EditContext editContext, in List<FieldIdentifier>? fields, IValidator? validator = null, ValidationMessageStore? messageStore = null)
+    public static bool ValidateFluentValidation(this EditContext editContext, in List<FieldIdentifier>? fields, IServiceProvider serviceProvider, IValidator? validator = null, ValidationMessageStore? messageStore = null)
     {
         messageStore ??= new ValidationMessageStore(editContext);
         var isValid = true;
@@ -132,7 +132,7 @@ public static class EditContextExtension
             }
         }
 
-        validator ??= ScanValidator(editContext.Model.GetType());
+        validator ??= ScanValidator(editContext.Model.GetType(), serviceProvider);
 
         if (validator != null)
         {
@@ -354,15 +354,25 @@ public static class EditContextExtension
         return string.Empty;
     }
 
-    public static IValidator? ScanValidator(Type modelType)
+    public static IValidator? ScanValidator(Type modelType, IServiceProvider serviceProvider)
     {
+        var validatorType = typeof(IValidator<>).MakeGenericType(modelType);
+        try
+        {
+            if (serviceProvider.GetService(validatorType) is IValidator validator)
+            {
+                return validator;
+            }
+        }
+        catch (Exception) { }
+
         var assemblyScanner = AssemblyScanner
             .FindValidatorsInAssembly(modelType?.Assembly)
             .FirstOrDefault(x => x.InterfaceType.GenericTypeArguments.First() == modelType);
 
         if (assemblyScanner != null)
         {
-            return Activator.CreateInstance(assemblyScanner.ValidatorType) as IValidator;
+            return ActivatorUtilities.CreateInstance(serviceProvider, assemblyScanner.ValidatorType) as IValidator;
         }
 
         return null;

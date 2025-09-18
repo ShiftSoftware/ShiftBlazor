@@ -448,7 +448,7 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     public bool Validate(List<FieldIdentifier> fields)
     {
         var messageStore = shiftValidator?.MessageStore ?? new ValidationMessageStore(EditContext!);
-        return EditContext?.Validate(fields, Validator, messageStore) ?? true;
+        return EditContext?.Validate(fields, ServiceProvider, Validator, messageStore) ?? true;
     }
 
     public void DisplayError(string field, string message)

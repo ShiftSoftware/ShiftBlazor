@@ -7,6 +7,7 @@
 
 @inject SettingManager SettingManager
 @inject ShiftBlazorLocalizer Loc
+@inject IServiceProvider serviceProvider
 
 <MudGrid>
     @foreach (var (lang, value) in Values)
@@ -182,7 +183,7 @@
             var errors = EditContext.ValidateDataAnnotationValue(value, validationAttributes);
 
             if (errors.Count == 0 && fieldName != null)
-                errors = EditContext.ValidateFluentValidationValue(value, fieldName, ShiftEntityForm?.Validator);
+                errors = EditContext.ValidateFluentValidationValue(value, fieldName, serviceProvider, ShiftEntityForm?.Validator);
         
             if (errors.Count == 0)
             {
