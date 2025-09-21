@@ -168,6 +168,7 @@ public partial class FileExplorer : IShortcutComponent
         (Extensions: new[] { ".json", ".xml" }, Value: ("data_array", "#777777")),
         (Extensions: new[] { ".exe", ".dll", ".msi" }, Value: ("terminal", "#001234")),
         (Extensions: new[] { ".sh", ".bat", ".cmd", ".ps1" }, Value: ("terminal", "#001234")),
+        (Extensions: new[] { ".apk", ".apk", ".apks", ".aab", ".xapk", ".apkm", ".akp" }, Value: ("apk_document", "#3DDC84")),
         (Extensions: [..ImageExtensions], Value: ("image", "#d14b4b")),
         (Extensions: new[] { "" }, Value: ("draft", "#777777")),
         (Extensions: new[] { "folder" }, Value: ("folder", "#f1ce69")),
