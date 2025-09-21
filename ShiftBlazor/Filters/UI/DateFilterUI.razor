@@ -3,239 +3,239 @@
 @inherits FilterUIBase
 
 @* 
-	TODO:
-	Use TextField instead of DatePicker as base input
+    TODO:
+    Use TextField instead of DatePicker as base input
 *@
 <MudField Class="@("custom-date-range-picker " + ClassName)"
-		  Adornment="Adornment.End"
-		  AdornmentIcon="@Icons.Material.Filled.FilterAlt"
-		  InnerPadding="false"
-		  Label="@Label"
-		  Disabled="ParentDisabled"
-		  @onkeydown="FieldKeyDownHandler"
-		  OnAdornmentClick="OpenMenu">
+          Adornment="Adornment.End"
+          AdornmentIcon="@Icons.Material.Filled.FilterAlt"
+          InnerPadding="false"
+          Label="@Label"
+          Disabled="ParentDisabled"
+          @onkeydown="FieldKeyDownHandler"
+          OnAdornmentClick="OpenMenu">
 
-	<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
-		<ActivatorContent>
-			<MudText>@Filter.Operator.Describe()</MudText>
-			<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
-		</ActivatorContent>
-		<ChildContent>
-			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">@ODataOperator.Equal.Describe()</MudMenuItem>
-			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">@ODataOperator.NotEqual.Describe()</MudMenuItem>
-			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">@ODataOperator.IsNotEmpty.Describe()</MudMenuItem>
-			<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">@ODataOperator.IsEmpty.Describe()</MudMenuItem>
-		</ChildContent>
-	</MudMenu>
+    <MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
+        <ActivatorContent>
+            <MudText>@Filter.Operator.Describe()</MudText>
+            <MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
+        </ActivatorContent>
+        <ChildContent>
+            <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">@ODataOperator.Equal.Describe()</MudMenuItem>
+            <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">@ODataOperator.NotEqual.Describe()</MudMenuItem>
+            <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">@ODataOperator.IsNotEmpty.Describe()</MudMenuItem>
+            <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">@ODataOperator.IsEmpty.Describe()</MudMenuItem>
+        </ChildContent>
+    </MudMenu>
 
-	@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
-	{
-		<MudDatePicker Adornment="Adornment.None"
-					   Editable
-					   Underline="false"
-					   DateChanged="DateStartChanged"
-					   Date="_dateRangeValue.Start"
-					   @onblur="StartInputBlurHandler"
-					   @onfocus="StartInputFocusHandler" />
+    @if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
+    {
+        <MudTextField Underline="false"
+                      T="string"
+                      ValueChanged="DateStartChanged"
+                      Value="_dateRangeValue.Start.ToString()"
+                      @onblur="StartInputBlurHandler"
+                      @onfocus="StartInputFocusHandler" />
 
-		@if (IsPickerOpen || _dateRangeValue.Start != null || _dateRangeValue.End != null)
-		{
-			<MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt" Color="Color.Default" Style="align-self: end;margin: 4px;" />
-		}
+        @if (IsPickerOpen || _dateRangeValue.Start != null || _dateRangeValue.End != null)
+        {
+            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt" Color="Color.Default" Style="align-self: end;margin: 4px;" />
+        }
 
-		<MudDatePicker Adornment="Adornment.None"
-					   Underline="false"
-					   DateChanged="DateEndChanged"
-					   Date="_dateRangeValue.End"
-					   Editable
-					   @onblur="EndInputBlurHandler"
-					   @onfocus="EndInputFocusHandler" />
+        <MudTextField Underline="false"
+                      T="string"
+                      ValueChanged="DateEndChanged"
+                      Value="_dateRangeValue.End.ToString()"
+                      @onblur="EndInputBlurHandler"
+                      @onfocus="EndInputFocusHandler" />
 
-		@if (_dateRangeValue.Start != null || _dateRangeValue.End != null)
-		{
-			<MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" Size="Size.Small" OnClick="ClearInput" />
-		}
-	}
+        @if (_dateRangeValue.Start != null || _dateRangeValue.End != null)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" Size="Size.Small" OnClick="ClearInput" />
+        }
+    }
 
-	<MudPopover Open="IsPickerOpen" AnchorOrigin="Origin.BottomLeft" >
-		<MudDateRangePicker DateRange="_dateRangeValue"
-							DateRangeChanged="RangeChangedHandler"
-							Elevation="0"
-							PickerVariant="PickerVariant.Static" />
-	</MudPopover>
+    <MudPopover Open="IsPickerOpen" AnchorOrigin="Origin.BottomLeft" >
+        <MudDateRangePicker DateRange="_dateRangeValue"
+                            DateRangeChanged="RangeChangedHandler"
+                            Elevation="0"
+                            PickerVariant="PickerVariant.Static" />
+    </MudPopover>
 
-	<MudPopover Open="_IsMenuOpen" RelativeWidth="DropdownWidth.Relative" AnchorOrigin="Origin.BottomLeft" Paper Class="pa-5">
-		<MudStack Row>
-			<MudSelectExtended @bind-Value="DateOperator">
-				@foreach (var item in Enum.GetValues<DateFilterOperator>().Where(x => x.ToString() != "Range"))
-				{
-					<MudSelectItem Value="item">@item.Describe()</MudSelectItem>
-				}
-			</MudSelectExtended>
+    <MudPopover Open="_IsMenuOpen" RelativeWidth="DropdownWidth.Relative" AnchorOrigin="Origin.BottomLeft" Paper Class="pa-5">
+        <MudStack Row>
+            <MudSelectExtended @bind-Value="DateOperator">
+                @foreach (var item in Enum.GetValues<DateFilterOperator>().Where(x => x.ToString() != "Range"))
+                {
+                    <MudSelectItem Value="item">@item.Describe()</MudSelectItem>
+                }
+            </MudSelectExtended>
 
-			@if (DateOperator == DateFilterOperator.Last || DateOperator == DateFilterOperator.Next)
-			{
-				<MudNumericField T="int" @bind-Value="UnitValue" Min="1"></MudNumericField>
-				<MudSelectExtended T="TimeUnit" @bind-Value="TimeUnit">
-					@foreach (var item in Enum.GetValues<TimeUnit>())
-					{
-						<MudSelectItem Value="item">@item.ToString()</MudSelectItem>
-					}
-				</MudSelectExtended>
-			}
-			else if (DateOperator == DateFilterOperator.Date || DateOperator == DateFilterOperator.After || DateOperator == DateFilterOperator.Before)
-			{
-				<MudDatePicker @bind-Date="DateTimeValue" />
-			}
+            @if (DateOperator == DateFilterOperator.Last || DateOperator == DateFilterOperator.Next)
+            {
+                <MudNumericField T="int" @bind-Value="UnitValue" Min="1"></MudNumericField>
+                <MudSelectExtended T="TimeUnit" @bind-Value="TimeUnit">
+                    @foreach (var item in Enum.GetValues<TimeUnit>())
+                    {
+                        <MudSelectItem Value="item">@item.ToString()</MudSelectItem>
+                    }
+                </MudSelectExtended>
+            }
+            else if (DateOperator == DateFilterOperator.Date || DateOperator == DateFilterOperator.After || DateOperator == DateFilterOperator.Before)
+            {
+                <MudDatePicker @bind-Date="DateTimeValue" />
+            }
 
-			<MudSpacer />
+            <MudSpacer />
 
-			<MudButton Color="Color.Secondary" OnClick="CloseMenu">Cancel</MudButton>
-			<MudButton Color="Color.Primary" OnClick="SaveAndCloseMenu">OK</MudButton>
-		</MudStack>
-	</MudPopover>
+            <MudButton Color="Color.Secondary" OnClick="CloseMenu">Cancel</MudButton>
+            <MudButton Color="Color.Primary" OnClick="SaveAndCloseMenu">OK</MudButton>
+        </MudStack>
+    </MudPopover>
 </MudField>
 
 <MudOverlay Visible="IsPickerOpen || _IsMenuOpen" AutoClose OnClosed="OverlayClosed" LockScroll="false" />
 
 @code {
 
-	private bool IsPickerOpen { get; set; }
-	private bool _IsMenuOpen { get; set; }
+    private bool IsPickerOpen { get; set; }
+    private bool _IsMenuOpen { get; set; }
 
-	private bool IsStartInputFocused;
-	private bool IsEndInputFocused;
+    private bool IsStartInputFocused;
+    private bool IsEndInputFocused;
 
-	private DateRange _dateRangeValue => Filter.Value as DateRange ?? new(null, null);
+    private DateRange _dateRangeValue => Filter.Value as DateRange ?? new(null, null);
 
-	private DateFilterOperator DateOperator { get; set; }
-	private TimeUnit TimeUnit { get; set; } = TimeUnit.Day;
-	private int UnitValue { get; set; } = 1;
-	private DateTime? DateTimeValue { get; set; } = DateTime.Now;
+    private DateFilterOperator DateOperator { get; set; }
+    private TimeUnit TimeUnit { get; set; } = TimeUnit.Day;
+    private int UnitValue { get; set; } = 1;
+    private DateTime? DateTimeValue { get; set; } = DateTime.Now;
 
-	private void StartInputFocusHandler()
-	{
-		IsStartInputFocused = true;
-		OpenPicker();
-	}
+    private void StartInputFocusHandler()
+    {
+        IsStartInputFocused = true;
+        OpenPicker();
+    }
 
-	private void StartInputBlurHandler()
-	{
-		IsStartInputFocused = false;
-	}
+    private void StartInputBlurHandler()
+    {
+        IsStartInputFocused = false;
+    }
 
-	private void EndInputFocusHandler()
-	{
-		OpenPicker();
-		IsEndInputFocused = true;
-	}
+    private void EndInputFocusHandler()
+    {
+        OpenPicker();
+        IsEndInputFocused = true;
+    }
 
-	private void EndInputBlurHandler()
-	{
-		IsEndInputFocused = false;
-	}
+    private void EndInputBlurHandler()
+    {
+        IsEndInputFocused = false;
+    }
 
-	private void OpenPicker()
-	{
-		IsPickerOpen = true;
-		_IsMenuOpen = false;
-	}
+    private void OpenPicker()
+    {
+        IsPickerOpen = true;
+        _IsMenuOpen = false;
+    }
 
-	private void ClosePicker()
-	{
-		IsPickerOpen = false;
-	}
+    private void ClosePicker()
+    {
+        IsPickerOpen = false;
+    }
 
-	private void OpenMenu()
-	{
-		_IsMenuOpen = true;
-		IsPickerOpen = false;
-	}
+    private void OpenMenu()
+    {
+        _IsMenuOpen = true;
+        IsPickerOpen = false;
+    }
 
-	private void CloseMenu()
-	{
-		_IsMenuOpen = false;
-	}
+    private void CloseMenu()
+    {
+        _IsMenuOpen = false;
+    }
 
-	private void SaveAndCloseMenu()
-	{
-		SetDateRange();
-		CloseMenu();
-	}
+    private void SaveAndCloseMenu()
+    {
+        SetDateRange();
+        CloseMenu();
+    }
 
-	private void OverlayClosed()
-	{
-		ClosePicker();
-		CloseMenu();
-	}
+    private void OverlayClosed()
+    {
+        ClosePicker();
+        CloseMenu();
+    }
 
-	private void RangeChangedHandler(DateRange range)
-	{
-		Filter.Value = range;
-		ClosePicker();
-		UpdateFilter();
-	}
+    private void RangeChangedHandler(DateRange range)
+    {
+        Filter.Value = range;
+        ClosePicker();
+        UpdateFilter();
+    }
 
-	private void DateStartChanged(DateTime? dateTime) 
-	{
-		if (dateTime != _dateRangeValue.Start)
-		{
-			_dateRangeValue.Start = dateTime;
-			UpdateFilter();
-		}
-	}
+    private void DateStartChanged(string? dateTime)
+    {
+        System.DateTime.TryParse(dateTime, out DateTime _dateTime);
+        if (_dateTime != _dateRangeValue.Start)
+        {
+            _dateRangeValue.Start = _dateTime;
+            UpdateFilter();
+        }
+    }
 
-	private void DateEndChanged(DateTime? dateTime)
-	{
-		if (dateTime != _dateRangeValue.End)
-		{
-			_dateRangeValue.End = dateTime;
-			UpdateFilter();
-		}
-	}
+    private void DateEndChanged(string? dateTime)
+    {
+        System.DateTime.TryParse(dateTime, out DateTime _dateTime);
+        if (_dateTime != _dateRangeValue.End)
+        {
+            _dateRangeValue.End = _dateTime;
+            UpdateFilter();
+        }
+    }
 
-	private void ClearInput()
-	{
-		_dateRangeValue.Start = null;
-		_dateRangeValue.End = null;
-		UpdateFilter();
-	}
+    private void ClearInput()
+    {
+        _dateRangeValue.Start = null;
+        _dateRangeValue.End = null;
+        UpdateFilter();
+    }
 
-	private void SetDateRange()
-	{
-		(DateTime? start, DateTime? end) = DateFilterModel.GetDateRange(DateOperator, TimeUnit, UnitValue, DateTimeValue);
-		if (start == DateTime.MinValue.ToUniversalTime())
-		{
-			start = null;
-		}
-		if (end == DateTime.MaxValue.ToUniversalTime())
-		{
-			end = null;
-		}
+    private void SetDateRange()
+    {
+        (DateTime? start, DateTime? end) = DateFilterModel.GetDateRange(DateOperator, TimeUnit, UnitValue, DateTimeValue);
+        if (start == DateTime.MinValue.ToUniversalTime())
+        {
+            start = null;
+        }
+        if (end == DateTime.MaxValue.ToUniversalTime())
+        {
+            end = null;
+        }
 
-		var test = new DateRange(start, end?.AddDays(-1));
+        var test = new DateRange(start, end?.AddDays(-1));
 
-		Filter.Value = test;
-		UpdateFilter();
-	}
+        Filter.Value = test;
+        UpdateFilter();
+    }
 
-	private void FieldKeyDownHandler(KeyboardEventArgs args)
-	{
-		switch (args.Key)
-		{
-			case "Escape":
-				ClosePicker();
-				break;
-			case "Tab":
-				if (args.ShiftKey && IsStartInputFocused)
-				{
-					ClosePicker();
-				}
-				else if (!args.ShiftKey && IsEndInputFocused)
-				{
-					ClosePicker();
-				}
-				break;
-		}
-	}
+    private void FieldKeyDownHandler(KeyboardEventArgs args)
+    {
+        switch (args.Key)
+        {
+            case "Escape":
+                ClosePicker();
+                break;
+            case "Tab":
+                if (args.ShiftKey && IsStartInputFocused)
+                {
+                    ClosePicker();
+                }
+                else if (!args.ShiftKey && IsEndInputFocused)
+                {
+                    ClosePicker();
+                }
+                break;
+        }
+    }
 }
