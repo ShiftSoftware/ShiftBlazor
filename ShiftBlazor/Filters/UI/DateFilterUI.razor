@@ -33,7 +33,7 @@
         <MudTextField Underline="false"
                       T="string"
                       ValueChanged="DateStartChanged"
-                      Value="_dateRangeValue.Start.ToString()"
+                      Value="_dateRangeValue.Start?.ToString(Filter.UIOptions.Format)"
                       @onblur="StartInputBlurHandler"
                       @onfocus="StartInputFocusHandler" />
 
@@ -45,7 +45,7 @@
         <MudTextField Underline="false"
                       T="string"
                       ValueChanged="DateEndChanged"
-                      Value="_dateRangeValue.End.ToString()"
+                      Value="_dateRangeValue.End?.ToString(Filter.UIOptions.Format)"
                       @onblur="EndInputBlurHandler"
                       @onfocus="EndInputFocusHandler" />
 

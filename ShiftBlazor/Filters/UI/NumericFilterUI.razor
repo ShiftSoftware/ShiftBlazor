@@ -3,38 +3,39 @@
 
 <div style="width: 100%;" class="@ClassName">
 
-	<MudField Label="@Label" InnerPadding="false" Disabled="ParentDisabled">
-		<MudStack Row>
-			<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
-				<ActivatorContent>
-					<MudText>@Filter.Operator.Describe()</MudText>
-					<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
-				</ActivatorContent>
-				<ChildContent>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">@ODataOperator.Equal.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">@ODataOperator.NotEqual.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.GreaterThan))">@ODataOperator.GreaterThan.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.GreaterThanOrEqual))">@ODataOperator.GreaterThanOrEqual.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.LessThan))">@ODataOperator.LessThan.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.LessThanOrEqual))">@ODataOperator.LessThanOrEqual.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.StartsWith))">@ODataOperator.StartsWith.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.EndsWith))">@ODataOperator.EndsWith.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Contains))">@ODataOperator.Contains.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotContains))">@ODataOperator.NotContains.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">@ODataOperator.IsNotEmpty.Describe()</MudMenuItem>
-					<MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">@ODataOperator.IsEmpty.Describe()</MudMenuItem>
-				</ChildContent>
-			</MudMenu>
+    <MudField Label="@Label" InnerPadding="false" Disabled="ParentDisabled">
+        <MudStack Row>
+            <MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
+                <ActivatorContent>
+                    <MudText>@Filter.Operator.Describe()</MudText>
+                    <MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">@ODataOperator.Equal.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotEqual))">@ODataOperator.NotEqual.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.GreaterThan))">@ODataOperator.GreaterThan.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.GreaterThanOrEqual))">@ODataOperator.GreaterThanOrEqual.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.LessThan))">@ODataOperator.LessThan.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.LessThanOrEqual))">@ODataOperator.LessThanOrEqual.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.StartsWith))">@ODataOperator.StartsWith.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.EndsWith))">@ODataOperator.EndsWith.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Contains))">@ODataOperator.Contains.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.NotContains))">@ODataOperator.NotContains.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsNotEmpty))">@ODataOperator.IsNotEmpty.Describe()</MudMenuItem>
+                    <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.IsEmpty))">@ODataOperator.IsEmpty.Describe()</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
 
-			@if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
-			{
-				<MudNumericField T="double?"
-								 Value="Filter.Value as double?"
-								 ValueChanged="ValueChanged"
-								 Clearable
-								 Underline="false" />
-			}
-		</MudStack>
-	</MudField>
+            @if (Filter.Operator != ODataOperator.IsEmpty && Filter.Operator != ODataOperator.IsNotEmpty)
+            {
+                <MudNumericField T="double?"
+                                 Value="Filter.Value as double?"
+                                 ValueChanged="ValueChanged"
+                                 Clearable
+                                 Format="@Filter.UIOptions.Format"
+                                 Underline="false" />
+            }
+        </MudStack>
+    </MudField>
 
 </div>
