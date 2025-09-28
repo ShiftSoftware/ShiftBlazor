@@ -380,6 +380,12 @@
     <MudOverlay @bind-Visible="DisplayContextMenu" ZIndex="10000" AutoClose LockScroll="false" OnClosed="CloseContextMenu" @oncontextmenu="CloseContextMenu">
         <MudPaper Class="context-menu" Elevation="25" Width="300px" Style="@($"left: {ContextLeft}px; top: {ContextTop}px;")">
             <MudList T="string">
+
+                @if (IsContextMenuEmpty && MenuItemsTemplate == null)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.FolderOff">@Loc["No Context Menu Action Available"]</MudListItem>
+                }
+
                 @if (DisplayNewFolderButton)
                 {
                     <MudListItem Icon="@Icons.Material.Filled.CreateNewFolder" OnClick="CreateNewFolder">@Loc["New Folder"]</MudListItem>
@@ -399,7 +405,10 @@
 
                 @if (MenuItemsTemplate != null)
                 {
-                    <MudDivider />
+                    if (!IsContextMenuEmpty)
+                    {
+                        <MudDivider />
+                    }
                     @MenuItemsTemplate
                 }
             </MudList>
@@ -416,6 +425,6 @@
               OnBatchUploadStarted="HandleUploading"
               OnUploadFinished="HandleUploading"
               MaxFileSizeInMegaBytes="MaxFileSizeInMegaBytes"
-              MaxFileCount="this.MaxUploadFileCount"
+              MaxFileCount="-1"
               OpenDialogOnUpload="OpenDialogOnUpload"
               ValuesChanged="FileUploaderValuesChanged" />

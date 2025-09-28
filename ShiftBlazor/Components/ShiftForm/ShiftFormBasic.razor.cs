@@ -454,12 +454,17 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
 
     public void DisplayError(string field, string message)
     {
-        var messageStore = shiftValidator?.MessageStore ?? new ValidationMessageStore(EditContext!);
         var fieldId = EditContext?.ToFieldIdentifier(field);
         if (fieldId != null)
         {
-            messageStore?.Add(fieldId.Value, message);
+            DisplayError(fieldId.Value, message);
         }
+    }
+
+    public void DisplayError(FieldIdentifier field, string message)
+    {
+        var messageStore = shiftValidator?.MessageStore ?? new ValidationMessageStore(EditContext!);
+        messageStore?.Add(field, message);
     }
 
     private HashSet<FormSection> Sections { get; set; } = new HashSet<FormSection>();

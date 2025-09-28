@@ -24,6 +24,7 @@ public interface IShiftForm
     public bool Validate();
     public bool Validate(List<FieldIdentifier> fields);
     public void DisplayError(string field, string message);
+    public void DisplayError(FieldIdentifier field, string message);
 
 
 }
