@@ -205,7 +205,7 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
 
             var url = IRequestComponent.GetPath(this);
 
-            using var request = HttpClient.CreateIdempotencyRequest(ShiftListGeneric?.SelectState ?? new(), url, IdempotencyToken);
+            using var request = HttpClient.CreatePostRequest(ShiftListGeneric?.SelectState ?? new(), url, IdempotencyToken);
 
             if (OnBeforeRequest != null && await OnBeforeRequest.Invoke(request))
             {
