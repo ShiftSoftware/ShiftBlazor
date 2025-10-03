@@ -306,19 +306,28 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
             if (result?.Canceled != true)
             {
-                using var requestMessage = HttpClient.CreateRequestMessage(HttpMethod.Delete, new Uri(ItemUrl));
-
-                if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(requestMessage)))
-                    return;
-
-                using (var res = await HttpClient.SendAsync(requestMessage))
+                try
                 {
-                    if (OnResponse != null && !(await OnResponse.Invoke(res)))
+                    using var requestMessage = HttpClient.CreateRequestMessage(HttpMethod.Delete, new Uri(ItemUrl));
+
+                    if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(requestMessage)))
                         return;
 
-                    await SetValue(await ParseEntityResponse(res));
+                    using (var res = await HttpClient.SendAsync(requestMessage))
+                    {
+                        if (OnResponse != null && !(await OnResponse.Invoke(res)))
+                            return;
+
+                        await SetValue(await ParseEntityResponse(res));
+                    }
+                    MadeChanges = true;
                 }
-                MadeChanges = true;
+                catch (Exception e)
+                {
+                    if (OnError != null && !(await OnError.Invoke(e)))
+                        return;
+                    throw;
+                }
             }
         });
     }
@@ -392,19 +401,28 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
         T? value = null;
 
-        using var request = IsCreateMode ?
-            HttpClient.CreatePostRequest(Value, ItemUrl, Guid.NewGuid()) :
-            HttpClient.CreatePutRequest(Value, ItemUrl);
-
-        if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(request)))
-            return;
-
-        using (var res = await HttpClient.SendAsync(request))
+        try
         {
-            if (OnResponse != null && !(await OnResponse.Invoke(res)))
+            using var request = IsCreateMode ?
+                HttpClient.CreatePostRequest(Value, ItemUrl, Guid.NewGuid()) :
+                HttpClient.CreatePutRequest(Value, ItemUrl);
+
+            if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(request)))
                 return;
 
-            value = await ParseEntityResponse(res);
+            using (var res = await HttpClient.SendAsync(request))
+            {
+                if (OnResponse != null && !(await OnResponse.Invoke(res)))
+                    return;
+
+                value = await ParseEntityResponse(res);
+            }
+        }
+        catch (Exception e)
+        {
+            if (OnError != null && !(await OnError.Invoke(e)))
+                return;
+            throw;
         }
 
 
@@ -540,7 +558,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                 Converters = { new LocalDateTimeOffsetJsonConverter() }
             });
 
-            if (OnResult != null && await OnResult.Invoke(result))
+            if (OnResult != null && !(await OnResult.Invoke(result)))
                 return null;
 
         }
