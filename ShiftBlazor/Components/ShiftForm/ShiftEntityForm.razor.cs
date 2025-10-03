@@ -211,6 +211,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         else
         {
             EditContext = new EditContext(Value);
+            await OnReady.InvokeAsync();
         }
 
         SetTitle();

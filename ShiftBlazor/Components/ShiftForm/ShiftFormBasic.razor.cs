@@ -157,6 +157,8 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     public EventCallback<ShiftEvent<FormTasks>> OnTaskStart { get; set; }
     [Parameter]
     public EventCallback<FormTasks> OnTaskFinished { get; set; }
+
+    [Parameter]
     public EventCallback OnReady { get; set; }
 
     public EventCallback<FormTasks> _OnTaskStart { get; set; }
