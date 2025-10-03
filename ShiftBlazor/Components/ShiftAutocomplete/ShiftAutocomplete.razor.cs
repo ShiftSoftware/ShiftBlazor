@@ -505,7 +505,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         }
         catch (Exception e)
         {
-            if (OnError != null && await OnError.Invoke(e))
+            if (OnError != null && !(await OnError.Invoke(e)))
                 return;
 
             Console.WriteLine($"fetch error {e}");

@@ -508,7 +508,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             catch (Exception e)
             {
                 EditContext = new EditContext(Value);
-                if (OnError != null && await OnError.Invoke(e))
+                if (OnError != null && !(await OnError.Invoke(e)))
                     return;
                 throw;
             }
