@@ -298,9 +298,7 @@
                                                       ObjectFit="ObjectFit.Contain"
                                                       ObjectPosition="ObjectPosition.Center"
                                                       Src="@file.ThumbnailUrl"
-                                                      data-src="@file.TargetPath"
-                                                      loading="lazy"
-                                                      onerror="if (this.src !== this.dataset.src) this.src = this.dataset.src" />
+                                                      FallbackSrc="@file.Url"/>
                                         }
                                         else
                                         {
