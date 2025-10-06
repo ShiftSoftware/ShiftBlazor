@@ -10,7 +10,11 @@ window.getQueryParam = function(key) {
 window.updateQueryParams = function (newParams) {
     const url = new URL(window.location);
     Object.entries(newParams).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
+        if (value) {
+            url.searchParams.set(key, value);
+        } else {
+            url.searchParams.delete(key);
+        }
     });
     history.pushState({}, '', url);
 }

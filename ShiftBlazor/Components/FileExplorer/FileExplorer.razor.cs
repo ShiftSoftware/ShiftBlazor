@@ -43,6 +43,9 @@ public partial class FileExplorer : IShortcutComponent
     public string? CurrentPath { get; set; }
 
     [Parameter]
+    public string URLPathKey { get; set; } = "path";
+
+    [Parameter]
     public string? BaseUrl { get; set; }
 
     [Parameter]
@@ -109,22 +112,22 @@ public partial class FileExplorer : IShortcutComponent
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = [];
-    public List<FileExplorerDirectoryContent> SelectedFiles { get; set; } = [];
+    public List<FileExplorerItemDTO> SelectedFiles { get; set; } = [];
 
     private string FileExplorerId => "FileExplorer" + Id.ToString().Replace("-", string.Empty);
     private string ToolbarStyle = string.Empty;
     private Size IconSize = Size.Medium;
     private bool DisableSidebar => DisableQuickAccess && DisableRecents;
-    private FileExplorerDirectoryContent? CWD { get; set; } = null;
-    private List<FileExplorerDirectoryContent> Files { get; set; } = [];
-    private List<FileExplorerDirectoryContent>? FilteredFiles { get; set; }
-    private List<FileExplorerDirectoryContent> DisplayedFiles => FilteredFiles ?? Files;
+    private string? _CurrentPath { get; set; }
+    private List<FileExplorerItemDTO> Files { get; set; } = [];
+    private List<FileExplorerItemDTO>? FilteredFiles { get; set; }
+    private List<FileExplorerItemDTO> DisplayedFiles => FilteredFiles ?? Files;
     private UploadEventArgs? UploadingFiles { get; set; }
     private bool IsLoading { get; set; } = true;
     private string Url = "";
     private FileUploader? _FileUploader { get; set; }
     private List<string> PathParts = [];
-    private FileExplorerDirectoryContent? LastSelectedFile { get; set; }
+    private FileExplorerItemDTO? LastSelectedFile { get; set; }
     private bool RenderQuickAccess => !DisableQuickAccess && Settings.QuickAccessItems.Count > 0;
     private string SortIcon => Settings.SortDescending ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward;
     private bool ShowDeletedFiles { get; set; }
@@ -139,7 +142,6 @@ public partial class FileExplorer : IShortcutComponent
 
     private double ContextLeft { get; set; }
     private double ContextTop { get; set; }
-    private readonly string URLPathKey = "path";
 
     private bool IsIconsView => Settings.View >= FileView.Small && Settings.View <= FileView.ExtraLarge;
     private string SettingKey => $"FileExplorer_{LoggedInUser?.ID}_{AccountName}_{ContainerName}_{Root}";
@@ -186,6 +188,7 @@ public partial class FileExplorer : IShortcutComponent
 
     protected override void OnInitialized()
     {
+        Console.WriteLine("FileExplorer OnInitialized");
         IsEmbed = ParentDisabled != null || ParentReadOnly != null;
 
         if (!IsEmbed)
@@ -193,44 +196,54 @@ public partial class FileExplorer : IShortcutComponent
             IShortcutComponent.Register(this);
         }
 
-        var apiUrl = BaseUrl
-            ?? SettingManager.Configuration.ExternalAddresses.TryGet(BaseUrlKey ?? "") 
-            ?? SettingManager.Configuration.BaseAddress;
+        string? url = BaseUrl;
+        var config = SettingManager.Configuration;
 
-        Url = apiUrl.AddUrlPath("FileExplorer", "FileOperations");
+        if (url is null && BaseUrlKey is not null)
+            url = config.ExternalAddresses.TryGet(BaseUrlKey);
+
+        url ??= config.BaseAddress;
+        Url = url.AddUrlPath("FileExplorer");
+
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
         IconSize = Dense ? Size.Medium : Size.Large;
-        SetBreadcrumb();
 
         NavigationManager.LocationChanged += LocationChanged;
     }
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        JsRuntime.InvokeVoidAsync("FileExplorerRegisterEvents", FileExplorerId);
+        base.OnAfterRender(firstRender);
+    }
+
     private void LocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
-        if (CWD == null) return;
+        if (_CurrentPath == null) return;
 
         var uri = new Uri(e.Location);
         var urlPath = HttpUtility.ParseQueryString(uri.Query).Get(URLPathKey) ?? string.Empty;
-        string currentPath = CWD == null ? "" : (CWD.FilterPath == "" ? "" : CWD.FilterPath + CWD.Name);
 
-        if (urlPath != currentPath)
+        if (urlPath != GetFriendlyPath(_CurrentPath))
         {
-            GoToPath(urlPath).ContinueWith(x => StateHasChanged());
+            GoToPath(GetRoot() + urlPath).ContinueWith(x => StateHasChanged());
         }
     }
 
     public async Task UpdateUrlAsync()
     {
-        if (CWD == null) return;
+        if (_CurrentPath == null) return;
 
         string urlPath = await JsRuntime.InvokeAsync<string>("getQueryParam", URLPathKey);
-        string currentPath = CWD == null ? "" : (CWD.FilterPath == "" ? "" : CWD.FilterPath + CWD.Name);
+        var dirPath = GetFriendlyPath(_CurrentPath);
+        var updatePath = (string.IsNullOrWhiteSpace(dirPath) && !string.IsNullOrWhiteSpace(urlPath))
+            || (!string.IsNullOrWhiteSpace(dirPath) && dirPath != urlPath);
 
-        if (currentPath != urlPath)
+        if (updatePath)
             await JsRuntime.InvokeVoidAsync("updateQueryParams",
                 new Dictionary<string, object>
                 {
-                    [URLPathKey] = currentPath
+                    [URLPathKey] = dirPath
                 }
             );
     }
@@ -251,9 +264,9 @@ public partial class FileExplorer : IShortcutComponent
         var urlPath = await JsRuntime.InvokeAsync<string?>("getQueryParam", URLPathKey);
 
         if (!string.IsNullOrWhiteSpace(urlPath))
-            await GoToPath(urlPath);
+            await GoToPath(GetRoot() + urlPath);
         else if (!string.IsNullOrWhiteSpace(CurrentPath))
-            await GoToPath(CurrentPath);
+            await GoToPath(GetRoot() + CurrentPath);
         else
             await FetchData();
     }
@@ -278,7 +291,7 @@ public partial class FileExplorer : IShortcutComponent
                 break;
             case KeyboardKeys.KeyD:
                 if (DisplayDeleteButton)
-                await Delete();
+                    await Delete();
                 break;
             case KeyboardKeys.KeyT:
                 await ViewDeletedFiles();
@@ -288,48 +301,84 @@ public partial class FileExplorer : IShortcutComponent
         StateHasChanged();
     }
 
-    public async Task FetchData(FileExplorerDirectoryContent? data = null)
+    //private string PreparePath(string? path = null)
+    //{
+    //    if (string.IsNullOrWhiteSpace(Root))
+    //        return path ?? "";
+
+    //    return Root.Trim('/') + "/" + path;
+    //}
+
+    //private string StrippedPath(string path)
+    //{
+    //    if (string.IsNullOrWhiteSpace(Root))
+    //        return path;
+    //    if (path.StartsWith(Root))
+    //        return path[Root.Length..].TrimStart('/');
+    //    return path;
+    //}
+
+    private string GetRoot()
+    {
+        if (string.IsNullOrWhiteSpace(Root))
+            return "";
+        if (!Root.EndsWith('/'))
+            Root += "/";
+        return Root.TrimStart('/');
+    }
+
+    private string GetFriendlyPath(string path)
+    {
+        var root = GetRoot();
+        if (!string.IsNullOrWhiteSpace(root))
+            return path.Replace(root, "");
+        return path;
+    }
+
+    public async Task FetchData(string? path = null)
     {
         IsLoading = true;
-
         LastSelectedFile = null;
         DeselectAllFiles();
 
         try
         {
-            var obj = DefaultDirectoryContentObject();
-            obj.Action = "read";
-            obj.Path = GetPath(data);
-            obj.Data = data == null ? [] : [data];
-            obj.ShowHiddenItems = ShowDeletedFiles;
+            path ??= GetRoot();
+            var query = nameof(FileExplorerReadDTO.Path) + "=" + Uri.EscapeDataString(path);
+            if (ShowDeletedFiles)
+                query += nameof(FileExplorerReadDTO.IncludeDeleted) + "=true";
+            var url = $"{Url.AddUrlPath("list")}?{query}";
 
-            var response = await HttpClient.PostAsJsonAsync(Url, obj);
+            var response = await HttpClient.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception();
+                throw new Exception("Failed to fetch data");
             }
 
-            var content = await response.Content.ReadFromJsonAsync<FileExplorerResponse>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            var content = await response.Content.ReadFromJsonAsync<FileExplorerResponseDTO>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
             {
                 Converters = { new LocalDateTimeOffsetJsonConverter() }
             });
 
-            if (content?.Error != null)
-            {
-                throw new Exception(content.Error.Message);
-            }
-
-            if (content == null || content.CWD == null)
+            if (content == null || content.Path == null)
             {
                 throw new Exception("Could not parse server data");
             }
 
-            var files = content.Files?.ToList() ?? [];
+
+            if (content.Message != null)
+            {
+                throw new Exception(content.Message.Title);
+            }
+
+            var files = content.Items?.ToList() ?? [];
+
+            //Console.WriteLine($"Root: {Root} | path: {path} | Prepared: {PreparePath(path)} | Cleaned: {StrippedPath(content.Path)}");
+
 
             Files = files;
-            CWD = content.CWD;
-            var crumbPath = content.CWD.FilterPath == "" ? "" : content.CWD.FilterPath + content.CWD.Name;
+            _CurrentPath = content.Path;
 
             var userIds = files
                 .Where(x => !string.IsNullOrWhiteSpace(x.CreatedBy))
@@ -348,8 +397,7 @@ public partial class FileExplorer : IShortcutComponent
                 }
             }
             
-
-            SetBreadcrumb(crumbPath);
+            SetBreadcrumb(_CurrentPath);
             SetSort();
             UpdateToolbarButtons();
             await UpdateUrlAsync();
@@ -369,12 +417,11 @@ public partial class FileExplorer : IShortcutComponent
             RootAliasName ?? "Root",
         };
 
-        breadcrumb.AddRange(path.Split('/', StringSplitOptions.RemoveEmptyEntries));
-
+        breadcrumb.AddRange(GetFriendlyPath(path).Split('/', StringSplitOptions.RemoveEmptyEntries));
         PathParts = breadcrumb;
     }
     
-    private async Task HandleOpen(FileExplorerDirectoryContent file)
+    private async Task HandleOpen(FileExplorerItemDTO file)
     {
         if (file.IsFile)
         {
@@ -383,11 +430,11 @@ public partial class FileExplorer : IShortcutComponent
         else
         {
             ClearSearch();
-            await FetchData(file);
+            await FetchData(file.Path);
         }
     }
 
-    private async Task OnFileClick(MouseEventArgs args, FileExplorerDirectoryContent file)
+    private async Task OnFileClick(MouseEventArgs args, FileExplorerItemDTO file)
     {
         var isDoubleClick = args.Detail > 1;
 
@@ -444,8 +491,8 @@ public partial class FileExplorer : IShortcutComponent
         DisplayDownloadButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsFile);
         DisplayQuickAccessButton = !DisableQuickAccess && SelectedFiles.Count > 0 && SelectedFiles.All(x => !x.IsFile);
         DisplayRestoreButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsDeleted);
-        DisplayNewFolderButton = CWD != null;
-        DisplayUploadButton = CWD != null;
+        DisplayNewFolderButton = _CurrentPath != null;
+        DisplayUploadButton = _CurrentPath != null;
 
         IsContextMenuEmpty = !(DisplayDeleteButton
                             || DisplayDownloadButton
@@ -457,23 +504,13 @@ public partial class FileExplorer : IShortcutComponent
 
     private async Task OnBreadCrumbClick(int index)
     {
-        FileExplorerDirectoryContent? data = null;
+        string? path = null;
 
         if (index > 0)
         {
-            var path = string.Join("/", PathParts.GetRange(1, index));
-            var filterPath = string.Join("/", PathParts.GetRange(1, index - 1));
-            var name = PathParts[index];
-            data = new FileExplorerDirectoryContent()
-            {
-                Path = path,
-                Name = name,
-                FilterPath = filterPath + "/",
-                Type = "Directory",
-            };
-
+            path = GetRoot() + string.Join("/", PathParts.GetRange(1, index)) + "/";
         }
-        await FetchData(data);
+        await FetchData(path);
     }
 
     private async Task CreateNewFolder()
@@ -493,22 +530,20 @@ public partial class FileExplorer : IShortcutComponent
         {
             if (result?.Data is string value)
             {
-                var newFolderData = DefaultDirectoryContentObject();
-                newFolderData.Action = "create";
-                newFolderData.Path = GetPath(CWD);
-                newFolderData.Name = value;
-                newFolderData.Data = CWD == null ? [] : [CWD];
+                var newFolderData = new FileExplorerCreateDTO();
+                newFolderData.Path = (_CurrentPath ?? "").AddUrlPath(value) + "/";
+                var url = Url.AddUrlPath("create");
 
-                var response = await HttpClient.PostAsJsonAsync(Url, newFolderData);
+                var response = await HttpClient.PostAsJsonAsync(url, newFolderData);
 
-                var content = await response.Content.ReadFromJsonAsync<FileExplorerResponse>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                var content = await response.Content.ReadFromJsonAsync<FileExplorerResponseDTO>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
                 {
                     Converters = { new LocalDateTimeOffsetJsonConverter() }
                 });
 
-                if (content?.Error != null)
+                if (content?.Message != null)
                 {
-                    throw new Exception(content.Error.Message);
+                    throw new Exception(content.Message.Title);
                 }
 
                 await Refresh();
@@ -537,11 +572,13 @@ public partial class FileExplorer : IShortcutComponent
         }
         DisplayContextMenu = false;
         //await _FileUploader.ClearAll();
-        await FetchData(CWD);
+        await FetchData(_CurrentPath);
     }
 
     private async Task Delete()
     {
+        DisplayContextMenu = false;
+
         if (SelectedFiles.Count == 0)
         {
             return;
@@ -559,16 +596,16 @@ public partial class FileExplorer : IShortcutComponent
         
         if (result == true)
         {
-            DisplayContextMenu = false;
-            var files = SelectedFiles.Where(x => !x.IsDeleted).ToArray();
-            var deleteData = DefaultDirectoryContentObject();
-            deleteData.Action = "delete";
-            deleteData.Path = SelectedFiles.First().FilterPath;
-            deleteData.Data = files;
 
             try
             {
-                var response = await HttpClient.PostAsJsonAsync(Url, deleteData);
+                var restoreData = new FileExplorerDeleteDTO
+                {
+                    Paths = SelectedFiles.Select(x => x.Path!).ToArray()
+                };
+                var url = Url.AddUrlPath("delete");
+
+                var response = await HttpClient.PostAsJsonAsync(url, restoreData);
                 await Refresh();
             }
             catch (Exception ex) 
@@ -578,9 +615,9 @@ public partial class FileExplorer : IShortcutComponent
         }
     }
 
-    private async Task Download(FileExplorerDirectoryContent? file = null)
+    private async Task Download(FileExplorerItemDTO? file = null)
     {
-        IEnumerable<FileExplorerDirectoryContent> files = [];
+        IEnumerable<FileExplorerItemDTO> files = [];
         DisplayContextMenu = false;
 
         if (file != null)
@@ -594,7 +631,7 @@ public partial class FileExplorer : IShortcutComponent
 
         foreach (var f in files)
         {
-            await JsRuntime.InvokeVoidAsync("downloadFileFromUrl", f.Name, f.TargetPath);
+            await JsRuntime.InvokeVoidAsync("downloadFileFromUrl", f.Name, f.Url);
         }
     }
 
@@ -613,11 +650,17 @@ public partial class FileExplorer : IShortcutComponent
     private void AddToQuickAccess()
     {
         DisplayContextMenu = false;
-        var file = SelectedFiles.LastOrDefault() ?? CWD;
+        var file = SelectedFiles.LastOrDefault();
 
-        if (file == null || file.Path == null || file.IsFile) return;
+        if (file?.IsFile == true)
+            return;
 
-        Settings.QuickAccessItems.Add(file.Path);
+        var path = file?.Path ?? _CurrentPath;
+
+        if (path == null)
+            return;
+
+        Settings.QuickAccessItems.Add(path);
 
         SettingManager.SetFileExplorerSetting(SettingKey, Settings);
     }
@@ -632,26 +675,15 @@ public partial class FileExplorer : IShortcutComponent
 
     private async Task GoToPath(string path)
     {
-        if (Root != null && path.StartsWith(Root))
-        {
-            path = path.Substring(Root.Length).TrimStart('/');
-        }
+        //if (Root != null && path.StartsWith(Root))
+        //{
+        //    path = path.Substring(Root.Length).TrimStart('/');
+        //}
 
-        var i = path.LastIndexOf('/');
-        var filterPath = path.Substring(0, i + 1);
-        var name = path.Substring(i + 1);
-
-        var data = new FileExplorerDirectoryContent
-        {
-            FilterPath = filterPath,
-            Name = name,
-            Path = path,
-        };
-
-        await FetchData(data);
+        await FetchData(path);
     }
 
-    private (string icon, string color) GetFileIcon(FileExplorerDirectoryContent file)
+    private (string icon, string color) GetFileIcon(FileExplorerItemDTO file)
     {
         if (file.IsFile)
         {
@@ -696,21 +728,17 @@ public partial class FileExplorer : IShortcutComponent
         if (result == true)
         {
             DisplayContextMenu = false;
-            var files = SelectedFiles.Where(x => x.IsDeleted).ToArray();
-            var restoreData = DefaultDirectoryContentObject();
-            restoreData.Action = "restore";
-            restoreData.Path = SelectedFiles.First().FilterPath;
-            restoreData.Data = files;
+            var restoreData = new FileExplorerRestoreDTO
+            {
+                Paths = SelectedFiles.Select(x => x.Path!).ToArray()
+            };
+            var url = Url.AddUrlPath("restore");
 
-            var response = await HttpClient.PostAsJsonAsync(Url, restoreData);
+            var response = await HttpClient.PostAsJsonAsync(url, restoreData);
             await Refresh();
         }
     }
 
-    private string GetPath(FileExplorerDirectoryContent? data)
-    {
-        return data == null || string.IsNullOrWhiteSpace(data.FilterPath) ? "/" : data.FilterPath + data.Name;
-    }
 
     private async Task<List<UserDetails>> GetUsers(List<string> userIds)
     {
@@ -813,32 +841,7 @@ public partial class FileExplorer : IShortcutComponent
         }
     }
 
-    private FileExplorerDirectoryContent DefaultDirectoryContentObject()
-    {
-        var CustomData = new Dictionary<string, object>();
-
-        if (!string.IsNullOrWhiteSpace(ContainerName))
-        {
-            CustomData.Add("ContainerName", ContainerName);
-        }
-
-        if (!string.IsNullOrWhiteSpace(AccountName))
-        {
-            CustomData.Add("AccountName", AccountName);
-        }
-
-        if (Root != null)
-        {
-            CustomData.Add("RootDir", Root);
-        }
-
-        return new FileExplorerDirectoryContent
-        {
-            CustomData = CustomData,
-        };
-    }
-
-    private string SpecialItemClasses(FileExplorerDirectoryContent file)
+    private string SpecialItemClasses(FileExplorerItemDTO file)
     {
         var classes = new List<string>();
         if (SelectedFiles.Any(x => x.Path == file.Path))

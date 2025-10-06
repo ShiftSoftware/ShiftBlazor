@@ -181,7 +181,7 @@
                     <MudText>></MudText>
                 }
 
-                <MudButton Size="Size.Small" Disabled>@PathParts.Last()</MudButton>
+                <MudButton Size="Size.Small" Disabled>@(PathParts.LastOrDefault() ?? RootAliasName ?? "Root")</MudButton>
 
                 <MudSpacer />
                 <div style="min-width: 250px;">
@@ -209,7 +209,7 @@
                                      SelectOnRowClick="false"
                                      RowClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
                                      RowContextMenuClick="@((x) => OnFileClick(x.MouseEventArgs, x.Item))"
-                                     T="FileExplorerDirectoryContent"
+                                     T="FileExplorerItemDTO"
                                      RowClassFunc="@((file, index) => SpecialItemClasses(file))"
                                      ShowColumnOptions="false">
                             <Columns>
@@ -417,7 +417,7 @@
 <FileUploader @ref="_FileUploader"
               ContainerName="@ContainerName"
               AccountName="@AccountName"
-              Prefix="@(CWD?.Path)"
+              Prefix="@(_CurrentPath)"
               HideUI
               DropAreaSelector="@($"#{FileExplorerId} .main-window")"
               OnBatchUploadStarted="HandleUploading"
