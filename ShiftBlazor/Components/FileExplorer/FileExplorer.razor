@@ -343,7 +343,9 @@
 
     <MudDivider/>
 
-    <MudToolBar Dense="true">
+    <MudToolBar Dense="true" Style="gap: 4px;" >
+
+        <MudText Typo="Typo.body2">@Files.Count items</MudText>
 
         @if (SelectedFiles.Count > 0)
         {
@@ -358,10 +360,15 @@
 
         @if (UploadingFiles?.Items.Count > 0)
         {
-            <MudProgressCircular Style="margin-inline-end: 4px;" Color="Color.Primary" Size="@Size.Small" Value="@UploadingFiles.Completed" Max="@UploadingFiles.Count" />
+            <MudProgressCircular Color="Color.Primary" Size="@Size.Small" Value="@UploadingFiles.Completed" Max="@UploadingFiles.Count" />
             <MudText Style="cursor: pointer;" @onclick="() => _FileUploader?.OpenUploadDialog()" Typo="Typo.body2">@Loc["FileExplorerUploadCount", UploadingFiles.Completed, UploadingFiles.Items.Count]</MudText>
         }
         <MudSpacer/>
+
+        @if (!string.IsNullOrWhiteSpace(CWD?.ContinuationToken))
+        {
+            <MudButton Variant="Variant.Outlined" OnClick="LoadMore" StartIcon="@Icons.Material.Filled.Downloading">@Loc["LoadMore"]</MudButton>
+        }
 
         <MudButtonGroup Class="change-view" Variant="Variant.Outlined" Size="Size.Small">
             <MudButton OnClick="() => SetView()" StartIcon="@Icons.Material.Filled.ViewList">@Loc["Switch View"]</MudButton>
@@ -387,6 +394,10 @@
                 @if (DisplayNewFolderButton)
                 {
                     <MudListItem Icon="@Icons.Material.Filled.CreateNewFolder" OnClick="CreateNewFolder">@Loc["New Folder"]</MudListItem>
+                }
+                @if (true)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.Details" OnClick="GetDetails"> @Loc["Details"]</MudListItem>
                 }
                 @if (DisplayDownloadButton)
                 {
@@ -417,7 +428,7 @@
 <FileUploader @ref="_FileUploader"
               ContainerName="@ContainerName"
               AccountName="@AccountName"
-              Prefix="@(_CurrentPath)"
+              Prefix="@(CWD?.Path)"
               HideUI
               DropAreaSelector="@($"#{FileExplorerId} .main-window")"
               OnBatchUploadStarted="HandleUploading"
