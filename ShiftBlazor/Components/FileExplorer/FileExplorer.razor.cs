@@ -458,6 +458,7 @@ public partial class FileExplorer : IShortcutComponent
     private async Task OnFileClick(MouseEventArgs args, FileExplorerItemDTO file)
     {
         var isDoubleClick = args.Detail > 1;
+        var isRightClick = args.Button == 2;
 
         if (isDoubleClick)
         {
@@ -493,8 +494,11 @@ public partial class FileExplorer : IShortcutComponent
         }
         else
         {
+            if (!isRightClick || !SelectedFiles.Contains(file))
+            {
+                SelectedFiles = [file];
+            }
             LastSelectedFile = file;
-            SelectedFiles = [file];
         }
 
         UpdateToolbarButtons();
@@ -542,7 +546,6 @@ public partial class FileExplorer : IShortcutComponent
             CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.ExtraSmall,
         };
-
 
         var dialogRef = await DialogService.ShowAsync<CreateFolderDialog>("", options);
         var result = await dialogRef.Result;
@@ -774,25 +777,25 @@ public partial class FileExplorer : IShortcutComponent
             && SelectedFiles.FirstOrDefault() is FileExplorerItemDTO item
             && !item.IsFile)
         {
-        var options = new DialogOptions
-        {
-            MaxWidth = MaxWidth.ExtraSmall,
-        };
+            var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.ExtraSmall,
+            };
 
-        bool? result = await DialogService.ShowMessageBox(
-            Loc["Get Details"],
-            Loc["Are you sure you want to get this file details?"],
-            yesText: Loc["Get Details"], cancelText: Loc["CancelChanges"], options: options);
+            bool? result = await DialogService.ShowMessageBox(
+                Loc["Get Details"],
+                Loc["Are you sure you want to get this file details?"],
+                yesText: Loc["Get Details"], cancelText: Loc["CancelChanges"], options: options);
 
             if (result != true)
                 return;
         }
 
         var _options = new DialogOptions
-            {
+        {
             CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.Small,
-            };
+        };
 
         var parameters = new DialogParameters()
         {
