@@ -359,6 +359,7 @@ public partial class FileExplorer : IShortcutComponent
         {
             data ??= new();
             data.Path ??= GetRoot();
+            data.IncludeDeleted = ShowDeletedFiles;
             var query = CreateQuery(data);
             var url = $"{Url.AddUrlPath("list")}?{query}";
 
