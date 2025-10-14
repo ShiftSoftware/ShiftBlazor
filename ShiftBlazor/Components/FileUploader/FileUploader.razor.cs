@@ -447,7 +447,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         try
         {
-            var maxFileSize = (long)MaxFileSizeInMegaBytes * 1024 * 1024;
+            var userMaxUploadSize = TypeAuthService?.AccessValue(AzureStorageActionTree.MaxUploadSizeInMegaBytes) ?? 0;
+            var maxFileSize = Math.Max((long)MaxFileSizeInMegaBytes, (long)userMaxUploadSize) * 1024 * 1024;
             using var stream = item.LocalFile.OpenReadStream(maxFileSize);
             var blobClient = new BlobClient(new Uri(item.File!.Url!));
             var token = item.CancellationTokenSource?.Token ?? CancellationToken.None;
