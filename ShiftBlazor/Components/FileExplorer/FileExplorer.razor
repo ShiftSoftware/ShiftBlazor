@@ -291,7 +291,7 @@
                                          @onclick:stopPropagation="true"
                                          @oncontextmenu="(e) => OnFileClick(e, file)">
 
-                                        @if (ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)?.ToLower()))
+                                        @if (file.IsFile && ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)))
                                         {
                                             <MudImage Height="@GetImageSize()"
                                                       Width="@GetImageSize()"

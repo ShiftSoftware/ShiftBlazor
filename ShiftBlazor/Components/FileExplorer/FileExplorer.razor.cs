@@ -150,7 +150,7 @@ public partial class FileExplorer : IShortcutComponent
     TokenUserDataDTO? LoggedInUser;
     private Dictionary<string, string> Usernames = [];
     private string SearchQuery { get; set; } = string.Empty;
-    private static readonly IEnumerable<string> ImageExtensions = new List<string>
+    internal static readonly IEnumerable<string> ImageExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         ".jpg",
         ".jpeg",
@@ -158,7 +158,7 @@ public partial class FileExplorer : IShortcutComponent
         ".gif",
         ".webp",
     };
-    private static readonly Dictionary<string, (string icon, string color)> FileIcons =
+    internal static readonly Dictionary<string, (string icon, string color)> FileIcons =
     new[]
     {
         (Extensions: new[] { ".pdf" }, Value: ("picture_as_pdf", "#de2429")),
@@ -178,6 +178,7 @@ public partial class FileExplorer : IShortcutComponent
         (Extensions: [..ImageExtensions], Value: ("image", "#d14b4b")),
         (Extensions: new[] { "" }, Value: ("draft", "#777777")),
         (Extensions: new[] { "folder" }, Value: ("folder", "#f1ce69")),
+        (Extensions: new[] { "files" }, Value: ("stacks", "#F9F9F9")),
 
     }
     .SelectMany(group => group.Extensions.Select(ext => (ext, group.Value)))
@@ -703,7 +704,7 @@ public partial class FileExplorer : IShortcutComponent
         await FetchData(path);
     }
 
-    private (string icon, string color) GetFileIcon(FileExplorerItemDTO file)
+    internal static (string icon, string color) GetFileIcon(FileExplorerItemDTO file)
     {
         if (file.IsFile)
         {
@@ -768,6 +769,10 @@ public partial class FileExplorer : IShortcutComponent
         if (path == null)
             return;
 
+        if (SelectedFiles.Count == 1
+            && SelectedFiles.FirstOrDefault() is FileExplorerItemDTO item
+            && !item.IsFile)
+        {
         var options = new DialogOptions
         {
             MaxWidth = MaxWidth.ExtraSmall,
@@ -778,22 +783,26 @@ public partial class FileExplorer : IShortcutComponent
             Loc["Are you sure you want to get this file details?"],
             yesText: Loc["Get Details"], cancelText: Loc["CancelChanges"], options: options);
 
-        if (result == true)
-        {
-            var detailData = new FileExplorerDetailDTO
+            if (result != true)
+                return;
+        }
+
+        var _options = new DialogOptions
             {
-                Path = path,
-                AccountName = AccountName,
-                ContainerName = ContainerName,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
             };
 
-            var query = CreateQuery(detailData);
-            var url = $"{Url.AddUrlPath("detail")}?{query}";
-
-            var response = await HttpClient.GetAsync(url);
-        }
+        var parameters = new DialogParameters()
+        {
+            ["Files"] = SelectedFiles,
+            ["Usernames"] = Usernames,
+            ["Url"] = Url,
+            ["AccountName"] = AccountName,
+            ["ContainerName"] = ContainerName,
+        };
+        var dialogRef = await DialogService.ShowAsync<DetailDialog>("", parameters, _options);
     }
-
 
     private async Task<List<UserDetails>> GetUsers(List<string> userIds)
     {
