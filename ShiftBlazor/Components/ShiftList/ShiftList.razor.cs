@@ -4,11 +4,11 @@ using Microsoft.JSInterop;
 using Microsoft.OData.Client;
 using MudBlazor;
 using MudBlazor.Utilities;
-using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Components.Print;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
@@ -17,10 +17,10 @@ using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Linq.Expressions;
 
 namespace ShiftSoftware.ShiftBlazor.Components
 {
@@ -374,7 +374,7 @@ namespace ShiftSoftware.ShiftBlazor.Components
         private bool IsModalOpen = false;
         private bool IsGridEditorOpen = false;
         private bool IsDeleteColumnHidden = true;
-        private DotNetObjectReference<ShiftList<T>> dotNetRef;
+        private DotNetObjectReference<ShiftList<T>>? dotNetRef;
         private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
         public Dictionary<Guid, FilterModelBase> Filters { get; set; } = [];
         private Debouncer Debouncer { get; set; } = new Debouncer();
@@ -1118,12 +1118,28 @@ namespace ShiftSoftware.ShiftBlazor.Components
         internal async Task ExportList()
         {
             if (ExportIsInProgress)
-            {
                 return;
+
+            try
+            {
+                this.ExportIsInProgress = true;
+
+                var payload = BuildExportPayload();
+
+                Snackbar.RemoveByKey($"export_table_{payload.Name}");
+                MessageService.Show($"📦 '{payload.Name}' export started", severity: Severity.Info, modalColor: Color.Info, icon: Icons.Material.TwoTone.FileCopy, key: $"export_table_{payload.Name}");
+
+                await JsRuntime.InvokeVoidAsync("tableExport", payload, dotNetRef);
             }
+            catch (Exception e)
+            {
+                MessageService.Show($"❌ Export failed: {e.Message}", Severity.Error);
+                this.ExportIsInProgress = false;
+            }
+        }
 
-            this.ExportIsInProgress = true;
-
+        internal ExportPayload BuildExportPayload()
+        {
             var name = Title != null && ExportTitleRegex().IsMatch(Title)
                 ? Title
                 : EntitySet ?? typeof(T).Name;
@@ -1132,9 +1148,10 @@ namespace ShiftSoftware.ShiftBlazor.Components
             var date = DateTime.Now.ToString("yyyy-MM-dd");
             var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}.csv";
 
-            var urlValue = CurrentUri == null ? string.Empty : ExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "");
-            var values = CurrentUri == null ? Values : [];
-            var propertyName = nameof(PropertyColumn<object, object>.Property);
+            var urlValue = Values == null && CurrentUri != null
+                ? CleanExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "")
+                : string.Empty;
+            var values = Values ?? [];
 
             var foreignColumns = DataGrid!
                     .RenderedColumns
@@ -1148,19 +1165,18 @@ namespace ShiftSoftware.ShiftBlazor.Components
                         var parts = fullName!.Split('.');
                         var tableName = parts.Length >= 2 ? parts[^2] : fullName;
 
-                        foreignColumn.ForeignEntiyField = tableName;
+                        foreignColumn.ForeignEntityField = tableName;
 
                         return foreignColumn;
                     });
 
             var columns = DataGrid!
                 .RenderedColumns
-                .Where(x => x.GetType().GetProperty(propertyName) != null)
+                .Where(x => x.GetType().GetProperty(nameof(PropertyColumn<object, object>.Property)) != null)
                 .Select(x =>
                 {
                     var key = x.PropertyName;
-
-                    if (x.GetType().GetProperty(propertyName)?.GetValue(x) is LambdaExpression propertyValue)
+                    if (x.GetType().GetProperty(nameof(PropertyColumn<object, object>.Property))?.GetValue(x) is LambdaExpression propertyValue)
                     {
                         key = Misc.GetPropertyPath(propertyValue).Split(".").First();
                     }
@@ -1174,43 +1190,37 @@ namespace ShiftSoftware.ShiftBlazor.Components
                         ? null
                         : GetEnumMap(Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType);
 
-                    return new
-                    {
+                    return new ExportColumn(
                         key,
                         format,
                         enumValues,
                         customColumn,
-                        title = x.Title,
-                        hidden = x.Hidden,
-                    };
+                        x.Title,
+                        x.Hidden
+                    );
                 });
 
-            var language = SettingManager.GetCulture().TwoLetterISOLanguageName;
-            var isRTL = SettingManager.GetLanguage().RTL;
-            var dateFormat= SettingManager.GetDateFormat();
-            var timeFormat = SettingManager.GetTimeFormat();
+            var setting = new ExportSetting(
+                fileName,
+                SettingManager.GetLanguage().RTL,
+                SettingManager.GetCulture().TwoLetterISOLanguageName,
+                SettingManager.GetDateFormat(),
+                SettingManager.GetTimeFormat()
+                );
 
-            var payload = new
-            {
+            return new(
                 name,
-                isRTL,
+                urlValue,
                 values,
                 columns,
-                fileName,
-                language,
-                urlValue,
-                dateFormat,
-                timeFormat,
                 foreignColumns,
-            };
-
-            Snackbar.RemoveByKey($"export_table_{name}");
-            MessageService.Show($"📦 '{name}' export started", severity: Severity.Info, modalColor: Color.Info, icon: Icons.Material.TwoTone.FileCopy, key: $"export_table_{name}");
-
-            await JsRuntime.InvokeVoidAsync("tableExport", payload, dotNetRef);
-            
+                setting
+            );
         }
 
+        public sealed record ExportPayload(string Name, string UrlValue, IReadOnlyList<T>? Values, IEnumerable<ExportColumn> Columns, IEnumerable<IForeignColumn> ForeignColumns, ExportSetting Setting);
+        public sealed record ExportColumn(string Key, string? Format, IReadOnlyDictionary<string, string>? EnumValues, IReadOnlyList<object>? CustomColumn, string Title, bool Hidden);
+        public sealed record ExportSetting(string FileName, bool IsRTL, string Language, string DateFormat, string TimeFormat);
 
         [JSInvokable]
         public void OnExportProcessing(string name)
@@ -1233,6 +1243,11 @@ namespace ShiftSoftware.ShiftBlazor.Components
             
             StateHasChanged();
         }
+
+        [GeneratedRegex("[^a-zA-Z]")]
+        private static partial Regex ExportTitleRegex();
+        [GeneratedRegex("\\$skip=[0-9]+&?|\\$top=[0-9]+&?")]
+        private static partial Regex CleanExportUrlRegex();
 
         #endregion
 
@@ -1306,13 +1321,9 @@ namespace ShiftSoftware.ShiftBlazor.Components
             GetFunc = value => !value ?? true,
         };
 
-        [GeneratedRegex("[^a-zA-Z]")]
-        private static partial Regex ExportTitleRegex();
-        [GeneratedRegex("\\$skip=[0-9]+&?|\\$top=[0-9]+&?")]
-        private static partial Regex ExportUrlRegex();
-
         public void Dispose()
         {
+            dotNetRef?.Dispose();
             ShiftBlazorEvents.OnModalClosed -= ShiftBlazorEvents_OnModalClosed;
             IShortcutComponent.Remove(Id);
         }

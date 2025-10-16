@@ -47,7 +47,7 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
     public string? ForeignTextField { get; set; }
 
     [Parameter]
-    public string? ForeignEntiyField { get; set; }
+    public string? ForeignEntityField { get; set; }
 
     [Parameter]
     public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
@@ -152,11 +152,11 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
                 {
                     RemoteData = foreignData.Value;
 
-                    if (ForeignEntiyField is not null)
+                    if (ForeignEntityField is not null)
                     {
                         foreach (var item in items)
                         {
-                            var property = item.GetType().GetProperty(ForeignEntiyField);
+                            var property = item.GetType().GetProperty(ForeignEntityField);
 
                             if (property is not null && property.CanWrite)
                             {

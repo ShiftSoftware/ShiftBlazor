@@ -16,7 +16,7 @@ window.tableExport = (payload, dotNetObjectRef) => {
 
             if (isSuccess) {
                 window.downloadFileFromUrl(fileName, csvURL)
-                URL.revokeObjectURL(csvURL)
+                setTimeout(() => URL.revokeObjectURL(csvURL), 1000)
             }
 
             dotNetObjectRef.invokeMethodAsync("OnExportProcessed", isSuccess, message, payload.name)

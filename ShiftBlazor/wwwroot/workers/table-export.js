@@ -5,7 +5,8 @@ async function fetchRows(url, headers) {
     const response = await fetch(url, { headers, method: "GET" })
     const data = await response.json()
     return data?.Value || []
-                }
+}
+
 function buildForeignColumnsMapper(columns, foreignColumns, origin) {
     const foreignTables = {}
     const fieldMapper = {}
@@ -15,7 +16,7 @@ function buildForeignColumnsMapper(columns, foreignColumns, origin) {
         // if the foreign is not in the columns ( hidden ) then skip it
         if (!columns.some((column) => column.key === col.propertyName)) return
 
-        foreignTables[col.foreignEntiyField] ??= {
+        foreignTables[col.foreignEntityField] ??= {
             items: [],
             itemsMapper: {},
             filterValues: {},
@@ -23,7 +24,7 @@ function buildForeignColumnsMapper(columns, foreignColumns, origin) {
         }
 
         fieldMapper[col.propertyName] = {
-            table: col.foreignEntiyField,
+            table: col.foreignEntityField,
             idKey: col.tEntityValueField,
             valueKey: col.tEntityTextField,
         }
@@ -136,20 +137,18 @@ const replacements = {
     tt: (date) => date.getHours() < 12 ? 'AM' : 'PM'
 };
 
-function formatDate(date, dateFormat, timeFormat, isRTL) {
-    const isForwardSlash = dateFormat.includes("/")
+function formatDate(date, setting) {
+    const isForwardSlash = setting.dateFormat.includes("/")
 
     let dateParts
 
-    if (isForwardSlash) dateParts = dateFormat.split("/")
-    else dateParts = dateFormat.split("-")
+    if (isForwardSlash) dateParts = setting.dateFormat.split("/")
+    else dateParts = setting.dateFormat.split("-")
 
     const parsedDateParts = dateParts.map(part => (replacements[part] && replacements[part](date)) || part)
 
     const parsedDate = parsedDateParts.join(isForwardSlash ? "/" : "-")
-
-
-    const [hour, rest] = timeFormat.split(":");
+    const [hour, rest] = setting.timeFormat.split(":");
     const [minute, period] = rest ? rest.split(" ") : [undefined, undefined];
     const timeParts = [hour, minute, period].filter(Boolean);
 
@@ -158,14 +157,14 @@ function formatDate(date, dateFormat, timeFormat, isRTL) {
     let parsedTime = `${parsedTimeParts[0]}:${parsedTimeParts[1]}`
 
     if (parsedTimeParts.length > 2) {
-        if (isRTL) parsedTime = `${parsedTimeParts[2]} ` + parsedTime
+        if (setting.isRTL) parsedTime = `${parsedTimeParts[2]} ` + parsedTime
         else parsedTime += ` ${parsedTimeParts[2]}`
     }
 
-    return isRTL ? `${parsedTime} ${parsedDate}` : `${parsedDate} ${parsedTime}`
+    return setting.isRTL ? `${parsedTime} ${parsedDate}` : `${parsedDate} ${parsedTime}`
 }
 
-function parseRawValue(value, col, localizedColumns, language, dateFormat, timeFormat, isRTL) {
+function parseRawValue(value, col, localizedColumns, setting) {
 
     if (col.enumValues && typeof col.enumValues[value] === "string") {
         try {
@@ -177,7 +176,7 @@ function parseRawValue(value, col, localizedColumns, language, dateFormat, timeF
     if (localizedColumns.has(col.title)) { // normal texts localized
         try {
             const localizedObject = JSON.parse(value)
-            value = localizedObject[language] ?? value
+            value = localizedObject[setting.language] ?? value
         } catch { }
     }
 
@@ -190,7 +189,7 @@ function parseRawValue(value, col, localizedColumns, language, dateFormat, timeF
 
 
     if (value instanceof Date) {
-        value = formatDate(value, dateFormat, timeFormat, isRTL)
+        value = formatDate(value, setting)
     } else if (typeof value === "boolean") {
         value = capitalizeFirstLetter(String(value))
     }
@@ -239,7 +238,7 @@ function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables) {
 
 }
 
-function parseCustomColumn(row, col, localizedColumns, language, dateFormat, timeFormat, isRTL, fieldMapper, foreignTables) {
+function parseCustomColumn(row, col, localizedColumns, setting, fieldMapper, foreignTables) {
     let parsedValue = ""
 
     col.customColumn.forEach(({ type, value }) => {
@@ -267,11 +266,11 @@ function parseCustomColumn(row, col, localizedColumns, language, dateFormat, tim
                         if (typeof tempValue === "string") {
                             try {
                                 const localizedObject = JSON.parse(tempValue)
-                                tempValue = localizedObject[language]
+                                tempValue = localizedObject[setting.language]
                             } catch { }
                         }
 
-                        parsedValue += parseRawValue(tempValue, col, localizedColumns, language, dateFormat, timeFormat, isRTL)
+                        parsedValue += parseRawValue(tempValue, col, localizedColumns, setting)
                     } catch { }
 
 
@@ -283,13 +282,13 @@ function parseCustomColumn(row, col, localizedColumns, language, dateFormat, tim
 
                         try {
                             const localizedObject = JSON.parse(tempValue)
-                            tempValue = localizedObject[language]
+                            tempValue = localizedObject[setting.language]
                         } catch { }
 
-                        parsedValue += parseRawValue(tempValue, col, localizedColumns, language, dateFormat, timeFormat, isRTL)
+                        parsedValue += parseRawValue(tempValue, col, localizedColumns, setting)
 
                     } else {
-                        parsedValue += parseRawValue(row[value], col, localizedColumns, language, dateFormat, timeFormat, isRTL)
+                        parsedValue += parseRawValue(row[value], col, localizedColumns, setting)
                     }
                 }
             }
@@ -299,7 +298,7 @@ function parseCustomColumn(row, col, localizedColumns, language, dateFormat, tim
     return parsedValue
 }
 
-function generateCSVContent(rows, columns, language, dateFormat, timeFormat, foreignTables, fieldMapper, isRTL) {
+function generateCSVContent(rows, columns, foreignTables, fieldMapper, setting) {
     const csvRows = []
     const localizedColumns = new Set()
     const foreignKeys = Object.keys(fieldMapper)
@@ -314,18 +313,18 @@ function generateCSVContent(rows, columns, language, dateFormat, timeFormat, for
 
             let value;
 
-            if (col.customColumn) value = parseCustomColumn(row, col, localizedColumns, language, dateFormat, timeFormat, isRTL, fieldMapper, foreignTables)
+            if (col.customColumn) value = parseCustomColumn(row, col, localizedColumns, setting, fieldMapper, foreignTables)
             else value = parseColumn(col, foreignKeys, fieldMapper, row, foreignTables)
 
             // Determine localized columns based on the first row
             if (rowIndex === 0) {
                 try {
                     const localizedObject = JSON.parse(value)
-                    if (localizedObject[language]) localizedColumns.add(col.title)
+                    if (localizedObject[setting.language]) localizedColumns.add(col.title)
                 } catch { }
             }
 
-            return parseRawValue(value, col, localizedColumns, language, dateFormat, timeFormat, isRTL)
+            return parseRawValue(value, col, localizedColumns, setting)
         })
 
         csvRows.push(csvRowData.join(","))
@@ -341,10 +340,7 @@ self.onmessage = async (event) => {
     }, 8000)
 
     const { payload, headers, origin } = event.data;
-
-    const { urlValue, values, columns, fileName, language, foreignColumns, dateFormat, timeFormat, isRTL } = payload;
-
-
+    const { urlValue, values, columns, foreignColumns, setting } = payload;
 
     try {
         const rows = Array.isArray(values) && values.length ? values : await fetchRows(urlValue, headers);
@@ -361,13 +357,12 @@ self.onmessage = async (event) => {
 
         generateItemMapper(foreignTables)
 
-        const csvContent = generateCSVContent(rows, columns, language, dateFormat, timeFormat, foreignTables, fieldMapper, isRTL)
-
+        const csvContent = generateCSVContent(rows, columns, foreignTables, fieldMapper, setting)
         const csvURL = URL.createObjectURL(new Blob([csvContent], { type: "text/csv" }))
 
         clearTimeout(longExportToastTimer)
 
-        self.postMessage({ csvURL, fileName, message: "", isSuccess: true, messageType: "export ended" })
+        self.postMessage({ csvURL, fileName: setting.fileName, message: "", isSuccess: true, messageType: "export ended" })
     } catch (error) {
         clearTimeout(longExportToastTimer)
 

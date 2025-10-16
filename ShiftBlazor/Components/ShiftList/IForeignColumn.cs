@@ -16,7 +16,7 @@ public interface IForeignColumn : IODataRequest
     public string? Url { get; }
     public string? TEntityValueField { get; }
     public string? TEntityTextField { get; }
-    public string? ForeignEntiyField { get; set; }
+    public string? ForeignEntityField { get; set; }
 
     internal static string GetDataValueFieldName(IForeignColumn column)
     {
@@ -76,7 +76,7 @@ public interface IForeignColumn : IODataRequest
 
                 var query = GetODataUrl<ShiftEntityDTOBase>(column, oDataQuery);
 
-                if (column.ForeignEntiyField is null)
+                if (column.ForeignEntityField is null)
                 {
                     query = query.AddQueryOption("$select", $"{column.TEntityValueField},{column.TEntityTextField}");
                 }
