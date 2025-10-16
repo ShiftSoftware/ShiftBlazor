@@ -8,10 +8,12 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.ShiftIdentity.Blazor;
 using ShiftSoftware.ShiftIdentity.Core.DTOs;
+using ShiftSoftware.TypeAuth.Core;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Web;
@@ -138,6 +140,7 @@ public partial class FileExplorer : IShortcutComponent
     private bool DisplayNewFolderButton { get; set; } = true;
     private bool DisplayRestoreButton { get; set; }
     private bool DisplayContextMenu { get; set; }
+    private bool DisplayDeleteToggle { get; set; }
     private bool IsContextMenuEmpty { get; set; }
 
     private double ContextLeft { get; set; }
@@ -149,6 +152,7 @@ public partial class FileExplorer : IShortcutComponent
     private FileExplorerSettings DefaultSettings = DefaultAppSetting.FileExplorerSettings;
     TokenUserDataDTO? LoggedInUser;
     private Dictionary<string, string> Usernames = [];
+    private ITypeAuthService? TypeAuthService;
     private string SearchQuery { get; set; } = string.Empty;
     internal static readonly IEnumerable<string> ImageExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -207,6 +211,9 @@ public partial class FileExplorer : IShortcutComponent
 
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
         IconSize = Dense ? Size.Medium : Size.Large;
+
+        TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
+        DisplayDeleteToggle = TypeAuthService?.CanAccess(AzureStorageActionTree.ViewDeletedFiles) != false;
 
         NavigationManager.LocationChanged += LocationChanged;
     }

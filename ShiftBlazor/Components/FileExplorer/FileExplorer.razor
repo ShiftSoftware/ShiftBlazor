@@ -125,17 +125,20 @@
             </MudTooltip> *@
         }
 
-        <MudTooltip Text="@Loc["ToggleDeleteTooltip"]">
-            <MudButtonExtended StartIcon="@Icons.Material.Filled.RestoreFromTrash"
-                               KeyboardKey="KeyboardKeys.KeyT"
-                               style="text-transform: capitalize;"
-                               Size="@IconSize"
-                               Color="ShowDeletedFiles? Color.Error : (NavIconFlatColor ? Color.Inherit : Color.Default)"
-                               aria-label="@Loc["ToggleDeleteTooltip"]"
-                               OnClick="ViewDeletedFiles">
-                @Loc["Toggle Delete"]
-            </MudButtonExtended>
-        </MudTooltip>
+        @if (DisplayDeleteToggle)
+        {
+            <MudTooltip Text="@Loc["ToggleDeleteTooltip"]">
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.RestoreFromTrash"
+                                   KeyboardKey="KeyboardKeys.KeyT"
+                                   style="text-transform: capitalize;"
+                                   Size="@IconSize"
+                                   Color="ShowDeletedFiles? Color.Error : (NavIconFlatColor ? Color.Inherit : Color.Default)"
+                                   aria-label="@Loc["ToggleDeleteTooltip"]"
+                                   OnClick="ViewDeletedFiles">
+                    @Loc["Toggle Delete"]
+                </MudButtonExtended>
+            </MudTooltip>
+        }
 
         @if (DisplayRestoreButton)
         {
