@@ -306,7 +306,17 @@ function generateCSVContent(rows, columns, foreignTables, fieldMapper, setting) 
     const visibleColumns = columns.filter(col => !col.hidden)
 
     // Header row
-    csvRows.push(visibleColumns.map((c) => c.title).join(","))
+    csvRows.push(visibleColumns.map((c) => {
+        // remove line breaks
+        if (c.title.includes("\n") || c.title.includes("\r")) {
+            c.title = c.title.replace(/(?:\r?\n|\r)+/g, " ")
+        } 
+
+        if (c.title.includes(",") || c.title.includes('"')) {
+            c.title = `"${c.title.replace(/"/g, '""')}"`
+        }
+        return c.title;
+    }).join(","))
 
     rows.forEach((row, rowIndex) => {
         const csvRowData = visibleColumns.map((col) => {
