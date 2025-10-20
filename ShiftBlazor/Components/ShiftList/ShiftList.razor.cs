@@ -1329,7 +1329,8 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
         else
         {
-            SelectState.Clear();
+            SelectState.Items.Clear();
+            SelectState.All = false;
         }
         await OnSelectStateChanged.InvokeAsync(SelectState);
     }
