@@ -713,7 +713,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
         catch (JsonException e)
         {
-            if (OnError != null && await OnError.Invoke(e))
+            if (OnError != null && !(await OnError.Invoke(e)))
             {
                 return gridData;
             }
@@ -723,7 +723,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
         catch (Exception e)
         {
-            if (OnError != null && await OnError.Invoke(e))
+            if (OnError != null && !(await OnError.Invoke(e)))
             {
                 return gridData;
             }

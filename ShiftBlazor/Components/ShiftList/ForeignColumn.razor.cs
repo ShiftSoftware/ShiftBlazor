@@ -145,7 +145,7 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
                 var itemIds = IForeignColumn.GetForeignIds(this, items);
                 var foreignData = await IForeignColumn.GetForeignColumnValues<TEntity>(this, itemIds, OData, HttpClient);
 
-                if (OnResult != null && await OnResult.Invoke(foreignData))
+                if (OnResult != null && !(await OnResult.Invoke(foreignData)))
                     return;
 
                 if (foreignData != null)

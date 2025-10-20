@@ -205,16 +205,16 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
 
             var url = IRequestComponent.GetPath(this);
 
-            using var request = HttpClient.CreateIdempotencyRequest(ShiftListGeneric?.SelectState ?? new(), url, IdempotencyToken);
+            using var request = HttpClient.CreatePostRequest(ShiftListGeneric?.SelectState ?? new(), url, IdempotencyToken);
 
-            if (OnBeforeRequest != null && await OnBeforeRequest.Invoke(request))
+            if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(request)))
             {
                 return null;
             }
 
             using var response = await HttpClient.SendAsync(request);
 
-            if (OnResponse != null && await OnResponse.Invoke(response))
+            if (OnResponse != null && !(await OnResponse.Invoke(response)))
             {
                 return null;
             }
@@ -224,7 +224,7 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
                 Converters = { new LocalDateTimeOffsetJsonConverter() }
             });
 
-            if (OnResult != null && await OnResult.Invoke(result))
+            if (OnResult != null && !(await OnResult.Invoke(result)))
             {
                 return null;
             }
@@ -249,7 +249,7 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
         }
         catch (Exception e)
         {
-            if (OnError != null && await OnError.Invoke(e))
+            if (OnError != null && !(await OnError.Invoke(e)))
             {
                 return false;
             }

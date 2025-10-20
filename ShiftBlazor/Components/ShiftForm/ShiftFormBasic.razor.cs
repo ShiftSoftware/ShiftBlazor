@@ -30,7 +30,7 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     [Inject] IWebAssemblyHostEnvironment Env { get; set; } = default!;
 
     [CascadingParameter]
-    internal IMudDialogInstance? MudDialog { get; set; }
+    public IMudDialogInstance? MudDialog { get; set; }
 
     /// <summary>
     ///     The current Mode of the form.
@@ -157,6 +157,8 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     public EventCallback<ShiftEvent<FormTasks>> OnTaskStart { get; set; }
     [Parameter]
     public EventCallback<FormTasks> OnTaskFinished { get; set; }
+
+    [Parameter]
     public EventCallback OnReady { get; set; }
 
     public EventCallback<FormTasks> _OnTaskStart { get; set; }

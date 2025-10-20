@@ -87,12 +87,12 @@ public interface IForeignColumn : IODataRequest, IRequestComponent
 
                 using var requestMessage = httpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url));
 
-                if (column.OnBeforeRequest != null && await column.OnBeforeRequest.Invoke(requestMessage))
+                if (column.OnBeforeRequest != null && !(await column.OnBeforeRequest.Invoke(requestMessage)))
                     return null;
 
                 using var res = await httpClient.SendAsync(requestMessage);
 
-                if (column.OnResponse != null && await column.OnResponse.Invoke(res))
+                if (column.OnResponse != null && !(await column.OnResponse.Invoke(res)))
                     return null;
 
                 if (res.IsSuccessStatusCode)
@@ -103,7 +103,7 @@ public interface IForeignColumn : IODataRequest, IRequestComponent
             }
             catch (Exception e)
             {
-                if (column.OnError != null && await column.OnError.Invoke(e))
+                if (column.OnError != null && !(await column.OnError.Invoke(e)))
                     return null;
                 throw;
             }
