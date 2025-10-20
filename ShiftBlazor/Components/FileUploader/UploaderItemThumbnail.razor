@@ -48,7 +48,7 @@
     }
 
     @* Only display image thumbnails after uploading has finished or when loading from server *@
-    @if (Item.IsImage() && Item.State == FileUploadState.Uploaded)
+    @if (Item.IsImage() && Item.State == FileUploadState.Uploaded && Item.File?.Url != null)
     {
         <MudImage draggable="false"
                   Src="@($"{Item.File.Url}")"

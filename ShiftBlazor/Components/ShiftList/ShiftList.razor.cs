@@ -22,737 +22,741 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace ShiftSoftware.ShiftBlazor.Components
+namespace ShiftSoftware.ShiftBlazor.Components;
+
+[CascadingTypeParameter(nameof(T))]
+public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponent, ISortableComponent, IFilterableComponent, IShiftList where T : ShiftEntityDTOBase, new()
 {
-    [CascadingTypeParameter(nameof(T))]
-    public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponent, ISortableComponent, IFilterableComponent, IShiftList where T : ShiftEntityDTOBase, new()
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+    [Inject] ODataQuery OData { get; set; } = default!;
+    [Inject] public HttpClient HttpClient { get; private set; } = default!;
+    [Inject] ShiftModal ShiftModal { get; set; } = default!;
+    [Inject] public ShiftBlazorLocalizer Loc  { get; private set; } = default!;
+    [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
+    [Inject] public SettingManager SettingManager { get; private set; } = default!;
+    [Inject] IJSRuntime JsRuntime { get; set; } = default!;
+    [Inject] MessageService MessageService { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] PrintService PrintService { get; set; } = default!;
+
+
+    [CascadingParameter]
+    protected IMudDialogInstance? MudDialog { get; set; }
+
+    /// <summary>
+    /// To check whether this list is currently embeded inside a form component.
+    /// </summary>
+    [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
+    public bool? ParentReadOnly { get; set; }
+
+    [CascadingParameter(Name = FormHelper.ParentDisabledName)]
+    public bool? ParentDisabled { get; set; }
+
+    /// <summary>
+    /// The current fetched items, this will be fetched from the OData API endpoint that is provided in the Action paramater.
+    /// </summary>
+    [Parameter]
+    public List<T>? Values { get; set; }
+
+    /// <summary>
+    /// An event triggered when the state of Values has changed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<List<T>> ValuesChanged { get; set; }
+
+    /// <summary>
+    /// The OData EntitySet Name.
+    /// </summary>
+    [Parameter]
+    public string? EntitySet { get; set; }
+
+    [Parameter]
+    public string? Endpoint { get; set; }
+
+    /// <summary>
+    /// The OData api endpoint.
+    /// </summary>
+    [Parameter]
+    public string? BaseUrl { get; set; }
+
+    /// <summary>
+    /// The OData api endpoint config key.
+    /// </summary>
+    [Parameter]
+    public string? BaseUrlKey { get; set; }
+
+    /// <summary>
+    /// The type of the component to be opened as a dialog when clicking on Add or the Action button.
+    /// If empty, 'Add' and 'Action button' column will be hidden.
+    /// </summary>
+    [Parameter]
+    public Type? ComponentType { get; set; }
+
+    /// <summary>
+    /// To pass additional parameters to the 'ShiftFormContainer' component.
+    /// </summary>
+    [Parameter]
+    public Dictionary<string, object>? AddDialogParameters { get; set; }
+
+    /// <summary>
+    /// Enable row selection.
+    /// </summary>
+    [Parameter]
+    public bool EnableSelection { get; set; }
+
+    /// <summary>
+    /// Enable Virtualization and disable Paging.
+    /// 'Height' paramater should have a valid value when this is enabled.
+    /// </summary>
+    [Parameter]
+    public bool EnableVirtualization { get; set; }
+
+    /// <summary>
+    /// Sets the css height property for the Datagrid.
+    /// </summary>
+    [Parameter]
+    public string Height { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The title used for the form and the browser tab title.
+    /// </summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
+
+    /// <summary>
+    /// The css value used for the toolbar's 'background-color'.
+    /// Only RGB and Hex values work with 'NavIconFlatColor'.
+    /// </summary>
+    [Parameter]
+    public string? NavColor { get; set; }
+
+    /// <summary>
+    /// When true, the toolbar's text color will be in white or black, depending on the contrast of the background.
+    /// </summary>
+    [Parameter]
+    public bool NavIconFlatColor { get; set; }
+
+    /// <summary>
+    /// The icon displayed before the Form Title. (SVG string)
+    /// </summary>
+    [Parameter]
+    public string IconSvg { get; set; } = @Icons.Material.Filled.List;
+
+    /// <summary>
+    /// Used to add custom elements to the start of the header toolbar.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ToolbarStartTemplate { get; set; }
+
+    /// <summary>
+    /// Used to add custom elements to the end of the header toolbar.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ToolbarEndTemplate { get; set; }
+
+    /// <summary>
+    /// Used to add custom elements to the header.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? HeaderTemplate { get; set; }
+
+    /// <summary>
+    /// Used to add custom elements to the controls section of the header toolbar.
+    /// This section is only visible when the form is opened in a dialog.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ToolbarControlsTemplate { get; set; }
+
+    /// <summary>
+    /// When true, the header toolbar will not be rendered.
+    /// </summary>
+    [Parameter]
+    public bool DisableHeaderToolbar { get; set; }
+
+    /// <summary>
+    /// When true, the Action Column will not be rendered.
+    /// </summary>
+    [Parameter]
+    public bool DisableActionColumn { get; set; } = true;
+
+    /// <summary>
+    /// When true, the Delete Filter will not be rendered.
+    /// </summary>
+    [Parameter]
+    public bool DisableDeleteFilter { get; set; }
+
+    /// <summary>
+    /// When true, the Column Chooser will not be rendered.
+    /// </summary>
+    [Parameter]
+    [Obsolete("ColumnChooser is replaced with GridEditor")]
+    public bool DisableColumnChooser { get; set; }
+
+    /// <summary>
+    /// Disables the column editor menu.
+    /// </summary>
+    [Parameter]
+    public bool DisableGridEditor { get; set; }
+
+    /// <summary>
+    /// When true, the 'Add' button will not be rendered.
+    /// </summary>
+    [Parameter]
+    public bool DisableAdd { get; set; }
+
+    /// <summary>
+    /// When true, the form is more compact and smaller.
+    /// </summary>
+    [Parameter]
+    public bool Dense { get; set; }
+
+    /// <summary>
+    /// Fires when a row is clicked, sends 'DataGridRowClickEventArgs<T>' as argument.
+    /// </summary>
+    [Parameter]
+    public EventCallback<ShiftEvent<DataGridRowClickEventArgs<T>>> OnRowClick { get; set; }
+
+    /// <summary>
+    /// Fires when form is closed, sends the form data when form is saved and null if cancelled.
+    /// </summary>
+    [Parameter]
+    public EventCallback<object?> OnFormClosed { get; set; }
+
+    /// <summary>
+    /// Fires when DataGrid is loaded.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnLoad { get; set; }
+
+    [Parameter]
+    [Obsolete("Use OnSelectStateChanged instead")]
+    public EventCallback<HashSet<T>> OnSelectedItemsChanged { get; set; }
+    
+    [Parameter]
+    public EventCallback<SelectState<T>> OnSelectStateChanged { get; set; }
+
+    [Parameter]
+    public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
+    [Parameter]
+    public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
+    [Parameter]
+    public Func<Exception, ValueTask<bool>>? OnError { get; set; }
+    [Parameter]
+    public Func<ODataDTO<T>?, ValueTask<bool>>? OnResult { get; set; }
+
+    [Parameter]
+    public RenderFragment<ListChildContext<T>>? ChildContent { get; set; }
+
+    /// <summary>
+    /// Whether to render or not render 'Entity ID' column
+    /// </summary>
+    [Parameter]
+    public bool ShowIDColumn { get; set; } = true;
+
+    /// <summary>
+    /// The number of items to be displayed per page.
+    /// </summary>
+    [Parameter]
+    public int? PageSize { get; set; }
+
+    /// <summary>
+    /// Enable and show Export button.
+    /// </summary>
+    [Parameter]
+    public bool EnableExport { get; set; }
+
+    /// <summary>
+    /// Disable sticky header, works only with Height and EnableVirtualization.
+    /// </summary>
+    [Parameter]
+    public bool DisableStickyHeader { get; set; }
+
+    /// <summary>
+    /// When true, the pagination will not be rendered.
+    /// </summary>
+    [Parameter]
+    public bool DisablePagination { get; set; }
+
+    /// <summary>
+    /// Disable column sorting.
+    /// </summary>
+    [Parameter]
+    public bool DisableSorting { get; set; }
+
+    /// <summary>
+    /// Disables a feature where you can select multiple columns to sort. (Ctrl + Click)
+    /// </summary>
+    [Parameter]
+    public bool DisableMultiSorting { get; set; }
+
+    /// <summary>
+    /// Disable column filtering.
+    /// </summary>
+    [Parameter]
+    public bool DisableFilters { get; set; }
+
+    /// <summary>
+    /// Used to override any element in the Action column.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<CellContext<T>>? ActionsTemplate { get; set; }
+
+    /// <summary>
+    /// Give the form window an outline and disable elevation.
+    /// </summary>
+    [Parameter]
+    public bool Outlined { get; set; }
+
+    [Parameter]
+    public Dictionary<string, SortDirection> Sort { get; set; } = [];
+
+    [Parameter]
+    public Action<ODataFilterGenerator>? Filter { get; set; }
+
+    /// <summary>
+    /// When true, row-click also toggles the checkbox state
+    /// </summary>
+    [Parameter]
+    public bool SelectOnRowClick { get; set; } = false;
+
+    [Parameter]
+    public bool EnableFilterPanel { get; set; }
+
+    [Parameter]
+    public bool FilterPanelDefaultOpen { get; set; }
+
+    [Parameter]
+    public bool FilterImmediate { get; set; }
+
+    [Parameter]
+    public RenderFragment? FilterTemplate {  get; set; }
+
+    [Parameter]
+    public bool EnablePrintColumn { get; set; }
+
+    [Parameter]
+    public PrintFormConfig? PrintConfig { get; set; }
+
+    [Parameter]
+    public bool DisableReloadButton { get; set; }
+
+    [Parameter]
+    public string? SortedColgroupStyle { get; set; }
+
+    [Parameter]
+    public bool HighlightSortedColumn { get; set; }
+
+    public Uri? CurrentUri { get; set; }
+    public Guid Id { get; private set; } = Guid.NewGuid();
+    public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = [];
+    public bool IsEmbed { get; private set; } = false;
+    [Obsolete("Use SelectState.Items instead")]
+    public HashSet<T> SelectedItems => SelectState.Items.ToHashSet();
+    [Obsolete("Use SelectState.All instead")]
+    public bool IsAllSelected => SelectState.All;
+    public readonly SelectState<T> SelectState = new();
+
+    internal Size IconSize = Size.Medium;
+    internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
+    internal bool RenderAddButton = false;
+    internal int SelectedPageSize;
+    internal int[] PageSizes = [ 5, 10, 50, 100, 250, 500 ];
+    internal bool? deleteFilter = false;
+    internal string? ErrorMessage;
+    private ITypeAuthService? TypeAuthService;
+    private string ToolbarStyle = string.Empty;
+    internal SortMode SortMode = SortMode.Multiple;
+    public ODataFilterGenerator ODataFilters { get; private set; } = new ODataFilterGenerator(true);
+    private string PreviousFilters = string.Empty;
+    private bool ReadyToRender = false;
+    private bool IsModalOpen = false;
+    private bool IsGridEditorOpen = false;
+    private bool IsDeleteColumnHidden = true;
+    private DotNetObjectReference<ShiftList<T>>? dotNetRef;
+    private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
+    public Dictionary<Guid, FilterModelBase> Filters { get; set; } = [];
+    private Debouncer Debouncer { get; set; } = new Debouncer();
+    private bool IsFilterPanelOpen { get; set; }
+    public HashSet<Guid> ActiveOperations { get; set; } = [];
+    private CancellationTokenSource? ReloadBlockTokenSource;
+    public bool IsLoading { get; set; }
+
+    private TaskCompletionSource<GridData<T>> IndefiniteReloadTask = new();
+    private CancellationTokenSource? ReloadCancellationTokenSource { get; set; }
+
+    protected string GetRowClassname(T item, int colIndex) =>
+        new CssBuilder()
+            .AddClass("is-deleted", item.IsDeleted)
+            .Build();
+
+    protected string SortedColgroupStylename =>
+        new StyleBuilder()
+            .AddStyle("background", "rgba(var(--mud-palette-primary-rgb), 0.25)", string.IsNullOrWhiteSpace(SortedColgroupStyle))
+            .AddStyle(SortedColgroupStyle)
+            .Build();
+
+    private List<Column<T>> DraggableColumns
     {
-        [Inject] ISnackbar Snackbar { get; set; } = default!;
-        [Inject] ODataQuery OData { get; set; } = default!;
-        [Inject] public HttpClient HttpClient { get; private set; } = default!;
-        [Inject] ShiftModal ShiftModal { get; set; } = default!;
-        [Inject] public ShiftBlazorLocalizer Loc  { get; private set; } = default!;
-        [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
-        [Inject] public SettingManager SettingManager { get; private set; } = default!;
-        [Inject] IJSRuntime JsRuntime { get; set; } = default!;
-        [Inject] MessageService MessageService { get; set; } = default!;
-        [Inject] NavigationManager NavigationManager { get; set; } = default!;
-        [Inject] PrintService PrintService { get; set; } = default!;
-
-        [CascadingParameter]
-        protected IMudDialogInstance? MudDialog { get; set; }
-
-        /// <summary>
-        /// To check whether this list is currently embeded inside a form component.
-        /// </summary>
-        [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
-        public bool? ParentReadOnly { get; set; }
-
-        [CascadingParameter(Name = FormHelper.ParentDisabledName)]
-        public bool? ParentDisabled { get; set; }
-
-        /// <summary>
-        /// The current fetched items, this will be fetched from the OData API endpoint that is provided in the Action paramater.
-        /// </summary>
-        [Parameter]
-        public List<T>? Values { get; set; }
-
-        /// <summary>
-        /// An event triggered when the state of Values has changed.
-        /// </summary>
-        [Parameter]
-        public EventCallback<List<T>> ValuesChanged { get; set; }
-
-        /// <summary>
-        /// The OData EntitySet Name.
-        /// </summary>
-        [Parameter]
-        public string? EntitySet { get; set; }
-
-        [Parameter]
-        public string? Endpoint { get; set; }
-
-        /// <summary>
-        /// The OData api endpoint.
-        /// </summary>
-        [Parameter]
-        public string? BaseUrl { get; set; }
-
-        /// <summary>
-        /// The OData api endpoint config key.
-        /// </summary>
-        [Parameter]
-        public string? BaseUrlKey { get; set; }
-
-        /// <summary>
-        /// The type of the component to be opened as a dialog when clicking on Add or the Action button.
-        /// If empty, 'Add' and 'Action button' column will be hidden.
-        /// </summary>
-        [Parameter]
-        public Type? ComponentType { get; set; }
-
-        /// <summary>
-        /// To pass additional parameters to the 'ShiftFormContainer' component.
-        /// </summary>
-        [Parameter]
-        public Dictionary<string, object>? AddDialogParameters { get; set; }
-
-        /// <summary>
-        /// Enable row selection.
-        /// </summary>
-        [Parameter]
-        public bool EnableSelection { get; set; }
-
-        /// <summary>
-        /// Enable Virtualization and disable Paging.
-        /// 'Height' paramater should have a valid value when this is enabled.
-        /// </summary>
-        [Parameter]
-        public bool EnableVirtualization { get; set; }
-
-        /// <summary>
-        /// Sets the css height property for the Datagrid.
-        /// </summary>
-        [Parameter]
-        public string Height { get; set; } = string.Empty;
-
-        /// <summary>
-        /// The title used for the form and the browser tab title.
-        /// </summary>
-        [Parameter]
-        public string? Title { get; set; }
-
-        [Parameter]
-        public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
-
-        /// <summary>
-        /// The css value used for the toolbar's 'background-color'.
-        /// Only RGB and Hex values work with 'NavIconFlatColor'.
-        /// </summary>
-        [Parameter]
-        public string? NavColor { get; set; }
-
-        /// <summary>
-        /// When true, the toolbar's text color will be in white or black, depending on the contrast of the background.
-        /// </summary>
-        [Parameter]
-        public bool NavIconFlatColor { get; set; }
-
-        /// <summary>
-        /// The icon displayed before the Form Title. (SVG string)
-        /// </summary>
-        [Parameter]
-        public string IconSvg { get; set; } = @Icons.Material.Filled.List;
-
-        /// <summary>
-        /// Used to add custom elements to the start of the header toolbar.
-        /// </summary>
-        [Parameter]
-        public RenderFragment? ToolbarStartTemplate { get; set; }
-
-        /// <summary>
-        /// Used to add custom elements to the end of the header toolbar.
-        /// </summary>
-        [Parameter]
-        public RenderFragment? ToolbarEndTemplate { get; set; }
-
-        /// <summary>
-        /// Used to add custom elements to the header.
-        /// </summary>
-        [Parameter]
-        public RenderFragment? HeaderTemplate { get; set; }
-
-        /// <summary>
-        /// Used to add custom elements to the controls section of the header toolbar.
-        /// This section is only visible when the form is opened in a dialog.
-        /// </summary>
-        [Parameter]
-        public RenderFragment? ToolbarControlsTemplate { get; set; }
-
-        /// <summary>
-        /// When true, the header toolbar will not be rendered.
-        /// </summary>
-        [Parameter]
-        public bool DisableHeaderToolbar { get; set; }
-
-        /// <summary>
-        /// When true, the Action Column will not be rendered.
-        /// </summary>
-        [Parameter]
-        public bool DisableActionColumn { get; set; } = true;
-
-        /// <summary>
-        /// When true, the Delete Filter will not be rendered.
-        /// </summary>
-        [Parameter]
-        public bool DisableDeleteFilter { get; set; }
-
-        /// <summary>
-        /// When true, the Column Chooser will not be rendered.
-        /// </summary>
-        [Parameter]
-        [Obsolete]
-        public bool DisableColumnChooser { get; set; }
-
-        /// <summary>
-        /// Disables the column editor menu.
-        /// </summary>
-        [Parameter]
-        public bool DisableGridEditor { get; set; }
-
-        /// <summary>
-        /// When true, the 'Add' button will not be rendered.
-        /// </summary>
-        [Parameter]
-        public bool DisableAdd { get; set; }
-
-        /// <summary>
-        /// When true, the form is more compact and smaller.
-        /// </summary>
-        [Parameter]
-        public bool Dense { get; set; }
-
-        /// <summary>
-        /// Fires when a row is clicked, sends 'DataGridRowClickEventArgs<T>' as argument.
-        /// </summary>
-        [Parameter]
-        public EventCallback<ShiftEvent<DataGridRowClickEventArgs<T>>> OnRowClick { get; set; }
-
-        /// <summary>
-        /// Fires when form is closed, sends the form data when form is saved and null if cancelled.
-        /// </summary>
-        [Parameter]
-        public EventCallback<object?> OnFormClosed { get; set; }
-
-        /// <summary>
-        /// Fires when DataGrid is loaded.
-        /// </summary>
-        [Parameter]
-        public EventCallback OnLoad { get; set; }
-
-        [Parameter]
-        [Obsolete]
-        public EventCallback<HashSet<T>> OnSelectedItemsChanged { get; set; }
-        
-        [Parameter]
-        public EventCallback<SelectState<T>> OnSelectStateChanged { get; set; }
-
-        [Parameter]
-        public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
-        [Parameter]
-        public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
-        [Parameter]
-        public Func<Exception, ValueTask<bool>>? OnError { get; set; }
-        [Parameter]
-        public Func<ODataDTO<T>?, ValueTask<bool>>? OnResult { get; set; }
-
-        [Parameter]
-        public RenderFragment<ListChildContext<T>>? ChildContent { get; set; }
-
-        /// <summary>
-        /// Whether to render or not render 'Entity ID' column
-        /// </summary>
-        [Parameter]
-        public bool ShowIDColumn { get; set; } = true;
-
-        /// <summary>
-        /// The number of items to be displayed per page.
-        /// </summary>
-        [Parameter]
-        public int? PageSize { get; set; }
-
-        /// <summary>
-        /// Enable and show Export button.
-        /// </summary>
-        [Parameter]
-        public bool EnableExport { get; set; }
-
-        /// <summary>
-        /// Disable sticky header, works only with Height and EnableVirtualization.
-        /// </summary>
-        [Parameter]
-        public bool DisableStickyHeader { get; set; }
-
-        /// <summary>
-        /// When true, the pagination will not be rendered.
-        /// </summary>
-        [Parameter]
-        public bool DisablePagination { get; set; }
-
-        /// <summary>
-        /// Disable column sorting.
-        /// </summary>
-        [Parameter]
-        public bool DisableSorting { get; set; }
-
-        /// <summary>
-        /// Disables a feature where you can select multiple columns to sort. (Ctrl + Click)
-        /// </summary>
-        [Parameter]
-        public bool DisableMultiSorting { get; set; }
-
-        /// <summary>
-        /// Disable column filtering.
-        /// </summary>
-        [Parameter]
-        public bool DisableFilters { get; set; }
-
-        /// <summary>
-        /// Used to override any element in the Action column.
-        /// </summary>
-        [Parameter]
-        public RenderFragment<CellContext<T>>? ActionsTemplate { get; set; }
-
-        /// <summary>
-        /// Give the form window an outline and disable elevation.
-        /// </summary>
-        [Parameter]
-        public bool Outlined { get; set; }
-
-        [Parameter]
-        public Dictionary<string, SortDirection> Sort { get; set; } = [];
-
-        [Parameter]
-        public Action<ODataFilterGenerator>? Filter { get; set; }
-
-        /// <summary>
-        /// When true, row-click also toggles the checkbox state
-        /// </summary>
-        [Parameter]
-        public bool SelectOnRowClick { get; set; } = false;
-
-        [Parameter]
-        public bool EnableFilterPanel { get; set; }
-
-        [Parameter]
-        public bool FilterPanelDefaultOpen { get; set; }
-
-        [Parameter]
-        public bool FilterImmediate { get; set; }
-
-        [Parameter]
-        public RenderFragment? FilterTemplate {  get; set; }
-
-        [Parameter]
-        public bool EnablePrintColumn { get; set; }
-
-        [Parameter]
-        public PrintFormConfig? PrintConfig { get; set; }
-
-        [Parameter]
-        public bool DisableReloadButton { get; set; }
-
-        [Parameter]
-        public string? SortedColgroupStyle { get; set; }
-
-        [Parameter]
-        public bool HighlightSortedColumn { get; set; }
-
-        public Uri? CurrentUri { get; set; }
-        public Guid Id { get; private set; } = Guid.NewGuid();
-        public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
-        public bool IsEmbed { get; private set; } = false;
-        [Obsolete]
-        public HashSet<T> SelectedItems => SelectState.Items.ToHashSet();
-        [Obsolete]
-        public bool IsAllSelected => SelectState.All;
-        public readonly SelectState<T> SelectState = new();
-
-        internal Size IconSize = Size.Medium;
-        internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
-        internal bool RenderAddButton = false;
-        internal int SelectedPageSize;
-        internal int[] PageSizes = new int[] { 5, 10, 50, 100, 250, 500 };
-        internal bool? deleteFilter = false;
-        internal string? ErrorMessage;
-        private ITypeAuthService? TypeAuthService;
-        private string ToolbarStyle = string.Empty;
-        internal SortMode SortMode = SortMode.Multiple;
-        public ODataFilterGenerator ODataFilters { get; private set; } = new ODataFilterGenerator(true);
-        private string PreviousFilters = string.Empty;
-        private bool ReadyToRender = false;
-        private bool IsModalOpen = false;
-        private bool IsGridEditorOpen = false;
-        private bool IsDeleteColumnHidden = true;
-        private DotNetObjectReference<ShiftList<T>>? dotNetRef;
-        private string GridEditorHeight => string.IsNullOrWhiteSpace(Height) ? "350px" : $"calc({Height} - 50px)";
-        public Dictionary<Guid, FilterModelBase> Filters { get; set; } = [];
-        private Debouncer Debouncer { get; set; } = new Debouncer();
-        private bool IsFilterPanelOpen { get; set; }
-        public HashSet<Guid> ActiveOperations { get; set; } = [];
-        private CancellationTokenSource? ReloadBlockTokenSource;
-        public bool IsLoading { get; set; }
-
-        private TaskCompletionSource<GridData<T>> IndefiniteReloadTask = new();
-        private CancellationTokenSource? ReloadCancellationTokenSource { get; set; }
-
-        protected string GetRowClassname(T item, int colIndex) =>
-            new CssBuilder()
-                .AddClass("is-deleted", item.IsDeleted)
-                .Build();
-
-        protected string SortedColgroupStylename =>
-            new StyleBuilder()
-                .AddStyle("background", "rgba(var(--mud-palette-primary-rgb), 0.25)", string.IsNullOrWhiteSpace(SortedColgroupStyle))
-                .AddStyle(SortedColgroupStyle)
-                .Build();
-
-        private List<Column<T>> DraggableColumns
+        get
         {
-            get
-            {
-                if (DataGrid == null)
-                {
-                    return [];
-                }
-
-                if (EnableSelection)
-                {
-                    var count = DataGrid.RenderedColumns.Count;
-                    return DataGrid.RenderedColumns.GetRange(1, count - 1);
-                }
-
-                return DataGrid.RenderedColumns;
-            }
-        }
-
-        internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
-
-        private MudDataGrid<T>? _DataGrid;
-        public MudDataGrid<T>? DataGrid
-        {
-            get => _DataGrid;
-            set
-            {
-                _DataGrid = value;
-                OnDataGridLoad();
-                OnLoad.InvokeAsync();
-            }
-        }
-
-        public bool ExportIsInProgress { get; private set; } = false;
-
-        protected override void OnInitialized()
-        {
-            dotNetRef = DotNetObjectReference.Create(this);
-
-            IsEmbed = ParentDisabled != null || ParentReadOnly != null;
-
-            if (!IsEmbed)
-            {
-                IShortcutComponent.Register(this);
-            }
-
-            if (Values == null && EntitySet == null)
-            {
-                throw new ArgumentNullException($"{nameof(Values)} and {nameof(EntitySet)} are null");
-            }
-
-            ShiftBlazorEvents.OnModalClosed += ShiftBlazorEvents_OnModalClosed;
-            TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
-
-            if (EntitySet != null)
-            {
-                string? url = IRequestComponent.GetPath(this);
-                
-                QueryBuilder = OData
-                    .CreateNewQuery<T>(EntitySet, url)
-                    .IncludeCount();
-            }
-
-            RenderAddButton = !(DisableAdd || ComponentType == null || (TypeAuthAction != null && TypeAuthService?.Can(TypeAuthAction, Access.Write) != true));
-            IconSize = Dense ? Size.Medium : Size.Large;
-            ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
-            ServerData = Values == null
-                ? new Func<GridState<T>, Task<GridData<T>>>(ServerReload)
-                : default;
-            SortMode = DisableSorting
-                        ? SortMode.None
-                        : DisableMultiSorting
-                            ? SortMode.Single
-                            : SortMode.Multiple;
-
-            if (PageSize != null && !PageSizes.Any(x => x == PageSize))
-            {
-                PageSizes = PageSizes.Append(PageSize.Value).Order().ToArray();
-            }
-
-            if (Values != null)
-            {
-                SelectState.Total = Values.Count;
-            }
-
-            SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
-            IsFilterPanelOpen = SettingManager?.GetFilterPanelState() ?? FilterPanelDefaultOpen;
-        }
-
-        protected override void OnAfterRender(bool firstRender)
-        {
-            if (firstRender)
-            {
-                if (!DisableGridEditor)
-                {
-                    var columnStates = SettingManager.GetColumnState(GetListIdentifier());
-                    HideDisabledColumns(columnStates);
-                    MakeColumnsSticky(columnStates);
-                    ReorderColumns(columnStates);
-                }
-            }
-
-            _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
-        }
-
-        protected override bool ShouldRender()
-        {
-            return ReadyToRender;
-        }
-
-        protected override void OnParametersSet()
-        {
-            if (Filter != null)
-            {
-                var filter = new ODataFilterGenerator(true, Id);
-                Filter.Invoke(filter);
-                ODataFilters.Add(filter);
-            }
-
-            if (Filters.ToString() != PreviousFilters)
-            {
-                PreviousFilters = Filters.ToString();
-                SelectState.Clear();
-                DataGrid?.ReloadServerData();
-            }
-
             if (DataGrid == null)
             {
-                return;
+                return [];
             }
 
-            // Should only check on DisableActionColumn paramater change
-            if (DisableActionColumn)
+            if (EnableSelection)
             {
-                var actionColumn = DataGrid.RenderedColumns.LastOrDefault(x => x.Title == Loc["ActionsColumnHeaderText"]);
-                DataGrid.RenderedColumns.Remove(actionColumn);
+                var count = DataGrid.RenderedColumns.Count;
+                return DataGrid.RenderedColumns.GetRange(1, count - 1);
             }
 
-            if (DataGrid.Virtualize != EnableVirtualization && Values == null)
-            {
-                DataGrid.ReloadServerData();
-            }
+            return DataGrid.RenderedColumns;
+        }
+    }
+
+    internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
+
+    private MudDataGrid<T>? _DataGrid;
+    public MudDataGrid<T>? DataGrid
+    {
+        get => _DataGrid;
+        set
+        {
+            _DataGrid = value;
+            OnDataGridLoad();
+            OnLoad.InvokeAsync();
+        }
+    }
+
+    public bool ExportIsInProgress { get; private set; } = false;
+
+    protected override void OnInitialized()
+    {
+        dotNetRef = DotNetObjectReference.Create(this);
+        IsEmbed = ParentDisabled != null || ParentReadOnly != null;
+
+        if (!IsEmbed)
+        {
+            IShortcutComponent.Register(this);
         }
 
-        /// <summary>
-        /// Opens a dialog form to create a new item or edit an existing one.
-        /// </summary>
-        /// <param name="key">The unique ID of the item to be edited. If null, the form will be in 'Create' mode.</param>
-        /// <returns>The data of the created or edited item after the dialog is closed. Returns null if the form is not saved.</returns>
-        public async Task ViewAddItem(object? key = null)
+        if (Values == null && EntitySet == null)
         {
-            if (ComponentType != null)
-            {
-                var result = await OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters);
-                await OnFormClosed.InvokeAsync(result?.Data);
-            }
+            throw new ArgumentNullException($"{nameof(Values)} and {nameof(EntitySet)} are null");
         }
 
-        /// <summary>
-        /// Opens a dialog window.
-        /// </summary>
-        /// <param name="ComponentType">The type of component to be opened.</param>
-        /// <param name="key">The unique ID of the item to be opened.</param>
-        /// <param name="openMode">Specifies how the dialog window opens.</param>
-        /// <param name="parameters">The parameters to be passed to the component.</param>
-        /// <returns>A DialogResult object representing the outcome of the dialog.</returns>
-        public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null)
+        ShiftBlazorEvents.OnModalClosed += ShiftBlazorEvents_OnModalClosed;
+        TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
+
+        if (EntitySet != null)
         {
-            IsModalOpen = true;
-            var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
-            if (result != null && result.Canceled != true)
-            {
-                await DataGrid!.ReloadServerData();
-            }
-            IsModalOpen = false;
-            return result;
-        }
-
-        /// <summary>
-        /// Asynchronously sets the sorting configuration for the data grid.
-        /// </summary>
-        /// <param name="field">The field by which the data should be sorted.</param>
-        /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
-        public async Task SetSortAsync(string field, SortDirection sortDirection)
-        {
-            if (DataGrid != null)
-            {
-                await DataGrid.SetSortAsync(field, sortDirection, null);
-            }
-        }
-
-        /// <summary>
-        /// Sets the sorting configuration for the data grid.
-        /// </summary>
-        /// <param name="field">The field by which the data should be sorted.</param>
-        /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
-        public void SetSort(string field, SortDirection sortDirection)
-        {
-            var sort = new SortDefinition<T>(field, sortDirection == SortDirection.Descending, DataGrid?.SortDefinitions.Count ?? 0, null);
-            DataGrid?.SortDefinitions.Add(field, sort);
-            InvokeAsync(StateHasChanged);
-        }
-
-        /// <summary>
-        /// Adds a filter to the data grid.
-        /// </summary>
-        /// <param name="field">The field to apply the filter on.</param>
-        /// <param name="op">The comparison operator for the filter (e.g., Equal, GreaterThan).</param>
-        /// <param name="value">The value to compare against for the filter.</param>
-        public void AddFilter(Guid id, string field, ODataOperator op, object? value = null)
-        {
-            ODataFilters.Add(field, op, value, id);
-        }
-
-        public void GridStateHasChanged()
-        {
-            StateHasChanged();
-        }
-
-        public async ValueTask HandleShortcut(KeyboardKeys key)
-        {
-            switch (key)
-            {
-                case KeyboardKeys.Escape:
-                    CloseDialog();
-                    break;
-                case KeyboardKeys.KeyA:
-                    if (RenderAddButton)
-                        await ViewAddItem();
-                    break;
-                case KeyboardKeys.KeyE:
-                    if (EnableExport)
-                        await ExportList();
-                    break;
-                case KeyboardKeys.KeyC:
-                    if (!DisableGridEditor)
-                        OpenGridEditor();
-                    break;
-            }
-        }
-
-        private async Task<GridData<T>> ServerReload(GridState<T> state)
-        {
-            IsLoading = true;
-            StateHasChanged();
-
-            // Check if there are any active operations,
-            // if so, wait for them to finish before proceeding,
-            // only if it is the first request.
-            // Operations could be things like Filter, Sort...
-            if (!ReadyToRender && ActiveOperations.Count > 0)
-            {
-                try
-                {
-                    ReloadBlockTokenSource = new CancellationTokenSource();
-                    await Task.Delay(300, ReloadBlockTokenSource.Token);
-                }
-                catch (Exception) { }
-
-                ReloadBlockTokenSource?.Dispose();
-                ReloadBlockTokenSource = null;
-            }
-
-            ReloadCancellationTokenSource?.Cancel();
-            ReloadCancellationTokenSource?.Dispose();
-            ReloadCancellationTokenSource = new CancellationTokenSource();
-            var cts = ReloadCancellationTokenSource;
+            string? url = IRequestComponent.GetPath(this);
             
-            GridData<T> gridData = new();
-            bool preventDefault = false;
-            ErrorMessage = null;
+            QueryBuilder = OData
+                .CreateNewQuery<T>(EntitySet, url)
+                .IncludeCount();
+        }
 
+        RenderAddButton = !(DisableAdd || ComponentType == null || (TypeAuthAction != null && TypeAuthService?.Can(TypeAuthAction, Access.Write) != true));
+        IconSize = Dense ? Size.Medium : Size.Large;
+        ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
+        ServerData = Values == null
+            ? new Func<GridState<T>, Task<GridData<T>>>(ServerReload)
+            : default;
+        SortMode = DisableSorting
+                    ? SortMode.None
+                    : DisableMultiSorting
+                        ? SortMode.Single
+                        : SortMode.Multiple;
+
+        if (PageSize != null && !PageSizes.Any(x => x == PageSize))
+        {
+            PageSizes = PageSizes.Append(PageSize.Value).Order().ToArray();
+        }
+
+        if (Values != null)
+        {
+            SelectState.Total = Values.Count;
+        }
+
+        SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
+        IsFilterPanelOpen = SettingManager?.GetFilterPanelState() ?? FilterPanelDefaultOpen;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (!DisableGridEditor)
+            {
+                var columnStates = SettingManager.GetColumnState(GetListIdentifier());
+                HideDisabledColumns(columnStates);
+                MakeColumnsSticky(columnStates);
+                ReorderColumns(columnStates);
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) => await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+
+    protected override bool ShouldRender()
+    {
+        return ReadyToRender;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Filter != null)
+        {
+            var filter = new ODataFilterGenerator(true, Id);
+            Filter.Invoke(filter);
+            ODataFilters.Add(filter);
+        }
+
+        var currentFilters = ODataFilters.ToString();
+
+        if (currentFilters != PreviousFilters)
+        {
+            PreviousFilters = currentFilters;
+            SelectState.Clear();
+            DataGrid?.ReloadServerData();
+        }
+
+        if (DataGrid == null)
+        {
+            return;
+        }
+
+        // Should only check on DisableActionColumn paramater change
+        if (DisableActionColumn)
+        {
+            var actionColumn = DataGrid.RenderedColumns.LastOrDefault(x => x.Title == Loc["ActionsColumnHeaderText"]);
+            DataGrid.RenderedColumns.Remove(actionColumn);
+        }
+
+        if (DataGrid.Virtualize != EnableVirtualization && Values == null)
+        {
+            DataGrid.ReloadServerData();
+        }
+    }
+
+    /// <summary>
+    /// Opens a dialog form to create a new item or edit an existing one.
+    /// </summary>
+    /// <param name="key">The unique ID of the item to be edited. If null, the form will be in 'Create' mode.</param>
+    /// <returns>The data of the created or edited item after the dialog is closed. Returns null if the form is not saved.</returns>
+    public async Task ViewAddItem(object? key = null)
+    {
+        if (ComponentType != null)
+        {
+            var result = await OpenDialog(ComponentType, key, ModalOpenMode.Popup, this.AddDialogParameters);
+            await OnFormClosed.InvokeAsync(result?.Data);
+        }
+    }
+
+    /// <summary>
+    /// Opens a dialog window.
+    /// </summary>
+    /// <param name="ComponentType">The type of component to be opened.</param>
+    /// <param name="key">The unique ID of the item to be opened.</param>
+    /// <param name="openMode">Specifies how the dialog window opens.</param>
+    /// <param name="parameters">The parameters to be passed to the component.</param>
+    /// <returns>A DialogResult object representing the outcome of the dialog.</returns>
+    public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null)
+    {
+        IsModalOpen = true;
+        var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
+        if (result != null && result.Canceled != true)
+        {
+            await DataGrid!.ReloadServerData();
+        }
+        IsModalOpen = false;
+        return result;
+    }
+
+    /// <summary>
+    /// Asynchronously sets the sorting configuration for the data grid.
+    /// </summary>
+    /// <param name="field">The field by which the data should be sorted.</param>
+    /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
+    public async Task SetSortAsync(string field, SortDirection sortDirection)
+    {
+        if (DataGrid != null)
+        {
+            await DataGrid.SetSortAsync(field, sortDirection, null);
+        }
+    }
+
+    /// <summary>
+    /// Sets the sorting configuration for the data grid.
+    /// </summary>
+    /// <param name="field">The field by which the data should be sorted.</param>
+    /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
+    public void SetSort(string field, SortDirection sortDirection)
+    {
+        var sort = new SortDefinition<T>(field, sortDirection == SortDirection.Descending, DataGrid?.SortDefinitions.Count ?? 0, null);
+        DataGrid?.SortDefinitions.Add(field, sort);
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Adds a filter to the data grid.
+    /// </summary>
+    /// <param name="field">The field to apply the filter on.</param>
+    /// <param name="op">The comparison operator for the filter (e.g., Equal, GreaterThan).</param>
+    /// <param name="value">The value to compare against for the filter.</param>
+    public void AddFilter(Guid id, string field, ODataOperator op, object? value = null)
+    {
+        ODataFilters.Add(field, op, value, id);
+    }
+
+    public void GridStateHasChanged()
+    {
+        StateHasChanged();
+    }
+
+    public async ValueTask HandleShortcut(KeyboardKeys key)
+    {
+        switch (key)
+        {
+            case KeyboardKeys.Escape:
+                CloseDialog();
+                break;
+            case KeyboardKeys.KeyA:
+                if (RenderAddButton)
+                    await ViewAddItem();
+                break;
+            case KeyboardKeys.KeyE:
+                if (EnableExport)
+                    await ExportList();
+                break;
+            case KeyboardKeys.KeyC:
+                if (!DisableGridEditor)
+                    OpenGridEditor();
+                break;
+        }
+    }
+
+    private async Task<GridData<T>> ServerReload(GridState<T> state)
+    {
+        IsLoading = true;
+        StateHasChanged();
+
+        // Check if there are any active operations,
+        // if so, wait for them to finish before proceeding,
+        // only if it is the first request.
+        // Operations could be things like Filter, Sort...
+        if (!ReadyToRender && ActiveOperations.Count > 0)
+        {
             try
             {
-                // Save current PageSize as user preference 
-                if (state.PageSize != SelectedPageSize)
-                {
-                    SettingManager.SetListPageSize(state.PageSize);
-                    SelectedPageSize = state.PageSize;
-                }
-
-                var url = BuildODataUrl(state);
-                if (string.IsNullOrWhiteSpace(url))
-                    throw new Exception(Loc["DataReadUrlError"]);
-
-                CurrentUri = new Uri(url!);
-                var content = await IODataRequestComponent<T>.GetFromJsonAsync(this, CurrentUri, cts.Token);
-
-                if (content == null)
-                {
-                    preventDefault = true;
-                    return gridData;
-                }
-
-                gridData = new GridData<T>
-                {
-                    Items = content.Value ?? [],
-                    TotalItems = (int?)content.Count ?? content.Value?.Count ?? 0,
-                };
-
-                SelectState.Total = gridData.TotalItems;
-
-                //await OnFetch.InvokeAsync(content.Value);
+                ReloadBlockTokenSource = new CancellationTokenSource();
+                await Task.Delay(300, ReloadBlockTokenSource.Token);
             }
-            catch (OperationCanceledException) when (cts.IsCancellationRequested)
-            {
-                // the only way to cancel the request is when the user calls another
-                // ServerReload method while the previous request is still in progress.
-                // We return an indefinite task to prevent MudBlazor from stopping the loading animation.
-                // We later resolve this task when the request is completed.
-                return await IndefiniteReloadTask.Task;
-            }
-            catch (JsonException e)
-            {
-                if (OnError != null && await OnError.Invoke(e))
-                {
-                    return gridData;
-                }
+            catch (Exception) { }
 
-                ErrorMessage = Loc["DataParseError"];
-                MessageService.Error(Loc["DataReadError"], e.InnerException?.Message, e.Message, buttonText: Loc["DropdownViewButtonText"]);
-            }
-            catch (Exception e)
-            {
-                if (OnError != null && await OnError.Invoke(e))
-                {
-                    return gridData;
-                }
-
-                ErrorMessage = e.Message;
-                MessageService.Error(e.Message, e.Message, e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
-            }
-            finally
-            {
-                ReadyToRender = true;
-
-                if (ReferenceEquals(cts, ReloadCancellationTokenSource))
-                {
-                    IndefiniteReloadTask.SetResult(gridData);
-                    IndefiniteReloadTask = new();
-                    IsLoading = false;
-
-                    if (!preventDefault)
-                    {
-                        ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, gridData.Items.ToList<object>()));
-                    }
-                    StateHasChanged();
-                }
-
-
-            }
-
-            return gridData;
+            ReloadBlockTokenSource?.Dispose();
+            ReloadBlockTokenSource = null;
         }
 
-        private DataServiceQuery<T> BuildSort(GridState<T> state, DataServiceQuery<T> builder)
+        ReloadCancellationTokenSource?.Cancel();
+        ReloadCancellationTokenSource?.Dispose();
+        ReloadCancellationTokenSource = new CancellationTokenSource();
+        var cts = ReloadCancellationTokenSource;
+        
+        GridData<T> gridData = new();
+        bool preventDefault = false;
+        ErrorMessage = null;
+
+        try
+        {
+            // Save current PageSize as user preference 
+            if (state.PageSize != SelectedPageSize)
+            {
+                SettingManager.SetListPageSize(state.PageSize);
+                SelectedPageSize = state.PageSize;
+            }
+
+            var url = BuildODataUrl(state);
+            if (string.IsNullOrWhiteSpace(url))
+                throw new Exception(Loc["DataReadUrlError"]);
+
+            CurrentUri = new Uri(url!);
+            var content = await IODataRequestComponent<T>.GetFromJsonAsync(this, CurrentUri, cts.Token);
+
+            if (content == null)
+            {
+                preventDefault = true;
+                return gridData;
+            }
+
+            gridData = new GridData<T>
+            {
+                Items = content.Value ?? [],
+                TotalItems = (int?)content.Count ?? content.Value?.Count ?? 0,
+            };
+
+            SelectState.Total = gridData.TotalItems;
+
+            //await OnFetch.InvokeAsync(content.Value);
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            // the only way to cancel the request is when the user calls another
+            // ServerReload method while the previous request is still in progress.
+            // We return an indefinite task to prevent MudBlazor from stopping the loading animation.
+            // We later resolve this task when the request is completed.
+            return await IndefiniteReloadTask.Task;
+        }
+        catch (JsonException e)
+        {
+            if (OnError != null && !(await OnError.Invoke(e)))
+            {
+                return gridData;
+            }
+
+            ErrorMessage = Loc["DataParseError"];
+            MessageService.Error(Loc["DataReadError"], e.InnerException?.Message, e.Message, buttonText: Loc["DropdownViewButtonText"]);
+        }
+        catch (Exception e)
+        {
+            if (OnError != null && !(await OnError.Invoke(e)))
+            {
+                return gridData;
+            }
+
+            ErrorMessage = e.Message;
+            MessageService.Error(e.Message, e.Message, e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
+        }
+        finally
+        {
+            ReadyToRender = true;
+
+            if (ReferenceEquals(cts, ReloadCancellationTokenSource))
+            {
+                IndefiniteReloadTask.SetResult(gridData);
+                IndefiniteReloadTask = new();
+                IsLoading = false;
+
+                if (!preventDefault)
+                {
+                    ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, gridData.Items.ToList<object>()));
+                }
+                StateHasChanged();
+            }
+
+
+        }
+
+        return gridData;
+    }
+
+    private DataServiceQuery<T> BuildSort(GridState<T> state, DataServiceQuery<T> builder)
+    {
+        try
         {
             // Convert MudBlazor's SortDefinitions to OData query
             if (state.SortDefinitions.Count > 0)
@@ -760,331 +764,336 @@ namespace ShiftSoftware.ShiftBlazor.Components
                 var sortList = state.SortDefinitions.ToODataFilter();
                 builder = builder.AddQueryOption("$orderby", string.Join(',', sortList));
             }
-
-            return builder;
+        }
+        catch (Exception e)
+        {
+            ErrorMessage = Loc["GridSortError"];
+            MessageService.Error(ErrorMessage, e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
         }
 
-        private DataServiceQuery<T> BuildFilter(GridState<T> state, DataServiceQuery<T> builder)
+        return builder;
+    }
+
+    private DataServiceQuery<T> BuildFilter(GridState<T> state, DataServiceQuery<T> builder)
+    {
+        // Remove multiple empty filters but keep the last added empty filter
+        // state.FilterDefinitions is same as DataGrid!.FilterDefinitions
+        var emptyFields = state.FilterDefinitions
+            .Where(x => x.Value == null && x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty)
+            .ToList();
+
+        for (var i = 0; i < Math.Max(0, emptyFields.Count - 1); i++)
         {
-            // Remove multiple empty filters but keep the last added empty filter
-            // state.FilterDefinitions is same as DataGrid!.FilterDefinitions
-            var emptyFields = state.FilterDefinitions
-                .Where(x => x.Value == null && x.Operator != FilterOperator.String.Empty && x.Operator != FilterOperator.String.NotEmpty)
-                .ToList();
-
-            for (var i = 0; i < Math.Max(0, emptyFields.Count - 1); i++)
-            {
-                DataGrid!.FilterDefinitions.Remove(emptyFields[i]);
-            }
-
-            try
-            {
-                var filterPanel = Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x));
-
-                // Convert MudBlazor's FilterDefinitions to OData query
-                var userFilters = state.FilterDefinitions.ToODataFilter().Select(x => string.Join(" or ", x));
-
-                var filterList = new List<string>();
-                filterList.AddRange(userFilters);
-                filterList.AddRange(filterPanel);
-
-                if (ODataFilters.Count > 0)
-                    filterList.Add(ODataFilters.ToString());
-
-                if (filterList.Any())
-                {
-                    var filterQueryString = $"({string.Join(") and (", filterList)})";
-                    builder = builder.AddQueryOption("$filter", filterQueryString);
-                    SelectState.Filter = filterQueryString;
-                }
-                else
-                {
-                    SelectState.Filter = null;
-                }
-            }
-            catch (Exception e)
-            {
-                ErrorMessage = $"An error has occurred";
-                MessageService.Error(Loc["ShiftListFilterParseError"], e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
-            }
-
-            return builder;
+            DataGrid!.FilterDefinitions.Remove(emptyFields[i]);
         }
 
-        private string? BuildODataUrl(GridState<T> state)
+        try
         {
-            var builder = QueryBuilder;
+            var filterPanel = Filters.Select(x => x.Value.ToODataFilter().ToString()).Where(x => !string.IsNullOrWhiteSpace(x));
 
-            builder = BuildSort(state, builder);
-            builder = BuildFilter(state, builder);
+            // Convert MudBlazor's FilterDefinitions to OData query
+            var userFilters = state.FilterDefinitions.ToODataFilter().Select(x => string.Join(" or ", x));
 
-            var builderQueryable = builder.AsQueryable();
+            var filterList = new List<string>();
+            filterList.AddRange(userFilters);
+            filterList.AddRange(filterPanel);
 
-            // apply pagination values
-            if (!EnableVirtualization)
+            if (ODataFilters.Count > 0)
+                filterList.Add(ODataFilters.ToString());
+
+            if (filterList.Count > 0)
             {
-                builderQueryable = builderQueryable
-                    .Skip(state.Page * state.PageSize)
-                    .Take(state.PageSize);
+                var filterQueryString = $"({string.Join(") and (", filterList)})";
+                builder = builder.AddQueryOption("$filter", filterQueryString);
+                SelectState.Filter = filterQueryString;
             }
-
-            return builderQueryable.ToString();
-        }
-
-        private void ShiftBlazorEvents_OnModalClosed(object? sender, object? data)
-        {
-            // Use Shortcut components to find out if the datagrid is on top of the component list
-            if (!IsModalOpen)
+            else
             {
-                var beforeLastIndex = IShortcutComponent.Components.Count - 2;
-                var compId = IShortcutComponent.Components.Keys.ElementAtOrDefault(beforeLastIndex);
-
-                if (compId == Id && data != null)
-                {
-                    DataGrid!.ReloadServerData();
-                }
+                SelectState.Filter = null;
             }
         }
-
-        internal void OnDataGridLoad()
+        catch (Exception e)
         {
-            foreach (var sort in Sort)
+            ErrorMessage = Loc["GridFilterError"];
+            MessageService.Error(Loc["ShiftListFilterParseError"], e.Message, e!.ToString(), buttonText: Loc["DropdownViewButtonText"]);
+        }
+
+        return builder;
+    }
+
+    private string? BuildODataUrl(GridState<T> state)
+    {
+        var builder = QueryBuilder;
+
+        builder = BuildSort(state, builder);
+        builder = BuildFilter(state, builder);
+
+        var builderQueryable = builder.AsQueryable();
+
+        // apply pagination values
+        if (!EnableVirtualization)
+        {
+            builderQueryable = builderQueryable
+                .Skip(state.Page * state.PageSize)
+                .Take(state.PageSize);
+        }
+
+        return builderQueryable.ToString();
+    }
+
+    private void ShiftBlazorEvents_OnModalClosed(object? sender, object? data)
+    {
+        // Use Shortcut components to find out if the datagrid is on top of the component list
+        if (!IsModalOpen)
+        {
+            var beforeLastIndex = IShortcutComponent.Components.Count - 2;
+            var compId = IShortcutComponent.Components.Keys.ElementAtOrDefault(beforeLastIndex);
+
+            if (compId == Id && data != null)
             {
-                SetSort(sort.Key, sort.Value);
+                DataGrid!.ReloadServerData();
             }
         }
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="delete">
-        /// true: only get deleted items.
-        /// false: only get active items.
-        /// null: get all.
-        /// </param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        internal void FilterDeleted(bool? delete = null)
+    internal void OnDataGridLoad()
+    {
+        foreach (var sort in Sort)
         {
-            DataGrid!.FilterDefinitions.RemoveAll(x => x.Column!.PropertyName == nameof(ShiftEntityDTOBase.IsDeleted));
+            SetSort(sort.Key, sort.Value);
+        }
+    }
 
-            switch (delete)
-            {
-                case true:
-                    DataGrid!.FilterDefinitions.Add(CreateDeleteFilter());
-                    break;
-                case false:
-                    DataGrid!.FilterDefinitions.Add(CreateDeleteFilter(false));
-                    break;
-                case null:
-                    DataGrid!.FilterDefinitions.Add(CreateDeleteFilter());
-                    DataGrid!.FilterDefinitions.Add(CreateDeleteFilter(false));
-                    break;
-            }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="delete">
+    /// true: only get deleted items.
+    /// false: only get active items.
+    /// null: get all.
+    /// </param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    internal void FilterDeleted(bool? delete = null)
+    {
+        DataGrid!.FilterDefinitions.RemoveAll(x => x.Column!.PropertyName == nameof(ShiftEntityDTOBase.IsDeleted));
 
-            _ = DataGrid?.ReloadServerData();
+        switch (delete)
+        {
+            case true:
+                DataGrid!.FilterDefinitions.Add(CreateDeleteFilter());
+                break;
+            case false:
+                DataGrid!.FilterDefinitions.Add(CreateDeleteFilter(false));
+                break;
+            case null:
+                DataGrid!.FilterDefinitions.Add(CreateDeleteFilter());
+                DataGrid!.FilterDefinitions.Add(CreateDeleteFilter(false));
+                break;
         }
 
-        private FilterDefinition<T> CreateDeleteFilter(bool value = true)
+        _ = DataGrid?.ReloadServerData();
+    }
+
+    private FilterDefinition<T> CreateDeleteFilter(bool value = true)
+    {
+        return new FilterDefinition<T>
         {
-            return new FilterDefinition<T>
-            {
-                Column = DataGrid!.GetColumnByPropertyName<T>(nameof(ShiftEntityDTOBase.IsDeleted)),
-                Operator = FilterOperator.String.Equal,
-                Value = value,
-            };
+            Column = DataGrid!.GetColumnByPropertyName<T>(nameof(ShiftEntityDTOBase.IsDeleted)),
+            Operator = FilterOperator.String.Equal,
+            Value = value,
+        };
+    }
+
+    private void CloseDialog()
+    {
+        if (MudDialog != null)
+        {
+            ShiftModal.Close(MudDialog);
+            IShortcutComponent.Remove(Id);
+        }
+    }
+
+    private async Task RowClickHandler(DataGridRowClickEventArgs<T> args)
+    {
+        if (OnRowClick.HasDelegate)
+        {
+            if (await OnRowClick.PreventableInvokeAsync(args)) return;
         }
 
-        private void CloseDialog()
+        if (SelectOnRowClick)
         {
-            if (MudDialog != null)
-            {
-                ShiftModal.Close(MudDialog);
-                IShortcutComponent.Remove(Id);
-            }
+            await SelectRow(args.Item);
         }
+    }
 
-        private async Task RowClickHandler(DataGridRowClickEventArgs<T> args)
-        {
-            if (OnRowClick.HasDelegate)
-            {
-                if (await OnRowClick.PreventableInvokeAsync(args)) return;
-            }
+    private string GetListIdentifier()
+    {
+        return $"{EntitySet}_{typeof(T).Name}";
+    }
 
-            if (SelectOnRowClick)
-            {
-                await SelectRow(args.Item);
-            }
-        }
+    #region Columns
 
-        private string GetListIdentifier()
-        {
-            return $"{EntitySet}_{typeof(T).Name}";
-        }
-
-        #region Columns
-
-        private void ColumnHiddenStateChanged(string name, bool hidden)
-        {
-            var col = DataGrid?.RenderedColumns.FirstOrDefault(x => (x.Hideable ?? DataGrid?.Hideable) == true && x.Title == name);
+    #pragma warning disable BL0005 // Component parameter should not be set outside of its component.
+    private async Task ColumnHiddenStateChanged(string name, bool hidden)
+    {
+        var col = DataGrid?.RenderedColumns.FirstOrDefault(x => (x.Hideable ?? DataGrid?.Hideable) == true && x.Title == name);
+        if (col != null)
             col.Hidden = hidden;
-            SaveColumnState();
+        await SaveColumnState();
+    }
+
+    private void HideDisabledColumns(List<ColumnState> columnStates)
+    {
+        var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
+        if (columns == null || !columns.Any())
+        {
+            return;
         }
 
-        private void HideDisabledColumns(List<ColumnState> columnStates)
+        try
         {
-            var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
-            if (columns == null || !columns.Any())
-            {
-                return;
-            }
-
-#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
-            try
-            {
-                foreach (var item in columnStates)
-                {
-                    var column = columns.FirstOrDefault(x => x.Title == item.Title);
-
-                    if (column?.Title == @Loc["IsDeletedColumnHeaderText"])
-                    {
-                        IsDeleteColumnHidden = !item.Visible;
-                    } 
-                    else if (column != null)
-                    {
-                        column.Hidden = !item.Visible;
-                        _ = item.Visible == true
-                            ? column?.ShowAsync()
-                            : column?.HideAsync();
-                    }
-                }
-
-                foreach (var item in columns)
-                {
-                    item.HiddenChanged = new EventCallback<bool>(this, delegate (bool value) { ColumnHiddenStateChanged(item.Title, value); });
-                }
-            }
-            catch (Exception e)
-            {
-                MessageService.Error(Loc["HideDisabledColumnError"], e.Message, e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
-            }
-#pragma warning restore BL0005
-        }
-
-        private void MakeColumnsSticky(List<ColumnState> columnStates)
-        {
-            if (DataGrid == null || columnStates.Count == 0)
-            {
-                return;
-            }
-
             foreach (var item in columnStates)
             {
-                var column = DataGrid.RenderedColumns.FirstOrDefault(x => x.Title == item.Title);
-                if (column != null)
+                var column = columns.FirstOrDefault(x => x.Title == item.Title);
+
+                if (column?.Title == @Loc["IsDeletedColumnHeaderText"])
                 {
-                    column.StickyLeft = column.StickyRight = item.Sticky;
+                    IsDeleteColumnHidden = !item.Visible;
+                } 
+                else if (column != null)
+                {
+                    column.Hidden = !item.Visible;
+                    _ = item.Visible == true
+                        ? column?.ShowAsync()
+                        : column?.HideAsync();
                 }
             }
-        }
 
-        private void ReorderColumns(List<ColumnState> columnStates)
-        {
-            // This methods needs some rework and testing
-            if (DataGrid == null || columnStates.Count == 0)
+            foreach (var item in columns)
             {
-                return;
+                item.HiddenChanged = new EventCallback<bool>(this, async delegate(bool value) { await ColumnHiddenStateChanged(item.Title, value); });
             }
+        }
+        catch (Exception e)
+        {
+            MessageService.Error(Loc["HideDisabledColumnError"], e.Message, e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
+        }
+    }
 
-            // reorder the columns
-            var columnOrderByNames = columnStates.Select(x => x.Title).ToList();
-            var reorderedColumns = columnOrderByNames
-                .Select(x => DraggableColumns.FirstOrDefault(y => y.Title == x))
-                .Where(x => x != null)
-                .ToList();
+    private void MakeColumnsSticky(List<ColumnState> columnStates)
+    {
+        if (DataGrid == null || columnStates.Count == 0)
+        {
+            return;
+        }
 
-            // add any missing columns in columnState
-            reorderedColumns.AddRange(DraggableColumns.Where(col => !columnStates.Any(state => state.Title == col.Title)));
-
-            // add select column at the beginning after reordering
-            if (EnableSelection)
+        foreach (var item in columnStates)
+        {
+            var column = DataGrid.RenderedColumns.FirstOrDefault(x => x.Title == item.Title);
+            if (column != null)
             {
-                reorderedColumns.Insert(0, DataGrid.RenderedColumns.First());
+                column.StickyLeft = column.StickyRight = item.Sticky;
             }
-
-            DataGrid.RenderedColumns.Clear();
-            DataGrid.RenderedColumns.AddRange(reorderedColumns);
         }
+    }
 
-        private void ToggleSticky(Column<T> column, bool sticky)
+    private async Task ToggleSticky(Column<T> column, bool sticky)
+    {
+        column.StickyLeft = sticky;
+        column.StickyRight = sticky;
+        await SaveColumnState();
+    }
+    #pragma warning restore BL0005
+
+    private void ReorderColumns(List<ColumnState> columnStates)
+    {
+        // This methods needs some rework and testing
+        if (DataGrid == null || columnStates.Count == 0)
         {
-#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
-            column.StickyLeft = sticky;
-            column.StickyRight = sticky;
-            SaveColumnState();
-#pragma warning restore BL0005
+            return;
         }
 
-        private Task ColumnOrderUpdated(MudItemDropInfo<Column<T>> dropItem)
+        // reorder the columns
+        var columnOrderByNames = columnStates.Select(x => x.Title).ToList();
+        var reorderedColumns = columnOrderByNames
+            .Select(x => DraggableColumns.FirstOrDefault(y => y.Title == x))
+            .Where(x => x != null)
+            .ToList();
+
+        // add any missing columns in columnState
+        reorderedColumns.AddRange(DraggableColumns.Where(col => !columnStates.Any(state => state.Title == col.Title)));
+
+        // add select column at the beginning after reordering
+        if (EnableSelection)
         {
-            if (DataGrid != null)
-            {
-                DataGrid.RenderedColumns.Remove(dropItem.Item);
-                DataGrid.RenderedColumns.Insert(dropItem.IndexInZone, dropItem.Item);
-
-                DropContainerHasChanged();
-
-                SaveColumnState();
-            }
-
-            return Task.CompletedTask;
+            reorderedColumns.Insert(0, DataGrid.RenderedColumns.First());
         }
 
-        private void SaveColumnState()
+        DataGrid.RenderedColumns.Clear();
+        DataGrid.RenderedColumns.AddRange(reorderedColumns);
+    }
+
+    private async Task ColumnOrderUpdated(MudItemDropInfo<Column<T>> dropItem)
+    {
+        if (DataGrid != null)
         {
-            var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
-            if (columns == null || !columns.Any())
-            {
-                return;
-            }
+            DataGrid.RenderedColumns.Remove(dropItem.Item);
+            DataGrid.RenderedColumns.Insert(dropItem.IndexInZone, dropItem.Item);
 
-            var columnStates = columns.Select(x => new ColumnState
-            {
-                Title = x.Title,
-                Visible = !x.Hidden,
-                Sticky = x.StickyLeft,
-            }).ToList();
+            DropContainerHasChanged();
 
-            if (columnStates.Any(x => x.Sticky))
-            {
-                _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
-            }
-
-            SettingManager.SetColumnState(GetListIdentifier(), columnStates);
+            await SaveColumnState();
         }
 
-        private void OpenGridEditor()
+        return;
+    }
+
+    private async ValueTask SaveColumnState()
+    {
+        var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
+        if (columns == null || !columns.Any())
         {
-            IsGridEditorOpen = true;
+            return;
         }
 
-        private void CloseGridEditor()
+        var columnStates = columns.Select(x => new ColumnState
         {
-            IsGridEditorOpen = false;
-        }
+            Title = x.Title,
+            Visible = !x.Hidden,
+            Sticky = x.StickyLeft,
+        }).ToList();
 
-        private void ResetColumnSettings()
+        if (columnStates.Any(x => x.Sticky))
         {
-            SettingManager.SetColumnState(GetListIdentifier(), []);
-            NavigationManager.Refresh(true);
+            await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
         }
 
-        #endregion
+        SettingManager.SetColumnState(GetListIdentifier(), columnStates);
+    }
 
-        internal async Task RerenderDataGrid()
-        {
-            await InvokeAsync(StateHasChanged);
-        }
+    private void OpenGridEditor()
+    {
+        IsGridEditorOpen = true;
+    }
+
+    private void CloseGridEditor()
+    {
+        IsGridEditorOpen = false;
+    }
+
+    private void ResetColumnSettings()
+    {
+        SettingManager.SetColumnState(GetListIdentifier(), []);
+        NavigationManager.Refresh(true);
+    }
+
+    #endregion
+
+    internal async Task RerenderDataGrid()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
 
         #region Export  
 
@@ -1249,85 +1258,84 @@ namespace ShiftSoftware.ShiftBlazor.Components
         [GeneratedRegex("\\$skip=[0-9]+&?|\\$top=[0-9]+&?")]
         private static partial Regex CleanExportUrlRegex();
 
-        #endregion
+    #endregion
 
-        internal async Task SelectRow(T item)
+    internal async Task SelectRow(T item)
+    {
+        // search the selected list, if we find an item with the current item id, then remove it
+        var removedItems = SelectState.Items.RemoveAll(x => x.ID == item.ID);
+
+        // if no items were removed from the list, it means we want to add it to the list
+        if (removedItems == 0 && !SelectState.All)
         {
-            // search the selected list, if we find an item with the current item id, then remove it
-            var removedItems = SelectState.Items.RemoveAll(x => x.ID == item.ID);
-
-            // if no items were removed from the list, it means we want to add it to the list
-            if (removedItems == 0 && !SelectState.All)
-            {
-                SelectState.Items.Add(item);
-            }
-
-            SelectState.All = false;
-            await OnSelectStateChanged.InvokeAsync(SelectState);
+            SelectState.Items.Add(item);
         }
 
-        internal async Task SelectAll(bool selectAll)
+        SelectState.All = false;
+        await OnSelectStateChanged.InvokeAsync(SelectState);
+    }
+
+    internal async Task SelectAll(bool selectAll)
+    {
+        SelectState.All = selectAll;
+        if (selectAll)
         {
-            SelectState.All = selectAll;
-            if (selectAll)
-            {
-                SelectState.Items.Clear();
-            }
-            else
-            {
-                SelectState.Clear();
-            }
-            await OnSelectStateChanged.InvokeAsync(SelectState);
+            SelectState.Items.Clear();
         }
-
-        public void ToggleFilterPanel()
+        else
         {
-            IsFilterPanelOpen = SettingManager?.SetFilterPanelState(!IsFilterPanelOpen) ?? !IsFilterPanelOpen;
+            SelectState.Clear();
         }
+        await OnSelectStateChanged.InvokeAsync(SelectState);
+    }
 
-        public void Reload()
+    public void ToggleFilterPanel()
+    {
+        IsFilterPanelOpen = SettingManager?.SetFilterPanelState(!IsFilterPanelOpen) ?? !IsFilterPanelOpen;
+    }
+
+    public void Reload()
+    {
+        if (ReloadBlockTokenSource?.IsCancellationRequested == false)
         {
-            if (ReloadBlockTokenSource?.IsCancellationRequested == false)
-            {
-                ReloadBlockTokenSource.Cancel();
-            }
-            else
-            {
-                Debouncer.Debounce(100, DataGrid!.ReloadServerData);
-            }
+            ReloadBlockTokenSource.Cancel();
         }
-
-        private async Task PrintItem(string id)
+        else
         {
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                return;
-            }
-
-            var url = IRequestComponent.GetPath(this).AddUrlPath(EntitySet);
-            if (PrintConfig == null)
-            {
-                await PrintService.PrintAsync(url, id);
-            }
-            else
-            {
-                await PrintService.OpenPrintFormAsync(url, id, PrintConfig);
-            }
-        }
-
-        private readonly MudBlazor.Converter<bool, bool?> _oppositeBoolConverter = new()
-        {
-            SetFunc = value => !value,
-            GetFunc = value => !value ?? true,
-        };
-
-        public void Dispose()
-        {
-            dotNetRef?.Dispose();
-            ShiftBlazorEvents.OnModalClosed -= ShiftBlazorEvents_OnModalClosed;
-            IShortcutComponent.Remove(Id);
+            Debouncer.Debounce(100, DataGrid!.ReloadServerData);
         }
     }
 
-    
+    private async Task PrintItem(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return;
+        }
+
+        var url = IRequestComponent.GetPath(this).AddUrlPath(EntitySet);
+        if (PrintConfig == null)
+        {
+            await PrintService.PrintAsync(url, id);
+        }
+        else
+        {
+            await PrintService.OpenPrintFormAsync(url, id, PrintConfig);
+        }
+    }
+
+    private readonly MudBlazor.Converter<bool, bool?> _oppositeBoolConverter = new()
+    {
+        SetFunc = value => !value,
+        GetFunc = value => !value ?? true,
+    };
+
+    public void Dispose()
+    {
+        dotNetRef?.Dispose();
+        ShiftBlazorEvents.OnModalClosed -= ShiftBlazorEvents_OnModalClosed;
+        IShortcutComponent.Remove(Id);
+        GC.SuppressFinalize(this);
+    }
 }
+

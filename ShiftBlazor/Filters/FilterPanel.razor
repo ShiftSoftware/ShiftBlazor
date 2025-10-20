@@ -1,12 +1,13 @@
 ﻿@using ShiftSoftware.ShiftBlazor.Filters.Models
 @using ShiftSoftware.ShiftBlazor.Filters.UI
 
+<form @onsubmit="() => ReloadList(true)">
+
 @if (Parent?.Filters != null)
 {
     @* We cascade these two values for when a list is being used inside a form, so that they don't get disabled by the form *@
     <CascadingValue Name="@FormHelper.ParentReadOnlyName" Value="false">
         <CascadingValue Name="@FormHelper.ParentDisabledName" Value="IsLoading">
-            <form @onsubmit="() => ReloadList(true)">
                 <MudGrid>
                     @foreach (var (id, filter) in Parent.Filters.Where(x => !x.Value.IsHidden).OrderBy(x => x.Value.UIOptions.Order))
                     {
@@ -60,7 +61,6 @@
                     }
                 </MudGrid>
 
-            </form>
         </CascadingValue>
     </CascadingValue>
 }
@@ -70,5 +70,7 @@
 <MudStack Row Class="mt-3">
     <MudSpacer/>
     <MudButton StartIcon="@Icons.Material.Filled.PlaylistRemove" Size="Size.Small" Variant="Variant.Filled" OnClick="Reset" Disabled="IsLoading">Reset</MudButton>
-    <MudButton StartIcon="@Icons.Material.Filled.Search" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => ReloadList(true))" Color="Color.Primary" Disabled="IsLoading">Filter</MudButton>
+    <MudButton StartIcon="@Icons.Material.Filled.Search" Size="Size.Small" Variant="Variant.Filled" ButtonType="ButtonType.Submit" Color="Color.Primary" Disabled="IsLoading">Filter</MudButton>
 </MudStack>
+
+</form>

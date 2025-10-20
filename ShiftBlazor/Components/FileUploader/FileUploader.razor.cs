@@ -46,6 +46,9 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     internal List<UploaderItem> Items { get; set; } = new();
 
+    /// <summary>
+    /// Maximum number of files allowed to be uploaded. Set to -1 for unlimited.
+    /// </summary>
     [Parameter]
     public int MaxFileCount { get; set; } = 16;
 
@@ -195,13 +198,32 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             ["accept"] = InputAccept,
         };
 
-        if (For != null && ShiftForm?.EditContext != null)
+        if (ShiftForm?.EditContext != null)
         {
-            _FieldIdentifier = FieldIdentifier.Create(For);
-            ShiftForm.EditContext.OnValidationStateChanged += (o, args) =>
+            ShiftForm.EditContext.OnValidationRequested += OnValidationRequested;
+
+            if (For != null)
             {
-                ErrorText = ShiftForm.EditContext.GetValidationMessages(_FieldIdentifier).FirstOrDefault();
-            };
+                _FieldIdentifier = FieldIdentifier.Create(For);
+                ShiftForm.EditContext.OnValidationStateChanged += (o, args) =>
+                {
+                    ErrorText = ShiftForm.EditContext.GetValidationMessages(_FieldIdentifier).FirstOrDefault();
+                };
+            }
+        }
+
+    }
+
+    private void OnValidationRequested(object? sender, ValidationRequestedEventArgs e)
+    {
+        if (ShiftForm == null || For == null)
+            return;
+
+        var isUploading = Items.Any(x => x.State is FileUploadState.Waiting or FileUploadState.Prepared or FileUploadState.Uploading);
+        if (isUploading)
+        {
+            ErrorText = Loc["Upload in Progress"];
+            ShiftForm.DisplayError(_FieldIdentifier, ErrorText);
         }
     }
 
@@ -251,13 +273,14 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     private async Task OnInputFileChanged(InputFileChangeEventArgs e)
     {
-        if (e.FileCount + Items.Count > MaxFileCount)
+        if (MaxFileCount != -1 && e.FileCount + Items.Count > MaxFileCount)
         {
             MessageService.Warning(Loc["MaxAllowedFileUploadWarning", MaxFileCount]);
             return;
         }
 
-        var files = e.GetMultipleFiles(MaxFileCount);
+        var maxFileCount = MaxFileCount == -1 ? int.MaxValue : MaxFileCount;
+        var files = e.GetMultipleFiles(maxFileCount);
 
         if (IsDirectoryUpload == true && InputFileRef?.Element != null)
         {
@@ -424,7 +447,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         try
         {
-            var maxFileSize = (long)MaxFileSizeInMegaBytes * 1024 * 1024;
+            var userMaxUploadSize = TypeAuthService?.AccessValue(AzureStorageActionTree.MaxUploadSizeInMegaBytes) ?? 0;
+            var maxFileSize = Math.Max((long)MaxFileSizeInMegaBytes, (long)userMaxUploadSize) * 1024 * 1024;
             using var stream = item.LocalFile.OpenReadStream(maxFileSize);
             var blobClient = new BlobClient(new Uri(item.File!.Url!));
             var token = item.CancellationTokenSource?.Token ?? CancellationToken.None;
@@ -577,7 +601,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     private void OpenErrorDialog(Message message)
     {
-        DialogService.ShowMessageBox(message.Title, message.Body);
+        DialogService.ShowMessageBox(message.Title, message.Body ?? message.Title);
     }
 
     [JSInvokable]

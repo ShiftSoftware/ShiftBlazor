@@ -14,11 +14,8 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using System;
+using System.ComponentModel;
 using System.Linq.Expressions;
-using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -42,212 +39,281 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     private EditContext? EditContext { get; set; } = default!;
 
     [Parameter]
+    [Description("Currently selected value (single select).")]
     public ShiftEntitySelectDTO? Value { get; set; }
 
     [Parameter]
+    [Description("Raised when the single selected value changes.")]
     public EventCallback<ShiftEntitySelectDTO?> ValueChanged { get; set; }
 
     [Parameter]
+    [Description("Currently selected values (multi-select).")]
     public List<ShiftEntitySelectDTO>? SelectedValues { get; set; } = [];
 
     [Parameter]
+    [Description("Raised when the multi-select collection changes.")]
     public EventCallback<List<ShiftEntitySelectDTO>> SelectedValuesChanged { get; set; }
 
     [Parameter]
+    [Description("OData entity set name to query.")]
     [EditorRequired]
     public string EntitySet { get; set; }
 
     [Parameter]
+    [Description("Overrides the default OData endpoint path.")]
     public string? Endpoint { get; set; }
 
     [Parameter]
+    [Description("Absolute base URL for the API (overrides app settings).")]
     public string? BaseUrl { get; set; }
 
     [Parameter]
+    [Description("Lookup key for resolving the API base URL from settings.")]
     public string? BaseUrlKey { get; set; }
 
     [Parameter]
+    [Description("Input label text.")]
     public string? Label { get; set; }
 
     [Parameter]
+    [Description("MudBlazor input variant (e.g., Text, Filled, Outlined).")]
     public Variant Variant { get; set; } = Variant.Text;
 
     [Parameter]
+    [Description("Marks the field as required and shows required styling.")]
     public bool Required { get; set; }
 
     [Parameter]
+    [Description("Enable multiple selection of items.")]
     public bool MultiSelect { get; set; }
 
     [Parameter]
+    [Description("Maximum number of items to fetch/display per query.")]
     public int MaxItems { get; set; } = 25;
 
     [Parameter]
+    [Description("Maximum dropdown height in pixels.")]
     public int MaxHeight { get; set; } = 300;
 
     [Parameter]
+    [Description("Allow arbitrary user text as a selectable value (free input).")]
     public bool FreeInput { get; set; }
 
     [Parameter]
+    [Description("Show a clear button and allow clearing the selection.")]
     public bool Clearable { get; set; }
 
     [Parameter]
+    [Description("Automatically open the dropdown when the input gains focus.")]
     public bool OpenOnFocus { get; set; } = true;
 
     [Parameter]
+    [Description("Disables user interaction with the input.")]
     public bool Disabled { get; set; }
 
     [Parameter]
+    [Description("Makes the input read-only (no editing, still focusable).")]
     public bool ReadOnly { get; set; }
 
     [Parameter]
+    [Description("EditForm binding for validation; usually like: For=\"@(() => Model.Field)\".")]
     public Expression<Func<ShiftEntitySelectDTO>>? For { get; set; }
 
     [Parameter]
+    [Description("Custom error text to display when the field is invalid.")]
     public string? ErrorText { get; set; }
 
     [Parameter]
+    [Description("Force the field into an error state (visual only).")]
     public bool Error { get; set; }
 
     [Parameter]
+    [Description("Dropdown anchor origin (popper alignment).")]
     public Origin AnchorOrigin { get; set; } = Origin.BottomLeft;
 
     [Parameter]
+    [Description("Dropdown transform origin (popper transform alignment).")]
     public Origin TransformOrigin { get; set; } = Origin.TopLeft;
 
     [Parameter]
+    [Description("Behavior when the dropdown would overflow its container.")]
     public OverflowBehavior OverflowBehavior { get; set; } = OverflowBehavior.FlipOnOpen;
 
     [Parameter]
+    [Description("Fix the dropdown position (useful in modals/overlays).")]
     public bool DropdownFixed { get; set; } = false;
 
     [Parameter]
+    [Description("Lock page scroll while the dropdown is open.")]
     public bool LockScroll { get; set; } = true;
 
     [Parameter]
+    [Description("Show an underline style for the input (Material style).")]
     public bool Underline { get; set; } = true;
 
     [Parameter]
+    [Description("Placeholder text shown when no value is selected.")]
     public string? Placeholder { get; set; }
 
     [Parameter]
+    [Description("Suppress rapid input text updates during typing (improves UX).")]
     public bool TextUpdateSuppression { get; set; } = true;
 
     [Parameter]
+    [Description("Custom content rendered inside the component.")]
     public RenderFragment? ChildContent { get; set; }
 
     [Parameter]
+    [Description("Group/collapse selected chips into a single expandable group.")]
     public bool GroupSelectedValues { get; set; }
 
     // ======== Classes and Styles =========
     [Parameter]
+    [Description("CSS class applied to the root element.")]
     public string? Class { get; set; }
 
     [Parameter]
+    [Description("Inline styles applied to the root element.")]
     public string? Style { get; set; }
 
     [Parameter]
+    [Description("CSS class applied to the input element.")]
     public string? InputClass { get; set; }
 
     [Parameter]
+    [Description("Inline styles applied to the input element.")]
     public string? InputStyle { get; set; }
 
     [Parameter]
+    [Description("CSS class applied to the dropdown container.")]
     public string? DropdownClass { get; set; }
 
     [Parameter]
+    [Description("CSS class applied to the list (menu) element.")]
     public string? ListClass { get; set; }
 
     [Parameter]
+    [Description("CSS class applied to each list item.")]
     public string? ListItemClass { get; set; }
 
 
     // ======== Template Parameters =========
     [Parameter]
+    [Description("Template for rendering each dropdown item. Context provides the item and selection state.")]
     public RenderFragment<DropdownItemContext<TEntitySet>>? DropdownItemTemplate { get; set; }
 
     [Parameter]
+    [Description("Template for customizing the input area (text field, chips, etc.).")]
     public RenderFragment<AutcompleteInputContext<TEntitySet>>? InputTemplate { get; set; }
 
     [Parameter]
+    [Description("Template for rendering selected values (chips/items).")]
     public RenderFragment<SelectedValueContext<TEntitySet>>? SelectedValuesTemplate { get; set; }
 
     [Parameter]
+    [Description("Template shown when no items are available.")]
     public RenderFragment? NoItemsTemplate { get; set; }
 
     [Parameter]
+    [Description("Template shown while items are loading.")]
     public RenderFragment? LoadingTemplate { get; set; }
 
     [Parameter]
+    [Description("Template rendered after the items list (footer).")]
     public RenderFragment? AfterItemsTemplate { get; set; }
 
     [Parameter]
+    [Description("Template rendered before the items list (header).")]
     public RenderFragment? BeforeItemsTemplate { get; set; }
 
     [Parameter]
+    [Description("Template for the grouped selected-values panel.")]
     public RenderFragment<SelectedValuesGroupContext<TEntitySet>>? SelectedValuesGroupTemplate { get; set; }
 
     // ======== Adornment Parameters ========
 
     [Parameter]
+    [Description("Icon shown as an input adornment (defaults to Add/Preview depending on state).")]
     public string? AdornmentIcon { get; set; }
 
     [Parameter]
+    [Description("Adornment position (Start or End).")]
     public Adornment Adornment { get; set; } = Adornment.End;
 
     [Parameter]
+    [Description("Color of the adornment icon.")]
     public Color AdornmentColor { get; set; } = Color.Default;
 
     [Parameter]
+    [Description("Size of the adornment icon.")]
     public Size AdornmentSize { get; set; } = Size.Medium;
 
     [Parameter]
+    [Description("ARIA label for the adornment button (accessibility).")]
     public string? AdornmentAriaLabel { get; set; }
 
     [Parameter]
+    [Description("Raised when the adornment is clicked. If not handled, clicking toggles the dropdown.")]
     public EventCallback<MouseEventArgs> OnAdornmentClick { get; set; }
 
     // ======== Quick Add Parameters ========
     [Parameter]
+    [Description("Component type to render in the Quick Add modal.")]
     public Type? QuickAddComponentType { get; set; }
 
     [Parameter]
+    [Description("Quick Add parameter name to receive the current text input.")]
     public string? QuickAddParameterName { get; set; }
 
     // ======== Events Parameters ========
 
     [Parameter]
+    [System.ComponentModel.Description("Hook before sending the HTTP request. Return false to cancel.")]
     public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
+
     [Parameter]
+    [System.ComponentModel.Description("Hook after receiving the HTTP response. Return false to skip default handling.")]
     public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
+
     [Parameter]
+    [System.ComponentModel.Description("Hook when an error occurs during fetch. Return true to mark as handled.")]
     public Func<Exception, ValueTask<bool>>? OnError { get; set; }
+
     [Parameter]
+    [System.ComponentModel.Description("Hook after parsing the OData result. Return false to skip default update.")]
     public Func<ODataDTO<TEntitySet>?, ValueTask<bool>>? OnResult { get; set; }
 
     [Parameter]
+    [System.ComponentModel.Description("Raised when the input gains focus. Return false to block default behavior.")]
     public Func<ValueTask<bool>>? OnInputFocus { get; set; }
 
     [Parameter]
+    [System.ComponentModel.Description("Raised when the input loses focus. Return false to block default behavior.")]
     public Func<ValueTask<bool>>? OnInputBlur { get; set; }
 
     [Parameter]
+    [System.ComponentModel.Description("Key down handler for the input. Return false to suppress default handling.")]
     public Func<KeyboardEventArgs, ValueTask<bool>>? OnFieldKeyDown { get; set; }
 
     [Parameter]
+    [System.ComponentModel.Description("Key up handler for the input. Return false to suppress default handling.")]
     public Func<KeyboardEventArgs, ValueTask<bool>>? OnFieldKeyUp { get; set; }
 
     [Parameter]
+    [System.ComponentModel.Description("Raised before opening the Quick Add modal.")]
     public EventCallback<object> OnQuickAddClick { get; set; }
 
     [Parameter]
+    [System.ComponentModel.Description("Raised when the clear button is clicked.")]
     public EventCallback OnClearClick { get; set; }
 
     [Parameter]
+    [System.ComponentModel.Description("Raised when the dropdown open/close state changes.")]
     public EventCallback<bool> OnDropdownStateChanged { get; set; }
-
     // ======= Filter Properties =======
 
     [Parameter]
+    [Description("Callback to build and inject OData filters for the query.")]
     public Action<ODataFilterGenerator>? Filter { get; set; }
     public bool FilterImmediate { get; set; }
     public RenderFragment? FilterTemplate { get; set; }
@@ -439,7 +505,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         }
         catch (Exception e)
         {
-            if (OnError != null && await OnError.Invoke(e))
+            if (OnError != null && !(await OnError.Invoke(e)))
                 return;
 
             Console.WriteLine($"fetch error {e}");
@@ -588,7 +654,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         var _item = ToSelectDTO(item);
         if (_item == null)
         {
-            MessageService.Error("Could not select item");
+            MessageService.Error(Loc["CouldNotSelectItemError"]);
             return;
         }
         await SelectItem(_item);
@@ -984,7 +1050,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         }
         catch (Exception e)
         {
-            MessageService.Error("Failed to load initial data", "Failed to retrieve data", e.Message);
+            MessageService.Error(Loc["Failed to load initial data"], Loc["Failed to retrieve data"], e.Message);
         }
 
         if (!MultiSelect)
@@ -1150,4 +1216,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         InitialUpdateTokenSource?.Dispose();
         IShortcutComponent.Remove(Id);
     }
+
+    public object? GetParamValue(string paramName)
+    {
+        var prop = GetType().GetProperty(paramName);
+        return prop?.GetValue(this);
+    }
+
 }

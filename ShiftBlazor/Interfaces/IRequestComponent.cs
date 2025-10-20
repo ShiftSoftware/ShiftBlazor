@@ -93,7 +93,7 @@ public interface IODataRequestComponent<T> : IODataRequest, IRequestComponent
             throw new JsonException(body, e);
         }
 
-        if (self.OnResult != null && await self.OnResult.Invoke(content))
+        if (self.OnResult != null && !(await self.OnResult.Invoke(content)))
             return null;
 
         if (content == null || content.Count == null)

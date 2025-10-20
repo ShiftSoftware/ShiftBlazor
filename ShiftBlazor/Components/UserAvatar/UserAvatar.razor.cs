@@ -42,7 +42,7 @@ public partial class UserAvatar
         NavigationManager.NavigateTo("/", true);
     }
 
-    internal void OpenSettings() => Dialog.Show<Settings>();
+    internal async Task OpenSettings() => await Dialog.ShowAsync<Settings>();
 
     internal void IsOpenHandler(bool open) => IsOpen = open;
 

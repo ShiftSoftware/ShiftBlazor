@@ -1,5 +1,4 @@
-﻿
-using ShiftSoftware.ShiftEntity.Model.Dtos;
+﻿using ShiftSoftware.ShiftEntity.Model.Dtos;
 
 namespace ShiftSoftware.ShiftBlazor.Components.ShiftAutocomplete;
 

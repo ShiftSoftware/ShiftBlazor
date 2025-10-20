@@ -2,18 +2,23 @@
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Filters.Builders;
 using ShiftSoftware.ShiftBlazor.Filters.Models;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Utils;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
+public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>, IODataRequest
 {
     [Parameter]
     public IEnumerable<string>? Value { get; set; }
     private IEnumerable<string>? OldValue { get; set; }
 
     [Parameter]
+    [EditorRequired]
     public string? EntitySet { get; set; }
+
+    [Parameter]
+    public string? Endpoint { get; set; }
 
     [Parameter]
     public string? BaseUrl { get; set; }
@@ -25,6 +30,7 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
     public Dictionary<string, object>? AdditionalParameters { get; set; }
 
     [Parameter]
+    [EditorRequired]
     public Type? DTOType { get; set; }
 
     [Parameter]
@@ -49,6 +55,7 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
             {
                 BaseUrl = BaseUrl,
                 BaseUrlKey = BaseUrlKey,
+                Endpoint = Endpoint,
                 EntitySet = EntitySet,
                 AdditionalParameters = AdditionalParameters,
             };
@@ -67,6 +74,7 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
                     nameof(BaseUrl) => BaseUrl == parameter.Value as string,
                     nameof(BaseUrlKey) => BaseUrlKey == parameter.Value as string,
                     nameof(EntitySet) => EntitySet == parameter.Value as string,
+                    nameof(Endpoint) => Endpoint == parameter.Value as string,
                     _ => true,
                 };
 
@@ -99,6 +107,7 @@ public class ForeignFilter<T, TProperty> : FilterBuilder<T, TProperty>
             {
                 BaseUrl = BaseUrl,
                 BaseUrlKey = BaseUrlKey,
+                Endpoint = Endpoint,
                 EntitySet = EntitySet,
                 AdditionalParameters = AdditionalParameters,
             };

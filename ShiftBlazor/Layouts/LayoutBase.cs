@@ -21,8 +21,9 @@ public class LayoutBase : LayoutComponentBase
         base.OnInitialized();
 
         NavManager.LocationChanged += HandleLocationChanged;
-        OpenModals();
     }
+
+    protected override Task OnInitializedAsync() => OpenModals();
 
     [JSInvokable]
     public static void SendKeys(IEnumerable<string> keys)
@@ -32,12 +33,12 @@ public class LayoutBase : LayoutComponentBase
 
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        OpenModals();
+        _ = OpenModals();
     }
 
-    private void OpenModals()
+    private async Task OpenModals()
     {
-        ShiftModal.UpdateModals();
+        await ShiftModal.UpdateModals();
     }
 
 }

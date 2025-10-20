@@ -1,6 +1,4 @@
-﻿using ShiftSoftware.ShiftBlazor.Extensions;
-using ShiftSoftware.ShiftEntity.Core.Extensions;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace ShiftSoftware.ShiftBlazor.Services;
 
@@ -8,7 +6,7 @@ public class AppConfiguration
 {
     public string BaseAddress { get; set; } = string.Empty;
 
-    public Dictionary<string, string?> ExternalAddresses = new();
+    public Dictionary<string, string?> ExternalAddresses = [];
     public string? UserListEndpoint { get; set; }
 
 
@@ -26,7 +24,7 @@ public class AppConfiguration
 
     public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
 
-    public List<LanguageInfo> Languages = new();
+    public List<LanguageInfo> Languages = [];
 
     public AppConfiguration AddLanguage(string culture, string label, bool rtl = false)
     {

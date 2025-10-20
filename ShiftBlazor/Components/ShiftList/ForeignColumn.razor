@@ -4,7 +4,6 @@
 @typeparam TEntity where TEntity : ShiftEntityDTOBase, new()
 @inherits PropertyColumnExtended<T, TProperty>
 @implements IDisposable
-@implements IODataComponent
 
 @{
     base.BuildRenderTree(__builder);
@@ -13,7 +12,7 @@
 @code {
     internal RenderFragment<CellContext<T>> _CellTemplate => context =>
     @<text>
-        @if (IsReady && !FailedToLoadData)
+        @if (IsReady && !FailedToLoadData && TValueField != null)
         {
             try
             {

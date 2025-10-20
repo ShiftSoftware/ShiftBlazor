@@ -40,52 +40,17 @@ window.getQueryParam = function(key) {
     return urlParams.get(key);
 }
 
-window.updateQueryParams= function (newParams) {
+window.updateQueryParams = function (newParams) {
     const url = new URL(window.location);
     Object.entries(newParams).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
+        if (value) {
+            url.searchParams.set(key, value);
+        } else {
+            url.searchParams.delete(key);
+        }
     });
     history.pushState({}, '', url);
 }
-
-function dispatchUrlChange() {
-    window.dispatchEvent(new CustomEvent('urlchange', { detail: window.location }));
-}
-
-// Overwrite pushState and ReplaceState to be included in urlchange event
-const originalPushState = history.pushState;
-history.pushState = function (...args) {
-    originalPushState.apply(history, args);
-    dispatchUrlChange();
-};
-
-const originalReplaceState = history.replaceState;
-history.replaceState = function (...args) {
-    originalReplaceState.apply(history, args);
-    dispatchUrlChange();
-};
-
-window.addEventListener('popstate', dispatchUrlChange);
-
-const customListeners = {};
-
-window.addCustomUrlChangeListener = function (dotNetRef, listenerId) {
-    const listener = (e) => {
-        dotNetRef.invokeMethodAsync("OnUrlChanged", e.detail.href);
-    };
-
-    customListeners[listenerId] = listener;
-    window.addEventListener("urlchange", listener);
-};
-
-window.removeCustomUrlChangeListener = function (listenerId) {
-    const listener = customListeners[listenerId];
-    if (listener) {
-        window.removeEventListener("urlchange", listener);
-        delete customListeners[listenerId];
-    }
-};
-
 
 window.getWindowDimensions = function () {
     return {
@@ -123,12 +88,16 @@ window.releaseAltKey = function (e) {
     }
 }
 
-window.SetAsSortable = function (id) {
+window.SetAsSortable = function (id, counter = 0) {
+    // Wait for Sortable to be loaded
     if (typeof window["Sortable"] != "function") {
+        if (counter < 10) {
+            setTimeout(() => SetAsSortable(id, ++counter), 1000);
+        }
         return;
     }
-    let addButtonClass = ".add-file";
 
+    let addButtonClass = ".add-file";
     let element = document.getElementById(id);
     let grid = element.querySelector(".mud-grid");
 

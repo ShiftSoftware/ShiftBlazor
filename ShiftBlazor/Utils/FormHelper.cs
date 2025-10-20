@@ -3,48 +3,47 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace ShiftSoftware.ShiftBlazor.Utils
+namespace ShiftSoftware.ShiftBlazor.Utils;
+
+public class FormHelper
 {
-    public class FormHelper
+    public const string ParentDisabledName = "ParentDisabled";
+    public const string ParentReadOnlyName = "ParentReadOnly";
+    public static bool IsRequired<T>(Expression<Func<T>> _for)
     {
-        public const string ParentDisabledName = "ParentDisabled";
-        public const string ParentReadOnlyName = "ParentReadOnly";
-        public static bool IsRequired<T>(Expression<Func<T>> _for)
+        try
         {
-            try
+            var memberExpression = (MemberExpression)_for!.Body;
+            var type = memberExpression.Expression?.Type;
+            var name = memberExpression.Member.Name;
+
+            var isRequired = (type?.GetProperty(name))?.GetCustomAttribute<RequiredAttribute>() != null;
+            
+            if (isRequired) return isRequired;
+
+            var assemblyScanner = AssemblyScanner
+                .FindValidatorsInAssembly(type?.Assembly)
+                .FirstOrDefault(x => x.InterfaceType.GenericTypeArguments.First() == type);
+
+            if (assemblyScanner != null)
             {
-                var memberExpression = (MemberExpression)_for!.Body;
-                var type = memberExpression.Expression?.Type;
-                var name = memberExpression.Member.Name;
+                var validator = Activator.CreateInstance(assemblyScanner.ValidatorType) as IValidator;
+                var propertyRule = validator?
+                        .CreateDescriptor()
+                        .GetRulesForMember(name)
+                        .FirstOrDefault();
+                var RuleTypes = propertyRule?.Components.Select(x => x.Validator.GetType());
 
-                var isRequired = (type?.GetProperty(name))?.GetCustomAttribute<RequiredAttribute>() != null;
-                
-                if (isRequired) return isRequired;
-
-                var assemblyScanner = AssemblyScanner
-                    .FindValidatorsInAssembly(type?.Assembly)
-                    .FirstOrDefault(x => x.InterfaceType.GenericTypeArguments.First() == type);
-
-                if (assemblyScanner != null)
-                {
-                    var validator = Activator.CreateInstance(assemblyScanner.ValidatorType) as IValidator;
-                    var propertyRule = validator?
-                            .CreateDescriptor()
-                            .GetRulesForMember(name)
-                            .FirstOrDefault();
-                    var RuleTypes = propertyRule?.Components.Select(x => x.Validator.GetType());
-
-                    isRequired = RuleTypes?.Any(x => x.Name.StartsWith("NotEmpty") || x.Name.StartsWith("NotNull")) ?? false;
-                }
-
-                return isRequired;
-
+                isRequired = RuleTypes?.Any(x => x.Name.StartsWith("NotEmpty") || x.Name.StartsWith("NotNull")) ?? false;
             }
-            catch (Exception)
-            {
 
-                return false;
-            }
+            return isRequired;
+
+        }
+        catch (Exception)
+        {
+
+            return false;
         }
     }
 }

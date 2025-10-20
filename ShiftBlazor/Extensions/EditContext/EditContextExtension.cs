@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using FluentValidation.Internal;
+using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.ShiftBlazor.Extensions.EditContext;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -11,14 +12,12 @@ namespace Microsoft.AspNetCore.Components.Forms;
 
 public static class EditContextExtension
 {
-    // TODO
-    // Validate list of complex objects
 
     private static readonly char[] Separators = { '.', '[' };
 
     private static readonly ConcurrentDictionary<(Type ModelType, string FieldName), PropertyInfo?> _propertyInfoCache = new();
 
-    public static bool Validate(this EditContext editContext, in List<FieldIdentifier> fields, IValidator? validator = null, ValidationMessageStore? messageStore = null)
+    public static bool Validate(this EditContext editContext, in List<FieldIdentifier> fields, IServiceProvider serviceProvider, IValidator? validator = null, ValidationMessageStore? messageStore = null)
     {
         messageStore ??= new ValidationMessageStore(editContext);
 
@@ -28,10 +27,45 @@ public static class EditContextExtension
         // then don't run the FluentValidation validator 
         if (isValid)
         {
-            isValid = editContext.ValidateFluentValidation(fields, validator, messageStore);
+            isValid = editContext.ValidateFluentValidation(fields, serviceProvider, validator, messageStore);
         }
 
+        editContext.NotifyValidationStateChanged();
         return isValid;
+    }
+
+    public static List<string> ValidateDataAnnotationValue(this EditContext editContext, object value, IEnumerable<ValidationAttribute> validationAttributes)
+    {
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(editContext.Model);
+
+        Validator.TryValidateValue(value, context, results, validationAttributes);
+
+        return results
+            .Where(result => !string.IsNullOrWhiteSpace(result.ErrorMessage))
+            .Select(result => result.ErrorMessage!)
+            .ToList();
+    }
+
+    public static List<string> ValidateFluentValidationValue(this EditContext editContext, object value, string field, IServiceProvider serviceProvider, IValidator? validator = null)
+    {
+        var modelType = editContext.Model.GetType();
+        var instance = Activator.CreateInstance(modelType);
+
+        if (instance == null)
+            return [];
+
+        instance.GetType().GetProperty(field)!.SetValue(instance, value);
+        var compositeSelector = editContext.GetFluentSelector([editContext.Field(field)], instance);
+        validator ??= ScanValidator(editContext.Model.GetType(), serviceProvider);
+
+        if (validator == null || compositeSelector == null)
+            return [];
+
+        var context = new ValidationContext<object>(instance, new PropertyChain(), compositeSelector);
+        var result = validator.Validate(context);
+
+        return result.Errors.Select(x => x.ErrorMessage).ToList();
     }
 
     public static bool ValidateDataAnnotation(this EditContext editContext, in List<FieldIdentifier>? fields, ValidationMessageStore? messageStore = null)
@@ -39,8 +73,6 @@ public static class EditContextExtension
         messageStore ??= new ValidationMessageStore(editContext);
         var isValid = true;
         var results = new List<ValidationResult>();
-
-        editContext.ClearErrors(fields, messageStore);
 
         if (fields == null)
         {
@@ -53,14 +85,8 @@ public static class EditContextExtension
             {
                 if (TryGetValidatableProperty(field, out var propertyInfo))
                 {
-                    var propertyValue = propertyInfo?.GetValue(editContext.Model);
-
-                    if (propertyInfo == null)
-                    {
-                        throw new Exception($"Property '{field.FieldName}' not found on model type '{editContext.Model.GetType().FullName}'.");
-                    }
-
-                    var validationContext = new ValidationContext(editContext.Model)
+                    var propertyValue = propertyInfo.GetValue(field.Model);
+                    var validationContext = new ValidationContext(field.Model)
                     {
                         MemberName = propertyInfo.Name
                     };
@@ -71,26 +97,24 @@ public static class EditContextExtension
                     }
                 }
 
+                messageStore.Clear(field);
             }
         }
 
-        foreach (var error in results)
+        var validationResults = results
+            .SelectMany(result => result.MemberNames.Select(name => (name, result.ErrorMessage)))
+            .Where(result => !string.IsNullOrWhiteSpace(result.name) && !string.IsNullOrWhiteSpace(result.ErrorMessage));
+
+        foreach (var (name, errorMessage) in validationResults)
         {
-            if (!string.IsNullOrWhiteSpace(error.ErrorMessage))
-            {
-                foreach (var name in error.MemberNames)
-                {
-                    var field = editContext.ToFieldIdentifier(name);
-                    messageStore.Add(field, error.ErrorMessage);
-                }
-            }
+            var field = editContext.ToFieldIdentifier(name);
+            messageStore.Add(field, errorMessage!);
         }
 
-        editContext.NotifyValidationStateChanged();
         return isValid;
     }
 
-    public static bool ValidateFluentValidation(this EditContext editContext, in List<FieldIdentifier>? fields, IValidator? validator = null, ValidationMessageStore? messageStore = null)
+    public static bool ValidateFluentValidation(this EditContext editContext, in List<FieldIdentifier>? fields, IServiceProvider serviceProvider, IValidator? validator = null, ValidationMessageStore? messageStore = null)
     {
         messageStore ??= new ValidationMessageStore(editContext);
         var isValid = true;
@@ -100,24 +124,15 @@ public static class EditContextExtension
         IntersectingCompositeValidatorSelector? compositeSelector = null;
         if (fields != null)
         {
-            var propertyPaths = fields.Select(editContext.ToFluentPropertyPath).Where(x => !string.IsNullOrWhiteSpace(x));
+            compositeSelector = editContext.GetFluentSelector(fields);
 
-            if (!propertyPaths.Any())
+            if (compositeSelector == null)
             {
                 return isValid;
             }
-
-            var context = new ValidationContext<object>(editContext.Model);
-            var fluentValidationValidatorSelector = context.Selector;
-            var changedPropertySelector = ValidationContext<object>.CreateWithOptions(editContext.Model, strategy =>
-            {
-                strategy.IncludeProperties(propertyPaths.ToArray());
-            }).Selector;
-
-            compositeSelector = new([fluentValidationValidatorSelector, changedPropertySelector]);
         }
 
-        validator ??= ScanValidator(editContext.Model.GetType());
+        validator ??= ScanValidator(editContext.Model.GetType(), serviceProvider);
 
         if (validator != null)
         {
@@ -136,7 +151,6 @@ public static class EditContextExtension
             isValid = result.IsValid;
         }
 
-        editContext.NotifyValidationStateChanged();
         return isValid;
     }
 
@@ -165,10 +179,10 @@ public static class EditContextExtension
     {
         messageStore ??= new ValidationMessageStore(context);
 
-        foreach (var err in errors)
+        foreach (var (propPath, error) in errors)
         {
-            var field = ToFieldIdentifier(context, err.Key);
-            messageStore.Add(field, err.Value);
+            var field = context.ToFieldIdentifier(propPath);
+            messageStore.Add(field, error);
         }
 
         context.NotifyValidationStateChanged();
@@ -289,7 +303,11 @@ public static class EditContextExtension
 
             var nonPrimitiveProperties = currentModelObject?.GetType()
                 .GetProperties()
-                .Where(prop => !prop.PropertyType.IsPrimitive || prop.PropertyType.IsArray) ?? new List<PropertyInfo>();
+                .Where(prop =>
+                {
+                    var type = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                    return type.IsArray || (!type.IsPrimitive && type.IsClass && type != typeof(string));
+                }) ?? new List<PropertyInfo>();
 
             foreach (var nonPrimitiveProperty in nonPrimitiveProperties)
             {
@@ -336,18 +354,49 @@ public static class EditContextExtension
         return string.Empty;
     }
 
-    public static IValidator? ScanValidator(Type modelType)
+    public static IValidator? ScanValidator(Type modelType, IServiceProvider serviceProvider)
     {
+        var validatorType = typeof(IValidator<>).MakeGenericType(modelType);
+        try
+        {
+            if (serviceProvider.GetService(validatorType) is IValidator validator)
+            {
+                return validator;
+            }
+        }
+        catch (Exception) { }
+
         var assemblyScanner = AssemblyScanner
             .FindValidatorsInAssembly(modelType?.Assembly)
             .FirstOrDefault(x => x.InterfaceType.GenericTypeArguments.First() == modelType);
 
         if (assemblyScanner != null)
         {
-            return Activator.CreateInstance(assemblyScanner.ValidatorType) as IValidator;
+            return ActivatorUtilities.CreateInstance(serviceProvider, assemblyScanner.ValidatorType) as IValidator;
         }
 
         return null;
+    }
+
+    private static IntersectingCompositeValidatorSelector? GetFluentSelector(this EditContext editContext, in List<FieldIdentifier> fields, object? model = null)
+    {
+        model ??= editContext.Model;
+
+        var propertyPaths = fields.Select(editContext.ToFluentPropertyPath).Where(x => !string.IsNullOrWhiteSpace(x));
+
+        if (!propertyPaths.Any())
+        {
+            return null;
+        }
+
+        var context = new ValidationContext<object>(model);
+        var fluentValidationValidatorSelector = context.Selector;
+        var changedPropertySelector = ValidationContext<object>.CreateWithOptions(model, strategy =>
+        {
+            strategy.IncludeProperties(propertyPaths.ToArray());
+        }).Selector;
+
+        return new([fluentValidationValidatorSelector, changedPropertySelector]);
     }
 
     private static bool TryGetValidatableProperty(in FieldIdentifier fieldIdentifier, [NotNullWhen(true)] out PropertyInfo? propertyInfo)

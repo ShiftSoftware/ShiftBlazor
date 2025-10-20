@@ -84,7 +84,7 @@
     [Parameter]
     public ShiftIdentityHostingTypes IdentityHostingType { get; set; }
 
-    private AppLayoutContext AppContext;
+    private AppLayoutContext AppContext = default!;
 
     protected override void OnInitialized()
     {

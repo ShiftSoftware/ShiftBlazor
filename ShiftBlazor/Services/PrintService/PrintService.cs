@@ -1,7 +1,6 @@
 ﻿using Microsoft.JSInterop;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Components.Print;
-using System.IO;
 
 namespace ShiftSoftware.ShiftBlazor.Services;
 
@@ -50,8 +49,6 @@ public class PrintService
             CloseOnEscapeKey = false,
         };
 
-        var dialogReference = await DialogService.ShowAsync<PrintForm>("", parameters, dialogOptions);
-
-        return dialogReference;
+        return await DialogService.ShowAsync<PrintForm>("", parameters, dialogOptions);
     }
 }

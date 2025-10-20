@@ -23,8 +23,8 @@ public partial class FilterPanel : ComponentBase, IDisposable
 
     public ODataFilterGenerator? ODataFilters { get; private set; }
 
-    private IEnumerable<PropertyInfo> Fields = [];
-    private bool IsAnd = true;
+    private readonly IEnumerable<PropertyInfo> Fields = [];
+    private readonly bool IsAnd = true;
     private bool IsLoading { get; set; }
 
     protected override void OnInitialized()
@@ -74,6 +74,9 @@ public partial class FilterPanel : ComponentBase, IDisposable
 
     private void Reset()
     {
+        if (Parent == null)
+            return;
+
         foreach (var filter in Parent.Filters.Values.Where(x => !x.IsHidden))
         {
             filter.Value = null;
@@ -87,5 +90,6 @@ public partial class FilterPanel : ComponentBase, IDisposable
         {
             ShiftBlazorEvents.OnBeforeGridDataBound -= OnListFetched;
         }
+        GC.SuppressFinalize(this);
     }
 }

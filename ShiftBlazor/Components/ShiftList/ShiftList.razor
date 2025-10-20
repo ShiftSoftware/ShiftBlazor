@@ -5,7 +5,6 @@
 @using ShiftSoftware.ShiftEntity.Model.Flags
 @typeparam T where T : ShiftEntityDTOBase, new()
 @inherits EventComponentBase
-@implements IODataComponent
 
 @if (TypeAuthAction == null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
 {

@@ -46,6 +46,13 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     public int xs { get; set; }
 #pragma warning restore IDE1006 // Naming Styles
 
+    /// <summary>
+    /// Format string to format the value, e.g. "yyyy-MM-dd" for DateTime and "C" for decimal
+    /// Can only be used with DateTime and numeric types
+    /// </summary>
+    [Parameter]
+    public string? Format { get; set; }
+
     [Parameter]
     public int Order { get; set; } = int.MaxValue;
     [Parameter]
@@ -108,6 +115,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
             md = md,
             sm = sm,
             xs = xs,
+            Format = Format,
             Order = Order,
             Template = Template,
         };
@@ -181,6 +189,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
             md = md,
             sm = sm,
             xs = xs,
+            Format = Format,
             Order = Order,
             Template = Template,
         };

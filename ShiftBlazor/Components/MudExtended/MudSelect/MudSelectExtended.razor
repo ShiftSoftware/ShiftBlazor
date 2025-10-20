@@ -8,6 +8,9 @@
 }
 
 @code {
+    [CascadingParameter]
+    public IFormSection? FormSection { get; set; }
+
     private bool FirstRun = true;
 
     public override Task SetParametersAsync(ParameterView parameters)
@@ -26,8 +29,13 @@
 
     protected override void OnInitialized()
     {
-        var type = Nullable.GetUnderlyingType(typeof(T));
-        type ??= typeof(T);
+        if (For != null && FormSection != null)
+        {
+            FormSection.Add(Microsoft.AspNetCore.Components.Forms.FieldIdentifier.Create(For));
+
+        }
+
+        var type = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
 
         if (ChildContent == null && type.IsEnum)
         {

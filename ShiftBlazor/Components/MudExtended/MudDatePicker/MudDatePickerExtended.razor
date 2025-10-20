@@ -7,6 +7,9 @@
 }
 
 @code {
+    [CascadingParameter]
+    public IFormSection? FormSection { get; set; }
+
     private bool FirstRun = true;
 
     public override Task SetParametersAsync(ParameterView parameters)
@@ -21,5 +24,15 @@
         }
 
         return base.SetParametersAsync(parameters);
+    }
+
+    override protected void OnInitialized()
+    {
+        if (For != null && FormSection != null)
+        {
+            FormSection.Add(Microsoft.AspNetCore.Components.Forms.FieldIdentifier.Create(For));
+
+        }
+        base.OnInitialized();
     }
 }
