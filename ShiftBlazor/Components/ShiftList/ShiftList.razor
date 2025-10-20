@@ -394,7 +394,7 @@
         @if (Array.Exists(typeof(T).GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHasDraftColumn<>)))
         {
             return
-            @<TemplateColumn T="T" Title="Draft">
+            @<PropertyColumn Property="x => (x as IHasDraftColumn<T>)!.IsDraft" T="T" TProperty="bool" Title="Draft">
                 <CellTemplate>
                     @if ((context.Item as IHasDraftColumn<T>)!.IsDraft)
                     {
@@ -413,7 +413,7 @@
                         </MudChip>
                     }
                 </CellTemplate>
-            </TemplateColumn>;
+            </PropertyColumn>;
         }
 
         return null;
