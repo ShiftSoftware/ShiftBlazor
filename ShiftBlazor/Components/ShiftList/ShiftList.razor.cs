@@ -1199,13 +1199,16 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                         ? null
                         : GetEnumMap(Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType);
 
+                    // don't export column if the column is hidden or is readonly with no CustomColumnExport attr
+                    var isHidden = x.Hidden || (property?.CanWrite == false && customColumn == null);
+
                     return new ExportColumn(
                         key,
                         format,
                         enumValues,
                         customColumn,
                         x.Title,
-                        x.Hidden
+                        isHidden
                     );
                 });
 
