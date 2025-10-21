@@ -187,7 +187,6 @@ function parseRawValue(value, col, localizedColumns, setting) {
         }
     } catch { }
 
-
     if (value instanceof Date) {
         value = formatDate(value, setting)
     } else if (typeof value === "boolean") {
@@ -226,12 +225,8 @@ function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables) {
             if (!table && foreignField?.valueKey) value = ""
         }
 
-    } else if (col.key.includes('.')) { // process dateTime columns
-        const [columnKey, columnType] = col.key.split('.');
-
-        value = row[columnKey]
-
-        if (columnType === "DateTime") value = new Date(value)
+    } else if (col.type.startsWith('DateTime')) { // process dateTime columns
+        value = new Date(value);
     }
 
     return value;
@@ -239,70 +234,64 @@ function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables) {
 }
 
 function parseCustomColumn(row, col, localizedColumns, setting, fieldMapper, foreignTables) {
-    let parsedValue = ""
+    var values = col.customColumn.args.map(arg => {
+        if (arg.includes(".")) {
+            const [tableTarget, fieldTarget] = arg.split(".")
 
-    col.customColumn.forEach(({ type, value }) => {
-        if (type === "string") parsedValue += value
-        else if (type === "property") {
-            if (value.includes(".")) {
-                const [tableTarget, fieldTarget] = value.split(".")
+            if (foreignTables[tableTarget]) {
+                const [foreignColumnKey, foreignColumnData] = Object.entries(fieldMapper).find(([_, ref]) => ref.table === tableTarget)
 
-                if (foreignTables[tableTarget]) {
-                    const [foreignColumnKey, foreignColumnData] = Object.entries(fieldMapper).find(([_, ref]) => ref.table === tableTarget)
+                const foreign = foreignTables[tableTarget]
 
-                    const foreign = foreignTables[tableTarget]
+                let foreignTableRow = {}
 
-                    let foreignTableRow = {}
+                try {
+                    if (foreign.itemsMapper[row[foreignColumnKey]]) {
+                        foreignTableRow = foreign.items[+foreign.itemsMapper[row[foreignColumnKey]]]
+                    } else {
+                        foreignTableRow = foreign.items.find(item => item[foreignColumnData.idKey] == row[foreignColumnKey])
+                    }
 
-                    try {
-                        if (foreign.itemsMapper[row[foreignColumnKey]]) {
-                            foreignTableRow = foreign.items[+foreign.itemsMapper[row[foreignColumnKey]]]
-                        } else {
-                            foreignTableRow = foreign.items.find(item => item[foreignColumnData.idKey] == row[foreignColumnKey])
-                        }
+                    let tempValue = foreignTableRow[fieldTarget];
 
-                        let tempValue = foreignTableRow[fieldTarget];
-
-                        if (typeof tempValue === "string") {
-                            try {
-                                const localizedObject = JSON.parse(tempValue)
-                                tempValue = localizedObject[setting.language]
-                            } catch { }
-                        }
-
-                        parsedValue += parseRawValue(tempValue, col, localizedColumns, setting)
-                    } catch { }
-
-
-                }
-            } else {
-                if (row[value]) {
-                    if (typeof row[value] === "string") {
-                        let tempValue = row[value];
-
+                    if (typeof tempValue === "string") {
                         try {
                             const localizedObject = JSON.parse(tempValue)
                             tempValue = localizedObject[setting.language]
                         } catch { }
-
-                        parsedValue += parseRawValue(tempValue, col, localizedColumns, setting)
-
-                    } else {
-                        parsedValue += parseRawValue(row[value], col, localizedColumns, setting)
                     }
+
+                    return parseRawValue(tempValue, col, localizedColumns, setting)
+                } catch { }
+
+
+            }
+        } else {
+            if (row[arg]) {
+                if (typeof row[arg] === "string") {
+                    let tempValue = row[arg];
+
+                    try {
+                        const localizedObject = JSON.parse(tempValue)
+                        tempValue = localizedObject[setting.language]
+                    } catch { }
+
+                    return parseRawValue(tempValue, col, localizedColumns, setting)
+
+                } else {
+                    return parseRawValue(row[value], col, localizedColumns, setting)
                 }
             }
         }
-    })
+    });
 
-    return parsedValue
+    return formatUnicorn(col.customColumn.format, values);
 }
 
 function generateCSVContent(rows, columns, foreignTables, fieldMapper, setting) {
     const csvRows = []
     const localizedColumns = new Set()
     const foreignKeys = Object.keys(fieldMapper)
-
     const visibleColumns = columns.filter(col => !col.hidden)
 
     // Header row
@@ -341,6 +330,25 @@ function generateCSVContent(rows, columns, foreignTables, fieldMapper, setting) 
     })
 
     return csvRows.join("\n")
+}
+
+// stackoverflow's implementation https://stackoverflow.com/a/18234317
+function formatUnicorn(str, ...args) {
+    if (typeof str !== "string") {
+        throw new TypeError("First argument must be a string");
+    }
+
+    if (!args.length)
+        return str;
+
+    var t = typeof args[0];
+    var replacements = "string" === t || "number" === t
+        ? Array.prototype.slice.call(args)
+        : args[0];
+
+    for (var key in replacements)
+        str = str.replace(new RegExp("\\{" + key + "\\}", "gi"), replacements[key]);
+    return str
 }
 
 self.onmessage = async (event) => {

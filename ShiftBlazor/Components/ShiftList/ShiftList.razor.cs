@@ -1185,32 +1185,40 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                 .Select(x =>
                 {
                     var key = x.PropertyName;
-                    if (x.GetType().GetProperty(nameof(PropertyColumn<object, object>.Property))?.GetValue(x) is LambdaExpression propertyValue)
+                    if (x.GetType().GetProperty(nameof(PropertyColumn<object, object>.Property))?.GetValue(x) is LambdaExpression propertyExpression)
                     {
-                        key = Misc.GetPropertyPath(propertyValue).Split(".").First();
+                        key = Misc.GetPropertyPath(propertyExpression).Split(".").First();
                     }
 
                     var property = typeof(T).GetProperty(key) ?? null;
+                    var propType = property != null
+                        ? Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType
+                        : null;
 
                     var format = property?.GetCustomAttribute<ShiftListNumberFormatterExportAttribute>()?.Format;
-                    var customColumn = property?.GetCustomAttribute<ShiftListCustomColumnExportAttribute>()?.ToList();
+                    var customColumnAttr = property?.GetCustomAttribute<CustomColumnExportAttribute>();
+                    var customColumn = customColumnAttr != null
+                        ? new ExportCustomColumn(customColumnAttr.Format, customColumnAttr.Args)
+                        : null;
 
-                    var enumValues = property == null
-                        ? null
-                        : GetEnumMap(Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType);
+                    var enumValues = propType != null && propType.IsEnum
+                        ? GetEnumMap(propType)
+                        : null;
 
                     // don't export column if the column is hidden or is readonly with no CustomColumnExport attr
                     var isHidden = x.Hidden || (property?.CanWrite == false && customColumn == null);
 
                     return new ExportColumn(
                         key,
+                        propType?.Name,
                         format,
                         enumValues,
                         customColumn,
                         x.Title,
                         isHidden
                     );
-                });
+                })
+                .ToList();
 
             var setting = new ExportSetting(
                 fileName,
@@ -1231,8 +1239,9 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
 
         public sealed record ExportPayload(string Name, string UrlValue, IReadOnlyList<T>? Values, IEnumerable<ExportColumn> Columns, IEnumerable<IForeignColumn> ForeignColumns, ExportSetting Setting);
-        public sealed record ExportColumn(string Key, string? Format, IReadOnlyDictionary<string, string>? EnumValues, IReadOnlyList<object>? CustomColumn, string Title, bool Hidden);
+        public sealed record ExportColumn(string Key, string? type, string? Format, IReadOnlyDictionary<string, string>? EnumValues, ExportCustomColumn? CustomColumn, string Title, bool Hidden);
         public sealed record ExportSetting(string FileName, bool IsRTL, string Language, string DateFormat, string TimeFormat);
+        public sealed record ExportCustomColumn(string Format, string[] Args);
 
         [JSInvokable]
         public void OnExportProcessing(string name)
