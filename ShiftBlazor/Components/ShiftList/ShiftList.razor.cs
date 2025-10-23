@@ -1220,13 +1220,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                 })
                 .ToList();
 
-            var setting = new ExportSetting(
-                fileName,
-                SettingManager.GetLanguage().RTL,
-                SettingManager.GetCulture().TwoLetterISOLanguageName,
-                SettingManager.GetDateFormat(),
-                SettingManager.GetTimeFormat()
-                );
+            var lang = SettingManager.GetCulture().TwoLetterISOLanguageName;
 
             return new(
                 name,
@@ -1234,13 +1228,13 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                 values,
                 columns,
                 foreignColumns,
-                setting
+                fileName,
+                lang
             );
         }
 
-        public sealed record ExportPayload(string Name, string UrlValue, IReadOnlyList<T>? Values, IEnumerable<ExportColumn> Columns, IEnumerable<IForeignColumn> ForeignColumns, ExportSetting Setting);
+        public sealed record ExportPayload(string Name, string UrlValue, IReadOnlyList<T>? Values, IEnumerable<ExportColumn> Columns, IEnumerable<IForeignColumn> ForeignColumns, string FileName, string Language);
         public sealed record ExportColumn(string Key, string? type, string? Format, IReadOnlyDictionary<string, string>? EnumValues, ExportCustomColumn? CustomColumn, string Title, bool Hidden);
-        public sealed record ExportSetting(string FileName, bool IsRTL, string Language, string DateFormat, string TimeFormat);
         public sealed record ExportCustomColumn(string Format, string[] Args);
 
         [JSInvokable]

@@ -119,51 +119,6 @@ function capitalizeFirstLetter(str) {
     return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-const pad = (n) => (n < 10 ? '0' + n : n);
-
-const replacements = {
-    yyyy: (date) => date.getFullYear(),
-    yy: (date) => String(date.getFullYear()).slice(-2),
-    MM: (date) => pad(date.getMonth() + 1),
-    M: (date) => date.getMonth() + 1,
-    dd: (date) => pad(date.getDate()),
-    d: (date) => date.getDate(),
-    HH: (date) => pad(date.getHours()),
-    H: (date) => date.getHours(),
-    hh: (date) => pad(date.getHours() % 12 || 12),
-    h: (date) => date.getHours() % 12 || 12,
-    mm: (date) => pad(date.getMinutes()),
-    m: (date) => date.getMinutes(),
-    tt: (date) => date.getHours() < 12 ? 'AM' : 'PM'
-};
-
-function formatDate(date, setting) {
-    const isForwardSlash = setting.dateFormat.includes("/")
-
-    let dateParts
-
-    if (isForwardSlash) dateParts = setting.dateFormat.split("/")
-    else dateParts = setting.dateFormat.split("-")
-
-    const parsedDateParts = dateParts.map(part => (replacements[part] && replacements[part](date)) || part)
-
-    const parsedDate = parsedDateParts.join(isForwardSlash ? "/" : "-")
-    const [hour, rest] = setting.timeFormat.split(":");
-    const [minute, period] = rest ? rest.split(" ") : [undefined, undefined];
-    const timeParts = [hour, minute, period].filter(Boolean);
-
-    const parsedTimeParts = timeParts.map(part => (replacements[part] && replacements[part](date)) || part)
-
-    let parsedTime = `${parsedTimeParts[0]}:${parsedTimeParts[1]}`
-
-    if (parsedTimeParts.length > 2) {
-        if (setting.isRTL) parsedTime = `${parsedTimeParts[2]} ` + parsedTime
-        else parsedTime += ` ${parsedTimeParts[2]}`
-    }
-
-    return setting.isRTL ? `${parsedTime} ${parsedDate}` : `${parsedDate} ${parsedTime}`
-}
-
 function parseRawValue(value, col, localizedColumns, setting) {
 
     if (col.enumValues && typeof col.enumValues[value] === "string") {
@@ -188,7 +143,7 @@ function parseRawValue(value, col, localizedColumns, setting) {
     } catch { }
 
     if (value instanceof Date) {
-        value = formatDate(value, setting)
+        value = toISOLocal(value, setting)
     } else if (typeof value === "boolean") {
         value = capitalizeFirstLetter(String(value))
     }
@@ -330,6 +285,24 @@ function generateCSVContent(rows, columns, foreignTables, fieldMapper, setting) 
     })
 
     return csvRows.join("\n")
+}
+
+// ISO 8601 https://stackoverflow.com/a/49332027
+function toISOLocal(d) {
+    var z = n => ('0' + n).slice(-2);
+    var zz = n => ('00' + n).slice(-3);
+    var off = d.getTimezoneOffset();
+    var sign = off > 0 ? '-' : '+';
+    off = Math.abs(off);
+
+    return d.getFullYear() + '-'
+        + z(d.getMonth() + 1) + '-' +
+        z(d.getDate()) + 'T' +
+        z(d.getHours()) + ':' +
+        z(d.getMinutes()) + ':' +
+        z(d.getSeconds()) + '.' +
+        zz(d.getMilliseconds()) +
+        sign + z(off / 60 | 0) + ':' + z(off % 60);
 }
 
 // stackoverflow's implementation https://stackoverflow.com/a/18234317
