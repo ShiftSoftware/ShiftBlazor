@@ -8,7 +8,7 @@ using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public interface IForeignColumn : IODataRequest, IRequestComponent
+public interface IForeignColumn : IODataRequest
 {
     public string? DataValueField { get; set; }
     public string? ForeignTextField { get; set; }
@@ -16,7 +16,7 @@ public interface IForeignColumn : IODataRequest, IRequestComponent
     public string? Url { get; }
     public string? TEntityValueField { get; }
     public string? TEntityTextField { get; }
-    public string? ForeignEntiyField { get; }
+    public string? ForeignEntityField { get; set; }
 
     internal static string GetDataValueFieldName(IForeignColumn column)
     {
@@ -71,12 +71,12 @@ public interface IForeignColumn : IODataRequest, IRequestComponent
         {
             try
             {
-                var TEntity = column.GetType().GetGenericArguments().Last();
+                var TEntity = column.GetType().GetGenericArguments().Last(); 
                 Type oDataType = typeof(ODataDTO<>).MakeGenericType(TEntity);
 
                 var query = GetODataUrl<ShiftEntityDTOBase>(column, oDataQuery);
 
-                if (column.ForeignEntiyField is null)
+                if (column.ForeignEntityField is null)
                 {
                     query = query.AddQueryOption("$select", $"{column.TEntityValueField},{column.TEntityTextField}");
                 }
@@ -87,13 +87,13 @@ public interface IForeignColumn : IODataRequest, IRequestComponent
 
                 using var requestMessage = httpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url));
 
-                if (column.OnBeforeRequest != null && !(await column.OnBeforeRequest.Invoke(requestMessage)))
-                    return null;
+                //if (column.OnBeforeRequest != null && await column.OnBeforeRequest.Invoke(requestMessage))
+                //    return null;
 
                 using var res = await httpClient.SendAsync(requestMessage);
 
-                if (column.OnResponse != null && !(await column.OnResponse.Invoke(res)))
-                    return null;
+                //if (column.OnResponse != null && await column.OnResponse.Invoke(res))
+                //    return null;
 
                 if (res.IsSuccessStatusCode)
                 {
@@ -103,8 +103,8 @@ public interface IForeignColumn : IODataRequest, IRequestComponent
             }
             catch (Exception e)
             {
-                if (column.OnError != null && !(await column.OnError.Invoke(e)))
-                    return null;
+                //if (column.OnError != null && await column.OnError.Invoke(e))
+                //    return null;
                 throw;
             }
         }

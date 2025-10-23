@@ -83,17 +83,18 @@ public class MessageService
         this.Show(text, title, detail, severity: Severity.Warning, buttonText: buttonText, modalColor: Color.Warning);
     }
 
-    public void Show(string text, Severity severity = Severity.Normal, Action<SnackbarOptions>? configure = null)
-    {
-        Snackbar.Add(
-            text,
-            severity,
-            configure
-        );
-    }
+        public void Show(string text, Severity severity = Severity.Normal, Action<SnackbarOptions>? configure = null, string? key = null)
+        {
+            Snackbar.Add(
+                text,
+                severity,
+                configure,
+                key
+            );
+        }
 
-    public void Show(string text, string? title = null, string? detail = null, Severity severity = Severity.Normal, string? buttonText = null, Variant? buttonVariant = null, Color buttonColor = Color.Inherit, Color modalColor = Color.Inherit, string icon = Icons.Material.Outlined.Info)
-    {
+        public void Show(string text, string? title = null, string? detail = null, Severity severity = Severity.Normal, string? buttonText = null, Variant? buttonVariant = null, Color buttonColor = Color.Inherit, Color modalColor = Color.Inherit, string? icon = Icons.Material.Outlined.Info, string? key = null)
+        {
 
         Show(text, severity, config =>
         {
@@ -121,9 +122,9 @@ public class MessageService
                     config.ActionVariant = buttonVariant.Value;
                 }
 
-            }
-        });
-    }
+                }
+            }, key);
+        }
 
     private void ShowDialog(string title, string detail, Color color, string? Icon)
     {

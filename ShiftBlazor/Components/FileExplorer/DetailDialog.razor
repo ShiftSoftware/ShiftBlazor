@@ -1,0 +1,248 @@
+﻿@using ShiftSoftware.ShiftEntity.Core
+@using System.Text.Json
+@using System.Net.Http.Json
+
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<MudDialog ContentStyle="overflow: hidden;">
+    <TitleContent>
+        @Loc["File Details"]
+    </TitleContent>
+    <DialogContent>
+        @if (Files != null)
+        {
+            var first = Files.FirstOrDefault();
+            <MudStack Row>
+                @if (Count > 1)
+                {
+                    var icon = FileExplorer.FileIcons["files"];
+                    var style = $"font-size: 72px; color: {icon.color};";
+                    <div class="material-symbols-outlined" style="@style">@icon.icon</div>
+
+                    <MudStack>
+                        <MudGrid Spacing="2">
+                            <MudItem lg="3">Type: </MudItem>
+                            <MudItem lg="9">@FormatType(Files)</MudItem>
+
+                            <MudItem lg="3">Location: </MudItem>
+                            <MudItem lg="9">
+                                @string.Join("\n", Paths)
+                            </MudItem>
+
+                            <MudItem lg="3">Size: </MudItem>
+                            <MudItem lg="9">
+                                @Files.Sum(f => f.Size)
+                                @if (Files.Any(x => !x.IsFile))
+                                {
+                                    @(" (Folders Excluded)")
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudStack>
+                }
+                else if (first is FileExplorerItemDTO file)
+                {
+                    @if (FileExplorer.ImageExtensions.Contains(Path.GetExtension(file.Name)))
+                    {
+                        <MudImage Height="150"
+                                  Width="150"
+                                  ObjectFit="ObjectFit.Contain"
+                                  ObjectPosition="ObjectPosition.LeftTop"
+                                  Src="@first.ThumbnailUrl"
+                                  FallbackSrc="@first.Url" />
+                    }
+                    else
+                    {
+                        <div class="material-symbols-outlined" style="font-size: 72px; color: @FileExplorer.GetFileIcon(file).color;">@FileExplorer.GetFileIcon(file).icon</div>
+                    }
+
+                    <MudStack>
+                        <MudGrid Spacing="2">
+                            <MudItem lg="3" title="@file.Name">Name: </MudItem>
+                            <MudItem lg="9" Style="white-space: nowrap;">@file.Name</MudItem>
+
+                            <MudItem lg="3">Type: </MudItem>
+                            <MudItem lg="9">@FormatType(Files)</MudItem>
+
+                            <MudItem lg="3" title="@file.Path">Location: </MudItem>
+                            <MudItem lg="9" Style="white-space: nowrap;">@(BlobHelper.Delimiter + BlobHelper.PathAndName(file.Path).dir.TrimEnd(BlobHelper.Delimiter))</MudItem>
+
+                            <MudItem lg="3">Size: </MudItem>
+                            <MudItem lg="9">
+                                @if (file.IsFile)
+                                {
+                                    @file.Size
+                                }
+                                else if (IsLoading && ServerFiles.Count == 0)
+                                {
+                                    <MudSkeleton Animation="Animation.Wave" Height="20px" SkeletonType="SkeletonType.Text"/>
+                                }
+                                else
+                                {
+                                    @ServerFiles.Sum(x => x.Size)
+                                }
+                            </MudItem>
+
+                            @if (!file.IsFile)
+                            {
+                                <MudItem lg="3">Items: </MudItem>
+                                <MudItem lg="9">
+                                    @if (IsLoading && ServerFiles.Count == 0)
+                                    {
+                                        <MudSkeleton Animation="Animation.Wave" Height="20px" SkeletonType="SkeletonType.Text" />
+                                    }
+                                    else
+                                    {
+                                        @ServerFiles.Sum(x => (x.Additional as JsonElement?)?.GetInt32())
+                                    }
+                                </MudItem>
+                            }
+                        </MudGrid>
+
+
+                        @if (file.IsFile)
+                        {
+                            <MudDivider />
+
+                            <MudGrid Spacing="2">
+                                <MudItem lg="3">CreatedBy: </MudItem>
+                                <MudItem lg="9">@(Usernames.GetValueOrDefault(file.CreatedBy ?? "") ?? file.CreatedBy)</MudItem>
+
+                                <MudItem lg="3">CreatedDate: </MudItem>
+                                <MudItem lg="9">@file.CreatedDate</MudItem>
+
+                                <MudItem lg="3">DateModified: </MudItem>
+                                <MudItem lg="9">@file.DateModified</MudItem>
+                            </MudGrid>
+                        }
+
+                    </MudStack>
+                }
+            </MudStack>
+        }
+        
+    </DialogContent>
+    <DialogActions>
+        @if (!string.IsNullOrWhiteSpace(ContinuationToken))
+        {
+            <MudButton OnClick="LoadMore">
+                @if (IsLoading)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                }
+                Load More
+            </MudButton>
+        }
+        <MudButton OnClick="Close">@Loc["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
+    [Inject] HttpClient HttpClient { get; set; } = default!;
+
+    [Parameter]
+    public IEnumerable<FileExplorerItemDTO>? Files { get; set; }
+
+    [Parameter]
+    public Dictionary<string, string> Usernames { get; set; } = [];
+
+    [Parameter]
+    public string? Url { get; set; }
+
+    [Parameter]
+    public string? AccountName { get; set; }
+
+    [Parameter]
+    public string? ContainerName { get; set; }
+
+    private void Close() => MudDialog.Cancel();
+
+    private int Count { get; set; }
+    private IEnumerable<string> Paths { get; set; } = [];
+
+    private bool IsLoading { get; set; }
+    public List<FileExplorerItemDTO> ServerFiles { get; set; } = [];
+    public string? ContinuationToken { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Count = Files?.Count() ?? 0;
+
+        if (Count > 1)
+            Paths = Files!.Select(x => BlobHelper.Delimiter + BlobHelper.PathAndName(x.Path).dir.TrimEnd(BlobHelper.Delimiter)).Distinct();
+
+        await GetDetails();
+    }
+
+    private async Task GetDetails(string? token = null)
+    {
+        if (Files == null)
+            return;
+
+        if (Files.Count() == 1
+            && Files.FirstOrDefault() is FileExplorerItemDTO item
+            && !item.IsFile)
+        {
+            IsLoading = true;
+
+            FileExplorerDetailDTO? requestDTO = new FileExplorerDetailDTO
+            {
+                Path = item.Path,
+                AccountName = AccountName,
+                ContainerName = ContainerName,
+                ContinuationToken = token,
+            };
+
+            var props = requestDTO.GetType().GetProperties();
+            var queries = props.Select(prop => prop.Name + "=" + prop.GetValue(requestDTO));
+            var query = string.Join("&", queries);
+
+            var url = $"{Url.AddUrlPath("detail")}?{query}";
+
+            var response = await HttpClient.GetAsync(url);
+
+            var content = await response.Content.ReadFromJsonAsync<FileExplorerResponseDTO>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            {
+                Converters = { new LocalDateTimeOffsetJsonConverter() }
+            });
+
+            if (content?.Items?.Count > 0)
+            {
+                ServerFiles.Add(content.Items.First());
+            }
+
+            ContinuationToken = content?.ContinuationToken;
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+
+    private string FormatType(IEnumerable<FileExplorerItemDTO> Files)
+    {
+        var first = Files.FirstOrDefault();
+
+        if (Count > 1)
+        {
+            var allSame = Files.Select(f => f.Type?.ToLower()).All(t => t == first?.Type);
+            var type = allSame ? first?.Type?.TrimStart('.').ToUpper().Trim() : null;
+            return string.IsNullOrWhiteSpace(type) ? "Files" : type + " Files"; ;
+        }
+        else if (first?.IsFile == true)
+        {
+            var type = first?.Type?.TrimStart('.').ToUpper().Trim();
+            return string.IsNullOrWhiteSpace(type) ? "File" : type + " File";
+        }
+
+        return first?.Type ?? "Directory";
+    }
+
+    private async Task LoadMore()
+    {
+        await GetDetails(ContinuationToken);
+    }
+}
