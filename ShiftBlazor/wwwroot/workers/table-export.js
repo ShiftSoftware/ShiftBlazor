@@ -119,7 +119,7 @@ function capitalizeFirstLetter(str) {
     return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-function parseRawValue(value, col, localizedColumns, setting) {
+function parseRawValue(value, col, localizedColumns, lang) {
 
     if (col.enumValues && typeof col.enumValues[value] === "string") {
         try {
@@ -131,7 +131,7 @@ function parseRawValue(value, col, localizedColumns, setting) {
     if (localizedColumns.has(col.title)) { // normal texts localized
         try {
             const localizedObject = JSON.parse(value)
-            value = localizedObject[setting.language] ?? value
+            value = localizedObject[lang] ?? value
         } catch { }
     }
 
@@ -143,7 +143,7 @@ function parseRawValue(value, col, localizedColumns, setting) {
     } catch { }
 
     if (value instanceof Date) {
-        value = toISOLocal(value, setting)
+        value = toISOLocal(value)
     } else if (typeof value === "boolean") {
         value = capitalizeFirstLetter(String(value))
     }
@@ -188,7 +188,7 @@ function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables) {
 
 }
 
-function parseCustomColumn(row, col, localizedColumns, setting, fieldMapper, foreignTables) {
+function parseCustomColumn(row, col, localizedColumns, lang, fieldMapper, foreignTables) {
     var values = col.customColumn.args.map(arg => {
         if (arg.includes(".")) {
             const [tableTarget, fieldTarget] = arg.split(".")
@@ -212,11 +212,11 @@ function parseCustomColumn(row, col, localizedColumns, setting, fieldMapper, for
                     if (typeof tempValue === "string") {
                         try {
                             const localizedObject = JSON.parse(tempValue)
-                            tempValue = localizedObject[setting.language]
+                            tempValue = localizedObject[lang]
                         } catch { }
                     }
 
-                    return parseRawValue(tempValue, col, localizedColumns, setting)
+                    return parseRawValue(tempValue, col, localizedColumns, lang)
                 } catch { }
 
 
@@ -228,13 +228,13 @@ function parseCustomColumn(row, col, localizedColumns, setting, fieldMapper, for
 
                     try {
                         const localizedObject = JSON.parse(tempValue)
-                        tempValue = localizedObject[setting.language]
+                        tempValue = localizedObject[lang]
                     } catch { }
 
-                    return parseRawValue(tempValue, col, localizedColumns, setting)
+                    return parseRawValue(tempValue, col, localizedColumns, lang)
 
                 } else {
-                    return parseRawValue(row[value], col, localizedColumns, setting)
+                    return parseRawValue(row[value], col, localizedColumns, lang)
                 }
             }
         }
@@ -243,7 +243,7 @@ function parseCustomColumn(row, col, localizedColumns, setting, fieldMapper, for
     return formatUnicorn(col.customColumn.format, values);
 }
 
-function generateCSVContent(rows, columns, foreignTables, fieldMapper, setting) {
+function generateCSVContent(rows, columns, foreignTables, fieldMapper, lang) {
     const csvRows = []
     const localizedColumns = new Set()
     const foreignKeys = Object.keys(fieldMapper)
@@ -267,18 +267,18 @@ function generateCSVContent(rows, columns, foreignTables, fieldMapper, setting) 
 
             let value;
 
-            if (col.customColumn) value = parseCustomColumn(row, col, localizedColumns, setting, fieldMapper, foreignTables)
+            if (col.customColumn) value = parseCustomColumn(row, col, localizedColumns, lang, fieldMapper, foreignTables)
             else value = parseColumn(col, foreignKeys, fieldMapper, row, foreignTables)
 
             // Determine localized columns based on the first row
             if (rowIndex === 0) {
                 try {
                     const localizedObject = JSON.parse(value)
-                    if (localizedObject[setting.language]) localizedColumns.add(col.title)
+                    if (localizedObject[lang]) localizedColumns.add(col.title)
                 } catch { }
             }
 
-            return parseRawValue(value, col, localizedColumns, setting)
+            return parseRawValue(value, col, localizedColumns, lang)
         })
 
         csvRows.push(csvRowData.join(","))
@@ -331,7 +331,7 @@ self.onmessage = async (event) => {
     }, 8000)
 
     const { payload, headers, origin } = event.data;
-    const { urlValue, values, columns, foreignColumns, setting } = payload;
+    const { urlValue, values, columns, foreignColumns, fileName, lang } = payload;
 
     try {
         const rows = Array.isArray(values) && values.length ? values : await fetchRows(urlValue, headers);
@@ -348,12 +348,12 @@ self.onmessage = async (event) => {
 
         generateItemMapper(foreignTables)
 
-        const csvContent = generateCSVContent(rows, columns, foreignTables, fieldMapper, setting)
+        const csvContent = generateCSVContent(rows, columns, foreignTables, fieldMapper, lang)
         const csvURL = URL.createObjectURL(new Blob([csvContent], { type: "text/csv" }))
 
         clearTimeout(longExportToastTimer)
 
-        self.postMessage({ csvURL, fileName: setting.fileName, message: "", isSuccess: true, messageType: "export ended" })
+        self.postMessage({ csvURL, fileName, message: "", isSuccess: true, messageType: "export ended" })
     } catch (error) {
         clearTimeout(longExportToastTimer)
 

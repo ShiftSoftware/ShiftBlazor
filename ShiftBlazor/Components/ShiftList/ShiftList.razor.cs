@@ -1195,18 +1195,25 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                         ? Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType
                         : null;
 
-                    var format = property?.GetCustomAttribute<ShiftListNumberFormatterExportAttribute>()?.Format;
-                    var customColumnAttr = property?.GetCustomAttribute<CustomColumnExportAttribute>();
-                    var customColumn = customColumnAttr != null
-                        ? new ExportCustomColumn(customColumnAttr.Format, customColumnAttr.Args)
-                        : null;
+                    var attr = property?.GetCustomAttribute<ExportOptionsAttribute>();
+                    string? format = null;
+                    ExportCustomColumn? customColumn = null;
+
+                    if (attr?.Format != null && attr?.Args?.Count() > 0)
+                    {
+                        customColumn = new ExportCustomColumn(attr.Format, attr.Args);
+                    }
+                    else if (attr?.Format != null)
+                    {
+                        format = attr?.Format;
+                    }
 
                     var enumValues = propType != null && propType.IsEnum
                         ? GetEnumMap(propType)
                         : null;
 
                     // don't export column if the column is hidden or is readonly with no CustomColumnExport attr
-                    var isHidden = x.Hidden || (property?.CanWrite == false && customColumn == null);
+                    var isHidden = x.Hidden || attr?.Hidden == true || (property?.CanWrite == false && customColumn == null);
 
                     return new ExportColumn(
                         key,
