@@ -50,6 +50,10 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
     public string? ForeignEntityField { get; set; }
 
     [Parameter]
+    [Obsolete($"Use {nameof(ForeignEntityField)} instead", true)]
+    public string? ForeignEntiyField { get; set; }
+
+    [Parameter]
     public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
     [Parameter]
     public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
