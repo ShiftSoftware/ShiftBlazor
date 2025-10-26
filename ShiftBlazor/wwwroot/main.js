@@ -1,4 +1,37 @@
-﻿window.GetUrl = function () {
+﻿const getHeaders = () => ({
+    cookie: document.cookie,
+    "Content-Type": "application/json",
+    authorization: "Bearer " + JSON.parse(localStorage.token).Token,
+});
+   
+window.tableExport = (payload, dotNetObjectRef) => {
+    const worker = new Worker(
+        "_content/ShiftSoftware.ShiftBlazor/workers/table-export.js"
+    )
+
+    worker.onmessage = (e) => {
+
+        if (e.data.messageType === "export ended") {
+            const { isSuccess, message, csvURL, fileName } = e.data
+
+            if (isSuccess) {
+                window.downloadFileFromUrl(fileName, csvURL)
+                setTimeout(() => URL.revokeObjectURL(csvURL), 1000)
+            }
+
+            dotNetObjectRef.invokeMethodAsync("OnExportProcessed", isSuccess, message, payload.name)
+
+            worker.terminate()
+        } else if (e.data.messageType === "export processing"){
+            dotNetObjectRef.invokeMethodAsync("OnExportProcessing", payload.name)
+        }
+    }
+
+    worker.postMessage({
+        payload, headers: getHeaders(), origin: `${window.location.origin}/api` })
+}
+
+window.GetUrl = function () {
     return window.location.href;
 };
 
