@@ -11,6 +11,7 @@ using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using ShiftSoftware.ShiftEntity.Model.FileExplorer.Dtos;
 using ShiftSoftware.ShiftIdentity.Blazor;
 using ShiftSoftware.ShiftIdentity.Core.DTOs;
 using ShiftSoftware.TypeAuth.Core;
