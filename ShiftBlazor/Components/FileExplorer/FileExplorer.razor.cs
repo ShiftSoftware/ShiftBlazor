@@ -21,11 +21,11 @@ using System.Web;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public partial class FileExplorer : IShortcutComponent
+public partial class FileExplorer : IShortcutComponent, IRequestComponent
 {
-    [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
-    [Inject] SettingManager SettingManager { get; set; } = default!;
-    [Inject] HttpClient HttpClient { get; set; } = default!;
+    [Inject] public ShiftBlazorLocalizer Loc { get; set; } = default!;
+    [Inject] public SettingManager SettingManager { get; set; } = default!;
+    [Inject] public HttpClient HttpClient { get; set; } = default!;
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] ISnackbar Snackbar { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
@@ -41,6 +41,8 @@ public partial class FileExplorer : IShortcutComponent
 
     [Parameter]
     public string? Root { get; set; }
+
+    public string? Endpoint { get; }
 
     [Parameter]
     public string? CurrentPath { get; set; }
@@ -101,6 +103,13 @@ public partial class FileExplorer : IShortcutComponent
 
     [Parameter]
     public RenderFragment? ToolbarTemplate { get; set; }
+
+    [Parameter]
+    public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; set; }
+    [Parameter]
+    public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; set; }
+    [Parameter]
+    public Func<Exception, ValueTask<bool>>? OnError { get; set; }
 
     [Parameter]
     public bool OpenDialogOnUpload { get; set; }
@@ -369,9 +378,17 @@ public partial class FileExplorer : IShortcutComponent
             data.Path ??= GetRoot();
             data.IncludeDeleted = ShowDeletedFiles;
             var query = CreateQuery(data);
-            var url = $"{Url.AddUrlPath("list")}?{query}";
+            var url = new Uri($"{Url.AddUrlPath("list")}?{query}");
 
-            var response = await HttpClient.GetAsync(url);
+            using var requestMessage = HttpClient.CreateRequestMessage(HttpMethod.Get, url);
+
+            if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(requestMessage)))
+                return;
+
+            using var response = await HttpClient.SendAsync(requestMessage);
+
+            if (OnResponse != null && !(await OnResponse.Invoke(response)))
+                return;
 
             if (!response.IsSuccessStatusCode)
             {
@@ -433,6 +450,8 @@ public partial class FileExplorer : IShortcutComponent
         }
         catch (Exception e)
         {
+            if (OnError != null && !(await OnError.Invoke(e)))
+                return;
             DisplayError(e.Message);
         }
 
@@ -570,7 +589,16 @@ public partial class FileExplorer : IShortcutComponent
                 };
 
                 var url = Url.AddUrlPath("create");
-                var response = await HttpClient.PostAsJsonAsync(url, newFolderData);
+
+                using var requestMessage = HttpClient.CreatePostRequest(newFolderData, url);
+
+                if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(requestMessage)))
+                    return;
+
+                using var response = await HttpClient.SendAsync(requestMessage);
+
+                if (OnResponse != null && !(await OnResponse.Invoke(response)))
+                    return;
 
                 var content = await response.Content.ReadFromJsonAsync<FileExplorerResponseDTO>(new JsonSerializerOptions(JsonSerializerDefaults.Web)
                 {
@@ -587,6 +615,8 @@ public partial class FileExplorer : IShortcutComponent
         }
         catch (Exception e)
         {
+            if (OnError != null && !(await OnError.Invoke(e)))
+                return;
             DisplayError(e.Message);
         }
     }
@@ -635,7 +665,7 @@ public partial class FileExplorer : IShortcutComponent
 
             try
             {
-                var restoreData = new FileExplorerDeleteDTO
+                var deleteData = new FileExplorerDeleteDTO
                 {
                     Paths = SelectedFiles.Select(x => x.Path!).ToArray(),
                     AccountName = AccountName,
@@ -643,12 +673,23 @@ public partial class FileExplorer : IShortcutComponent
                 };
                 var url = Url.AddUrlPath("delete");
 
-                var response = await HttpClient.PostAsJsonAsync(url, restoreData);
+                using var requestMessage = HttpClient.CreatePostRequest(deleteData, url);
+
+                if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(requestMessage)))
+                    return;
+
+                using var response = await HttpClient.SendAsync(requestMessage);
+
+                if (OnResponse != null && !(await OnResponse.Invoke(response)))
+                    return;
+
                 await Refresh();
             }
-            catch (Exception ex) 
+            catch (Exception e) 
             {
-                DisplayError(ex.Message);
+                if (OnError != null && !(await OnError.Invoke(e)))
+                    return;
+                DisplayError(e.Message);
             }
         }
     }
@@ -761,16 +802,34 @@ public partial class FileExplorer : IShortcutComponent
 
         if (result == true)
         {
-            var restoreData = new FileExplorerRestoreDTO
+            try
             {
-                Paths = SelectedFiles.Select(x => x.Path!).ToArray(),
-                AccountName = AccountName,
-                ContainerName = ContainerName,
-            };
-            var url = Url.AddUrlPath("restore");
+                var restoreData = new FileExplorerRestoreDTO
+                {
+                    Paths = SelectedFiles.Select(x => x.Path!).ToArray(),
+                    AccountName = AccountName,
+                    ContainerName = ContainerName,
+                };
+                var url = Url.AddUrlPath("restore");
 
-            var response = await HttpClient.PostAsJsonAsync(url, restoreData);
-            await Refresh();
+                using var requestMessage = HttpClient.CreatePostRequest(restoreData, url);
+
+                if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(requestMessage)))
+                    return;
+
+                using var response = await HttpClient.SendAsync(requestMessage);
+
+                if (OnResponse != null && !(await OnResponse.Invoke(response)))
+                    return;
+
+                await Refresh();
+            }
+            catch (Exception e)
+            {
+                if (OnError != null && !(await OnError.Invoke(e)))
+                    return;
+                DisplayError(e.Message);
+            }
         }
     }
 
