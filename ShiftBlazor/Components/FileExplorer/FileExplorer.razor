@@ -190,7 +190,7 @@
 
                 <MudSpacer />
                 <div style="min-width: 250px;">
-                    <MudTextField Placeholder="Search Current Directory" T="string" ValueChanged="LocalSearch" Immediate Clearable/>
+                    <MudTextField Placeholder="@Loc["Search Current Directory"]" T="string" ValueChanged="LocalSearch" Immediate Clearable />
                 </div>
             </MudToolBar>
 
@@ -327,7 +327,7 @@
                         }
                         else
                         {
-                            <MudText>No files found with the "@SearchQuery" query</MudText>
+                            <MudText>@Loc["SearchNotFound", SearchQuery]</MudText>
                         }
                     </div>
                     @* <MudAlert Severity="Severity.Info">@Loc["NoFiles"]</MudAlert> *@

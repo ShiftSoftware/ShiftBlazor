@@ -241,7 +241,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .file-listing.icons.small .file-explorer-item {
     display: flex;
     align-items: center;
-    height: auto;
+    height: 20px;
     gap: 6px;
 }
 
