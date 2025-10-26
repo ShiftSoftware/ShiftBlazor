@@ -1,0 +1,189 @@
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
+@using System.Text.Json
+@using System.Linq.Expressions
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject SettingManager SettingManager
+@inject ShiftBlazorLocalizer Loc
+@inject IServiceProvider serviceProvider
+
+<MudGrid>
+    @foreach (var (lang, value) in Values)
+    {
+        var langLabel = languageInfo[lang].FirstOrDefault()?.Label;
+        var label = Label == null
+            ? langLabel
+            : string.IsNullOrWhiteSpace(langLabel)
+                ? $"{Label}"
+                : $"{Label} ({Loc[langLabel].Value})";
+
+        Errors.TryGetValue(lang, out var errorMessage);
+        errorMessage = string.IsNullOrWhiteSpace(errorMessage) ? null : errorMessage.Replace(modelName, fieldName);
+        var showErrors = errorMessage != null;
+
+        var textChanged = async (string value) => await this.TextChanged(lang, value);
+
+        <MudItem @key="lang" xs="xsColSize" sm="smColSize" md="mdColSize" lg="lgColSize">
+            @if (ChildContent != null)
+            {
+                @ChildContent(new LocalizedInputContext
+                {
+                    Value = value,
+                    ValueChanged = textChanged,
+                    Error = showErrors,
+                    ErrorText = errorMessage,
+                    Label = label,
+                });
+            }
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    [CascadingParameter(Name = "ShiftForm")]
+    public IShiftForm? ShiftEntityForm { get; set; }
+
+    [CascadingParameter]
+    public IFormSection? FormSection { get; set; }
+
+    [Parameter]
+    public RenderFragment<LocalizedInputContext>? ChildContent { get; set; }
+
+    /// <summary>
+    /// The value of this input element.
+    /// </summary>
+    [Parameter]
+    public string Value { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>
+    /// If string has value the label text will be displayed in the input, and scaled down at the top if the input has value.
+    /// </summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>
+    /// Specify an expression which returns the model's field for which validation messages should be displayed.
+    /// If value is null, validation will be skipped for this field.
+    /// </summary>
+    [Parameter]
+    public Expression<Func<string?>>? For { get; set; }
+
+    private int xsColSize;
+    private int smColSize;
+    private int mdColSize;
+    private int lgColSize;
+
+    [CascadingParameter]
+    private EditContext? EditContext { get; set; }
+    private Dictionary<string, string> Values { get; set; } = new();
+    private Dictionary<string, string> Errors { get; set; } = new();
+    private IEnumerable<ValidationAttribute>? validationAttributes;
+    private string modelName = string.Empty;
+    private string? fieldName;
+    private ILookup<string, LanguageInfo> languageInfo = default!;
+
+    protected override void OnInitialized()
+    {
+        this.languageInfo = SettingManager.Configuration.Languages
+            .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
+
+        var langCodes = this.languageInfo.Select(x => x.Key).Distinct().ToList();
+        var langCount = langCodes.Count;
+        Values = langCodes.ToDictionary(lang => lang, lang => string.Empty);
+
+        xsColSize = 12;
+        smColSize = Math.Max(12 / langCount, 6);
+        mdColSize = Math.Max(12 / langCount, 4);
+        lgColSize = Math.Max(12 / langCount, 3);
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(Value))
+            {
+                // LocalizedTextField expects a JSON string in the format {"en":"Hello","fr":"Bonjour"}
+                var json = JsonDocument.Parse(Value);
+                Values = json.Deserialize<Dictionary<string, string>>() ?? new();
+            }
+        }
+        catch
+        {
+            // if Value is not a valid json, we ignore the error and use the raw value
+            var lang = new System.Globalization.CultureInfo(DefaultAppSetting.Language.CultureName).TwoLetterISOLanguageName;
+            Values[lang] = Value;
+        }
+
+        // From here we deal with validations
+        // If For is null, we skip validations
+        if (For == null || EditContext == null)
+        {
+            return;
+        }
+
+        FormSection?.Add(FieldIdentifier.Create(For));
+
+        // get the model name for error message replacement
+        // e.g. "The ProductDTO field is required." => "The [Label] field is required."
+        modelName = EditContext.Model.GetType().Name;
+
+        var expression = (MemberExpression?)For.Body;
+        if (expression?.Member != null)
+        {
+            // get validation attributes for this field
+            // so that we can validate the value for each language input separately
+            validationAttributes = expression.Member.GetCustomAttributes<ValidationAttribute>();
+            fieldName = expression.Member.Name;
+        }
+
+        // Display errors when the form is submitted
+        EditContext.OnValidationRequested += (sender, eventArgs) =>
+        {
+            foreach (var (lang, value) in Values)
+            {
+                ValidateField(lang, value);
+            }
+            ;
+
+            // Add the error to the form's EditContext/MessageStore
+            // so that we can prevent the form from being submitted
+            if (Errors.Count != 0 && fieldName != null && ShiftEntityForm != null)
+            {
+                ShiftEntityForm.DisplayError(fieldName, Errors.First().Value);
+            }
+        };
+    }
+
+    public async Task TextChanged(string lang, string newValue)
+    {
+        Values[lang] = newValue;
+        ValidateField(lang, newValue);
+
+        Value = JsonSerializer.Serialize(Values);
+        await this.ValueChanged.InvokeAsync(Value);
+        StateHasChanged();
+    }
+
+    private void ValidateField(string lang, string value)
+    {
+        if (validationAttributes != null && EditContext != null)
+        {
+            var errors = EditContext.ValidateDataAnnotationValue(value, validationAttributes);
+
+            if (errors.Count == 0 && fieldName != null)
+                errors = EditContext.ValidateFluentValidationValue(value, fieldName, serviceProvider, ShiftEntityForm?.Validator);
+
+            if (errors.Count == 0)
+            {
+                Errors.Remove(lang);
+            }
+            else
+            {
+                Errors[lang] = errors.First();
+            }
+        }
+    }
+}
