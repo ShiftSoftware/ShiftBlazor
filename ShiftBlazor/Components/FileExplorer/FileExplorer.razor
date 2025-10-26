@@ -279,41 +279,37 @@
                     }
                     else if (IsIconsView)
                     {
+                        var size = GetImageSize();
+
                         @foreach (var file in DisplayedFiles)
                         {
-                            <MudTooltip>
-                                <TooltipContent>
-                                    <div>@Loc["Filename"]: @file.Name</div>
-                                    @if (file.IsFile && !string.IsNullOrWhiteSpace(file.CreatedBy))
-                                    {
-                                        <div>@Loc["Created By"]: @Usernames.GetValueOrDefault(file.CreatedBy)</div>
-                                    }
-                                </TooltipContent>
-                                <ChildContent>
-                                    <div @key="file.Path"
-                                         class="file-explorer-item @SpecialItemClasses(file)"
-                                         @onclick="(e) => OnFileClick(e, file)"
-                                         @onclick:stopPropagation="true"
-                                         @oncontextmenu="(e) => OnFileClick(e, file)">
+                            var icon = GetFileIcon(file);
+                            var fileClick = async delegate (MouseEventArgs e) { await OnFileClick(e, file); };
 
-                                        @if (file.IsFile && ShowThumbnails && ImageExtensions.Contains(Path.GetExtension(file.Name)))
-                                        {
-                                            <MudImage Height="@GetImageSize()"
-                                                      Width="@GetImageSize()"
-                                                      ObjectFit="ObjectFit.Contain"
-                                                      ObjectPosition="ObjectPosition.Center"
-                                                      Src="@file.ThumbnailUrl"
-                                                      FallbackSrc="@file.Url"/>
-                                        }
-                                        else
-                                        {
-                                            <div class="material-symbols-outlined" style="color: @GetFileIcon(file).color;">@GetFileIcon(file).icon</div>
-                                        }
+                            <div @key="file.Path"
+                                    class="@SpecialItemClasses(file)"
+                                    @onclick="fileClick"
+                                    @onclick:stopPropagation="true"
+                                    title="@file.Name"
+                                    @oncontextmenu="fileClick">
 
-                                        <MudText>@file.Name</MudText>
-                                    </div>
-                                </ChildContent>
-                            </MudTooltip>
+                                @if (file.IsFile && ShowThumbnails && Path.GetExtension(file.Name) is string ext && ImageExtensions.Contains(ext))
+                                {
+                                    <MudImage Height="@size"
+                                                Width="@size"
+                                                ObjectFit="ObjectFit.Contain"
+                                                ObjectPosition="ObjectPosition.Center"
+                                                Src="@file.ThumbnailUrl"
+                                                FallbackSrc="@file.Url"/>
+                                }
+                                else
+                                {
+                                    <div class="material-symbols-outlined" style="color: @icon.color;">@icon.icon</div>
+                                }
+
+                                <MudText>@file.Name</MudText>
+                            </div>
+
                         }
                     }
                     else

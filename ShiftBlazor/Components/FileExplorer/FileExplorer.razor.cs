@@ -164,7 +164,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
     private Dictionary<string, string> Usernames = [];
     private ITypeAuthService? TypeAuthService;
     private string SearchQuery { get; set; } = string.Empty;
-    internal static readonly IEnumerable<string> ImageExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    internal static readonly HashSet<string> ImageExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         ".jpg",
         ".jpeg",
@@ -228,11 +228,6 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
         NavigationManager.LocationChanged += LocationChanged;
     }
 
-    protected override void OnAfterRender(bool firstRender)
-    {
-        JsRuntime.InvokeVoidAsync("FileExplorerRegisterEvents", FileExplorerId);
-        base.OnAfterRender(firstRender);
-    }
 
     private void LocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
@@ -978,7 +973,10 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
 
     private string SpecialItemClasses(FileExplorerItemDTO file)
     {
-        var classes = new List<string>();
+        var classes = new List<string>()
+        {
+            "file-explorer-item",
+        };
         if (SelectedFiles.Any(x => x.Path == file.Path))
         {
             classes.Add("selected");
