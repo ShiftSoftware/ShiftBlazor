@@ -68,12 +68,12 @@ public interface IODataRequestComponent<T> : IODataRequest, IRequestComponent
     {
         using var requestMessage = self.HttpClient.CreateRequestMessage(HttpMethod.Get, url);
 
-        if (self.OnBeforeRequest != null && await self.OnBeforeRequest.Invoke(requestMessage))
+        if (self.OnBeforeRequest != null && !(await self.OnBeforeRequest.Invoke(requestMessage)))
             return null;
 
         using var res = await self.HttpClient.SendAsync(requestMessage, token);
 
-        if (self.OnResponse != null && await self.OnResponse.Invoke(res))
+        if (self.OnResponse != null && !(await self.OnResponse.Invoke(res)))
             return null;
 
         if (!res.IsSuccessStatusCode)
