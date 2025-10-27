@@ -390,6 +390,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     protected string GetRowClassname(T item, int colIndex) =>
         new CssBuilder()
             .AddClass("is-deleted", item.IsDeleted)
+            .AddClass("is-selected", SelectState.Items.Any(x => x.ID == item.ID) || SelectState.All)
             .Build();
 
     protected string SortedColgroupStylename =>

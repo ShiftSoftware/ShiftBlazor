@@ -37,6 +37,14 @@
     background-color: #ffaeae !important;
 }
 
+.mud-data-grid .mud-table-row.is-selected .mud-table-cell {
+    background-color: var(--mud-palette-gray-lighter);
+}
+
+.mud-data-grid .mud-table-row.is-selected:hover .mud-table-cell {
+    background-color: var(--mud-palette-gray-light);
+}
+
 .button-column-button {
     color: var(--mud-palette-primary);
 }
