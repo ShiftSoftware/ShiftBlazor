@@ -349,6 +349,9 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     [Parameter]
     public bool HighlightSortedColumn { get; set; }
 
+    [Parameter]
+    public bool HeaderNowrap { get; set; }
+
     public Uri? CurrentUri { get; set; }
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = [];
@@ -397,6 +400,11 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         new StyleBuilder()
             .AddStyle("background", "rgba(var(--mud-palette-primary-rgb), 0.25)", string.IsNullOrWhiteSpace(SortedColgroupStyle))
             .AddStyle(SortedColgroupStyle)
+            .Build();
+
+    protected string DataGridClass => 
+        new CssBuilder()
+            .AddClass("nowrap", HeaderNowrap)
             .Build();
 
     private List<Column<T>> DraggableColumns

@@ -45,6 +45,10 @@
     background-color: var(--mud-palette-gray-light);
 }
 
+.mud-data-grid.nowrap .column-header {
+    white-space: nowrap;
+}
+
 .button-column-button {
     color: var(--mud-palette-primary);
 }
