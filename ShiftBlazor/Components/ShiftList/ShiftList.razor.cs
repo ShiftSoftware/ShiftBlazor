@@ -350,7 +350,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     public bool HighlightSortedColumn { get; set; }
 
     [Parameter]
-    public bool HeaderNowrap { get; set; }
+    public bool HeaderNowrap { get; set; } = true;
 
     public Uri? CurrentUri { get; set; }
     public Guid Id { get; private set; } = Guid.NewGuid();
