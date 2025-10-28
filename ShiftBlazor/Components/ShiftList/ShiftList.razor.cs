@@ -20,6 +20,7 @@ using ShiftSoftware.TypeAuth.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
@@ -1223,10 +1224,14 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
                     // don't export column if the column is hidden or is readonly with no CustomColumnExport attr
                     var isHidden = x.Hidden || attr?.Hidden == true || (property?.CanWrite == false && customColumn == null);
+                    var type = propType?.Name;
+                    
+                    if (property?.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType == typeof(LocalizedTextJsonConverter))
+                        type = "LocalizedText";
 
                     return new ExportColumn(
                         key,
-                        propType?.Name,
+                        type,
                         format,
                         enumValues,
                         customColumn,

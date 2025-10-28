@@ -35,6 +35,26 @@ public static class Misc
         var paths = new List<string>();
         Expression? current = expression.Body;
 
+        if (current is MethodCallExpression call)
+        {
+            if (call.Object != null)
+            {
+                current = call.Object;
+            }
+            else if (call.Arguments.Count > 0)
+            {
+                current = call.Arguments[0];
+            }
+        }
+
+        while (current is UnaryExpression u &&
+          (u.NodeType == ExpressionType.Convert ||
+           u.NodeType == ExpressionType.ConvertChecked ||
+           u.NodeType == ExpressionType.TypeAs))
+        {
+            current = u.Operand;
+        }
+
         while (current is MemberExpression member)
         {
             paths.Insert(0, member.Member.Name);
