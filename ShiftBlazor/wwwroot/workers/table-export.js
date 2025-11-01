@@ -158,7 +158,7 @@ function parseRawValue(value, col, localizedColumns, lang) {
     return value
 }
 
-function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables) {
+function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables, lang) {
     let value = row[col.key]
 
     if (foreignKeys.includes(col.key)) { // process the foriegn values
@@ -174,7 +174,15 @@ function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables) {
                 table = foreign.items.find(item => item[foreignField.idKey] == value)
             }
 
-            if (table && table[foreignField?.valueKey]) value = table[foreignField.valueKey]
+            if (table && table[foreignField?.valueKey]) {
+
+                try {
+                    const localizedObject = JSON.parse(table[foreignField.valueKey])
+                    value = localizedObject[lang];
+                } catch {
+                    value = table[foreignField.valueKey];
+                }
+            }
 
             if (!table && foreignField?.valueKey) value = ""
         }
@@ -267,7 +275,7 @@ function generateCSVContent(rows, columns, foreignTables, fieldMapper, lang) {
             let value;
 
             if (col.customColumn) value = parseCustomColumn(row, col, localizedColumns, lang, fieldMapper, foreignTables)
-            else value = parseColumn(col, foreignKeys, fieldMapper, row, foreignTables)
+            else value = parseColumn(col, foreignKeys, fieldMapper, row, foreignTables, lang)
 
             return parseRawValue(value, col, localizedColumns, lang)
         })
