@@ -347,7 +347,11 @@ self.onmessage = async (event) => {
 
         generateItemMapper(foreignTables)
         const csvContent = generateCSVContent(rows, columns, foreignTables, fieldMapper, language)
-        const csvURL = URL.createObjectURL(new Blob([csvContent], { type: "text/csv" }))
+
+        const utf8Bom = new Uint8Array([0xEF, 0xBB, 0xBF]); // UTF-8 BOM
+        const blobParts = [utf8Bom, csvContent];
+        const blob = new Blob(blobParts, { type: "text/csv;charset=utf-8" });
+        const csvURL = URL.createObjectURL(blob)
 
         clearTimeout(longExportToastTimer)
 
