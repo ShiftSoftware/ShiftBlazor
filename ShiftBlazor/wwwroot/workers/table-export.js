@@ -142,7 +142,7 @@ function parseRawValue(value, col, localizedColumns, lang) {
     } catch { }
 
     if (value instanceof Date) {
-        value = toISOLocal(value)
+        value = toExcelFriendlyLocal(value)
     } else if (typeof value === "boolean") {
         value = capitalizeFirstLetter(String(value))
     }
@@ -302,6 +302,21 @@ function toISOLocal(d) {
         z(d.getSeconds()) + '.' +
         zz(d.getMilliseconds()) +
         sign + z(off / 60 | 0) + ':' + z(off % 60);
+}
+
+function toExcelFriendlyLocal(d) {
+    var z = n => ('0' + n).slice(-2);
+    var zz = n => ('00' + n).slice(-3);
+    var off = d.getTimezoneOffset();
+    var sign = off > 0 ? '-' : '+';
+    off = Math.abs(off);
+
+    return d.getFullYear() + '-'
+        + z(d.getMonth() + 1) + '-' +
+        z(d.getDate()) + ' ' +
+        z(d.getHours()) + ':' +
+        z(d.getMinutes()) + ':' +
+        z(d.getSeconds());
 }
 
 // stackoverflow's implementation https://stackoverflow.com/a/18234317
