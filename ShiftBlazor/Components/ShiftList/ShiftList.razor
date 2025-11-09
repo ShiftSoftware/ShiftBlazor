@@ -21,114 +21,117 @@
 
                         <MudSpacer></MudSpacer>
 
-                        @ToolbarEndTemplate
+                        <ToolbarMenuItems>
 
-                        @if (!DisableReloadButton)
-                        {
-                            <MudTooltip Text="Refresh">
-                                <MudIconButtonExtended Size="@IconSize"
-                                                       Icon="@Icons.Material.Outlined.Refresh"
-                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                       Disabled="IsLoading"
-                                                       OnClick="() => DataGrid!.ReloadServerData()" />
-                            </MudTooltip>
-                        }
+                            @ToolbarEndTemplate
 
-                        @if (EnableFilterPanel)
-                        {
-                            <MudTooltip Text="@Loc["ToggleFilterPanelTitle"]">
-                                <MudIconButtonExtended Size="@IconSize"
-                                                       Icon="@(IsFilterPanelOpen ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
-                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                       aria-label="@Loc["ToggleFilterPanelTitle"]"
-                                                       OnClick="ToggleFilterPanel" />
-                            </MudTooltip>
-                        }
+                            @if (!DisableReloadButton)
+                            {
+                                <MudTooltip Text="Refresh">
+                                    <MudIconButtonExtended Size="@IconSize"
+                                                           Icon="@Icons.Material.Outlined.Refresh"
+                                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                           Disabled="IsLoading"
+                                                           OnClick="() => DataGrid!.ReloadServerData()" />
+                                </MudTooltip>
+                            }
 
-                        @if (!DisableGridEditor)
-                        {
-                            <MudTooltip Text="@Loc["ColumnChooserTitle"]">
-                                <MudIconButtonExtended Size="@IconSize"
-                                                       KeyboardKey="KeyboardKeys.KeyC"
-                                                       Icon="@Icons.Material.Filled.ViewColumn"
-                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                       aria-label="@Loc["ColumnChooserTitle"]"
-                                                       OnClick="OpenGridEditor" />
-                            </MudTooltip>
-                        }
+                            @if (EnableFilterPanel)
+                            {
+                                <MudTooltip Text="@Loc["ToggleFilterPanelTitle"]">
+                                    <MudIconButtonExtended Size="@IconSize"
+                                                           Icon="@(IsFilterPanelOpen ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
+                                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                           aria-label="@Loc["ToggleFilterPanelTitle"]"
+                                                           OnClick="ToggleFilterPanel" />
+                                </MudTooltip>
+                            }
+
+                            @if (!DisableGridEditor)
+                            {
+                                <MudTooltip Text="@Loc["ColumnChooserTitle"]">
+                                    <MudIconButtonExtended Size="@IconSize"
+                                                           KeyboardKey="KeyboardKeys.KeyC"
+                                                           Icon="@Icons.Material.Filled.ViewColumn"
+                                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                           aria-label="@Loc["ColumnChooserTitle"]"
+                                                           OnClick="OpenGridEditor" />
+                                </MudTooltip>
+                            }
 
                           
 
-                        @if (!DisableDeleteFilter && Values == null)
-                        {
-                            <MudTooltip Text="@Loc["FilterDeletedItemsTitle"]">
-                                <MudMenu Size="@IconSize"
-                                         Icon="@Icons.Material.Filled.RestoreFromTrash"
-                                         aria-label="@Loc["FilterDeletedItemsTitle"]"
-                                         Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                         AnchorOrigin="Origin.BottomLeft">
-                                    <MudMenuItem OnClick="() => FilterDeleted()">@Loc["ShowBothDeletedAndActiveOption"]</MudMenuItem>
-                                    <MudMenuItem OnClick="() => FilterDeleted(true)">@Loc["ShowDeletedOnlyOption"]</MudMenuItem>
-                                    <MudMenuItem OnClick="() => FilterDeleted(false)">@Loc["ShowActiveOnlyOption"]</MudMenuItem>
-                                </MudMenu>
-                            </MudTooltip>
-                        }
-
-                        @if (EnableExport)
-                        {
-                            <MudTooltip Text="@Loc["ExportButtonTitle"]">
-                                @if (this.ExportIsInProgress)
-                                {
-                                    <MudProgressCircular Class="pa-2" Color="Color.Warning" Size="IconSize" Indeterminate="true" />
-                                }
-
-                                else
-                                {
-                                    <MudIconButtonExtended Icon="@Icons.Material.Filled.FileDownload"
-                                    KeyboardKey="KeyboardKeys.KeyE"
-                                    Size="@IconSize"
-                                    Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                    aria-label="@Loc["ExportButtonTitle"]"
-                                    OnClick="@ExportList" />
-                                }
-                            </MudTooltip>
-                        }
-
-                        @if (RenderAddButton)
-                        {
-                            <MudTooltip Text="@Loc["AddNewItemTitle"]">
-                                <MudIconButtonExtended Icon="@Icons.Material.Filled.AddCircle"
-                                                       KeyboardKey="KeyboardKeys.KeyA"
-                                                       Size="@IconSize"
-                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
-                                                       aria-label="@Loc["AddNewItemTitle"]"
-                                                       OnClick="() => ViewAddItem()" />
-                            </MudTooltip>
-                        }
-
-                        @if (MudDialog != null && IsEmbed != true)
-                        {
-                            @if (RenderAddButton || !DisableGridEditor || !DisableDeleteFilter || EnableExport)
+                            @if (!DisableDeleteFilter && Values == null)
                             {
-                                <MudDivider Vertical="true" Class="shift-vertical-divider"></MudDivider>
+                                <MudTooltip Text="@Loc["FilterDeletedItemsTitle"]">
+                                    <MudMenu Size="@IconSize"
+                                             Icon="@Icons.Material.Filled.RestoreFromTrash"
+                                             aria-label="@Loc["FilterDeletedItemsTitle"]"
+                                             Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                             AnchorOrigin="Origin.BottomLeft"
+                                             Style="display: flex; flex-direction: column;">
+                                        <MudMenuItem OnClick="() => FilterDeleted()">@Loc["ShowBothDeletedAndActiveOption"]</MudMenuItem>
+                                        <MudMenuItem OnClick="() => FilterDeleted(true)">@Loc["ShowDeletedOnlyOption"]</MudMenuItem>
+                                        <MudMenuItem OnClick="() => FilterDeleted(false)">@Loc["ShowActiveOnlyOption"]</MudMenuItem>
+                                    </MudMenu>
+                                </MudTooltip>
                             }
 
-                            @ToolbarControlsTemplate
+                            @if (EnableExport)
+                            {
+                                <MudTooltip Text="@Loc["ExportButtonTitle"]">
+                                    @if (this.ExportIsInProgress)
+                                    {
+                                        <MudProgressCircular Class="pa-2" Color="Color.Warning" Size="IconSize" Indeterminate="true" />
+                                    }
 
-                            <MudTooltip Text="@Loc["CloseModalButtonTitle"]">
-                                <MudButtonExtended Style="min-width:40px; z-index: 100;"
-                                                   KeyboardKey="KeyboardKeys.Escape"
-                                                   Variant="Variant.Text"
-                                                   Size="Size.Medium"
-                                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                   aria-label="@Loc["CloseModalButtonTitle"]"
-                                                   OnClick="CloseDialog">
-                                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
-                                </MudButtonExtended>
-                            </MudTooltip>
-                        }
+                                    else
+                                    {
+                                        <MudIconButtonExtended Icon="@Icons.Material.Filled.FileDownload"
+                                        KeyboardKey="KeyboardKeys.KeyE"
+                                        Size="@IconSize"
+                                        Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                        aria-label="@Loc["ExportButtonTitle"]"
+                                        OnClick="@ExportList" />
+                                    }
+                                </MudTooltip>
+                            }
 
+                            @if (RenderAddButton)
+                            {
+                                <MudTooltip Text="@Loc["AddNewItemTitle"]">
+                                    <MudIconButtonExtended Icon="@Icons.Material.Filled.AddCircle"
+                                                           KeyboardKey="KeyboardKeys.KeyA"
+                                                           Size="@IconSize"
+                                                           Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
+                                                           aria-label="@Loc["AddNewItemTitle"]"
+                                                           OnClick="() => ViewAddItem()" />
+                                </MudTooltip>
+                            }
 
+                            @if (MudDialog != null && IsEmbed != true)
+                            {
+                                @if (RenderAddButton || !DisableGridEditor || !DisableDeleteFilter || EnableExport)
+                                {
+                                    <MudDivider Vertical="true" Class="shift-vertical-divider"></MudDivider>
+                                }
+
+                                @ToolbarControlsTemplate
+
+                                <MudTooltip Text="@Loc["CloseModalButtonTitle"]">
+                                    <MudButtonExtended Style="min-width:40px; z-index: 100;"
+                                                       KeyboardKey="KeyboardKeys.Escape"
+                                                       Variant="Variant.Text"
+                                                       Size="Size.Medium"
+                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                       aria-label="@Loc["CloseModalButtonTitle"]"
+                                                       OnClick="CloseDialog">
+                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
+
+                        </ToolbarMenuItems>
                     </MudToolBar>
                 }
                 @if (EnableFilterPanel)

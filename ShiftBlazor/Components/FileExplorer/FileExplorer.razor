@@ -12,109 +12,109 @@
         <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FileExplorer"])</MudText>
 
         <MudSpacer></MudSpacer>
+        <ToolbarMenuItems>
+            @if (ToolbarTemplate != null)
+            {
+                @ToolbarTemplate
+                <MudDivider Vertical Class="shift-vertical-divider"/>
+            }
 
-                @if (ToolbarTemplate != null)
-                {
-                    @ToolbarTemplate
-                    <MudDivider Vertical Class="shift-vertical-divider"/>
-                }
-
-                @if (DisplayNewFolderButton)
-                {
-                    <MudTooltip Text="@Loc["NewFolderTooltip"]">
-                        <MudButtonExtended StartIcon="@Icons.Material.Filled.CreateNewFolder"
-                                           KeyboardKey="KeyboardKeys.KeyN"
-                                           style="text-transform: capitalize;"
-                                           Size="@IconSize"
-                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                           aria-label="@Loc["NewFolderTooltip"]"
-                                           OnClick="CreateNewFolder">
-                            @Loc["New Folder"]
-                        </MudButtonExtended>
-                    </MudTooltip>
-                }
-
-                @if (DisplayUploadButton)
-                {
-                    <MudTooltip Text="@Loc["UploadTooltip"]">
-                        <MudButtonExtended StartIcon="@Icons.Material.Filled.UploadFile"
-                                           KeyboardKey="KeyboardKeys.KeyU"
-                                           style="text-transform: capitalize;"
-                                           Size="@IconSize"
-                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                           aria-label="@Loc["UploadTooltip"]"
-                                           OnClick="Upload">
-                            @Loc["Upload"]
-                        </MudButtonExtended>
-                    </MudTooltip>
-                }
-
-                <MudTooltip Text="@Loc["SortTooltip"]">
-                <MudMenu ActivationEvent="MouseEvent.MouseOver" AnchorOrigin="Origin.BottomLeft">
-                        <ActivatorContent>
-                            <MudButtonExtended StartIcon="@SortIcon"
-                                               KeyboardKey="KeyboardKeys.KeyS"
-                                               style="text-transform: capitalize;"
-                                               Size="@IconSize"
-                                               Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                               aria-label="@Loc["SortTooltip"]"
-                                               OnClick="Sort">
-                                @Loc["Sort"]
-                            </MudButtonExtended>
-                        </ActivatorContent>
-
-                        <ChildContent>
-                            <MudMenuItem class="@(Settings.Sort == FileSort.Name ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Name)">@Loc["Name"]</MudMenuItem>
-                            <MudMenuItem class="@(Settings.Sort == FileSort.Date ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Date)">@Loc["Date"]</MudMenuItem>
-                            <MudMenuItem class="@(Settings.Sort == FileSort.Size ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Size)">@Loc["Size"]</MudMenuItem>
-                        </ChildContent>
-                    </MudMenu>
-
-                </MudTooltip>
-
-                <MudTooltip Text="@Loc["RefreshTooltip"]">
-                    <MudButtonExtended StartIcon="@Icons.Material.Filled.Refresh"
-                                       KeyboardKey="KeyboardKeys.KeyR"
-                                       style="text-transform: capitalize;"
-                                       Size="@IconSize"
-                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                       aria-label="@Loc["RefreshTooltip"]"
-                                       OnClick="() => Refresh(true)">
-                        @Loc["Refresh"]
+            @if (DisplayNewFolderButton)
+            {
+                <MudTooltip Text="@Loc["NewFolderTooltip"]">
+                    <MudButtonExtended StartIcon="@Icons.Material.Filled.CreateNewFolder"
+                                        KeyboardKey="KeyboardKeys.KeyN"
+                                        style="text-transform: capitalize;"
+                                        Size="@IconSize"
+                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                        aria-label="@Loc["NewFolderTooltip"]"
+                                        OnClick="CreateNewFolder">
+                        @Loc["New Folder"]
                     </MudButtonExtended>
                 </MudTooltip>
+            }
 
+            @if (DisplayUploadButton)
+            {
+                <MudTooltip Text="@Loc["UploadTooltip"]">
+                    <MudButtonExtended StartIcon="@Icons.Material.Filled.UploadFile"
+                                        KeyboardKey="KeyboardKeys.KeyU"
+                                        style="text-transform: capitalize;"
+                                        Size="@IconSize"
+                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                        aria-label="@Loc["UploadTooltip"]"
+                                        OnClick="Upload">
+                        @Loc["Upload"]
+                    </MudButtonExtended>
+                </MudTooltip>
+            }
 
-
-                @if (DisplayQuickAccessButton)
-                {
-                    @*             <MudTooltip Text="@Loc["QuickAccess"]">
-                <MudButtonExtended StartIcon="@Icons.Material.Filled.AddToDrive"
-                                   style="text-transform: capitalize;"
-                                   Size="@IconSize"
-                                   Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                   aria-label="@Loc["QuickAccess"]"
-                                   OnClick="() => AddToQuickAccess()">
-                    @Loc["Quick Access"]
-                </MudButtonExtended>
-            </MudTooltip> *@
-                }
-
-                @if (DisplayDeleteToggle)
-                {
-                    <MudTooltip Text="@Loc["ToggleDeleteTooltip"]">
-                        <MudButtonExtended StartIcon="@Icons.Material.Filled.RestoreFromTrash"
-                                           KeyboardKey="KeyboardKeys.KeyT"
-                                           style="text-transform: capitalize;"
-                                           Size="@IconSize"
-                                           Color="ShowDeletedFiles? Color.Error : (NavIconFlatColor ? Color.Inherit : Color.Default)"
-                                           aria-label="@Loc["ToggleDeleteTooltip"]"
-                                           OnClick="ViewDeletedFiles">
-                            @Loc["Toggle Delete"]
+            <MudTooltip Text="@Loc["SortTooltip"]">
+            <MudMenu ActivationEvent="MouseEvent.MouseOver" AnchorOrigin="Origin.BottomLeft" Style="display: flex; flex-direction: column;">
+                    <ActivatorContent>
+                        <MudButtonExtended StartIcon="@SortIcon"
+                                            KeyboardKey="KeyboardKeys.KeyS"
+                                            style="text-transform: capitalize;"
+                                            Size="@IconSize"
+                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                            aria-label="@Loc["SortTooltip"]"
+                                            OnClick="Sort">
+                            @Loc["Sort"]
                         </MudButtonExtended>
-                    </MudTooltip>
-                }
+                    </ActivatorContent>
 
+                    <ChildContent>
+                        <MudMenuItem class="@(Settings.Sort == FileSort.Name ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Name)">@Loc["Name"]</MudMenuItem>
+                        <MudMenuItem class="@(Settings.Sort == FileSort.Date ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Date)">@Loc["Date"]</MudMenuItem>
+                        <MudMenuItem class="@(Settings.Sort == FileSort.Size ? "selected-sort-item" : "")" AutoClose="false" @onclick="() => SortBy(FileSort.Size)">@Loc["Size"]</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+
+            </MudTooltip>
+
+            <MudTooltip Text="@Loc["RefreshTooltip"]">
+                <MudButtonExtended StartIcon="@Icons.Material.Filled.Refresh"
+                                    KeyboardKey="KeyboardKeys.KeyR"
+                                    style="text-transform: capitalize;"
+                                    Size="@IconSize"
+                                    Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                    aria-label="@Loc["RefreshTooltip"]"
+                                    OnClick="() => Refresh(true)">
+                    @Loc["Refresh"]
+                </MudButtonExtended>
+            </MudTooltip>
+
+
+
+            @if (DisplayQuickAccessButton)
+            {
+                @*             <MudTooltip Text="@Loc["QuickAccess"]">
+            <MudButtonExtended StartIcon="@Icons.Material.Filled.AddToDrive"
+                                style="text-transform: capitalize;"
+                                Size="@IconSize"
+                                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                aria-label="@Loc["QuickAccess"]"
+                                OnClick="() => AddToQuickAccess()">
+                @Loc["Quick Access"]
+            </MudButtonExtended>
+        </MudTooltip> *@
+            }
+
+            @if (DisplayDeleteToggle)
+            {
+                <MudTooltip Text="@Loc["ToggleDeleteTooltip"]">
+                    <MudButtonExtended StartIcon="@Icons.Material.Filled.RestoreFromTrash"
+                                        KeyboardKey="KeyboardKeys.KeyT"
+                                        style="text-transform: capitalize;"
+                                        Size="@IconSize"
+                                        Color="ShowDeletedFiles? Color.Error : (NavIconFlatColor ? Color.Inherit : Color.Default)"
+                                        aria-label="@Loc["ToggleDeleteTooltip"]"
+                                        OnClick="ViewDeletedFiles">
+                        @Loc["Toggle Delete"]
+                    </MudButtonExtended>
+                </MudTooltip>
+            }
+        </ToolbarMenuItems>
     </MudToolBar>
 
     <div style="display: flex;">

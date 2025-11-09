@@ -236,7 +236,38 @@ window.GetFocusableElementCount = function (element)
     return getTabbableElements(element).length;
 }
 
+function resizeMenuItems() {
+    var menus = document.getElementsByClassName("menu-items-container");
+    var offset = 5;
+
+    for (var i = 0; i < menus.length; i++) {
+        var menu = menus[i];
+        var parent = menu.parentElement;
+        var parentStyles = window.getComputedStyle(parent);
+        var parentInnerWidth = parent.offsetWidth - parseFloat(parentStyles.paddingLeft) - parseFloat(parentStyles.paddingRight);
+        var siblings = Array.from(parent.children).filter(x => x !== menu && !x.classList.contains("flex-grow-1"));
+        var siblingsWidth = siblings.reduce((total, sib) => total + (sib.offsetWidth ?? sib.clientWidth), 0);
+
+        var itemsContainer = menu.getElementsByClassName("menu-items")[0];
+        var dropdown = menu.getElementsByClassName("menu-dropdown")[0];
+
+
+        if (siblingsWidth + itemsContainer.offsetWidth + offset >= parentInnerWidth) {
+            itemsContainer.classList.add("hide");
+            dropdown.classList.remove("hide");
+        } else {
+            itemsContainer.classList.remove("hide");
+            dropdown.classList.add("hide");
+        }
+    }
+}
+
+function responsiveFix() {
+    fixAllStickyColumns();
+    resizeMenuItems();
+}
+
 window.addEventListener("keydown", handleKeydown);
 window.addEventListener("keyup", releaseAltKey);
 window.addEventListener("blur", releaseAltKey);
-window.addEventListener("resize", fixAllStickyColumns);
+window.addEventListener("resize", responsiveFix);

@@ -422,3 +422,21 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     margin-inline: 5px;
     opacity: 0.5;
 }
+.menu-items-container  {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    /*        gap: 10px;*/
+}
+
+.menu-items-container .hide {
+    position: absolute;
+    left: -9999px;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.menu-items-container .menu-items {
+    display: flex;
+}
