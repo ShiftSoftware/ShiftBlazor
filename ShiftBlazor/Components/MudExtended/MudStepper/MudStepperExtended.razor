@@ -117,9 +117,6 @@
         // we validate the section
         var section = ShiftForm.GetSections().Where(x => x.For != null).FirstOrDefault(x => x.For == step.Title);
 
-        // Console.WriteLine($"ShiftForm: {ShiftForm != null} | action: {args.Action} | section {section?.For} {section?.Validate()}");
-
-
         if (section != null)
         {
             if (section.Validate())

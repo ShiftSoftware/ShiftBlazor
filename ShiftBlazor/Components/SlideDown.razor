@@ -1,0 +1,73 @@
+﻿@using MudBlazor.Utilities
+
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<div class="@Classname" style="@Style" @ontransitionend="OnTransitionEnd">
+    <div class="@InnerClass" style="@InnerStyle">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback<EventArgs> OnTransitionEnd { get; set; }
+
+    [Parameter]
+    public bool Hide { get; set; }
+
+    [Parameter]
+    public bool Show { get; set; }
+
+    [Parameter]
+    public bool Toggle { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string? InnerClass { get; set; }
+
+    [Parameter]
+    public string? InnerStyle { get; set; }
+
+    [Parameter]
+    public bool Auto { get; set; } = true;
+
+    public bool DisplayContent { get; set; }
+
+    private string Classname => new CssBuilder("slide-down")
+        .AddClass(Class, Class != null)
+        .AddClass("show", DisplayContent)
+        .Build();
+
+    protected override void OnInitialized()
+    {
+        if (Auto)
+            DisplayContent = true;
+        base.OnInitialized();
+    }
+
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        parameters.TryGetValue(nameof(Hide), out bool hide);
+        parameters.TryGetValue(nameof(Show), out bool show);
+        parameters.TryGetValue(nameof(Toggle), out bool toggle);
+
+        if (DisplayContent && hide && hide != Hide)
+            DisplayContent = false;
+
+        if (!DisplayContent && show && show != Show)
+            DisplayContent = true;
+
+        if (Toggle != toggle)
+            DisplayContent = !DisplayContent;
+
+        return base.SetParametersAsync(parameters);
+    }
+}
