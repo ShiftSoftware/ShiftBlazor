@@ -36,107 +36,109 @@
                             <MudSpacer></MudSpacer>
                         }
 
-                        @ToolbarEndTemplate
+                        <ToolbarMenuItems>
+                            @ToolbarEndTemplate
 
-                        @if (_RenderCloneButton)
-                        {
-                            <MudTooltip Text="@Loc["Clone"]">
-                                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyC"
-                                                    Variant="Variant.Text"
-                                                    Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                    Style="min-width:40px;"
-                                                    aria-label="@Loc["Clone"]"
-                                                    OnClick="CloneAndOpen">
-                                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy"></MudIcon>
-                                </MudButtonExtended>
-                            </MudTooltip>
-                        }
+                            @if (_RenderCloneButton)
+                            {
+                                <MudTooltip Text="@Loc["Clone"]">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyC"
+                                                        Variant="Variant.Text"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                        Style="min-width:40px;"
+                                                        aria-label="@Loc["Clone"]"
+                                                        OnClick="CloneAndOpen">
+                                        <MudIcon Icon="@Icons.Material.Filled.ContentCopy"></MudIcon>
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
 
-                        @if (_RenderPrintButton)
-                        {
-                            <MudTooltip Text="@Loc["Print"]">
-                                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyP"
-                                                    Style="min-width:40px;"
-                                                    Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                                    Variant="Variant.Text"
-                                                    Size="Size.Medium"
-                                                    Disabled="DisablePrint || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
-                                                    aria-label="@Loc["Print"]"
-                                                    OnClick="PrintItem">
-                                    @if (TaskInProgress == FormTasks.Print)
-                                    {
-                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    }
-                                    else
-                                    {
-                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Print" />
-                                    }
-                                </MudButtonExtended>
-                            </MudTooltip>
-                        }
+                            @if (_RenderPrintButton)
+                            {
+                                <MudTooltip Text="@Loc["Print"]">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyP"
+                                                        Style="min-width:40px;"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Disabled="DisablePrint || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
+                                                        aria-label="@Loc["Print"]"
+                                                        OnClick="PrintItem">
+                                        @if (TaskInProgress == FormTasks.Print)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Print" />
+                                        }
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
 
-                        @if (_RenderRevisionButton)
-                        {
-                            <MudTooltip Text="@Loc["Revisions"]">
-                                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyR"
-                                                    Style="min-width:40px;"
-                                                    Disabled="DisableRevisions || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
-                                                    Variant="Variant.Text"
-                                                    Size="Size.Medium"
-                                                    Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                                    aria-label="@Loc["Revisions"]"
-                                                    OnClick="ViewRevisions">
-                                    @if (TaskInProgress == FormTasks.FetchRevisions)
-                                    {
-                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    }
-                                    else
-                                    {
-                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.History" />
-                                    }
-                                </MudButtonExtended>
-                            </MudTooltip>;
-                        }
+                            @if (_RenderRevisionButton)
+                            {
+                                <MudTooltip Text="@Loc["Revisions"]">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyR"
+                                                        Style="min-width:40px;"
+                                                        Disabled="DisableRevisions || Mode > FormModes.Archive || TaskInProgress != FormTasks.None"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                                        aria-label="@Loc["Revisions"]"
+                                                        OnClick="ViewRevisions">
+                                        @if (TaskInProgress == FormTasks.FetchRevisions)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.History" />
+                                        }
+                                    </MudButtonExtended>
+                                </MudTooltip>;
+                            }
 
-                        @if (_RenderDeleteButton)
-                        {
-                            <MudTooltip Text="@Loc["Delete"]">
-                                <MudButtonExtended KeyboardKey="KeyboardKeys.KeyD"
-                                                    Style="min-width:40px;"
-                                                    Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
-                                                    Variant="Variant.Text"
-                                                    Size="Size.Medium"
-                                                    Color="NavIconFlatColor ? Color.Inherit : Color.Error"
-                                                    aria-label="@Loc["Delete"]"
-                                                    OnClick="DeleteItem">
-                                    @if (TaskInProgress == FormTasks.Delete)
-                                    {
-                                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                    }
+                            @if (_RenderDeleteButton)
+                            {
+                                <MudTooltip Text="@Loc["Delete"]">
+                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyD"
+                                                        Style="min-width:40px;"
+                                                        Disabled="DisableDelete || Mode > FormModes.View || TaskInProgress != FormTasks.None"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Error"
+                                                        aria-label="@Loc["Delete"]"
+                                                        OnClick="DeleteItem">
+                                        @if (TaskInProgress == FormTasks.Delete)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                        }
 
-                                    else
-                                    {
-                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
-                                    }
-                                </MudButtonExtended>
-                            </MudTooltip>
-                        }
+                                        else
+                                        {
+                                            <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever" />
+                                        }
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
 
-                        @if (_RenderEditButton)
-                        {
-                            <MudTooltip Text="@Loc["Edit"]">
-                                <MudButtonExtended Style="min-width:40px;"
-                                                    Disabled="DisableEdit || Mode > FormModes.View || TaskInProgress != FormTasks.None"
-                                                    Variant="Variant.Text"
-                                                    Size="Size.Medium"
-                                                    Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
-                                                    aria-label="@Loc["Edit"]"
-                                                    KeyboardKey="KeyboardKeys.KeyE"
-                                                    OnClick="EditItem">
-                                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
-                                </MudButtonExtended>
-                            </MudTooltip>
-                        }
+                            @if (_RenderEditButton)
+                            {
+                                <MudTooltip Text="@Loc["Edit"]">
+                                    <MudButtonExtended Style="min-width:40px;"
+                                                        Disabled="DisableEdit || Mode > FormModes.View || TaskInProgress != FormTasks.None"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
+                                                        aria-label="@Loc["Edit"]"
+                                                        KeyboardKey="KeyboardKeys.KeyE"
+                                                        OnClick="EditItem">
+                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Edit" />
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
+                        </ToolbarMenuItems>
 
                         @if (_RenderHeaderControlsDivider && MudDialog != null)
                         {

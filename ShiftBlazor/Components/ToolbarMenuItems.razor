@@ -1,0 +1,38 @@
+﻿@using Microsoft.JSInterop
+@using MudBlazor.Utilities
+
+<div class="@Classname">
+    <div class="menu-items">@ChildContent</div>
+    <div class="menu-dropdown hide">
+        <MudMenu Icon="@Icon">
+            <MudStack>
+                @ChildContent
+            </MudStack>
+        </MudMenu>
+    </div>
+</div>
+
+@code {
+    [Inject] IJSRuntime JsRuntime { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string Icon { get; set; } = Icons.Material.Filled.MoreVert;
+
+    private string Classname => new CssBuilder("menu-items-container")
+        .AddClass(Class)
+        .Build();
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            JsRuntime.InvokeVoidAsync("resizeMenuItems");
+
+        base.OnAfterRender(firstRender);
+    }
+}

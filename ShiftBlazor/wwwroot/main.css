@@ -422,3 +422,54 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     margin-inline: 5px;
     opacity: 0.5;
 }
+
+
+
+.slide-down {
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: clip;
+    transition: grid-template-rows 350ms ease, opacity 250ms ease, transform 250ms ease, margin 250ms ease, opacity 250ms ease;
+    animation: slideDown 350ms ease;
+    /*    opacity: 0;*/
+}
+
+    .slide-down.show {
+        grid-template-rows: 1fr;
+/*        opacity: 1;*/
+    }
+
+    .slide-down > * {
+        overflow: hidden;
+    }
+
+
+@keyframes slideDown {
+    from {
+        grid-template-rows: 0fr;
+    }
+
+    to {
+        grid-template-rows: 1fr;
+    }
+}
+
+
+.menu-items-container  {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    /*        gap: 10px;*/
+}
+
+.menu-items-container .hide {
+    position: absolute;
+    left: -9999px;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.menu-items-container .menu-items {
+    display: flex;
+}

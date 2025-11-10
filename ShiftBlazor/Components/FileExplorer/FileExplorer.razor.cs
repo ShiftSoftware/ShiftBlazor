@@ -151,6 +151,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
     private bool DisplayRestoreButton { get; set; }
     private bool DisplayContextMenu { get; set; }
     private bool DisplayDeleteToggle { get; set; }
+    private bool DisplayDetailsButton { get; set; }
     private bool IsContextMenuEmpty { get; set; }
 
     private double ContextLeft { get; set; }
@@ -538,6 +539,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
         DisplayDownloadButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsFile);
         DisplayQuickAccessButton = !DisableQuickAccess && SelectedFiles.Count > 0 && SelectedFiles.All(x => !x.IsFile);
         DisplayRestoreButton = SelectedFiles.Count > 0 && SelectedFiles.Any(x => x.IsDeleted);
+        DisplayDetailsButton = SelectedFiles.Count > 0;
         DisplayNewFolderButton = CWD?.Path != null;
         DisplayUploadButton = CWD?.Path != null;
 
@@ -545,8 +547,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
                             || DisplayDownloadButton
                             || DisplayQuickAccessButton
                             || DisplayRestoreButton
-                            || DisplayNewFolderButton
-                            || DisplayUploadButton);
+                            || DisplayDetailsButton);
     }
 
     private async Task OnBreadCrumbClick(int index)
