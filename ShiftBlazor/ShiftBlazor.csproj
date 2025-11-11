@@ -26,16 +26,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="FluentValidation" Version="12.0.0" />
+		<PackageReference Include="FluentValidation" Version="12.1.0" />
 		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
 		<PackageReference Include="CsvHelper" Version="33.1.0" />
-		<PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.10" />
-		<PackageReference Include="Microsoft.OData.Client" Version="8.4.0" />
+		<PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.11" />
+		<PackageReference Include="Microsoft.OData.Client" Version="8.4.2" />
 		<PackageReference Include="MimeTypes" Version="2.5.2">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="MudBlazor" Version="8.13.0" />
+		<PackageReference Include="MudBlazor" Version="8.14.0" />
 		<PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
 		<PackageReference Include="ShiftSoftwareLocalization" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\ShiftFrameworkLocalization\ShiftSoftwareLocalization\ShiftSoftwareLocalization.csproj')" />
 		<PackageReference Include="ShiftSoftware.ShiftIdentity.Blazor" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\ShiftIdentity\ShiftIdentity.Blazor\ShiftIdentity.Blazor.csproj')" />
