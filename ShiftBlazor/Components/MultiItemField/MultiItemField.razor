@@ -86,7 +86,7 @@
             {
                 if (FieldFooter == null)
                 {
-                    <SlideDown Toggle="!UseLimits || Value.Count < Max" Style="margin:auto; margin-top:15px;">
+                    <SlideDown Toggle="!UseLimits || Value.Count < Max || Max == 0" Style="margin:auto; margin-top:15px;">
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Info"
                                    Size="Size.Small"
