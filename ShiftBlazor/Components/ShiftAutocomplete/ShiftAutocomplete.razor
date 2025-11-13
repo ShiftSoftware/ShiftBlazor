@@ -135,6 +135,17 @@
                                    tabindex="-1"/>
                 }
 
+                @if (UpdateInitialValueError != null)
+                {
+                    <MudTooltip Text="@UpdateInitialValueError">
+                        <MudIconButton Icon="@Icons.Material.Filled.Error"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       Edge="@Edge.End"
+                                       OnClick="() => UpdateInitialValue(true)" />
+                    </MudTooltip>
+                }
+
                 @if (Adornment == Adornment.End)
                 {
                     <MudIconButton Class="mud-input-adornment-icon-button mud-no-activator"

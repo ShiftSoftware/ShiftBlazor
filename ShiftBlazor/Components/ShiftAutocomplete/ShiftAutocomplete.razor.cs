@@ -356,6 +356,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     public bool IsLoading => FetchTokenSource?.IsCancellationRequested == false;
     public bool IsIntitialValueLoading => InitialUpdateTokenSource?.IsCancellationRequested == false;
     public string Text { get; private set; } = string.Empty;
+
+    public string? UpdateInitialValueError { get; private set; }
+
     internal bool IsSelectedValuesGroupOpen { get; set; }
 
     internal string DataValueField = string.Empty;
@@ -987,10 +990,12 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         await ValueChanged.InvokeAsync(value);
     }
 
-    private async Task UpdateInitialValue()
+    private async Task UpdateInitialValue(bool force = false)
     {
-        //if (InitialUpdateTokenSource is not null)
-        //    return;
+        if (UpdateInitialValueError != null && !force)
+        {
+            return;
+        }
 
         var values = MultiSelect
             ? SelectedValues ?? []
@@ -1022,8 +1027,13 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
 
             var items = await IODataRequestComponent<TEntitySet>.GetFromJsonAsync(this, new Uri(url), cts.Token);
 
-            if (items == null)
+            if (items == null || items.Value.Count == 0)
+            {
+                UpdateInitialValueError = "Failed to load initial data.";
+                InitialUpdateTokenSource?.Cancel();
+                StateHasChanged();
                 return;
+            }
 
             ShiftEntitySelectDTO? itemFound = null;
             foreach (var item in items.Value)
