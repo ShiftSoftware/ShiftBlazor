@@ -10,17 +10,34 @@
 <MudCard Elevation="2" Class="mt-3">
     <MudCardHeader Class="pt-1 pb-1 background-gray">
         <CardHeaderContent>
-            @if (TitleTemplate == null)
-            {
-                <MudStack Row>
-                    <MudText Typo="Typo.subtitle2">@Title</MudText>
-                    <ValidationMessage For="ValueExpression" />
-                </MudStack>
-            }
-            else
-            {
-                @TitleTemplate
-            }
+            <MudStack Row>
+                @if (TitleTemplate == null)
+                {
+                    <MudStack Row>
+                        <MudText Typo="Typo.subtitle2">@Title</MudText>
+                        <ValidationMessage For="ValueExpression" />
+                    </MudStack>
+                }
+                else
+                {
+                    @TitleTemplate
+                }
+                <MudSpacer/>
+
+                @if (!DisableCounter)
+                {
+                    <MudText Color="Mode > FormModes.Archive && Value.Count < Min && UseLimits ? Color.Error : Color.Default">
+                        @if (UseLimits)
+                        {
+                            <text>@Value.Count / @Math.Max(Min, 0)@(Max == 0 ? "+" : $"-{Max}")</text>
+                        }
+                        else
+                        {
+                            <text>@Value.Count</text>
+                        }
+                    </MudText>
+                }
+            </MudStack>
         </CardHeaderContent>
     </MudCardHeader>
 
@@ -40,21 +57,26 @@
             {
                 @foreach (var item in Value)
                 {
-                    <MudItem lg="11" md="11" sm="11" xs="11">
-                        <SlideDown Hide="ItemsToRemove.Contains(item)" OnTransitionEnd="() => RemoveTest(item)">
-                            @FieldBody((TItem)item)
-                        </SlideDown>
-                    </MudItem>
-                    <MudItem lg="1" md="1" sm="1" xs="1">
-                        <SlideDown Hide="ItemsToRemove.Contains(item)" OnTransitionEnd="() => RemoveTest(item)">
-                            @if (RemoveButtonTempalte == null)
-                            {
-                                @GetRemoveButton((TItem)item)
-                            }
-                            else
-                            {
-                                @RemoveButtonTempalte(new(this, (TItem)item))
-                            }
+                    <MudItem @key="item" lg="12" md="12" sm="12" xs="12">
+                        <SlideDown Hide="ItemsToRemove.Contains(item)" OnTransitionEnd="() => Remove(item)">
+                            <MudGrid>
+                                <MudItem lg="11" md="11" sm="11" xs="11">
+                                    @FieldBody((TItem)item)
+                                </MudItem>
+                                <MudItem lg="1" md="1" sm="1" xs="1">
+                                    @if (Mode > FormModes.Archive)
+                                    {
+                                        @if (RemoveButtonTempalte == null)
+                                        {
+                                            @GetRemoveButton((TItem)item)
+                                        }
+                                        else
+                                        {
+                                            @RemoveButtonTempalte(new(this, (TItem)item))
+                                        }
+                                    }
+                                </MudItem>
+                            </MudGrid>
                         </SlideDown>
                     </MudItem>
                 }
@@ -64,7 +86,7 @@
             {
                 if (FieldFooter == null)
                 {
-                    <SlideDown Toggle="!(!UseLimits || Value.Count < Max)" Style="margin:auto; margin-top:15px;">
+                    <SlideDown Toggle="!UseLimits || Value.Count < Max" Style="margin:auto; margin-top:15px;">
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Info"
                                    Size="Size.Small"
@@ -104,6 +126,9 @@
     [Parameter]
     public int Max { get; set; }
 
+    [Parameter]
+    public bool DisableCounter { get; set; }
+
     // ========= Template Parameters =========
     [Parameter]
     public RenderFragment<MultiItemField<T, TItem>>? FieldHeader { get; set; }
@@ -123,6 +148,7 @@
     private Type DTOType;
     private bool UseLimits = false;
     private FieldIdentifier fieldIdentifier;
+    private ValidationMessageStore? InternalMessageStore;
 
     public MultiItemField()
     {
@@ -131,17 +157,35 @@
 
     protected override void OnInitialized()
     {
-        UseLimits = Max > 0 && Min <= Max;
+        UseLimits = ((Max > 0 || Min > 0) && Min <= Max) || (Min > 0 && Max == 0);
         fieldIdentifier = FieldIdentifier.Create(ValueExpression);
 
         if (UseLimits)
         {
-            var minItemCount = Min;
-            while (minItemCount-- > 0)
+            if (EditContext != null)
             {
-                Value.Add(Activator.CreateInstance(DTOType));
+                InternalMessageStore = new(EditContext);
+                EditContext.OnValidationRequested += (sender, eventArgs) =>
+                {
+                    InternalMessageStore.Clear();
+                    if (Value.Count < Min)
+                    {
+                        InternalMessageStore.Add(fieldIdentifier, $"At least {Min} items are required.");
+                    }
+                };
             }
-            ValueChanged.InvokeAsync(Value);
+
+            if (Mode == FormModes.Create)
+            {
+                var minItemCount = Min;
+                var count = Value.Count;
+
+                while (minItemCount-- > count)
+                {
+                    Value.Add(Activator.CreateInstance(DTOType));
+                }
+                ValueChanged.InvokeAsync(Value);
+            }
         }
 
         base.OnInitialized();
@@ -149,38 +193,31 @@
 
     public void CreateNew()
     {
-        if (!UseLimits || Value.Count < Max)
+        InternalMessageStore?.Clear();
+
+        if (!UseLimits || Value.Count < Max || Max == 0)
         {
             Value.Add(Activator.CreateInstance(DTOType));
             ValueChanged.InvokeAsync(Value);
         }
     }
 
-    public void Remove(TItem item)
-    {
-        Value.Remove(item);
-        ValueChanged.InvokeAsync(Value);
-    }
-
     private void AddRemoveTransition(object item)
     {
-        Console.WriteLine($"AddRemoveTransition called for item {JsonSerializer.Serialize(item)}");
         ItemsToRemove.Add(item);
     }
 
     private HashSet<object> ItemsToRemove = [];
 
-    public void RemoveTest(object item)
+    public void Remove(object item)
     {
-        Console.WriteLine($"RemoveTest called {JsonSerializer.Serialize(ItemsToRemove)}");
         if (ItemsToRemove.Contains(item))
         {
             ItemsToRemove.Remove(item);
-            Remove((TItem)item);
+            Value.Remove(item);
+            ValueChanged.InvokeAsync(Value);
         }
     }
-
-    // string GetClassName(TItem item) => ItemsToRemove.Contains(item) ? "hide" : "";
 
     private RenderFragment GetRemoveButton(object item)
     {
@@ -203,7 +240,7 @@
         public RemoveContext(MultiItemField<T, TItem> multiItemField, TItem item)
         {
             Item = item;
-            Remove = () => multiItemField.Remove(item);
+            Remove = () => multiItemField.Remove(item!);
         }
     }
 }
