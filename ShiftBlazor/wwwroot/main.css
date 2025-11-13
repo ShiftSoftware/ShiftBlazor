@@ -89,6 +89,8 @@
 
 .button-shortcut {
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .shortcut-key {
@@ -191,6 +193,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 }
 
 .file-explorer .breadcrumb {
+    white-space: nowrap;
 }
 
     .file-explorer .breadcrumb .mud-typography {
@@ -437,11 +440,11 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     .slide-down.show {
         grid-template-rows: 0fr;
     }
-    }
+}
 
     .slide-down > * {
         overflow: hidden;
-}
+    }
 
 
 .menu-items-container  {
