@@ -423,35 +423,24 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     opacity: 0.5;
 }
 
-
-
 .slide-down {
     display: grid;
-    grid-template-rows: 0fr;
     overflow: clip;
+    grid-template-rows: 0fr;
     transition: grid-template-rows 350ms ease, opacity 250ms ease, transform 250ms ease, margin 250ms ease, opacity 250ms ease;
-    animation: slideDown 350ms ease;
-    /*    opacity: 0;*/
 }
-
     .slide-down.show {
         grid-template-rows: 1fr;
-/*        opacity: 1;*/
+    }
+
+@starting-style {
+    .slide-down.show {
+        grid-template-rows: 0fr;
+    }
     }
 
     .slide-down > * {
         overflow: hidden;
-    }
-
-
-@keyframes slideDown {
-    from {
-        grid-template-rows: 0fr;
-    }
-
-    to {
-        grid-template-rows: 1fr;
-    }
 }
 
 

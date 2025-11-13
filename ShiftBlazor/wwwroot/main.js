@@ -262,6 +262,16 @@ function resizeMenuItems() {
     }
 }
 
+window.registerSlideDownEvent = function (element, dotNetObj) {
+    element.ontransitionend = () => dotNetObj.invokeMethodAsync("TransitionEndHandler");
+    element.children[0].ontransitionend = (e) => e.stopPropagation();
+    }
+
+window.removeSlideDownEvent = function (element) {
+    element.ontransitionend = null;
+    element.children[0].ontransitionend = null;
+}
+
 function responsiveFix() {
     fixAllStickyColumns();
     resizeMenuItems();

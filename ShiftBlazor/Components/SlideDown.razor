@@ -1,14 +1,20 @@
-﻿@using MudBlazor.Utilities
+﻿@using Microsoft.JSInterop
+@using MudBlazor.Utilities
+@implements IAsyncDisposable
 
 @namespace ShiftSoftware.ShiftBlazor.Components
 
-<div class="@Classname" style="@Style" @ontransitionend="OnTransitionEnd">
+<div class="@Classname" style="@Style" @ref="ElementRef">
     <div class="@InnerClass" style="@InnerStyle">
         @ChildContent
     </div>
 </div>
 
+<div>DisplayContent: @DisplayContent</div>
+
 @code {
+    [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
+
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
@@ -22,7 +28,7 @@
     public bool Show { get; set; }
 
     [Parameter]
-    public bool Toggle { get; set; }
+    public bool? Toggle { get; set; }
 
     [Parameter]
     public string? Class { get; set; }
@@ -39,7 +45,10 @@
     [Parameter]
     public bool Auto { get; set; } = true;
 
-    public bool DisplayContent { get; set; }
+    public bool? DisplayContent { get; set; }
+    private DotNetObjectReference<SlideDown>? objRef;
+
+    private ElementReference? ElementRef { get; set; }
 
     private string Classname => new CssBuilder("slide-down")
         .AddClass(Class, Class != null)
@@ -48,25 +57,51 @@
 
     protected override void OnInitialized()
     {
-        if (Auto)
+        if (Auto && DisplayContent == null)
             DisplayContent = true;
         base.OnInitialized();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync("registerSlideDownEvent", ElementRef, objRef);
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    [JSInvokable]
+    public void TransitionEndHandler()
+    {
+        OnTransitionEnd.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (objRef != null)
+        {
+            await JsRuntime.InvokeVoidAsync("removeSlideDownEvent", ElementRef);
+            objRef.Dispose();
+        }
     }
 
     public override Task SetParametersAsync(ParameterView parameters)
     {
         parameters.TryGetValue(nameof(Hide), out bool hide);
         parameters.TryGetValue(nameof(Show), out bool show);
-        parameters.TryGetValue(nameof(Toggle), out bool toggle);
+        parameters.TryGetValue(nameof(Toggle), out bool? toggle);
 
-        if (DisplayContent && hide && hide != Hide)
+        if (DisplayContent == true && hide && hide != Hide)
             DisplayContent = false;
 
-        if (!DisplayContent && show && show != Show)
+        if (DisplayContent != true && show && show != Show)
             DisplayContent = true;
 
-        if (Toggle != toggle)
-            DisplayContent = !DisplayContent;
+        if (Toggle != toggle && toggle != null)
+            DisplayContent = toggle;
 
         return base.SetParametersAsync(parameters);
     }
