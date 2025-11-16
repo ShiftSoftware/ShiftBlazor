@@ -26,4 +26,5 @@ public class AppLayoutContext : AppContext
     public RenderFragment<AppContext>? NavMenuTemplate { get; set; }
     public RenderFragment<AppContext>? HeaderTemplate { get; set; }
     public RenderFragment<AppContext>? FooterTemplate { get; set; }
+    public Type? MainLayout { get; set; }
 }

@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.Extensions.DependencyInjection
+@using ShiftSoftware.ShiftBlazor.Components.App
 @using ShiftSoftware.ShiftIdentity.Blazor.Components
 @using ShiftSoftware.ShiftIdentity.Blazor.Services
 @using ShiftSoftware.ShiftIdentity.Core
@@ -10,10 +11,10 @@
 
 <CascadingValue Value="AppContext" IsFixed="true">
     <Router AppAssembly="@AppAssembly"
-    AdditionalAssemblies="@AdditionalAssemblies"
-    NotFound="@(NotFoundTemplate ?? NotFoundDefault)"
-    Navigating="Navigating"
-    OnNavigateAsync="OnNavigateAsync">
+            AdditionalAssemblies="@AdditionalAssemblies"
+            NotFoundPage="@(NotFoundPage ?? typeof(NotFound))"
+            Navigating="Navigating"
+            OnNavigateAsync="OnNavigateAsync">
 
         <Found Context="routeData">
             @if (AuthenticationStateTask == null)
@@ -61,7 +62,11 @@
     public string? AppTitle { get; set; }
 
     [Parameter]
+    [Obsolete("'NotFound' is obsolete: 'NotFound is deprecated. Use NotFoundPage instead.'", true)]
     public RenderFragment? NotFoundTemplate { get; set; }
+
+    [Parameter]
+    public Type? NotFoundPage { get; set; }
 
     [Parameter]
     public RenderFragment? Navigating { get; set; }
@@ -97,6 +102,7 @@
             HeaderTemplate = HeaderTemplate,
             FooterTemplate = FooterTemplate,
             EnableAutherization = AuthenticationStateTask != null,
+            MainLayout = MainLayout,
         };
 
         base.OnInitialized();
@@ -132,10 +138,4 @@
         await base.OnInitializedAsync();
     }
 
-    private RenderFragment NotFoundDefault => @<text>
-        <PageTitle>@Loc["DefaultAppNotFoundTitle"]</PageTitle>
-        <LayoutView Layout="@(MainLayout ?? typeof(ShiftMainLayout))">
-            <p role="alert">@Loc["DefaultAppNotFoundText"]</p>
-        </LayoutView>
-    </text>;
 }

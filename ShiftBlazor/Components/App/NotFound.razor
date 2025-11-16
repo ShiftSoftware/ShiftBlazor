@@ -1,0 +1,13 @@
+﻿@page "/not-found"
+@inject ShiftBlazorLocalizer Loc
+
+<PageTitle>@Loc["DefaultAppNotFoundTitle"]</PageTitle>
+<LayoutView Layout="@(Context?.MainLayout ?? typeof(ShiftMainLayout))">
+    <h1>404</h1>
+    <p role="alert">@Loc["DefaultAppNotFoundText"]</p>
+</LayoutView>
+
+@code {
+    [CascadingParameter]
+    public AppLayoutContext? Context { get; set; }
+}
