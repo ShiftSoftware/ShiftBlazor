@@ -169,7 +169,7 @@
 
 	private ShiftEntitySelectDTO ValueToSelectDTO(string value)
 	{
-		var dto = new ShiftEntitySelectDTO();
+		var dto = new ShiftEntitySelectDTO(string.Empty);
 
 		if (Filter is StringFilterModel filter && filter.AutocompleteOptions != null)
 		{

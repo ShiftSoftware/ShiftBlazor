@@ -10,8 +10,16 @@ public class LocalizedInputContext
 {
     public bool Error { get; set; }
     public string? ErrorText { get; set; }
-    public string? Value { get; set; }
+    public string Value { get; set; }
     public Func<string, Task> ValueChanged { get; set; }
     public string? Label { get; set; }
 
+    public LocalizedInputContext(string value, Func<string, Task> valueChanged, string? label, bool error, string? errorText)
+    {
+        Value = value;
+        ValueChanged = valueChanged;
+        Label = label;
+        Error = error;
+        ErrorText = errorText;
+    }
 }

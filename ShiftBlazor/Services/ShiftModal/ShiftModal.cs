@@ -28,7 +28,7 @@ public class ShiftModal
         SettingManager = settingManager;
         MessageService = messageService;
 
-        Assemblies = [Assembly.GetEntryAssembly()];
+        Assemblies = [Assembly.GetEntryAssembly()!];
 
         if (SettingManager.Configuration.AdditionalAssemblies != null)
         {

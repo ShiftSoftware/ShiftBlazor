@@ -44,7 +44,7 @@
                 }
                 else if (first is FileExplorerItemDTO file)
                 {
-                    @if (FileExplorer.ImageExtensions.Contains(Path.GetExtension(file.Name)))
+                    @if (FileExplorer.ImageExtensions.Contains(Path.GetExtension(file.Name ?? "")))
                     {
                         <MudImage Height="150"
                                   Width="150"

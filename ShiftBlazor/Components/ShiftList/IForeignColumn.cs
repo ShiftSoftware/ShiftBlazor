@@ -8,7 +8,7 @@ using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public interface IForeignColumn : IODataRequest
+public interface IForeignColumn : IRequestComponent, IODataRequest
 {
     public string? DataValueField { get; set; }
     public string? ForeignTextField { get; set; }
@@ -49,10 +49,10 @@ public interface IForeignColumn : IODataRequest
         return GetForeignIds(field, items);
     }
 
-    public static DataServiceQuery<TEntity> GetODataUrl<TEntity>(IForeignColumn column, ODataQuery? oDataQuery = null)
+    public static DataServiceQuery<TEntity> GetODataUrl<TEntity>(IForeignColumn column, ODataQuery oDataQuery)
         where TEntity : ShiftEntityDTOBase
     {
-        return oDataQuery.CreateNewQuery<TEntity>(column.EntitySet, column.Url);
+        return oDataQuery.CreateNewQuery<TEntity>(column.EntitySet!, column.Url);
     }
 
     public static async Task<ODataDTO<T>?> GetForeignColumnValues<T>(IForeignColumn column, IEnumerable<string> itemIds, ODataQuery oDataQuery, HttpClient httpClient)
@@ -67,6 +67,9 @@ public interface IForeignColumn : IODataRequest
 
     private static async Task<object?> _GetForeignColumnValues(IForeignColumn column, IEnumerable<string> itemIds, ODataQuery oDataQuery, HttpClient httpClient)
     {
+        if (column.EntitySet == null)
+            throw new ArgumentNullException(nameof(column.EntitySet), "column.EntitySet cannot be null");
+
         if (itemIds.Any())
         {
             try
@@ -87,13 +90,13 @@ public interface IForeignColumn : IODataRequest
 
                 using var requestMessage = httpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url));
 
-                //if (column.OnBeforeRequest != null && await column.OnBeforeRequest.Invoke(requestMessage))
-                //    return null;
+                if (column.OnBeforeRequest != null && await column.OnBeforeRequest.Invoke(requestMessage))
+                    return null;
 
                 using var res = await httpClient.SendAsync(requestMessage);
 
-                //if (column.OnResponse != null && await column.OnResponse.Invoke(res))
-                //    return null;
+                if (column.OnResponse != null && await column.OnResponse.Invoke(res))
+                    return null;
 
                 if (res.IsSuccessStatusCode)
                 {
@@ -103,12 +106,12 @@ public interface IForeignColumn : IODataRequest
             }
             catch (Exception e)
             {
-                //if (column.OnError != null && await column.OnError.Invoke(e))
-                //    return null;
+                if (column.OnError != null && await column.OnError.Invoke(e))
+                    return null;
                 throw;
             }
         }
 
         return null;
-    } 
+    }
 }

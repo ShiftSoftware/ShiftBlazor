@@ -105,7 +105,8 @@ public class MessageService
             }
 
             config.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
-            config.Icon = icon;
+            if (icon != null)
+                config.Icon = icon;
 
             if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(detail))
             {

@@ -741,6 +741,11 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
     }
 
+    private string GetTitle()
+    {
+        return Title ?? Loc["FormDefaultTitle"] ?? string.Empty;
+    }
+
     internal async Task RestoreOriginalValue()
     {
         if (string.IsNullOrWhiteSpace(OriginalValue))

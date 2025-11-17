@@ -28,14 +28,7 @@
         <MudItem @key="lang" xs="xsColSize" sm="smColSize" md="mdColSize" lg="lgColSize">
             @if (ChildContent != null)
             {
-                @ChildContent(new LocalizedInputContext
-                {
-                    Value = value,
-                    ValueChanged = textChanged,
-                    Error = showErrors,
-                    ErrorText = errorMessage,
-                    Label = label,
-                });
+                @ChildContent(new LocalizedInputContext(value, textChanged, label, showErrors, errorMessage));
             }
         </MudItem>
     }

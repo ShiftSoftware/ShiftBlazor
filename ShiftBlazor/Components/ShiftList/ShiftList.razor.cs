@@ -607,7 +607,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
     public void SetSort(string field, SortDirection sortDirection)
     {
-        var sort = new SortDefinition<T>(field, sortDirection == SortDirection.Descending, DataGrid?.SortDefinitions.Count ?? 0, null);
+        var sort = new SortDefinition<T>(field, sortDirection == SortDirection.Descending, DataGrid?.SortDefinitions.Count ?? 0, default!);
         DataGrid?.SortDefinitions.Add(field, sort);
         InvokeAsync(StateHasChanged);
     }

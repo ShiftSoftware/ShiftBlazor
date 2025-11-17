@@ -19,7 +19,7 @@
                 {
                     <MudToolBar Dense="true" Class="light-toolbar shift-toolbar-header" Style="@ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)">
                         <MudIcon Icon="@IconSvg"></MudIcon>
-                        <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["FormDefaultTitle"])</MudText>
+                        <MudText Class="px-4" Style="margin:0;">@GetTitle()</MudText>
 
                         @ToolbarStartTemplate
 
@@ -278,7 +278,7 @@
                                 else
                                 {
                                     <MudAlert Severity="Severity.Error">
-                                        @(Mode >= FormModes.Edit ? Loc["WriteAccessDenied", Title] : Loc["ReadAccessDenied", Title])
+                                        @(Mode >= FormModes.Edit ? Loc["WriteAccessDenied", GetTitle()] : Loc["ReadAccessDenied", GetTitle()])
                                     </MudAlert>
                                 }
                                 
