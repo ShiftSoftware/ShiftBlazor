@@ -9,6 +9,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -142,7 +143,7 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
             try
             {
                 var itemIds = IForeignColumn.GetForeignIds(this, items);
-                var foreignData = await IForeignColumn.GetForeignColumnValues<TEntity>(this, itemIds, OData, HttpClient);
+                var foreignData = await GetForeignColumnValues(this, itemIds, OData, HttpClient);
 
                 if (OnResult != null && !(await OnResult.Invoke(foreignData)))
                     return;
@@ -179,6 +180,58 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
         }
         IsReady = true;
         ShiftList.GridStateHasChanged();
+    }
+
+    private async Task<ODataDTO<TEntity>?> GetForeignColumnValues(ForeignColumn<T, TProperty, TEntity> column, IEnumerable<string> itemIds, ODataQuery oDataQuery, HttpClient httpClient)
+    {
+        if (column.EntitySet == null)
+            throw new ArgumentNullException(nameof(column.EntitySet), "column.EntitySet cannot be null");
+
+        if (itemIds.Any())
+        {
+            try
+            {
+                var TEntity = column.GetType().GetGenericArguments().Last();
+                Type oDataType = typeof(ODataDTO<>).MakeGenericType(TEntity);
+
+                var query = IForeignColumn.GetODataUrl<ShiftEntityDTOBase>(column, oDataQuery);
+
+                if (column.ForeignEntityField is null)
+                {
+                    query = query.AddQueryOption("$select", $"{column.TEntityValueField},{column.TEntityTextField}");
+                }
+
+                var url = query
+                    .WhereQuery(x => itemIds.Contains(x.ID))
+                    .ToString();
+
+                using var requestMessage = httpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url));
+
+                if (column.OnBeforeRequest != null && await column.OnBeforeRequest.Invoke(requestMessage))
+                    return null;
+
+                using var res = await httpClient.SendAsync(requestMessage);
+
+                if (column.OnResponse != null && await column.OnResponse.Invoke(res))
+                    return null;
+
+                IsForbiddenStatusCode = res.StatusCode == System.Net.HttpStatusCode.Forbidden;
+
+                if (res.IsSuccessStatusCode)
+                {
+                    return await res.Content.ReadFromJsonAsync<ODataDTO<TEntity>>();
+                }
+
+            }
+            catch (Exception e)
+            {
+                if (column.OnError != null && await column.OnError.Invoke(e))
+                    return null;
+                throw;
+            }
+        }
+
+        return null;
     }
 
     private async Task ClearFilterAsync()

@@ -8,7 +8,7 @@ using System.Net.Http.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public interface IForeignColumn : IRequestComponent, IODataRequest
+public interface IForeignColumn : IODataRequest
 {
     public string? DataValueField { get; set; }
     public string? ForeignTextField { get; set; }
@@ -89,14 +89,7 @@ public interface IForeignColumn : IRequestComponent, IODataRequest
                     .ToString();
 
                 using var requestMessage = httpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url));
-
-                if (column.OnBeforeRequest != null && await column.OnBeforeRequest.Invoke(requestMessage))
-                    return null;
-
                 using var res = await httpClient.SendAsync(requestMessage);
-
-                if (column.OnResponse != null && await column.OnResponse.Invoke(res))
-                    return null;
 
                 if (res.IsSuccessStatusCode)
                 {
@@ -104,10 +97,8 @@ public interface IForeignColumn : IRequestComponent, IODataRequest
                 }
 
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                if (column.OnError != null && await column.OnError.Invoke(e))
-                    return null;
                 throw;
             }
         }

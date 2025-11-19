@@ -85,6 +85,11 @@ function fetchForeignEntries(foreignTables, headers) {
 
         return fetch(url, { headers, method: "GET" })
             .then(async (response) => {
+
+                if (response.status == 403) {
+                    return;
+                }
+
                 if (!response.ok) {
                     throw new Error(`Failed to fetch ${url}: ${response.statusText}`)
                 }
@@ -183,8 +188,6 @@ function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables, lang) {
                     value = table[foreignField.valueKey];
                 }
             }
-
-            if (!table && foreignField?.valueKey) value = ""
         }
 
     } else if (value && col.type.startsWith('DateTime')) { // process dateTime columns
