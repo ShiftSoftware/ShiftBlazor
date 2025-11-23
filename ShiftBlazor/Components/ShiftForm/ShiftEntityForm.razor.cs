@@ -664,7 +664,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
     internal async Task OpenInNewTab()
     {
-        var url = await JsRuntime.InvokeAsync<string>("GetUrl");
+        var url = await JsRuntime.GetValueAsync<string>("window.location.href");
 
         var modals = ShiftModal.ParseModalUrl(url);
         await ShiftModal.Open(modals.First().Name, Key, ModalOpenMode.NewTab, modals.First().Parameters);
@@ -683,7 +683,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             ["TheItem"] = original,
         };
 
-        var url = await JsRuntime.InvokeAsync<string>("GetUrl");
+        var url = await JsRuntime.GetValueAsync<string>("window.location.href");
 
         var modals = ShiftModal.ParseModalUrl(url);
         var result = await ShiftModal.Open(modals.First().Name, parameters: param, skipQueryParamUpdate: true);

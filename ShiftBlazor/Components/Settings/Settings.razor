@@ -227,6 +227,6 @@
 
     internal async Task ReloadPage()
     {
-        await JsRuntime.InvokeVoidAsync("reloadPage");
+        await JsRuntime.InvokeVoidAsync("window.location.reload");
     }
 }

@@ -31,10 +31,6 @@ window.tableExport = (payload, dotNetObjectRef) => {
         payload, headers: getHeaders(), origin: `${window.location.origin}/api` })
 }
 
-window.GetUrl = function () {
-    return window.location.href;
-};
-
 window.getQueryParam = function(key) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(key);
@@ -58,10 +54,6 @@ window.getWindowDimensions = function () {
         height: window.innerHeight,
     };
 };
-
-window.reloadPage = function () {
-    window.location.reload();
-}
 
 window.handleKeydown = function (e) {
     if (e.altKey || (e.code != null && e.code.includes("Alt"))) {

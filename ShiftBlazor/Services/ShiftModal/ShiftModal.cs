@@ -144,10 +144,7 @@ public class ShiftModal
     /// </summary>
     public async Task UpdateModals()
     {
-        var (success, url) = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
-
-        if (!success) return;
-
+        var url = await JsRuntime.GetValueAsync<string>("window.location.href");
         var modals = ParseModalUrl(url);
 
         if (modals.Count == 0)
@@ -176,10 +173,7 @@ public class ShiftModal
 
     private async Task UpdateModalQueryUrl(string? name, object? key, Dictionary<string, object>? parameters = null)
     {
-        var (success, url) = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
-
-        if (!success) return;
-
+        var url = await JsRuntime.GetValueAsync<string>("window.location.href");
         var modals = ParseModalUrl(url);
 
         if (name == null)
@@ -287,10 +281,7 @@ public class ShiftModal
 
     private async Task RemoveFrontModalFromUrl()
     {
-        var (success, url) = await JsRuntime.InvokeAsyncWithErrorHandling<string>("GetUrl");
-
-        if (!success) return;
-
+        var url = await JsRuntime.GetValueAsync<string>("window.location.href");
         var modals = ParseModalUrl(url);
         if (modals.Count > 0)
         {
