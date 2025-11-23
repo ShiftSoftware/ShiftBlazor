@@ -19,6 +19,8 @@
                 {
                     var icon = FileExplorer.FileIcons["files"];
                     var style = $"font-size: 72px; color: {icon.color};";
+                    var size = Files.Sum(f => f.Size);
+
                     <div class="material-symbols-outlined" style="@style">@icon.icon</div>
 
                     <MudStack>
@@ -32,8 +34,8 @@
                             </MudItem>
 
                             <MudItem lg="3">Size: </MudItem>
-                            <MudItem lg="9">
-                                @Files.Sum(f => f.Size)
+                            <MudItem lg="9" title="@size">
+                                @Misc.BytesToString(size)
                                 @if (Files.Any(x => !x.IsFile))
                                 {
                                     @(" (Folders Excluded)")
@@ -73,15 +75,20 @@
                             <MudItem lg="9">
                                 @if (file.IsFile)
                                 {
-                                    @file.Size
+                                    <span title="@file.Size">
+                                        @Misc.BytesToString(file.Size)
+                                    </span>
                                 }
                                 else if (IsLoading && ServerFiles.Count == 0)
                                 {
-                                    <MudSkeleton Animation="Animation.Wave" Height="20px" SkeletonType="SkeletonType.Text"/>
+                                    <MudSkeleton Animation="Animation.Wave" Height="20px" SkeletonType="SkeletonType.Text" />
                                 }
                                 else
                                 {
-                                    @ServerFiles.Sum(x => x.Size)
+                                    var size = ServerFiles.Sum(x => x.Size);
+                                    <span title="@size">
+                                        @Misc.BytesToString(size)
+                                    </span>
                                 }
                             </MudItem>
 

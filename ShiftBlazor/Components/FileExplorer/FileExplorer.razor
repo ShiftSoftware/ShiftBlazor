@@ -230,7 +230,7 @@
                                     <CellTemplate>
                                         @if (context.Item.IsFile)
                                         {
-                                            <span>@context.Item.Size</span>
+                                            <span title="@context.Item.Size">@Misc.BytesToString(context.Item.Size)</span>
                                         }
                                     </CellTemplate>
                                 </TemplateColumn>
@@ -307,6 +307,13 @@
     <MudToolBar Dense="true" Style="gap: 4px;" >
 
         <MudText Typo="Typo.body2">@Files.Count items</MudText>
+
+        @if (SelectedFiles.Count > 0
+            || SelectedFiles.Count > 0 && UploadingFiles?.Items.Count > 0
+            || UploadingFiles?.Items.Count > 0)
+        {
+            <MudDivider Vertical="true" Class="shift-vertical-divider"></MudDivider>
+        }
 
         @if (SelectedFiles.Count > 0)
         {

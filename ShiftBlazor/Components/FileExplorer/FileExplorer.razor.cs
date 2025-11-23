@@ -775,7 +775,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
     private async Task ViewDeletedFiles()
     {
         ShowDeletedFiles = !ShowDeletedFiles;
-        await Refresh();
+        await Refresh(!ShowDeletedFiles);
     }
 
     private async Task RestoreFile()
