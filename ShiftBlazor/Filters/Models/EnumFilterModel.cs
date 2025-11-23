@@ -26,6 +26,19 @@ public class EnumFilterModel : FilterModelBase
     {
         var filter = new ODataFilterGenerator(true, Id);
 
+        if (Operator == ODataOperator.IsEmpty || Operator == ODataOperator.IsNotEmpty)
+        {
+            filter.Add(new ODataFilter
+            {
+                Field = Field,
+                Operator = Operator,
+                Prefix = Prefix,
+                IsCollection = IsCollection,
+            });
+
+            return filter;
+        }
+
         var val = (Value as IEnumerable)?.Cast<object>();
 
         if (val != null && val.Any())

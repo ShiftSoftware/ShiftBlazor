@@ -17,7 +17,7 @@ public class StringFilterModel : FilterModelBase
             return filter;
         }
 
-        if (hasValue || hasValue && (Operator == Enums.ODataOperator.IsEmpty || Operator == Enums.ODataOperator.IsNotEmpty))
+        if (hasValue || !hasValue && (Operator == Enums.ODataOperator.IsEmpty || Operator == Enums.ODataOperator.IsNotEmpty))
         {
             filter.Add(new ODataFilter
             {
