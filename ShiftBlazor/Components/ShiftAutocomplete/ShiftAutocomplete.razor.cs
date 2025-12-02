@@ -781,11 +781,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         var localizedText = LocalizedTextJsonConverter.ParseLocalizedText(text);
 
         await SelectItem(new ShiftEntitySelectDTO
-        (
-            value,
-            localizedText,
-            data: result.Data
-        ));
+        {
+            Value = value,
+            Text = localizedText,
+            Data = result.Data
+        });
     }
 
     public ShiftEntitySelectDTO? ToSelectDTO(TEntitySet entity)
@@ -794,11 +794,11 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         var text = GetProperty(entity, DataTextField);
 
         return new ShiftEntitySelectDTO
-        (
-            id,
-            text,
-            data: entity
-        );
+        {
+            Value = id,
+            Text = text,
+            Data = entity
+        };
     }
 
     internal async Task TextChangedHandler(string? text)
@@ -973,7 +973,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
             await CloseDropdown();
         }
 
-        var value = new ShiftEntitySelectDTO (string.Empty, text);
+        var value = new ShiftEntitySelectDTO { Value = string.Empty, Text = text };
         await SelectItem(value);
 
         if (MultiSelect)

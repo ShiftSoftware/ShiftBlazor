@@ -127,7 +127,7 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
 
         FilterItems = DataGrid.FilterDefinitions
             .Where(x => !string.IsNullOrWhiteSpace(x.Column?.PropertyName) && x.Column.PropertyName == PropertyName)
-            .Select(x => new ShiftEntitySelectDTO((string)x.Value!, x.Title)).ToList();
+            .Select(x => new ShiftEntitySelectDTO { Value = (string)x.Value!, Text = x.Title }).ToList();
 
         _ = RequestForeignData(data);
     }
