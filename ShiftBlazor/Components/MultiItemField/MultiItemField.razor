@@ -2,12 +2,13 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Collections
 @using System.Text.Json
+@using MudBlazor.Utilities
 
 @typeparam T where T : IList
 @typeparam TItem
 @namespace ShiftSoftware.ShiftBlazor.Components
 
-<MudCard Elevation="2" Class="mt-3">
+<MudCard Elevation="2" Class="@Classname" Style="@Style">
     <MudCardHeader Class="pt-1 pb-1 background-gray">
         <CardHeaderContent>
             <MudStack Row>
@@ -42,7 +43,7 @@
     </MudCardHeader>
 
     <MudCardContent Class="pt-2 pb-2">
-        <MudGrid Spacing="3">
+        <MudGrid Spacing="3" Class="@GridClass" Style="@GridStyle">
 
             @if (FieldHeader != null)
             {
@@ -59,7 +60,7 @@
                 {
                     <MudItem @key="item" lg="12" md="12" sm="12" xs="12">
                         <SlideDown Hide="ItemsToRemove.Contains(item)" OnTransitionEnd="() => Remove(item)">
-                            <MudGrid>
+                            <MudGrid Class="@GridItemClass" Style="@GridItemStyle">
                                 <MudItem lg="11" md="11" sm="11" xs="11">
                                     @FieldBody((TItem)item)
                                 </MudItem>
@@ -129,6 +130,26 @@
     [Parameter]
     public bool DisableCounter { get; set; }
 
+    // ========= Classes and Styles Parameters =========
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string? GridClass { get; set; }
+
+    [Parameter]
+    public string? GridStyle { get; set; }
+
+    [Parameter]
+    public string? GridItemClass { get; set; }
+
+    [Parameter]
+    public string? GridItemStyle { get; set; }
+
     // ========= Template Parameters =========
     [Parameter]
     public RenderFragment<MultiItemField<T, TItem>>? FieldHeader { get; set; }
@@ -145,15 +166,14 @@
     [Parameter]
     public RenderFragment? TitleTemplate { get; set; }
 
-    private Type DTOType;
+    private Type DTOType = typeof(T).GetGenericArguments().First();
     private bool UseLimits = false;
     private FieldIdentifier fieldIdentifier;
     private ValidationMessageStore? InternalMessageStore;
 
-    public MultiItemField()
-    {
-        DTOType = typeof(T).GetGenericArguments().First();
-    }
+    private string Classname => new CssBuilder("mt-3")
+        .AddClass(Class)
+        .Build();
 
     protected override void OnInitialized()
     {
