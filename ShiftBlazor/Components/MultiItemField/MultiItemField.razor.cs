@@ -2,12 +2,11 @@
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor.Utilities;
 using ShiftSoftware.ShiftBlazor.Enums;
-using System.Collections;
 using System.Linq.Expressions;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public partial class MultiItemField<T, TItem> where T : IList
+public partial class MultiItemField<T>
 {
 
     [CascadingParameter]
@@ -27,9 +26,9 @@ public partial class MultiItemField<T, TItem> where T : IList
     [CascadingParameter]
     public EditContext? EditContext { get; set; }
 
-    [Parameter] public T Value { get; set; } = default!;
-    [Parameter] public Expression<Func<T>> ValueExpression { get; set; } = default!;
-    [Parameter] public EventCallback<T> ValueChanged { get; set; } = default!;
+    [Parameter] public List<T> Value { get; set; } = default!;
+    [Parameter] public Expression<Func<List<T>>> ValueExpression { get; set; } = default!;
+    [Parameter] public EventCallback<List<T>> ValueChanged { get; set; } = default!;
 
     [Parameter]
     public string? Title { get; set; }
@@ -65,13 +64,13 @@ public partial class MultiItemField<T, TItem> where T : IList
 
     // ========= Template Parameters =========
     [Parameter]
-    public RenderFragment<MultiItemField<T, TItem>>? FieldHeader { get; set; }
+    public RenderFragment<MultiItemField<T>>? FieldHeader { get; set; }
 
     [Parameter]
-    public RenderFragment<TItem>? FieldBody { get; set; }
+    public RenderFragment<T>? FieldBody { get; set; }
 
     [Parameter]
-    public RenderFragment<MultiItemField<T, TItem>>? FieldFooter { get; set; }
+    public RenderFragment<MultiItemField<T>>? FieldFooter { get; set; }
 
     [Parameter]
     public RenderFragment<RemoveContext>? RemoveButtonTempalte { get; set; }
@@ -79,13 +78,12 @@ public partial class MultiItemField<T, TItem> where T : IList
     [Parameter]
     public RenderFragment? TitleTemplate { get; set; }
 
-    private Type DTOType = typeof(T).GetGenericArguments().First();
     private bool UseLimits = false;
     private FieldIdentifier fieldIdentifier;
     private ValidationMessageStore? InternalMessageStore;
     // items added to this list will have a transition applied before removal
-    private HashSet<object> ItemsToRemove = [];
-    private IEnumerable<TItem>? OldValue { get; set; }
+    private HashSet<T> ItemsToRemove = [];
+    private List<T>? OldValue { get; set; }
 
     private string Classname => new CssBuilder("mt-3")
         .AddClass(Class)
@@ -105,15 +103,14 @@ public partial class MultiItemField<T, TItem> where T : IList
     {
         try
         {
-            parameters.TryGetValue<T?>(nameof(Value), out var newValue);
-            var newItems = newValue as IEnumerable<TItem>;
+            parameters.TryGetValue<List<T>?>(nameof(Value), out var newValue);
 
-            if (!new HashSet<TItem>(OldValue ?? []).SetEquals(newItems ?? []))
+            if (!new HashSet<T>(OldValue ?? []).SetEquals(newValue ?? []))
             {
                 ForceRender();
             }
 
-            OldValue = (newValue as IList<TItem>)?.ToList();
+            OldValue = newValue?.ToList();
         }
         catch { }
 
@@ -147,7 +144,7 @@ public partial class MultiItemField<T, TItem> where T : IList
 
                 while (minItemCount-- > count)
                 {
-                    Value.Add(Activator.CreateInstance(DTOType));
+                    Value.Add(Activator.CreateInstance<T>());
                 }
                 ValueChanged.InvokeAsync(Value);
             }
@@ -162,14 +159,14 @@ public partial class MultiItemField<T, TItem> where T : IList
 
         if (!UseLimits || Value.Count < Max || Max == 0)
         {
-            Value.Add(Activator.CreateInstance(DTOType));
+            Value.Add(Activator.CreateInstance<T>());
             ValueChanged.InvokeAsync(Value);
         }
 
         ForceRender();
     }
 
-    private void AddRemoveTransition(object item)
+    private void AddRemoveTransition(T item)
     {
         ItemsToRemove.Add(item);
         ForceRender();
@@ -177,29 +174,28 @@ public partial class MultiItemField<T, TItem> where T : IList
 
     public void MarkAllForRemoval()
     {
-        foreach (var item in Value)
+        foreach (var item in Value.Where(x => x != null))
         {
-            ItemsToRemove.Add(item);
+            ItemsToRemove.Add(item!);
         }
         ForceRender();
     }
 
-    public void Remove(object item)
+    public void Remove(T item)
     {
         if (ItemsToRemove.Contains(item))
         {
             ItemsToRemove.Remove(item);
             Value.Remove(item);
             ValueChanged.InvokeAsync(Value);
-            //ForceRender();
         }
     }
     public class RemoveContext
     {
-        public TItem Item { get; set; }
+        public T Item { get; set; }
         public Action Remove;
 
-        public RemoveContext(MultiItemField<T, TItem> multiItemField, TItem item)
+        public RemoveContext(MultiItemField<T> multiItemField, T item)
         {
             Item = item;
             Remove = () => multiItemField.Remove(item!);

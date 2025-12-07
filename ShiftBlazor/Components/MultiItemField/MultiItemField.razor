@@ -1,8 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
 @using System.Collections
 
-@typeparam T where T : IList
-@typeparam TItem
+@typeparam T
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 <MudCard Elevation="2" Class="@Classname" Style="@Style">
@@ -59,18 +58,18 @@
                         <SlideDown Hide="ItemsToRemove.Contains(item)" OnTransitionEnd="() => Remove(item)">
                             <MudGrid Class="@GridItemClass" Style="@GridItemStyle">
                                 <MudItem lg="11" md="11" sm="11" xs="11">
-                                    @FieldBody((TItem)item)
+                                    @FieldBody(item)
                                 </MudItem>
                                 <MudItem lg="1" md="1" sm="1" xs="1">
                                     @if (Mode > FormModes.Archive)
                                     {
                                         @if (RemoveButtonTempalte == null)
                                         {
-                                            @GetRemoveButton((TItem)item)
+                                            @GetRemoveButton(item)
                                         }
                                         else
                                         {
-                                            @RemoveButtonTempalte(new(this, (TItem)item))
+                                            @RemoveButtonTempalte(new(this, item))
                                         }
                                     }
                                 </MudItem>
@@ -104,7 +103,7 @@
 </MudCard>
 
 @code {
-    private RenderFragment GetRemoveButton(object item)
+    private RenderFragment GetRemoveButton(T item)
     {
         return @<text>
             <MudIconButton ButtonType="ButtonType.Button"
