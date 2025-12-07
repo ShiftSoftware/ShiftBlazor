@@ -11,7 +11,18 @@ public partial class MultiItemField<T, TItem> where T : IList
 {
 
     [CascadingParameter]
-    public FormModes? Mode { get; set; }
+    public FormModes? Mode
+    {
+        get => field;
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                ForceRender();
+            }
+        }
+    }
 
     [CascadingParameter]
     public EditContext? EditContext { get; set; }
@@ -72,10 +83,42 @@ public partial class MultiItemField<T, TItem> where T : IList
     private bool UseLimits = false;
     private FieldIdentifier fieldIdentifier;
     private ValidationMessageStore? InternalMessageStore;
+    // items added to this list will have a transition applied before removal
+    private HashSet<object> ItemsToRemove = [];
+    private IEnumerable<TItem>? OldValue { get; set; }
 
     private string Classname => new CssBuilder("mt-3")
         .AddClass(Class)
         .Build();
+
+    private bool PreventRerender { get; set; } = true;
+    protected override bool ShouldRender() => !PreventRerender;
+
+    public void ForceRender()
+    {
+        PreventRerender = false;
+        StateHasChanged();
+        PreventRerender = true;
+    }
+
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        try
+        {
+            parameters.TryGetValue<T?>(nameof(Value), out var newValue);
+            var newItems = newValue as IEnumerable<TItem>;
+
+            if (!new HashSet<TItem>(OldValue ?? []).SetEquals(newItems ?? []))
+            {
+                ForceRender();
+            }
+
+            OldValue = (newValue as IList<TItem>)?.ToList();
+        }
+        catch { }
+
+        return base.SetParametersAsync(parameters);
+    }
 
     protected override void OnInitialized()
     {
@@ -122,14 +165,24 @@ public partial class MultiItemField<T, TItem> where T : IList
             Value.Add(Activator.CreateInstance(DTOType));
             ValueChanged.InvokeAsync(Value);
         }
+
+        ForceRender();
     }
 
     private void AddRemoveTransition(object item)
     {
         ItemsToRemove.Add(item);
+        ForceRender();
     }
 
-    private HashSet<object> ItemsToRemove = [];
+    public void MarkAllForRemoval()
+    {
+        foreach (var item in Value)
+        {
+            ItemsToRemove.Add(item);
+        }
+        ForceRender();
+    }
 
     public void Remove(object item)
     {
@@ -138,6 +191,7 @@ public partial class MultiItemField<T, TItem> where T : IList
             ItemsToRemove.Remove(item);
             Value.Remove(item);
             ValueChanged.InvokeAsync(Value);
+            //ForceRender();
         }
     }
     public class RemoveContext
