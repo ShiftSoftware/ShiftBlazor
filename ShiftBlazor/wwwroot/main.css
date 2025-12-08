@@ -437,7 +437,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     }
 
 @starting-style {
-    .slide-down.show {
+    .slide-down.first-render.show {
         grid-template-rows: 0fr;
     }
 }

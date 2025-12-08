@@ -47,9 +47,11 @@
     private DotNetObjectReference<SlideDown>? objRef;
 
     private ElementReference? ElementRef { get; set; }
+    private bool IsRendered { get; set; } = false;
 
     private string Classname => new CssBuilder("slide-down")
         .AddClass(Class, Class != null)
+        .AddClass("first-render", !IsRendered)
         .AddClass("show", DisplayContent)
         .Build();
 
@@ -64,6 +66,7 @@
     {
         if (firstRender)
         {
+            IsRendered = true;
             objRef = DotNetObjectReference.Create(this);
             await JsRuntime.InvokeVoidAsync("registerSlideDownEvent", ElementRef, objRef);
         }
