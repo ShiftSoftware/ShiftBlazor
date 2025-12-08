@@ -465,3 +465,30 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 .menu-items-container .menu-items {
     display: flex;
 }
+
+.sortable-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sortable-list .list-item {
+    position: relative;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.25rem;
+    border: 1px solid #ccc;
+}
+
+/* when moving up, slide it up slightly and fade */
+.list-item.move-up {
+    transition: transform 150ms ease-out, opacity 150ms ease-out;
+    transform: translateY(-100%);
+    opacity: 0.4;
+}
+
+/* when moving down, slide it down slightly and fade */
+.list-item.move-down {
+    transition: transform 150ms ease-out, opacity 150ms ease-out;
+    transform: translateY(100%);
+    opacity: 0.4;
+}

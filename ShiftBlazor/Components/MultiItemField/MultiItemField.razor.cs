@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using MudBlazor;
 using MudBlazor.Utilities;
 using ShiftSoftware.ShiftBlazor.Enums;
 using System.Linq.Expressions;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public partial class MultiItemField<T>
+public partial class MultiItemField<T> where T : notnull
 {
-
     [CascadingParameter]
     public FormModes? Mode
     {
@@ -72,11 +72,30 @@ public partial class MultiItemField<T>
     [Parameter]
     public RenderFragment<MultiItemField<T>>? FieldFooter { get; set; }
 
+    [Obsolete($"Use {nameof(ControlTemplate)} instead")]
     [Parameter]
     public RenderFragment<RemoveContext>? RemoveButtonTempalte { get; set; }
 
     [Parameter]
+    public RenderFragment<ControlContext>? ControlTemplate { get; set; }
+
+    [Parameter]
     public RenderFragment? TitleTemplate { get; set; }
+
+    [Parameter]
+    public bool VerticalControls { get; set; } = true;
+
+    [Parameter]
+    public bool DisableDragAndDrop { get; set; } = false;
+
+    [Parameter]
+    public bool DisableReorder { get; set; } = false; 
+
+    [Parameter]
+    public bool DisableRemove { get; set; }
+
+    [Parameter]
+    public Variant ControlVariant { get; set; } = Variant.Outlined;
 
     private bool UseLimits = false;
     private FieldIdentifier fieldIdentifier;
@@ -84,9 +103,20 @@ public partial class MultiItemField<T>
     // items added to this list will have a transition applied before removal
     private HashSet<T> ItemsToRemove = [];
     private List<T>? OldValue { get; set; }
-
+    MudDropContainer<T>? DropContainer { get; set; }
+    private int DownIndex = -1;
+    private int UpIndex = -1;
     private string Classname => new CssBuilder("mt-3")
         .AddClass(Class)
+        .Build();
+
+    private string GridClassname => new CssBuilder("sortable-list")
+        .AddClass(GridClass)
+        .Build();
+
+    private string ItemClassname(int index) =>new CssBuilder("list-item")
+        .AddClass("move-up", UpIndex == index || DownIndex != -1 && DownIndex + 1 == index)
+        .AddClass("move-down", DownIndex == index || UpIndex - 1 == index)
         .Build();
 
     private bool PreventRerender { get; set; } = true;
@@ -96,6 +126,7 @@ public partial class MultiItemField<T>
     {
         PreventRerender = false;
         StateHasChanged();
+        DropContainer?.Refresh();
         PreventRerender = true;
     }
 
@@ -105,6 +136,7 @@ public partial class MultiItemField<T>
         {
             parameters.TryGetValue<List<T>?>(nameof(Value), out var newValue);
 
+            // only trigger a re-render if the collection has changed
             if (!new HashSet<T>(OldValue ?? []).SetEquals(newValue ?? []))
             {
                 ForceRender();
@@ -153,6 +185,26 @@ public partial class MultiItemField<T>
         base.OnInitialized();
     }
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Update List on drag and drop end
+            DropContainer?.TransactionEnded += async (sender, args) =>
+            {
+                var index = args.DestinationIndex;
+                if (args.OriginIndex > args.DestinationIndex)
+                    index++;
+
+                Value.RemoveAt(args.OriginIndex);
+                Value.Insert(index, args.Item!);
+                ForceRender();
+            };
+        }
+
+        base.OnAfterRender(firstRender);
+    }
+
     public void CreateNew()
     {
         InternalMessageStore?.Clear();
@@ -162,8 +214,37 @@ public partial class MultiItemField<T>
             Value.Add(Activator.CreateInstance<T>());
             ValueChanged.InvokeAsync(Value);
         }
-
         ForceRender();
+    }
+
+    private async Task MoveUp(T item)
+    {
+        UpIndex = Value.IndexOf(item);
+        if (UpIndex > 0)
+        {
+            ForceRender();
+            await Task.Delay(150);
+
+            Value.RemoveAt(UpIndex);
+            Value.Insert(UpIndex - 1, item);
+            UpIndex = -1;
+            ForceRender();
+        }
+    }
+
+    private async Task MoveDown(T item)
+    {
+        DownIndex = Value.IndexOf(item);
+        if (DownIndex < Value.Count - 1)
+        {
+            ForceRender();
+            await Task.Delay(150);
+
+            Value.RemoveAt(DownIndex);
+            Value.Insert(DownIndex + 1, item);
+            DownIndex = -1;
+            ForceRender();
+        }
     }
 
     private void AddRemoveTransition(T item)
@@ -190,6 +271,7 @@ public partial class MultiItemField<T>
             ValueChanged.InvokeAsync(Value);
         }
     }
+
     public class RemoveContext
     {
         public T Item { get; set; }
@@ -199,6 +281,28 @@ public partial class MultiItemField<T>
         {
             Item = item;
             Remove = () => multiItemField.Remove(item!);
+        }
+    }
+
+    public class ControlContext
+    {
+        public T Item { get; set; }
+        public Action Remove;
+        public Action MoveUp;
+        public Action MoveDown;
+        public Action ForceRerender;
+        public Action MarkAllForRemoval;
+        public Action MarkForRemoval;
+
+        public ControlContext(MultiItemField<T> multiItemField, T item)
+        {
+            Item = item;
+            Remove = () => multiItemField.Remove(item!);
+            MoveUp = () => multiItemField.MoveUp(item).ConfigureAwait(false);
+            MoveDown = () => multiItemField.MoveDown(item).ConfigureAwait(false);
+            ForceRerender = multiItemField.ForceRender;
+            MarkForRemoval = () => multiItemField.AddRemoveTransition(item);
+            MarkAllForRemoval = multiItemField.MarkAllForRemoval;
         }
     }
 }

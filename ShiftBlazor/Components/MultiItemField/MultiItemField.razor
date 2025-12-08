@@ -39,7 +39,7 @@
     </MudCardHeader>
 
     <MudCardContent Class="pt-2 pb-2">
-        <MudGrid Spacing="3" Class="@GridClass" Style="@GridStyle">
+        <MudGrid Spacing="3" Class="@GridClassname" Style="@GridStyle">
 
             @if (FieldHeader != null)
             {
@@ -52,31 +52,65 @@
 
             @if (FieldBody != null)
             {
-                @foreach (var item in Value)
-                {
-                    <MudItem @key="item" lg="12" md="12" sm="12" xs="12">
-                        <SlideDown Hide="ItemsToRemove.Contains(item)" OnTransitionEnd="() => Remove(item)">
-                            <MudGrid Class="@GridItemClass" Style="@GridItemStyle">
-                                <MudItem lg="11" md="11" sm="11" xs="11">
-                                    @FieldBody(item)
-                                </MudItem>
-                                <MudItem lg="1" md="1" sm="1" xs="1">
-                                    @if (Mode > FormModes.Archive)
-                                    {
-                                        @if (RemoveButtonTempalte == null)
-                                        {
-                                            @GetRemoveButton(item)
-                                        }
-                                        else
-                                        {
-                                            @RemoveButtonTempalte(new(this, item))
-                                        }
-                                    }
-                                </MudItem>
-                            </MudGrid>
-                        </SlideDown>
-                    </MudItem>
-                }
+                <MudItem lg="12" md="12" sm="12" xs="12" >
+                    <MudDropContainer @ref="DropContainer" T="T" Items="Value" ItemsSelector="(_, _) => true">
+                        <ChildContent>
+                            <MudDropZone AllowReorder="(!DisableDragAndDrop && Mode > FormModes.Archive)" T="T"></MudDropZone>
+                        </ChildContent>
+
+                        <ItemRenderer Context="item">
+                            @{
+                                var i = Value.IndexOf(item);
+                            }
+                            <div class="@ItemClassname(i)">
+                                <SlideDown Hide="ItemsToRemove.Contains(item)" OnTransitionEnd="() => Remove(item)" >
+                                    <MudGrid Class="@GridItemClass" Style="@GridItemStyle">
+                                        <MudItem lg="11" md="11" sm="11" xs="11">
+                                            @FieldBody(item)
+                                        </MudItem>
+                                        <MudItem lg="1" md="1" sm="1" xs="1">
+                                            @if (Mode > FormModes.Archive)
+                                            {
+                                                @if (ControlTemplate == null)
+                                                {
+                                                    <MudButtonGroup Vertical="VerticalControls" Size="Size.Small" Variant="ControlVariant">
+
+                                                        @if (!DisableReorder)
+                                                        {
+                                                            <MudIconButton ButtonType="ButtonType.Button"
+                                                                            Color="Color.Default"
+                                                                            OnClick="() => MoveUp(item)"
+                                                                            Disabled="@(Value.IndexOf(item) <= 0)"
+                                                                            Icon="@Icons.Material.Filled.ArrowUpward" />
+                                                            <MudIconButton ButtonType="ButtonType.Button"
+                                                                            Color="Color.Default"
+                                                                            OnClick="() => MoveDown(item)"
+                                                                            Disabled="@(Value.IndexOf(item) >= Value.Count - 1)"
+                                                                            Icon="@Icons.Material.Filled.ArrowDownward" />
+                                                        }
+
+                                                        @if (!DisableRemove)
+                                                        {
+                                                            <MudIconButton ButtonType="ButtonType.Button"
+                                                                           Color="Color.Error"
+                                                                           OnClick="() => AddRemoveTransition(item)"
+                                                                           Icon="@Icons.Material.Filled.Delete" />
+                                                        }
+
+                                                    </MudButtonGroup>
+                                                }
+                                                else
+                                                {
+                                                    @ControlTemplate(new(this, item))
+                                                }
+                                            }
+                                        </MudItem>
+                                    </MudGrid>
+                                </SlideDown>
+                            </div>
+                        </ItemRenderer>
+                    </MudDropContainer>
+                </MudItem>
             }
 
             @if (Mode > FormModes.Archive )
@@ -101,18 +135,3 @@
         </MudGrid>
     </MudCardContent>
 </MudCard>
-
-@code {
-    private RenderFragment GetRemoveButton(T item)
-    {
-        return @<text>
-            <MudIconButton ButtonType="ButtonType.Button"
-                           Style="margin:10px;"
-                           Variant="Variant.Text"
-                           Color="Color.Default"
-                           Size="Size.Small"
-                           OnClick="() => AddRemoveTransition(item)"
-                           Icon="@Icons.Material.Filled.Delete" />
-        </text>;
-    }
-}
