@@ -11,7 +11,9 @@
                           MaxLines="MaxLines"
                           AutoGrow="AutoGrow"
                           ValueChanged="@context.ValueChanged"
-                          Label="@context.Label" />
+                          Label="@context.Label"
+                          Adornment="@Adornment"
+                          AdornmentIcon="@AdornmentIcon" />
 </LocalizedInput>
 
 
@@ -53,4 +55,9 @@
 
     [Parameter]
     public bool AutoGrow { get; set; } = false;
+
+    [Parameter]
+    public Adornment Adornment { get; set; }
+    [Parameter]
+    public String? AdornmentIcon { get; set; }
 }
