@@ -130,6 +130,9 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     public bool AllowSaveAsNew { get; set; }
 
     [Parameter]
+    public bool ForceSaveAsNew { get; set; }
+
+    [Parameter]
     public PrintFormConfig? PrintConfig { get; set; }
 
     internal string? OriginalValue { get; set; }
@@ -236,6 +239,13 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
         _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton;
+
+        if (this.ForceSaveAsNew && this.Mode == FormModes.View)
+        {
+            this.AllowSaveAsNew = true;
+            this.AllowClone = false;
+            this.Mode = FormModes.Edit;
+        }
     }
 
     public override async ValueTask HandleShortcut(KeyboardKeys key)
@@ -243,7 +253,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         switch (key)
         {
             case KeyboardKeys.Escape:
-                if (Mode == FormModes.Edit)
+                if (Mode == FormModes.Edit && !ForceSaveAsNew)
                 {
                     await CancelChanges();
                 }
@@ -260,7 +270,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             case KeyboardKeys.KeyS:
                 if (Form != null && _RenderSubmitButton)
                 {
-                    await Form.OnSubmit.InvokeAsync(Form.EditContext);
+                    await SubmitHandler(this.EditContext, this.ForceSaveAsNew ? FormTasks.SaveAsNew : FormTasks.Save);
                 }
                 break;
 

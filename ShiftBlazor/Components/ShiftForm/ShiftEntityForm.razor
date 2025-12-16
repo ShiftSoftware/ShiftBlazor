@@ -307,7 +307,7 @@
 
                                 @FooterToolbarEndTemplate
 
-                                @if (Mode == FormModes.Edit)
+                                @if (Mode == FormModes.Edit && !ForceSaveAsNew)
                                 {
                                     <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
                                                 Disabled="@(TaskInProgress != FormTasks.None)"
@@ -329,7 +329,7 @@
                                 @if (_RenderSubmitButton)
                                 {
                                         <MudButtonGroup Color="Color.Primary" Variant="Variant.Text">
-                                            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" ButtonType="ButtonType.Button" Disabled="@DisableSubmit" OnClick="async() => await Form!.OnSubmit.InvokeAsync(Form.EditContext)">
+                                            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" ButtonType="ButtonType.Button" Disabled="@DisableSubmit" OnClick="async () => await SubmitHandler(this.EditContext, this.ForceSaveAsNew ? FormTasks.SaveAsNew : FormTasks.Save)">
                                                 @if (TaskInProgress == FormTasks.Save || TaskInProgress == FormTasks.SaveAsNew)
                                                 {
                                                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -339,9 +339,18 @@
                                                     <MudIcon Icon="@Icons.Material.Filled.Save" />
                                                 }
 
-                                                <MudText Style="padding:0 10px;">@_SubmitText</MudText>
+                                                <MudText Style="padding:0 10px;">
+                                                    @if (ForceSaveAsNew)
+                                                    {
+                                                        @Loc["Save as New"]
+                                                    }
+                                                    else
+                                                    {
+                                                        @_SubmitText
+                                                    }
+                                                </MudText>
                                             </MudButtonExtended>
-                                            @if (Mode == FormModes.Edit && AllowSaveAsNew)
+                                            @if (Mode == FormModes.Edit && AllowSaveAsNew && !ForceSaveAsNew)
                                             {
                                                 <MudMenu Color="Color.Primary" Disabled="@DisableSubmit" Icon="@Icons.Material.Filled.ArrowDropDown">
                                                     <MudMenuItem OnClick="async () => await SubmitHandler(this.EditContext, FormTasks.SaveAsNew)" IconColor="Color.Primary" Icon="@Icons.Material.Filled.SaveAs">@Loc["Save as New"]</MudMenuItem>
