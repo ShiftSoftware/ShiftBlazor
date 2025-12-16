@@ -133,6 +133,10 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     public bool ForceSaveAsNew { get; set; }
 
     [Parameter]
+    public EventCallback<bool> ForceSaveAsNewChanged { get; set; }
+
+
+    [Parameter]
     public PrintFormConfig? PrintConfig { get; set; }
 
     internal string? OriginalValue { get; set; }
@@ -247,9 +251,8 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
         if (this.ForceSaveAsNew && this.Mode == FormModes.View)
         {
-            await ModeChanged.InvokeAsync(FormModes.Edit);
             this.AllowSaveAsNew = true;
-            this.Mode = FormModes.Edit;
+            await SetMode(FormModes.Edit);
         }
     }
 
@@ -448,6 +451,12 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
 
         MadeChanges = true;
+
+        if (ForceSaveAsNew)
+        {
+            ForceSaveAsNew = false;
+            await ForceSaveAsNewChanged.InvokeAsync(false);
+        }
 
         if (MudDialog != null && OnSaveAction == FormOnSaveAction.CloseFormOnSave)
         {
