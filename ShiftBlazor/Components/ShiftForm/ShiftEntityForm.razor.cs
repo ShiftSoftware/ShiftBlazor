@@ -232,18 +232,23 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     {
         base.OnParametersSet();
 
-        _RenderCloneButton = SettingManager.GetFormCloneSetting() || AllowClone;
+        _RenderCloneButton = (SettingManager.GetFormCloneSetting() || AllowClone) && !ForceSaveAsNew;
         _RenderPrintButton = /*OnPrint.HasDelegate &&*/ ShowPrint && HasReadAccess;
         _RenderRevisionButton = !HideRevisions && HasReadAccess && IsTemporal;
         _RenderEditButton = !HideEdit && HasWriteAccess;
         _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
         _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
 
         if (this.ForceSaveAsNew && this.Mode == FormModes.View)
         {
+            await ModeChanged.InvokeAsync(FormModes.Edit);
             this.AllowSaveAsNew = true;
-            this.AllowClone = false;
             this.Mode = FormModes.Edit;
         }
     }
