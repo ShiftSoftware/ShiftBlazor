@@ -35,14 +35,14 @@ public static class ServicesExtension
         });
 
         services.AddBlazoredLocalStorage();
-        services.AddSingleton<ClipboardService>();
+        services.AddScoped<ClipboardService>();
         services.AddScoped<ODataQuery>();
         services.AddScoped<ShiftModal>();
         services.AddScoped<MessageService>();
         services.AddScoped<PrintService>();
         services.AddScoped(x =>
         {
-            return new SettingManager(x.GetRequiredService<ISyncLocalStorageService>(),
+            return new SettingManager(x.GetRequiredService<ILocalStorageService>(),
                                x.GetRequiredService<NavigationManager>(),
                                x.GetRequiredService<HttpClient>(),
                                x.GetRequiredService<IJSRuntime>(),
