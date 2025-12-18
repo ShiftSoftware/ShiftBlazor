@@ -79,7 +79,7 @@ public partial class FilterPanel : ComponentBase, IDisposable
 
         foreach (var filter in Parent.Filters.Values.Where(x => !x.IsHidden))
         {
-            filter.Value = null;
+            filter.Reset();
         }
         ReloadList(true);
     }

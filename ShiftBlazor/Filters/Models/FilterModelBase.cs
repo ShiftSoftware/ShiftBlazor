@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using MudBlazor;
+﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
 
@@ -15,10 +14,31 @@ public abstract class FilterModelBase
     public bool IsImmediate { get; set; }
     public string? Prefix { get; set; }
     public bool IsCollection { get; set; }
-    internal bool IsDefault { get; set; }
     public FilterUIOptions UIOptions { get; set; } = new();
+    internal bool IsDefault { get; set; }
+    internal FilterModelBase OriginalState;
 
     public abstract ODataFilterGenerator ToODataFilter();
+
+    public FilterModelBase()
+    {
+        OriginalState = (FilterModelBase)this.MemberwiseClone();
+    }
+
+    internal FilterModelBase Clone()
+    {
+        OriginalState = (FilterModelBase)this.MemberwiseClone();
+        return OriginalState;
+    }
+
+    public void Reset(bool resetHidden = false)
+    {
+        if (!IsHidden || resetHidden)
+        {
+            Value = null;
+            Operator = OriginalState.Operator;
+        }
+    }
 
     public static FilterModelBase CreateFilter(string path, Type propertyType, Type? objectType = null, bool isDefault = false)
     {

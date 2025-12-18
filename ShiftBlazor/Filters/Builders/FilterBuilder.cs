@@ -120,6 +120,8 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
             Template = Template,
         };
 
+        Filter.Clone();
+
         Parent.Filters.Remove(Id);
         Parent.Filters.TryAdd(Id, Filter!);
 
