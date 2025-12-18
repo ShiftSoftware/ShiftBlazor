@@ -233,7 +233,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     // ======== Adornment Parameters ========
 
     [Parameter]
-    [Description("Icon shown as an input adornment (defaults to Add/Preview depending on state).")]
+    [Description("Icon shown as an input adornment (defaults to up/down arrow depending on the dropdown state).")]
     public string? AdornmentIcon { get; set; }
 
     [Parameter]
@@ -264,6 +264,26 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     [Parameter]
     [Description("Quick Add parameter name to receive the current text input.")]
     public string? QuickAddParameterName { get; set; }
+
+    [Parameter]
+    [Description("Icon shown as an input adornment (defaults to Add/Preview depending on state).")]
+    public string? QuickAddIcon { get; set; }
+
+    [Parameter]
+    [Description("QuickAdd position (Start or End).")]
+    public Adornment QuickAddPosition { get; set; } = Adornment.End;
+
+    [Parameter]
+    [Description("Color of the QuickAdd icon.")]
+    public Color QuickAddColor { get; set; } = Color.Default;
+
+    [Parameter]
+    [Description("Size of the QuickAdd icon.")]
+    public Size QuickAddSize { get; set; } = Size.Medium;
+
+    [Parameter]
+    [Description("ARIA label for the QuickAdd button (accessibility).")]
+    public string? QuickAddAriaLabel { get; set; }
 
     // ======== Events Parameters ========
 
@@ -425,7 +445,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         {
             throw new ArgumentException("EntitySet parameter is required.", nameof(EntitySet));
         }
-
 
         var shiftEntityKeyAndNameAttribute = Misc.GetAttribute<TEntitySet, ShiftEntityKeyAndNameAttribute>();
 
@@ -1170,14 +1189,14 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
 
     private string GetAdornmentIcon()
     {
-        if (string.IsNullOrWhiteSpace(AdornmentIcon))
+        if (string.IsNullOrWhiteSpace(QuickAddIcon))
         {
             return Value == null || MultiSelect
                 ? Icons.Material.Filled.AddCircle
                 : Icons.Material.Filled.RemoveRedEye;
         }
 
-        return AdornmentIcon;
+        return QuickAddIcon;
     }
 
     private void OnValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)

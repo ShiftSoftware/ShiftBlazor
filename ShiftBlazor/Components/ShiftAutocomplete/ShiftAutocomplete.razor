@@ -13,22 +13,34 @@
 
     <div class="@InputContainerClassname" @ref="ContainerRef" style="display: flex;">
 
-        <MudStack Row Spacing="0" Wrap="Wrap.Wrap" Style="flex-grow: 1;" @onkeydown="FieldKeyDownHandler" @onkeyup="FieldKeyUpHandler">
-
+        <div class="mud-input-adornment">
             @if (Adornment == Adornment.Start)
             {
-                <div class="mud-input-adornment">
                     <MudIconButton Class="mud-input-adornment-icon-button mud-no-activator"
-                                    Icon="@CurrentIcon"
-                                    OnClick="@AdornmentClickHandler"
-                                    Edge="@Edge.Start"
-                                    Size="@AdornmentSize"
-                                    Color="@AdornmentColor"
-                                    aria-label="@AdornmentAriaLabel"
-                                    tabindex="-1"
-                                    @onmousedown:stopPropagation />
-                </div>
+                                   Icon="@CurrentIcon"
+                                   OnClick="@AdornmentClickHandler"
+                                   Edge="@Edge.Start"
+                                   Size="@AdornmentSize"
+                                   Color="@AdornmentColor"
+                                   aria-label="@AdornmentAriaLabel"
+                                   tabindex="-1"
+                                   @onmousedown:stopPropagation />
             }
+
+            @if (DisplayQuickAdd && QuickAddPosition == Adornment.Start)
+            {
+                var itemId = MultiSelect ? null : Value?.Value;
+                <MudIconButton OnClick="() => AddEditItem(itemId)"
+                               Icon="@GetAdornmentIcon()"
+                               Size="@QuickAddSize"
+                               Color="@QuickAddColor"
+                               Edge="@Edge.Start"
+                               aria-label="@QuickAddAriaLabel"
+                               tabindex="-1" />
+            }
+        </div>
+
+        <MudStack Row Spacing="0" Wrap="Wrap.Wrap" Style="flex-grow: 1;" @onkeydown="FieldKeyDownHandler" @onkeyup="FieldKeyUpHandler">
 
             @if (MultiSelect && SelectedValues?.Count > 0)
             {
@@ -125,16 +137,6 @@
                                    tabindex="-1"/>
                 }
 
-                @if (DisplayQuickAdd)
-                {
-                    var itemId = MultiSelect ? null : Value?.Value;
-                    <MudIconButton OnClick="() => AddEditItem(itemId)"
-                                   Icon="@GetAdornmentIcon()"
-                                   Size="@AdornmentSize"
-                                   Edge="@Edge.End"
-                                   tabindex="-1"/>
-                }
-
                 @if (UpdateInitialValueError != null)
                 {
                     <MudTooltip Text="@UpdateInitialValueError">
@@ -144,6 +146,18 @@
                                        Edge="@Edge.End"
                                        OnClick="() => UpdateInitialValue(true)" />
                     </MudTooltip>
+                }
+
+                @if (DisplayQuickAdd && QuickAddPosition == Adornment.End)
+                {
+                    var itemId = MultiSelect ? null : Value?.Value;
+                    <MudIconButton OnClick="() => AddEditItem(itemId)"
+                                   Icon="@GetAdornmentIcon()"
+                                   Size="@QuickAddSize"
+                                   Color="@QuickAddColor"
+                                   Edge="@Edge.End"
+                                   aria-label="@QuickAddAriaLabel"
+                                   tabindex="-1" />
                 }
 
                 @if (Adornment == Adornment.End)
