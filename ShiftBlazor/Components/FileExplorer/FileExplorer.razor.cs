@@ -121,6 +121,10 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
     [Obsolete("This parameter is not used anymore.", false)]
     public int MaxUploadFileCount { get; set; } = 16;
 
+
+    [Parameter]
+    public Func<UploaderItem, Task<bool>>? PreUpload { get; set; }
+
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = [];

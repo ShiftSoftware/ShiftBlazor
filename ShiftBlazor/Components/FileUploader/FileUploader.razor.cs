@@ -100,6 +100,9 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     [Parameter]
     public EventCallback<UploadEventArgs> OnUploadFinished { get; set; }
 
+    [Parameter]
+    public Func<UploaderItem, Task<bool>>? PreUpload { get; set; }
+
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftForm { get; set; }
 
@@ -289,6 +292,19 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         }
         else
         {
+            foreach (var file in files)
+            {
+                if (PreUpload != null)
+                {
+                    var shouldContinue = await PreUpload(new UploaderItem(file, UploaderToken.Token));
+
+                    if (!shouldContinue)
+                    {
+                        return;
+                    }
+                }
+            }
+
             Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile, UploaderToken.Token)).ToList());
         }
 
