@@ -167,6 +167,11 @@ public partial class MultiItemField<T> where T : notnull
                         InternalMessageStore.Add(fieldIdentifier, $"At least {Min} items are required.");
                     }
                 };
+
+                EditContext.OnFieldChanged += (sender, eventArgs) =>
+                {
+                    this.ForceRender();
+                };
             }
 
             if (Mode == FormModes.Create)
