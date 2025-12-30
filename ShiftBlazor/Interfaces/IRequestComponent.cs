@@ -78,6 +78,12 @@ public interface IODataRequestComponent<T> : IODataRequest, IRequestComponent
 
         if (!res.IsSuccessStatusCode)
         {
+            //Check if shift entity error
+            var shiftEntityException = await res.Content.ReadFromJsonAsync<ShiftEntityException>(SerializerOptions, token);
+
+            if (shiftEntityException != null)
+                throw shiftEntityException;
+
             throw new Exception(self.Loc["DataReadStatusError", (int)res.StatusCode]);
         }
 

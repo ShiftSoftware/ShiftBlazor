@@ -1,12 +1,6 @@
 importScripts("javascript-number-formatter.min.js")
 // Docs: https://mottie.github.io/javascript-number-formatter/
 
-async function fetchRows(url, headers) {
-    const response = await fetch(url, { headers, method: "GET" })
-    const data = await response.json()
-    return data?.Value || []
-}
-
 function buildForeignColumnsMapper(columns, foreignColumns, origin) {
     const foreignTables = {}
     const fieldMapper = {}
@@ -351,7 +345,31 @@ self.onmessage = async (event) => {
     const { urlValue, values, columns, foreignColumns, fileName, language } = payload;
 
     try {
-        const rows = Array.isArray(values) && values.length ? values : await fetchRows(urlValue, headers);
+        let rows;
+
+        if (Array.isArray(values) && values.length) {
+            rows = values;
+        }
+        else {
+            const response = await fetch(urlValue, { headers, method: "GET" })
+
+            const data = await response.json();
+
+            if (response.status != 200) {
+
+                const error = `${data?.Message?.Title}: ${data?.Message?.Body}`;
+
+                clearTimeout(longExportToastTimer)
+
+                console.error(error)
+
+                self.postMessage({ isSuccess: false, message: error, messageType: "export ended", alertTitle: data?.Message?.Title })
+
+                return;
+            }
+
+            rows = data?.Value || [];
+        }
 
         if (!rows.length) throw new Error("No Items found");
 

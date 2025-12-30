@@ -731,6 +731,15 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             ErrorMessage = Loc["DataParseError"];
             MessageService.Error(Loc["DataReadError"], e.InnerException?.Message, e.Message, buttonText: Loc["DropdownViewButtonText"]);
         }
+        catch (ShiftEntityException e)
+        {
+            if (OnError != null && !(await OnError.Invoke(e)))
+            {
+                return gridData;
+            }
+            ErrorMessage = $"{e.Message.Title}: {e.Message.Body}";
+            MessageService.Error(e.Message.Title, e.Message.Title, e.Message.Body, buttonText: Loc["DropdownViewButtonText"]);
+        }
         catch (Exception e)
         {
             if (OnError != null && !(await OnError.Invoke(e)))
@@ -1276,7 +1285,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
 
         [JSInvokable]
-        public void OnExportProcessed(bool isSuccess, string message, string name)
+        public void OnExportProcessed(bool isSuccess, string message, string name, string? alertTitle = null)
         {
             this.ExportIsInProgress = false;
 
@@ -1285,7 +1294,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             if (isSuccess)
                 MessageService.Show($"'{name}' export completed successfully!", severity: Severity.Success, modalColor: Color.Success, icon: Icons.Material.TwoTone.CheckCircle, key: $"export_table_{name}");
             else
-                MessageService.Show(Loc["Export failed"], Loc["Export failed"], message, severity: Severity.Error, buttonText: Loc["DropdownViewButtonText"], modalColor: Color.Error, key: $"export_table_{name}");
+                MessageService.Show(alertTitle ?? Loc["Export failed"], alertTitle ?? Loc["Export failed"], message, severity: Severity.Error, buttonText: Loc["DropdownViewButtonText"], modalColor: Color.Error, key: $"export_table_{name}");
             
             StateHasChanged();
         }

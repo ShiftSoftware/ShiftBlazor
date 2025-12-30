@@ -12,14 +12,14 @@ window.tableExport = (payload, dotNetObjectRef) => {
     worker.onmessage = (e) => {
 
         if (e.data.messageType === "export ended") {
-            const { isSuccess, message, csvURL, fileName } = e.data
+            const { isSuccess, message, csvURL, fileName, alertTitle } = e.data
 
             if (isSuccess) {
                 window.downloadFileFromUrl(fileName, csvURL)
                 setTimeout(() => URL.revokeObjectURL(csvURL), 1000)
             }
 
-            dotNetObjectRef.invokeMethodAsync("OnExportProcessed", isSuccess, message, payload.name)
+            dotNetObjectRef.invokeMethodAsync("OnExportProcessed", isSuccess, message, payload.name, alertTitle)
 
             worker.terminate()
         } else if (e.data.messageType === "export processing"){
