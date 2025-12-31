@@ -265,6 +265,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     /// <summary>
     /// Enable and show Export button.
+    /// Warning: The export button is still invisible if the user does not have export acess <see cref="ShiftSoftware.ShiftEntity.Core.GeneralActionTree.DataGridExport"/>.
     /// </summary>
     [Parameter]
     public bool EnableExport { get; set; }
