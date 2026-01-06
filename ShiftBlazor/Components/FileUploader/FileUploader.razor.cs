@@ -101,7 +101,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     public EventCallback<UploadEventArgs> OnUploadFinished { get; set; }
 
     [Parameter]
-    public Func<UploaderItem, Task<bool>>? PreUpload { get; set; }
+    public Func<UploaderItem, Task<UploaderItem>>? OnBeforeUpload { get; set; }
 
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftForm { get; set; }
@@ -109,7 +109,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     private FormModes? _mode;
 
     [CascadingParameter]
-    public FormModes? Mode {
+    public FormModes? Mode
+    {
         get
         {
             return _mode;
@@ -150,7 +151,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         }
     }
 
-    internal string Classes {
+    internal string Classes
+    {
         get
         {
             var classNames = "file-uploader relative my-4 z-10";
@@ -294,18 +296,25 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         {
             foreach (var file in files)
             {
-                if (PreUpload != null)
+                if (OnBeforeUpload != null)
                 {
-                    var shouldContinue = await PreUpload(new UploaderItem(file, UploaderToken.Token));
+                    var uploaderItem = new UploaderItem(file, UploaderToken.Token);
 
-                    if (!shouldContinue)
-                    {
-                        return;
-                    }
+                    uploaderItem.File = GetShiftFileDTO(uploaderItem);
+
+                    var shouldContinue = await OnBeforeUpload(uploaderItem);
+
+                    if (uploaderItem.State == FileUploadState.Prevented)
+                        continue;
+
+                    uploaderItem.File = null;
+
+                    Items.Add(uploaderItem);
                 }
             }
 
-            Items.AddRange(files.Select(browserFile => new UploaderItem(browserFile, UploaderToken.Token)).ToList());
+            if (Items.Count == 0)
+                return;
         }
 
         await OnBatchUploadStarted.InvokeAsync(new UploadEventArgs(Items));
@@ -322,6 +331,25 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         }
 
         await SetValue(Items);
+    }
+
+    private ShiftFileDTO GetShiftFileDTO(UploaderItem item)
+    {
+        var fileName = string.Join('/', (item.RelativePath ?? item.LocalFile!.Name).Split('/'));
+
+        var file = new ShiftFileDTO
+        {
+            Blob = Prefix.AddUrlPath(fileName).Trim('/'),
+            Name = item.LocalFile!.Name
+        };
+
+        if (!string.IsNullOrWhiteSpace(AccountName))
+            file.AccountName = AccountName;
+
+        if (!string.IsNullOrWhiteSpace(ContainerName))
+            file.ContainerName = ContainerName;
+
+        return file;
     }
 
     internal async Task<bool> GetSASForFilesAsync(IEnumerable<UploaderItem> items)
@@ -341,19 +369,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             item.File = null;
             item.Message = null;
 
-            var fileName = string.Join('/', (item.RelativePath ?? item.LocalFile.Name).Split('/'));
-
-            var file = new ShiftFileDTO
-            {
-                Blob = Prefix.AddUrlPath(fileName).Trim('/'),
-                Name = item.LocalFile.Name
-            };
-
-            if (!string.IsNullOrWhiteSpace(AccountName))
-                file.AccountName = AccountName;
-
-            if (!string.IsNullOrWhiteSpace(ContainerName))
-                file.ContainerName = ContainerName;
+            var file = GetShiftFileDTO(item);
 
             files.Add(file);
         }
@@ -361,7 +377,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         try
         {
             using var postResponse = await HttpClient.PostAsJsonAsync(url, files);
-            
+
             var filesWithSASTokenReponse = await postResponse.Content.ReadFromJsonAsync<ShiftEntityResponse<List<ShiftFileDTO>>>();
 
             if (postResponse.IsSuccessStatusCode && filesWithSASTokenReponse?.Entity != null)
@@ -581,7 +597,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             foreach (var item in Items.Where(x => x.CancellationTokenSource != null))
             {
                 item.CancellationTokenSource!.Cancel();
-            };
+            }
+            ;
             Items.Clear();
             await SetValue([]);
         }

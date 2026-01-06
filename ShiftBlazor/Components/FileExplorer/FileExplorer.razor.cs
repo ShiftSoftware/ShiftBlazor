@@ -123,7 +123,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
 
 
     [Parameter]
-    public Func<UploaderItem, Task<bool>>? PreUpload { get; set; }
+    public Func<UploaderItem, Task<UploaderItem>>? OnBeforeUpload { get; set; }
 
     public bool IsEmbed { get; private set; } = false;
     public Guid Id { get; private set; } = Guid.NewGuid();
@@ -294,11 +294,11 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
         {
             case KeyboardKeys.KeyN:
                 if (DisplayNewFolderButton)
-                await CreateNewFolder();
+                    await CreateNewFolder();
                 break;
             case KeyboardKeys.KeyU:
                 if (DisplayUploadButton)
-                await Upload();
+                    await Upload();
                 break;
             case KeyboardKeys.KeyS:
                 Sort();
@@ -442,7 +442,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
                     Usernames.TryAdd(user.ID, user.Name);
                 }
             }
-            
+
             SetBreadcrumb(CWD.Path);
             SetSort();
             UpdateToolbarButtons();
@@ -468,7 +468,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
         breadcrumb.AddRange(GetFriendlyPath(path).Split('/', StringSplitOptions.RemoveEmptyEntries));
         PathParts = breadcrumb;
     }
-    
+
     private async Task HandleOpen(FileExplorerItemDTO file)
     {
         if (file.IsFile)
@@ -659,7 +659,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
             Loc["Delete File"],
             Loc["Are you sure you want to delete this file?"],
             yesText: Loc["Delete"], cancelText: Loc["CancelChanges"], options: options);
-        
+
         if (result == true)
         {
 
@@ -685,7 +685,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
 
                 await Refresh();
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 if (OnError != null && !(await OnError.Invoke(e)))
                     return;
@@ -762,7 +762,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
         if (file.IsFile)
         {
             var extension = Path.GetExtension(file.Name)?.ToLower() ?? string.Empty;
-            
+
             if (FileIcons.TryGetValue(extension, out var value))
             {
                 return value;
@@ -891,7 +891,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
         {
             return [];
         }
-        
+
     }
 
     private string GetViewClass(FileView? view = null)

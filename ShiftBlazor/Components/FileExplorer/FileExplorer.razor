@@ -398,7 +398,7 @@
               AccountName="@AccountName"
               Prefix="@(CWD?.Path)"
               HideUI
-              PreUpload="PreUpload"
+              OnBeforeUpload="OnBeforeUpload"
               DropAreaSelector="@($"#{FileExplorerId} .main-window")"
               OnBatchUploadStarted="HandleUploading"
               OnUploadFinished="HandleUploading"
