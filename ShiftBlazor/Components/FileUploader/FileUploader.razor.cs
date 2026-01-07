@@ -296,19 +296,23 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         {
             foreach (var file in files)
             {
+                var uploaderItem = new UploaderItem(file, UploaderToken.Token);
+
                 if (OnBeforeUpload != null)
                 {
-                    var uploaderItem = new UploaderItem(file, UploaderToken.Token);
-
                     uploaderItem.File = GetShiftFileDTO(uploaderItem);
 
-                    var shouldContinue = await OnBeforeUpload(uploaderItem);
+                    var mutatedUploaderItem = await OnBeforeUpload(uploaderItem);
 
                     if (uploaderItem.State == FileUploadState.Prevented)
                         continue;
 
-                    uploaderItem.File = null;
+                    mutatedUploaderItem.File = null;
 
+                    Items.Add(mutatedUploaderItem);
+                }
+                else
+                {
                     Items.Add(uploaderItem);
                 }
             }
