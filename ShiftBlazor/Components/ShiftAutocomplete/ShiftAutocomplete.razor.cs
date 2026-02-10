@@ -170,6 +170,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     [Parameter]
     public int MaxSelectedValues { get; set; }
 
+    [Parameter]
+    public Func<TEntitySet, bool>? DropdownItemDisabledFunc { get; set; }
+
     // ======== Classes and Styles =========
     [Parameter]
     [Description("CSS class applied to the root element.")]
