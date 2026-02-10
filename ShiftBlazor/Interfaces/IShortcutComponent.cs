@@ -8,7 +8,7 @@ public interface IShortcutComponent : IDisposable
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; }
     public ValueTask HandleShortcut(KeyboardKeys actions);
 
-    public static OrderedDictionary<Guid, IShortcutComponent> Components { get; set; } = new();
+    private static OrderedDictionary<Guid, IShortcutComponent> Components { get; set; } = new();
 
     public static bool Register(IShortcutComponent component)
     {
@@ -31,5 +31,10 @@ public interface IShortcutComponent : IDisposable
         {
             await Components.Last().Value.HandleShortcut(keys.First());
         }
+    }
+
+    public static IShortcutComponent GetComponent(Index index)
+    {
+        return Components.ElementAtOrDefault(index).Value;
     }
 }

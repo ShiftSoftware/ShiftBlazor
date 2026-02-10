@@ -866,8 +866,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         // Use Shortcut components to find out if the datagrid is on top of the component list
         if (!IsModalOpen)
         {
-            var beforeLastIndex = IShortcutComponent.Components.Count - 2;
-            var compId = IShortcutComponent.Components.Keys.ElementAtOrDefault(beforeLastIndex);
+            var compId = IShortcutComponent.GetComponent(^2).Id;
 
             if (compId == Id && data != null)
             {
