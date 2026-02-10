@@ -27,7 +27,6 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     [Inject] SettingManager SettingManager { get; set; } = default!;
     [Inject] ShiftBlazorLocalizer Loc { get; set; } = default!;
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
-    [Inject] IWebAssemblyHostEnvironment Env { get; set; } = default!;
 
     [CascadingParameter]
     public IMudDialogInstance? MudDialog { get; set; }
@@ -428,14 +427,11 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
         }
         catch (Exception e)
         {
-            if (Env?.IsDevelopment() == true)
-            {
+            #if DEBUG
                 MsgService.Error(Loc["FormTaskError", Loc[$"FormTask{Task.ToString()}"]], e.Message, e.ToString(), buttonText: Loc["DropdownViewButtonText"]);
-            }
-            else
-            {
+            #else
                 MsgService.Error(Loc["FormTaskError", Loc[$"FormTask{Task.ToString()}"]], buttonText: Loc["DropdownViewButtonText"]);
-            }
+            #endif
         }
 
         TaskInProgress = FormTasks.None;
