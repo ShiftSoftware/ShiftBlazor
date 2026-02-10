@@ -405,7 +405,8 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     private bool IsDisabled => ParentDisabled || Disabled;
     private bool IsReadOnly => ParentReadOnly || ReadOnly;
     private bool DisplayClearable => Clearable && !IsReadOnly && !IsDisabled && ( !string.IsNullOrWhiteSpace(Text) || Value != null || SelectedValues?.Count > 0);
-    private bool DisplayQuickAdd => QuickAddComponentType != null && (Value != null || Value == null && !IsReadOnly && !IsDisabled);
+    private bool IsValueNull => Value == null || Value.Value == string.Empty && Value.Text == null;
+    private bool DisplayQuickAdd => QuickAddComponentType != null && (!IsValueNull || IsValueNull && !IsReadOnly && !IsDisabled);
 
     public override Task SetParametersAsync(ParameterView parameters)
     {
