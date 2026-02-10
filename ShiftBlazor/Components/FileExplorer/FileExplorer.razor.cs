@@ -274,7 +274,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
             LoggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
         }
 
-        var userSettings = SettingManager.GetFileExplorerSetting(SettingKey);
+        var userSettings = await SettingManager.GetFileExplorerSetting(SettingKey);
         Settings = userSettings ?? DefaultSettings;
         SetView(userSettings?.View ?? View ?? DefaultSettings.View, false);
 

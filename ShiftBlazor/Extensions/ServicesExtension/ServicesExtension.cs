@@ -3,8 +3,6 @@ using MudBlazor;
 using MudBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Services;
 using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftwareLocalization.Blazor;
 
@@ -40,17 +38,10 @@ public static class ServicesExtension
         services.AddScoped<ShiftModal>();
         services.AddScoped<MessageService>();
         services.AddScoped<PrintService>();
-        services.AddScoped(x =>
-        {
-            return new SettingManager(x.GetRequiredService<ILocalStorageService>(),
-                               x.GetRequiredService<NavigationManager>(),
-                               x.GetRequiredService<HttpClient>(),
-                               x.GetRequiredService<IJSRuntime>(),
-                               config =>
-                               {
-                                   options.ShiftConfiguration?.Invoke(config);
-                               });
-        });
+        services.AddScoped<SettingManager>();
+
+        if (options.ShiftConfiguration != null)
+            services.AddOptions<AppConfiguration>().Configure(options.ShiftConfiguration);
 
         services.AddLocalization();
 

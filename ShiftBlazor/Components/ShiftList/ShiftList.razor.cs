@@ -387,7 +387,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     private bool IsFilterPanelOpen { get; set; }
     public HashSet<Guid> ActiveOperations { get; set; } = [];
     private CancellationTokenSource? ReloadBlockTokenSource;
-    public bool IsLoading { get; set; }
+    public bool IsLoading { get; set; } = true;
 
     private TaskCompletionSource<GridData<T>> IndefiniteReloadTask = new();
     private CancellationTokenSource? ReloadCancellationTokenSource { get; set; }
@@ -493,25 +493,30 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             SelectState.Total = Values.Count;
         }
 
-        SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
-        IsFilterPanelOpen = SettingManager?.GetFilterPanelState() ?? FilterPanelDefaultOpen;
+        SelectedPageSize = 10;
+        IsFilterPanelOpen = true;
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            SelectedPageSize = await SettingManager.GetListPageSize(GetListIdentifier(), PageSize);
+            IsFilterPanelOpen = await SettingManager.GetFilterPanelState(GetListIdentifier(), FilterPanelDefaultOpen);
+            await DataGrid!.SetRowsPerPageAsync(SelectedPageSize);
+
             if (!DisableGridEditor)
             {
-                var columnStates = SettingManager.GetColumnState(GetListIdentifier());
+                var columnStates = await SettingManager.GetColumnState(GetListIdentifier());
                 HideDisabledColumns(columnStates);
                 MakeColumnsSticky(columnStates);
                 ReorderColumns(columnStates);
             }
+            StateHasChanged();
         }
-    }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender) => await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+        _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+    }
 
     protected override bool ShouldRender()
     {
@@ -687,7 +692,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             // Save current PageSize as user preference 
             if (state.PageSize != SelectedPageSize)
             {
-                SettingManager.SetListPageSize(state.PageSize);
+                _ = SettingManager.SetListPageSize(GetListIdentifier(), state.PageSize);
                 SelectedPageSize = state.PageSize;
             }
 
@@ -1088,7 +1093,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
         }
 
-        SettingManager.SetColumnState(GetListIdentifier(), columnStates);
+        _ = SettingManager.SetColumnState(GetListIdentifier(), columnStates);
     }
 
     private void OpenGridEditor()
@@ -1103,7 +1108,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     private void ResetColumnSettings()
     {
-        SettingManager.SetColumnState(GetListIdentifier(), []);
+        _ = SettingManager.SetColumnState(GetListIdentifier(), []);
         NavigationManager.Refresh(true);
     }
 
@@ -1336,9 +1341,9 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         await OnSelectStateChanged.InvokeAsync(SelectState);
     }
 
-    public void ToggleFilterPanel()
+    public async Task ToggleFilterPanel()
     {
-        IsFilterPanelOpen = SettingManager?.SetFilterPanelState(!IsFilterPanelOpen) ?? !IsFilterPanelOpen;
+        IsFilterPanelOpen = await SettingManager.SetFilterPanelState(GetListIdentifier(), !IsFilterPanelOpen);
     }
 
     public void Reload()

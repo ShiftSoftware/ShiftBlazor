@@ -30,7 +30,6 @@ public interface IRequestComponent : IRequest
 {
     public HttpClient HttpClient { get; }
     public ShiftBlazorLocalizer Loc { get; }
-    public SettingManager SettingManager { get; }
 
     public Func<HttpRequestMessage, ValueTask<bool>>? OnBeforeRequest { get; }
     public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; }
@@ -39,7 +38,7 @@ public interface IRequestComponent : IRequest
     public static string GetPath(IRequestComponent self)
     {
         string? url = self.BaseUrl;
-        var config = self.SettingManager.Configuration;
+        var config = SettingManager.Configuration;
 
         if (url is null && self.BaseUrlKey is not null)
             url = config.ExternalAddresses.TryGet(self.BaseUrlKey);

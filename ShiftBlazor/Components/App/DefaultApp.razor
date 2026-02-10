@@ -17,25 +17,33 @@
             OnNavigateAsync="OnNavigateAsync">
 
         <Found Context="routeData">
-            @if (AuthenticationStateTask == null)
+
+            @if (_initialized)
             {
-                <RouteView RouteData="@routeData" DefaultLayout="@(MainLayout ?? typeof(ShiftMainLayout))" />
+                @if (AuthenticationStateTask == null)
+                {
+                    <RouteView RouteData="@routeData" DefaultLayout="@(MainLayout ?? typeof(ShiftMainLayout))" />
+                }
+                else
+                {
+                    <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@(MainLayout ?? typeof(ShiftMainLayout))">
+                        <NotAuthorized>
+                            <MudText Align="Align.Center" Typo="Typo.h1">@Loc["DefaultAppNotAuthorized"]</MudText>
+                            <MudText Align="Align.Center" Typo="Typo.body1">@Loc["DefaultAppRedirecting"]</MudText>
+
+                            @{
+                                _ = RedirectToLogin();
+                            }
+                        </NotAuthorized>
+                    </AuthorizeRouteView>
+                }
+
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
             }
             else
             {
-                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@(MainLayout ?? typeof(ShiftMainLayout))">
-                    <NotAuthorized>
-                        <MudText Align="Align.Center" Typo="Typo.h1">@Loc["DefaultAppNotAuthorized"]</MudText>
-                        <MudText Align="Align.Center" Typo="Typo.body1">@Loc["DefaultAppRedirecting"]</MudText>
-
-                        @{
-                            _ = RedirectToLogin();
-                        }
-                    </NotAuthorized>
-                </AuthorizeRouteView>
+                <div>loading...</div>
             }
-
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
     </Router>
 </CascadingValue>
@@ -91,8 +99,12 @@
 
     private AppLayoutContext AppContext = default!;
 
-    protected override void OnInitialized()
+    private bool _initialized;
+
+    protected override async Task OnInitializedAsync()
     {
+        await SettingManager.Setup(false);
+        
         ShiftIdentityService = ServiceProvider.GetService<ShiftIdentityService>();
 
         AppContext = new AppLayoutContext(SettingManager)
@@ -104,8 +116,8 @@
             EnableAutherization = AuthenticationStateTask != null,
             MainLayout = MainLayout,
         };
-
-        base.OnInitialized();
+        
+        _initialized = true;
     }
 
     public async Task RedirectToLogin()

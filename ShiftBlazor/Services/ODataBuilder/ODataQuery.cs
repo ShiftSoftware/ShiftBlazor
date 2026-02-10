@@ -6,10 +6,10 @@ public class ODataQuery : DataServiceContext
 {
     private string ODataPath;
 
-    public ODataQuery(SettingManager settings) :
-        this(settings.Configuration.BaseAddress)
+    public ODataQuery() :
+        this(SettingManager.Configuration.BaseAddress)
     {
-        ODataPath = settings.Configuration.BaseAddress;
+        ODataPath = SettingManager.Configuration.BaseAddress;
     }
 
     public ODataQuery(string serviceRoot) :

@@ -3,7 +3,7 @@
 @using ShiftSoftware.ShiftBlazor.Enums;
 @inject SettingManager SettingManager
 @inject NavigationManager NavManager
-@inject  IJSRuntime JsRuntime
+@inject IJSRuntime JsRuntime
 @inject ShiftBlazorLocalizer Loc
 
 @namespace ShiftSoftware.ShiftBlazor.Components
@@ -227,6 +227,7 @@
 
     internal async Task ReloadPage()
     {
-        await JsRuntime.InvokeVoidAsync("window.location.reload");
+        var selectedCulture = SettingManager.GetCulture(Language.CultureName);
+        SettingManager.SetCulture(selectedCulture);
     }
 }

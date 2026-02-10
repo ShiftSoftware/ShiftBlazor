@@ -9,13 +9,6 @@ public class AppConfiguration
     public Dictionary<string, string?> ExternalAddresses = [];
     public string? UserListEndpoint { get; set; }
 
-
-    //public string ODataPath
-    //{
-    //    get => BaseAddress.AddUrlPath(_ODataPath);
-    //    set => _ODataPath = value;
-    //}
-
     /// <summary>
     /// A list of thumbnail sizes to generate when a new image is uploaded.
     /// Width x Height format.
@@ -24,7 +17,7 @@ public class AppConfiguration
 
     public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
 
-    public List<LanguageInfo> Languages = [];
+    public readonly List<LanguageInfo> Languages = [];
 
     public AppConfiguration AddLanguage(string culture, string label, bool rtl = false)
     {
