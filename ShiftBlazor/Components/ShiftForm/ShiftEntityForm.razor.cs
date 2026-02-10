@@ -177,6 +177,8 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     }
 
     private bool ReadyToRender = false;
+    [PersistentState]
+    public T? FetchedEntity { get; set; }
 
     protected override void OnInitialized()
     {
@@ -213,7 +215,14 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
         if (Mode != FormModes.Create && HasReadAccess)
         {
+            if (FetchedEntity == null)
+            {
             await FetchItem();
+        }
+        else
+        {
+                await SetValue(FetchedEntity);
+            }
         }
         else
         {
@@ -545,7 +554,8 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
                     //res.Headers.TryGetValues(Constants.HttpHeaderVersioning, out IEnumerable<string>? versioning);
                     IsTemporal = true; //versioning?.Contains("Temporal") == true;
-                    await SetValue(await ParseEntityResponse(res), asOf == null);
+                    FetchedEntity = await ParseEntityResponse(res);
+                    await SetValue(FetchedEntity, asOf == null);
                 }
             }
             catch (Exception e)
