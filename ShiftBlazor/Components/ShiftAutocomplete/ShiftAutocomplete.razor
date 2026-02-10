@@ -209,7 +209,8 @@
                                  id="@GetItemId(i)"
                                  OnClick="@(() => SelectItem(item))"
                                  OnClickPreventDefault="true"
-                                 Class="@GetListItemClassname(isHighlighted)">
+                                 Class="@GetListItemClassname(isHighlighted)"
+                                 Disabled="@(!isSelected && IsAddValuesDisabled)">
 
                         @if (DropdownItemTemplate != null)
                         {

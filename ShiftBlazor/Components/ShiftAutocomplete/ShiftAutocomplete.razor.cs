@@ -167,6 +167,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     [Description("Group/collapse selected chips into a single expandable group.")]
     public bool GroupSelectedValues { get; set; }
 
+    [Parameter]
+    public int MaxSelectedValues { get; set; }
+
     // ======== Classes and Styles =========
     [Parameter]
     [Description("CSS class applied to the root element.")]
@@ -367,14 +370,27 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
                 .Build();
 
     public static readonly string HighlightedClassname = "highlighted-selected-value";
-    public Guid Id { get; private set; } = Guid.NewGuid();
+
+    // ======== Computed Properties =========
     public string InputId => "Input" + Id.ToString().Replace("-", string.Empty);
+    public bool IsLoading => FetchTokenSource?.IsCancellationRequested == false;
+    public bool IsIntitialValueLoading => InitialUpdateTokenSource?.IsCancellationRequested == false;
+    private string OpenIcon => Icons.Material.Filled.ArrowDropUp;
+    private string CloseIcon => Icons.Material.Filled.ArrowDropDown;
+    private string CurrentIcon => !string.IsNullOrWhiteSpace(AdornmentIcon) ? AdornmentIcon : IsDropdownOpen ? OpenIcon : CloseIcon;
+    private bool IsDisabled => ParentDisabled || Disabled;
+    private bool IsReadOnly => ParentReadOnly || ReadOnly;
+    private bool DisplayClearable => Clearable && !IsReadOnly && !IsDisabled && (!string.IsNullOrWhiteSpace(Text) || Value != null || SelectedValues?.Count > 0);
+    private bool IsValueNull => Value == null || Value.Value == string.Empty && Value.Text == null;
+    private bool DisplayQuickAdd => QuickAddComponentType != null && (!IsValueNull || IsValueNull && !IsReadOnly && !IsDisabled);
+    private bool IsAddValuesDisabled => MaxSelectedValues > 0 && SelectedValues != null && SelectedValues.Count >= MaxSelectedValues;
+
+    // ======== Private Fields =========
+    public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
 
     public bool IsDropdownOpen { get; private set; } = false;
     public bool IsFocused { get; private set; } = false;
-    public bool IsLoading => FetchTokenSource?.IsCancellationRequested == false;
-    public bool IsIntitialValueLoading => InitialUpdateTokenSource?.IsCancellationRequested == false;
     public string Text { get; private set; } = string.Empty;
 
     public string? UpdateInitialValueError { get; private set; }
@@ -387,11 +403,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     private int HighlightedListItemIndex { get; set; } = 0;
     internal int SelectedValuesIndex { get; set; } = int.MaxValue;
 
-    private string OpenIcon => Icons.Material.Filled.ArrowDropUp;
-    private string CloseIcon => Icons.Material.Filled.ArrowDropDown;
-
-    private string CurrentIcon => !string.IsNullOrWhiteSpace(AdornmentIcon) ? AdornmentIcon : IsDropdownOpen ? OpenIcon : CloseIcon;
-
     public List<TEntitySet> DropdownItems { get; private set; } = [];
 
     private CancellationTokenSource? FetchTokenSource;
@@ -401,12 +412,6 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     private ElementReference ContainerRef = default!;
     private Debouncer Debouncer = new();
     private FieldIdentifier _fieldIdentifier;
-
-    private bool IsDisabled => ParentDisabled || Disabled;
-    private bool IsReadOnly => ParentReadOnly || ReadOnly;
-    private bool DisplayClearable => Clearable && !IsReadOnly && !IsDisabled && ( !string.IsNullOrWhiteSpace(Text) || Value != null || SelectedValues?.Count > 0);
-    private bool IsValueNull => Value == null || Value.Value == string.Empty && Value.Text == null;
-    private bool DisplayQuickAdd => QuickAddComponentType != null && (!IsValueNull || IsValueNull && !IsReadOnly && !IsDisabled);
 
     public override Task SetParametersAsync(ParameterView parameters)
     {
@@ -692,9 +697,12 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
             // If the item is not selected, add it to the selected values
             if (!await RemoveSelected(item))
             {
-                SelectedValues ??= [];
-                SelectedValues.Add(item);
-                await SelectedValuesChanged.InvokeAsync(SelectedValues);
+                if (!IsAddValuesDisabled)
+                {
+                    SelectedValues ??= [];
+                    SelectedValues.Add(item);
+                    await SelectedValuesChanged.InvokeAsync(SelectedValues);
+                }
             }
         }
         else
