@@ -97,6 +97,8 @@ public partial class MultiItemField<T> where T : notnull
     [Parameter]
     public Variant ControlVariant { get; set; } = Variant.Outlined;
 
+    private bool ReadOnly => Mode < FormModes.Edit;
+
     private bool UseLimits = false;
     private FieldIdentifier fieldIdentifier;
     private ValidationMessageStore? InternalMessageStore;
