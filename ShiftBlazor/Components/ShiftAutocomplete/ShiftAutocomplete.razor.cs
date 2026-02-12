@@ -972,7 +972,16 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
 
                 break;
         }
+    }
 
+    private async Task ListItemOnClick(TEntitySet item)
+    {
+        if (_InputRef != null)
+        {
+            await _InputRef.FocusAsync();
+        }
+
+        await SelectItem(item);
     }
 
     private async Task ClearSelected()

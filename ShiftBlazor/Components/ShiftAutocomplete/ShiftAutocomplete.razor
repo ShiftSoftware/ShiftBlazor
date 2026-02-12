@@ -208,7 +208,7 @@
                     <MudListItem T="TEntitySet"
                                  @key="item"
                                  id="@GetItemId(i)"
-                                 OnClick="@(() => SelectItem(item))"
+                                 OnClick="@(async () => await ListItemOnClick(item))"
                                  OnClickPreventDefault="true"
                                  Class="@GetListItemClassname(isHighlighted)"
                                  Disabled="@isDisabled">
