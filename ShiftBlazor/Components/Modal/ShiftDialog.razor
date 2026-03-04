@@ -1,0 +1,15 @@
+﻿@using Microsoft.JSInterop
+@inject IJSRuntime JsRuntime
+
+@implements IDialogReference
+
+
+@* <button command="show-modal" commandfor="@htmlId">Open dialog</button> *@
+
+<dialog class="shift-dialog" id="@htmlId">
+    <div class="dialog-wrap item" data-layout-id="@Id">
+        <CascadingValue Value="_instance">
+            @ChildContent
+        </CascadingValue>
+    </div>
+</dialog>

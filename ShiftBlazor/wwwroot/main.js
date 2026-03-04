@@ -1,4 +1,32 @@
-﻿const getHeaders = () => ({
+﻿window.modals = {};
+
+window.openDialog = function (dialogId) {
+    let dialog = document.getElementById(dialogId);
+    let {createLayout, utils} = anime;
+
+    const modalLayout = createLayout(dialog, {
+        children: ['.item', 'h2', 'h3', 'p', 'input'],
+        properties: ['--overlay-alpha'],
+    });
+
+    window.modals[dialogId] = modalLayout;
+
+    modalLayout.update(() => {
+        dialog.showModal(); // Open the modal
+    }, {
+        duration: 400,
+    });
+}
+
+window.closeDialog = function (dialogId) {
+    let dialog = document.getElementById(dialogId);
+    console.log(dialogId, dialog);
+    window.modals[dialogId].update(({ root }) => {
+        dialog.close();
+    });
+};
+
+const getHeaders = () => ({
     cookie: document.cookie,
     "Content-Type": "application/json",
     authorization: "Bearer " + JSON.parse(localStorage.token).Token,
