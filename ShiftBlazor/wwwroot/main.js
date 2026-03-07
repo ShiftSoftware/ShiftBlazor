@@ -5,14 +5,14 @@ window.openDialog = function (dialogId) {
     let {createLayout, utils} = anime;
 
     const modalLayout = createLayout(dialog, {
-        children: ['.item', 'h2', 'h3', 'p', 'input'],
-        properties: ['--overlay-alpha'],
+        children: [".item", "article", ".mud-paper"],
+        properties: ["height"],
     });
 
     window.modals[dialogId] = modalLayout;
 
     modalLayout.update(() => {
-        dialog.showModal(); // Open the modal
+        dialog.showModal();
     }, {
         duration: 400,
     });
@@ -20,7 +20,6 @@ window.openDialog = function (dialogId) {
 
 window.closeDialog = function (dialogId) {
     let dialog = document.getElementById(dialogId);
-    console.log(dialogId, dialog);
     window.modals[dialogId].update(({ root }) => {
         dialog.close();
     });
