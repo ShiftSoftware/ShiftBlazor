@@ -492,3 +492,63 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     transform: translateY(100%);
     opacity: 0.4;
 }
+
+/* =============== Shift Dialog =============== */
+
+.shift-dialog {
+    --overlay-alpha: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: 100%;
+    max-height: 100%;
+    border: none;
+    background: transparent;
+    pointer-events: none;
+    background-color: color-mix(in srgb, var(--hex-black-1), transparent var(--overlay-alpha));
+}
+
+    .shift-dialog[open] {
+        --overlay-alpha: 40%;
+        pointer-events: auto;
+    }
+
+    .shift-dialog::backdrop {
+        background: #0004254d;
+    }
+
+    .shift-dialog[open] .item {
+        display: block;
+    }
+
+    .shift-dialog .item {
+        position: relative;
+        visibility: hidden;
+        display: none;
+        overflow: hidden;
+        width: 600px;
+        padding: 2rem;
+        border-radius: 1rem;
+        border: 1px solid var(--hex-green-6);
+        font-size: 1rem;
+        color: var(--hex-green-6);
+        background-color: var(--hex-green-1);
+    }
+
+    .shift-dialog[open] .item {
+        visibility: visible;
+    }
+
+    .shift-dialog .mud-focus-trap,
+    .shift-dialog .mud-focus-trap-child-container {
+        display: block !important;
+    }
+
+/* =============== Shift Dialog End =============== */

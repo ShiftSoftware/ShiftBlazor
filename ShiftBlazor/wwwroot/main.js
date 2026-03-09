@@ -6,7 +6,7 @@ window.openDialog = function (dialogId) {
 
     const modalLayout = createLayout(dialog, {
         children: [".item", "article", ".mud-paper"],
-        properties: ["height"],
+        properties: ["height", "--overlay-alpha"],
     });
 
     window.modals[dialogId] = modalLayout;
