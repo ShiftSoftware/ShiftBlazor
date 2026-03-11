@@ -8,7 +8,6 @@ namespace ShiftSoftware.ShiftBlazor.Components.Modal;
 
 public partial class ShiftDialog
 {
-    private readonly TaskCompletionSource<DialogResult?> _resultCompletion = new();
     private IMudDialogInstance _instance;
     private IDialogReference _reference;
 
@@ -33,7 +32,7 @@ public partial class ShiftDialog
     //public string? Title { get; set; }
 
     public string ElementId => $"dialog-{Id}";
-    public Task<DialogResult?> Result => _resultCompletion.Task;
+    public Task<DialogResult?> Result => _reference.Result;
 
     internal void OpenInlineDialog()
     {
@@ -47,6 +46,8 @@ public partial class ShiftDialog
 
     public IDialogReference ShowAsync()
     {
+        if (_reference.Result.IsCompleted)
+            _reference = new DialogReference(this);
         OpenInlineDialog();
         return _reference;
     }
@@ -63,7 +64,7 @@ public partial class ShiftDialog
 
     public bool Dismiss(DialogResult? result)
     {
-        if (_resultCompletion.TrySetResult(result))
+        if (_reference.Dismiss(result))
         {
             CloseInlineDialog();
             return true;
@@ -74,7 +75,8 @@ public partial class ShiftDialog
 
     private class DialogReference : IDialogReference
     {
-        private ShiftDialog _dialog;
+        private readonly TaskCompletionSource<DialogResult?> _resultCompletion = new();
+        private readonly ShiftDialog _dialog;
 
         public Guid Id => _dialog.Id;
         public string ElementId => _dialog.ElementId;
@@ -86,7 +88,7 @@ public partial class ShiftDialog
 
         public RenderFragment? RenderFragment { get; set; }
 
-        public Task<DialogResult?> Result => _dialog.Result;
+        public Task<DialogResult?> Result => _resultCompletion.Task;
 
         public TaskCompletionSource<bool> RenderCompleteTaskCompletionSource { get; } = new();
 
@@ -96,17 +98,17 @@ public partial class ShiftDialog
 
         public void Close()
         {
-            _dialog.Close();
+            this.Close();
         }
 
         public void Close(DialogResult? result)
         {
-            _dialog.Close(result);
+            this.Close(result);
         }
 
         public bool Dismiss(DialogResult? result)
         {
-            return _dialog.Dismiss(result);
+            return _resultCompletion.TrySetResult(result);
         }
 
         public async Task<T?> GetReturnValueAsync<[DynamicallyAccessedMembers((DynamicallyAccessedMemberTypes)(-1))] T>()
