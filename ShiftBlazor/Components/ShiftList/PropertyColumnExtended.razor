@@ -1,5 +1,6 @@
 ﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using System.Text.RegularExpressions
+@using ShiftSoftware.ShiftBlazor.Components.Modal
 @typeparam T where T : ShiftEntityDTOBase, new()
 @typeparam TProperty
 @inherits PropertyColumn<T, TProperty>
@@ -7,6 +8,17 @@
 
 @{
     base.BuildRenderTree(__builder);
+}
+
+
+
+@if (IsCustomDialog)
+{
+    <div class="my-test-class">Hello there @this.Title @this.PropertyName</div>
+
+    <ShiftDialog @ref="_dialog" Id="_id.Value">
+        <DynamicComponent Type="FormComponent" Parameters="FormParameters" />
+    </ShiftDialog>
 }
 
 @code {
@@ -36,9 +48,19 @@
 
     protected Type? FormComponent => ComponentType ?? ShiftList.ComponentType;
 
-
     [Parameter]
     public bool ForceExportIfHidden { get; set; }
+
+    private ShiftDialog? _dialog { get; set; }
+    private Guid? _id { get; set; }
+
+    private bool IsCustomDialog => _id != null && IsButtonColumn && OpenMode == ModalOpenMode.Popup;
+
+    protected override void OnInitialized()
+    {
+        _id = Guid.NewGuid();
+        base.OnInitialized();
+    }
 
     protected override void OnParametersSet()
     {
@@ -102,12 +124,19 @@
     {
         if (FormComponent == null) return;
 
-        await ShiftList.OpenDialog(FormComponent, id, OpenMode, FormParameters);
+        if (IsCustomDialog)
+        {
+            _dialog?.ShowAsync();
+        }
+        else
+        {
+            await ShiftList.OpenDialog(FormComponent, id, OpenMode, FormParameters);
+        }
     }
 
     public RenderFragment<CellContext<T>> Template => (context) =>
-    @<a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
-        
+    @<a class="item" data-layout-id="@_id" @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
+
         @{
             var content = FormatContent(base.CellContent(context.Item));
         }

@@ -495,6 +495,11 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
 
 /* =============== Shift Dialog =============== */
 
+.item[data-layout-id]:not(.dialog-wrap),
+.item[data-layout-id]:not(.dialog-wrap) > * {
+    visibility: visible !important;
+}
+
 .shift-dialog {
     --overlay-alpha: 100%;
     overflow: hidden;
@@ -512,7 +517,7 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     border: none;
     background: transparent;
     pointer-events: none;
-    background-color: color-mix(in srgb, var(--hex-black-1), transparent var(--overlay-alpha));
+    background-color: color-mix(in srgb, #0004254d, transparent var(--overlay-alpha));
 }
 
     .shift-dialog[open] {
@@ -524,25 +529,15 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
         background: #0004254d;
     }
 
-    .shift-dialog[open] .item {
-        display: block;
-    }
-
     .shift-dialog .item {
         position: relative;
         visibility: hidden;
         display: none;
         overflow: hidden;
-        width: 600px;
-        padding: 2rem;
-        border-radius: 1rem;
-        border: 1px solid var(--hex-green-6);
-        font-size: 1rem;
-        color: var(--hex-green-6);
-        background-color: var(--hex-green-1);
     }
 
     .shift-dialog[open] .item {
+        display: block;
         visibility: visible;
     }
 
