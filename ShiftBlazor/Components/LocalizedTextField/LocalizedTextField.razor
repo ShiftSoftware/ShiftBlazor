@@ -9,7 +9,7 @@
                           ErrorText="@context.ErrorText"
                           Lines="Lines"
                           MaxLines="MaxLines"
-                          AutoGrow="AutoGrow"
+                          Sizing="@(AutoGrow ? InputSizing.Auto : InputSizing.Fixed)"
                           ValueChanged="@context.ValueChanged"
                           Label="@context.Label"
                           Adornment="@Adornment"

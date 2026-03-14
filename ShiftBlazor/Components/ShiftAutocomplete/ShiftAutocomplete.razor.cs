@@ -157,6 +157,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
 
     [Parameter]
     [Description("Suppress rapid input text updates during typing (improves UX).")]
+    [Obsolete("TextUpdateSuppression has been removed in MudBlazor 9.x. This parameter is no longer used.")]
     public bool TextUpdateSuppression { get; set; } = true;
 
     [Parameter]
@@ -351,13 +352,13 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     protected string Classname =>
             new CssBuilder("shift-autocomplete shift-input")
                 .AddClass("mud-input-required", when: () => Required)
-                .AddClass($"mud-input-{Variant.ToDescriptionString()}-with-label", !string.IsNullOrEmpty(Label))
+                .AddClass($"mud-input-{Variant.ToStringFast().ToLowerInvariant()}-with-label", !string.IsNullOrEmpty(Label))
                 .AddClass(Class)
                 .Build();
 
     protected string InputContainerClassname =>
             new CssBuilder("shift-input-wrapper")
-                .AddClass($"mud-input-{Variant.ToDescriptionString()}-with-label", !string.IsNullOrEmpty(Label))
+                .AddClass($"mud-input-{Variant.ToStringFast().ToLowerInvariant()}-with-label", !string.IsNullOrEmpty(Label))
                 .AddClass("mud-shrink", !string.IsNullOrWhiteSpace(Text) || IsFocused || SelectedValues?.Count > 0 || Adornment == Adornment.Start || !string.IsNullOrWhiteSpace(Placeholder) || IsIntitialValueLoading)
                 .Build();
 

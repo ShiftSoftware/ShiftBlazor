@@ -428,7 +428,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
     }
 
-    internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
+    internal Func<GridState<T>, CancellationToken, Task<GridData<T>>>? ServerData = default;
 
     private MudDataGrid<T>? _DataGrid;
     public MudDataGrid<T>? DataGrid
@@ -475,7 +475,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         IconSize = Dense ? Size.Medium : Size.Large;
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
         ServerData = Values == null
-            ? new Func<GridState<T>, Task<GridData<T>>>(ServerReload)
+            ? new Func<GridState<T>, CancellationToken, Task<GridData<T>>>(ServerReload)
             : default;
         SortMode = DisableSorting
                     ? SortMode.None
@@ -651,7 +651,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
     }
 
-    private async Task<GridData<T>> ServerReload(GridState<T> state)
+    private async Task<GridData<T>> ServerReload(GridState<T> state, CancellationToken cancellationToken = default)
     {
         IsLoading = true;
         StateHasChanged();
@@ -1370,12 +1370,6 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             await PrintService.OpenPrintFormAsync(url, id, PrintConfig);
         }
     }
-
-    private readonly MudBlazor.Converter<bool, bool?> _oppositeBoolConverter = new()
-    {
-        SetFunc = value => !value,
-        GetFunc = value => !value ?? true,
-    };
 
     public void Dispose()
     {

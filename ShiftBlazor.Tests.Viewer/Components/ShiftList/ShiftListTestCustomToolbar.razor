@@ -61,8 +61,8 @@
     [Parameter]
     public RenderFragment? ToolbarControlsTemplate { get; set; }
 
-    private void ViewSelected()
+    private async Task ViewSelected()
     {
-        Dialog.ShowMessageBox("Selected Items", string.Join('\n', ShiftList.SelectedItems.Select(x => x.Name)));
+        await Dialog.ShowMessageBoxAsync("Selected Items", string.Join('\n', ShiftList.SelectedItems.Select(x => x.Name)));
     }
 }

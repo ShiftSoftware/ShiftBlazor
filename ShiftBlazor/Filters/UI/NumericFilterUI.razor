@@ -7,8 +7,10 @@
         <MudStack Row>
             <MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
                 <ActivatorContent>
-                    <MudText>@Filter.Operator.Describe()</MudText>
-                    <MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
+                    <div @onclick="context.ToggleAsync" style="display:flex;align-items:center;cursor:pointer;">
+                        <MudText>@Filter.Operator.Describe()</MudText>
+                        <MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
+                    </div>
                 </ActivatorContent>
                 <ChildContent>
                     <MudMenuItem OnClick="@((x) => OperatorChanged(ODataOperator.Equal))">@ODataOperator.Equal.Describe()</MudMenuItem>

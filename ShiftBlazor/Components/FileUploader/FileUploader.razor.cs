@@ -638,7 +638,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     private void OpenErrorDialog(Message message)
     {
-        DialogService.ShowMessageBox(message.Title, message.Body ?? message.Title);
+        DialogService.ShowMessageBoxAsync(message.Title, message.Body ?? message.Title);
     }
 
     [JSInvokable]

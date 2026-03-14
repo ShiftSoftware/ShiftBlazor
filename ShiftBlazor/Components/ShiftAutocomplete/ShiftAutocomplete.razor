@@ -52,10 +52,11 @@
                 {
                     <MudMenu MaxHeight="@MaxHeight" @bind-Open="IsSelectedValuesGroupOpen">
                         <ActivatorContent>
-                            <MudChip Size="Size.Small"
-                                     OnClick="SelectedValuesGroupClickHandler"
-                                     @onfocus="OpenSelectedValuesGroup"
-                                     Value="SelectedValues.Count"/>
+                            <div @onclick="context.ToggleAsync">
+                                <MudChip Size="Size.Small"
+                                         @onfocus="OpenSelectedValuesGroup"
+                                         Value="SelectedValues.Count"/>
+                            </div>
                         </ActivatorContent>
                         <ChildContent>
                             <MudStack Spacing="1">
@@ -96,7 +97,6 @@
                               @onfocus="InputFocusHandler"
                               OnBlur="InputBlurHandler"
                               TextChanged="TextChangedHandler"
-                              TextUpdateSuppression="TextUpdateSuppression"
                               KeyUpPreventDefault="true"
                               InputId="@InputId"
                               Immediate="true"

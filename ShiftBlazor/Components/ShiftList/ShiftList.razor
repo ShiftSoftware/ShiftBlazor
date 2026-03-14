@@ -181,9 +181,8 @@
                                                            Ripple="false"
                                                            Color="Color.Primary"
                                                            Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
-                                                           Value="@context.Hidden"
+                                                           Value="@(!context.Hidden)"
                                                            ValueChanged="@context.ToggleAsync"
-                                                           Converter="_oppositeBoolConverter"
                                                            Style="width: 70px;" />
 
                                                 <MudSwitch T="bool"
@@ -216,9 +215,8 @@
                                                    Color="Color.Primary"
                                                    Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
                                                    Style="width: 70px;"
-                                                   Value="@context.Hidden"
-                                                   ValueChanged="@context.ToggleAsync"
-                                                   Converter="_oppositeBoolConverter" />
+                                                   Value="@(!context.Hidden)"
+                                                   ValueChanged="@context.ToggleAsync" />
 
                                         <MudSwitch T="bool"
                                                    Ripple="false"

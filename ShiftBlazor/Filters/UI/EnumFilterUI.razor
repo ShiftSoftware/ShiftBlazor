@@ -8,8 +8,10 @@
 		<MudStack Row>
 			<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
 				<ActivatorContent>
-					<MudText>@Filter.Operator.Describe()</MudText>
-					<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
+					<div @onclick="context.ToggleAsync" style="display:flex;align-items:center;cursor:pointer;">
+						<MudText>@Filter.Operator.Describe()</MudText>
+						<MudIcon Color="Color.Default" Style="margin-inline-start: 5px" Icon="@MenuIcon" />
+					</div>
 				</ActivatorContent>
 				<ChildContent>
 					<MudMenuItem OnClick="@((x) => _OperatorChanged(ODataOperator.In))">@ODataOperator.In.Describe()</MudMenuItem>
@@ -54,7 +56,7 @@
 
 	private Type? EnumTypeToUse;
 
-	private IEnumerable<object>? Value => (Filter.Value as IEnumerable)?.Cast<object>();
+	private IReadOnlyCollection<object>? Value => (Filter.Value as IEnumerable)?.Cast<object>().ToList();
 	private bool HasNoValue => Filter.Operator == ODataOperator.IsEmpty || Filter.Operator == ODataOperator.IsNotEmpty;
 
 	private void _OperatorChanged(ODataOperator oDataOperator)
