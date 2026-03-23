@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
@@ -8,6 +10,7 @@ using ShiftSoftware.ShiftBlazor.Components.Print;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
 using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Filters.Builders;
 using ShiftSoftware.ShiftBlazor.Filters.Models;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
@@ -17,6 +20,7 @@ using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
+using ShiftSoftwareLocalization.Blazor;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
@@ -26,7 +30,7 @@ using System.Text.RegularExpressions;
 namespace ShiftSoftware.ShiftBlazor.Components;
 
 [CascadingTypeParameter(nameof(T))]
-public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponent, ISortableComponent, IFilterableComponent, IShiftList where T : ShiftEntityDTOBase, new()
+public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponent, IShiftList where T : ShiftEntityDTOBase, new()
 {
     [Inject] ISnackbar Snackbar { get; set; } = default!;
     [Inject] ODataQuery OData { get; set; } = default!;
@@ -39,7 +43,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
     [Inject] PrintService PrintService { get; set; } = default!;
-
+    [Inject] PersistentComponentState ApplicationState { get; set; } = default!;
 
     [CascadingParameter]
     protected IMudDialogInstance? MudDialog { get; set; }
@@ -123,6 +127,9 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// </summary>
     [Parameter]
     public string? Title { get; set; }
+
+    [Parameter]
+    public string? UniqueName { get; set; }
 
     [Parameter]
     public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
@@ -354,6 +361,12 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     [Parameter]
     public bool HeaderNowrap { get; set; } = true;
 
+    [Parameter]
+    public string? PagerClass { get; set; }
+
+    [Parameter]
+    public string? PagerStyle { get; set; }
+
     public Uri? CurrentUri { get; set; }
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = [];
@@ -367,7 +380,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     internal Size IconSize = Size.Medium;
     internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
     internal bool RenderAddButton = false;
-    internal int SelectedPageSize;
+    internal int _selectedPageSize;
     internal int[] PageSizes = [ 5, 10, 50, 100, 250, 500 ];
     internal bool? deleteFilter = false;
     internal string? ErrorMessage;
@@ -387,7 +400,20 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     private bool IsFilterPanelOpen { get; set; }
     public HashSet<Guid> ActiveOperations { get; set; } = [];
     private CancellationTokenSource? ReloadBlockTokenSource;
-    public bool IsLoading { get; set; } = true;
+    public bool IsLoading { get; set; }
+    private bool BackButtonsDisabled => CurrentPage == 0;
+    private bool ForwardButtonsDisabled => (CurrentPage + 1) * RowsPerPage >= GetItemsCount();
+    private string PagerInfoFormat
+    {
+        get
+        {
+            var firstItem = GetItemsCount() == 0 ? 0 : CurrentPage * RowsPerPage + 1;
+            var lastItem = Math.Min((CurrentPage + 1) * RowsPerPage, GetItemsCount());
+            var allItems = GetItemsCount();
+
+            return Loc[Resource.DataGridPager_InfoFormat, firstItem, lastItem, allItems];
+        }
+    }
 
     private TaskCompletionSource<GridData<T>> IndefiniteReloadTask = new();
     private CancellationTokenSource? ReloadCancellationTokenSource { get; set; }
@@ -409,6 +435,12 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             .AddClass("nowrap", HeaderNowrap)
             .Build();
 
+    protected string PagerClassname =>
+        new CssBuilder("mud-table-pagination-toolbar")
+            .AddClass("border-0")
+            .AddClass(PagerClass)
+            .Build();
+
     private List<Column<T>> DraggableColumns
     {
         get
@@ -428,15 +460,12 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
     }
 
-    internal Func<GridState<T>, Task<GridData<T>>>? ServerData = default;
-
-    private MudDataGrid<T>? _DataGrid;
     public MudDataGrid<T>? DataGrid
     {
-        get => _DataGrid;
+        get => field;
         set
         {
-            _DataGrid = value;
+            field = value;
             OnDataGridLoad();
             OnLoad.InvokeAsync();
         }
@@ -474,37 +503,139 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         RenderAddButton = !(DisableAdd || ComponentType == null || (TypeAuthAction != null && TypeAuthService?.Can(TypeAuthAction, Access.Write) != true));
         IconSize = Dense ? Size.Medium : Size.Large;
         ToolbarStyle = $"{ColorHelperClass.GetToolbarStyles(NavColor, NavIconFlatColor)}border: 0;";
-        ServerData = Values == null
-            ? new Func<GridState<T>, Task<GridData<T>>>(ServerReload)
-            : default;
         SortMode = DisableSorting
                     ? SortMode.None
                     : DisableMultiSorting
                         ? SortMode.Single
                         : SortMode.Multiple;
 
-        if (PageSize != null && !PageSizes.Any(x => x == PageSize))
-        {
-            PageSizes = PageSizes.Append(PageSize.Value).Order().ToArray();
-        }
 
         if (Values != null)
         {
             SelectState.Total = Values.Count;
         }
+    }
 
-        SelectedPageSize = 10;
-        IsFilterPanelOpen = true;
+    private GridData<T>? GridItems { get; set; }
+    public int RowsPerPage => _selectedPageSize;
+    public int CurrentPage { get; private set; }
+    private PersistingComponentStateSubscription persistingSubscription;
+
+    private OrderedDictionary<string, SortDirection> SortDefinitions { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        ReadSortDefinitions();
+
+        _selectedPageSize = await SettingManager.GetListPageSize(GetListIdentifier(), PageSize);
+        IsFilterPanelOpen = await SettingManager.GetFilterPanelState(GetListIdentifier(), FilterPanelDefaultOpen);
+
+        // if the selected page size is not in the dropdown list, add it
+        if (!PageSizes.Any(x => x == _selectedPageSize))
+        {
+            PageSizes = PageSizes.Append(_selectedPageSize).Order().ToArray();
+        }
+
+        if (!ApplicationState.TryTakeFromJson<GridData<T>>(
+            UniqueName + nameof(GridItems), out var restoredGridItems))
+        {
+            await ReloadServerData();
+        }
+        else
+        {
+            GridItems = restoredGridItems;
+            Values = restoredGridItems?.Items.ToList();
+        }
+
+        persistingSubscription = ApplicationState.RegisterOnPersisting(PersistItems);
+
+        await base.OnInitializedAsync();
+    }
+
+    private Task PersistItems()
+    {
+        ApplicationState.PersistAsJson(UniqueName + nameof(GridItems), GridItems);
+        return Task.CompletedTask;
+    }
+    
+    private void ReadSortDefinitions()
+    {
+        // Add sort definitions from parameter
+        foreach (var sort in Sort)
+        {
+            SortDefinitions.TryAdd(sort.Key, sort.Value);
+        }
+
+        // Add sort definitions from ChildContent
+        if (ChildContent == null)
+            return;
+
+        var builder = new RenderTreeBuilder();
+        var childContent = ChildContent(new(this));
+        childContent?.Invoke(builder);
+
+#pragma warning disable BL0006 // Do not use RenderTree types
+        // https://learn.microsoft.com/en-us/aspnet/core/diagnostics/bl0006?view=aspnetcore-10.0
+        try
+        {
+            var frames = builder.GetFrames().Array;
+
+            for (var i = 0; ; i++)
+            {
+                var frame = frames[i];
+                if (frame.FrameType == RenderTreeFrameType.Component && !(typeof(IFilterBuilder).IsAssignableFrom(frame.ComponentType) || frame.ComponentType.GetGenericTypeDefinition() == typeof(Sort<,>)))
+                {
+                    break;
+                }
+
+                if (frame.FrameType == RenderTreeFrameType.Component && frame.ComponentType.GetGenericTypeDefinition() == typeof(Sort<,>))
+                {
+                    var sortPropertyFrame = frames[i + 1];
+                    var sortDirectionFrame = frames[i + 2];
+                    var PropertyPath = Misc.GetPropertyPath((LambdaExpression)sortPropertyFrame.AttributeValue);
+                    var dir = (SortDirection)sortDirectionFrame.AttributeValue;
+
+                    SortDefinitions.TryAdd(PropertyPath, dir);
+                }
+
+                if (frame.FrameType == RenderTreeFrameType.Component && typeof(IFilterBuilder).IsAssignableFrom(frame.ComponentType))
+                {
+                    var attrs = new Dictionary<string, object>();
+                    for (var j = i + 1; ; j++)
+                    {
+                        var attrFrame = frames[j];
+                        if (attrFrame.FrameType == RenderTreeFrameType.Attribute)
+                        {
+                            attrs.Add(attrFrame.AttributeName, attrFrame.AttributeValue);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    var type = frame.ComponentType;
+                    var filter = (IFilterBuilder?)Activator.CreateInstance(type);
+                    foreach (var attr in attrs)
+                    {
+                        type.GetProperty(attr.Key)?.SetValue(filter, attr.Value);
+                    }
+
+                    filter?.Parent = this;
+                    filter?.Build();
+                }
+            }
+        }
+        catch (Exception)
+        {
+        }
+#pragma warning restore BL0006 // Do not use RenderTree types
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            SelectedPageSize = await SettingManager.GetListPageSize(GetListIdentifier(), PageSize);
-            IsFilterPanelOpen = await SettingManager.GetFilterPanelState(GetListIdentifier(), FilterPanelDefaultOpen);
-            await DataGrid!.SetRowsPerPageAsync(SelectedPageSize);
-
             if (!DisableGridEditor)
             {
                 var columnStates = await SettingManager.GetColumnState(GetListIdentifier());
@@ -516,11 +647,6 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
 
         _ = JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
-    }
-
-    protected override bool ShouldRender()
-    {
-        return ReadyToRender;
     }
 
     protected override void OnParametersSet()
@@ -538,7 +664,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         {
             PreviousFilters = currentFilters;
             SelectState.Clear();
-            DataGrid?.ReloadServerData();
+            ReloadServerData();
         }
 
         if (DataGrid == null)
@@ -555,7 +681,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
         if (DataGrid.Virtualize != EnableVirtualization && Values == null)
         {
-            DataGrid.ReloadServerData();
+            ReloadServerData();
         }
     }
 
@@ -587,7 +713,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         var result = await ShiftModal.Open(ComponentType, key, openMode, parameters);
         if (result != null && result.Canceled != true)
         {
-            await DataGrid!.ReloadServerData();
+            await ReloadServerData();
         }
         IsModalOpen = false;
         return result;
@@ -598,12 +724,10 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// </summary>
     /// <param name="field">The field by which the data should be sorted.</param>
     /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
-    public async Task SetSortAsync(string field, SortDirection sortDirection)
+    public Task SetSortAsync(string field, SortDirection sortDirection)
     {
-        if (DataGrid != null)
-        {
-            await DataGrid.SetSortAsync(field, sortDirection, null);
-        }
+        SetSort(field, sortDirection);
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -613,9 +737,22 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// <param name="sortDirection">The direction of sorting (ascending or descending).</param>
     public void SetSort(string field, SortDirection sortDirection)
     {
+        SortDefinitions.TryAdd(field, sortDirection);
+    }
+
+    public void SetSortUI(string field, SortDirection sortDirection)
+    {
         var sort = new SortDefinition<T>(field, sortDirection == SortDirection.Descending, DataGrid?.SortDefinitions.Count ?? 0, default!);
         DataGrid?.SortDefinitions.Add(field, sort);
         InvokeAsync(StateHasChanged);
+    }
+
+    public async Task SetSortUIAsync(string field, SortDirection sortDirection)
+    {
+        if (DataGrid != null)
+        {
+            await DataGrid.SetSortAsync(field, sortDirection, null);
+        }
     }
 
     /// <summary>
@@ -665,18 +802,18 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         // if so, wait for them to finish before proceeding,
         // only if it is the first request.
         // Operations could be things like Filter, Sort...
-        if (!ReadyToRender && ActiveOperations.Count > 0)
-        {
-            try
-            {
-                ReloadBlockTokenSource = new CancellationTokenSource();
-                await Task.Delay(300, ReloadBlockTokenSource.Token);
-            }
-            catch (Exception) { }
+        //if (!ReadyToRender && ActiveOperations.Count > 0)
+        //{
+        //    try
+        //    {
+        //        ReloadBlockTokenSource = new CancellationTokenSource();
+        //        await Task.Delay(300, ReloadBlockTokenSource.Token);
+        //    }
+        //    catch (Exception) { }
 
-            ReloadBlockTokenSource?.Dispose();
-            ReloadBlockTokenSource = null;
-        }
+        //    ReloadBlockTokenSource?.Dispose();
+        //    ReloadBlockTokenSource = null;
+        //}
 
         ReloadCancellationTokenSource?.Cancel();
         ReloadCancellationTokenSource?.Dispose();
@@ -689,12 +826,6 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
         try
         {
-            // Save current PageSize as user preference 
-            if (state.PageSize != SelectedPageSize)
-            {
-                _ = SettingManager.SetListPageSize(GetListIdentifier(), state.PageSize);
-                SelectedPageSize = state.PageSize;
-            }
 
             var url = BuildODataUrl(state);
             if (string.IsNullOrWhiteSpace(url))
@@ -772,10 +903,11 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                 }
                 StateHasChanged();
             }
-
-
         }
 
+        GridItems = gridData;
+        Values = GridItems.Items.ToList();
+        StateHasChanged();
         return gridData;
     }
 
@@ -783,10 +915,9 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     {
         try
         {
-            // Convert MudBlazor's SortDefinitions to OData query
-            if (state.SortDefinitions.Count > 0)
+            if (SortDefinitions.Count > 0)
             {
-                var sortList = state.SortDefinitions.ToODataFilter();
+                var sortList = SortDefinitions.ToODataFilter();
                 builder = builder.AddQueryOption("$orderby", string.Join(',', sortList));
             }
         }
@@ -875,16 +1006,16 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
             if (compId == Id && data != null)
             {
-                DataGrid!.ReloadServerData();
+                ReloadServerData();
             }
         }
     }
 
     internal void OnDataGridLoad()
     {
-        foreach (var sort in Sort)
+        foreach (var sort in SortDefinitions)
         {
-            SetSort(sort.Key, sort.Value);
+            SetSortUI(sort.Key, sort.Value);
         }
     }
 
@@ -916,7 +1047,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                 break;
         }
 
-        _ = DataGrid?.ReloadServerData();
+        _ = ReloadServerData();
     }
 
     private FilterDefinition<T> CreateDeleteFilter(bool value = true)
@@ -953,7 +1084,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     private string GetListIdentifier()
     {
-        return $"{EntitySet}_{typeof(T).Name}";
+        return UniqueName ?? $"{EntitySet}_{typeof(T).Name}";
     }
 
     #region Columns
@@ -1114,200 +1245,195 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     #endregion
 
-    internal async Task RerenderDataGrid()
+    #region Export  
+
+    public static Dictionary<string, string>? GetEnumMap(Type? enumType)
     {
-        await InvokeAsync(StateHasChanged);
+        if (enumType == null || !enumType.IsEnum)
+            return null;
+
+        var result = new Dictionary<string, string>();
+
+        foreach (Enum val in Enum.GetValues(enumType))
+        {
+            var description = val.Describe(); //description ?? name;
+
+            // Add both string and int representations of the enum value
+            // This is useful for cases where the enum value is used as a string in some contexts and as an integer in others.
+
+            //The Name property of the enum value is used as the key for the string representation.
+            result[val.ToString()] = description;
+            // ["SomeEnum"] = "Some Description"
+
+
+            //The integer value of the enum is converted to a string and used as the key for the integer representation.
+            result[Convert.ToInt32(val).ToString()] = description;
+            // ["1"] = "Some Description"
+        }
+
+        return result;
     }
 
-        #region Export  
+    internal async Task ExportList()
+    {
+        if (ExportIsInProgress)
+            return;
 
-        public static Dictionary<string, string>? GetEnumMap(Type? enumType)
+        try
         {
-            if (enumType == null || !enumType.IsEnum)
-                return null;
+            this.ExportIsInProgress = true;
 
-            var result = new Dictionary<string, string>();
+            var payload = BuildExportPayload();
 
-            foreach (Enum val in Enum.GetValues(enumType))
-            {
-                var description = val.Describe(); //description ?? name;
+            Snackbar.RemoveByKey($"export_table_{payload.Name}");
+            MessageService.Show($"📦 '{payload.Name}' export started", severity: Severity.Info, modalColor: Color.Info, icon: Icons.Material.TwoTone.FileCopy, key: $"export_table_{payload.Name}");
 
-                // Add both string and int representations of the enum value
-                // This is useful for cases where the enum value is used as a string in some contexts and as an integer in others.
-
-                //The Name property of the enum value is used as the key for the string representation.
-                result[val.ToString()] = description;
-                // ["SomeEnum"] = "Some Description"
-
-
-                //The integer value of the enum is converted to a string and used as the key for the integer representation.
-                result[Convert.ToInt32(val).ToString()] = description;
-                // ["1"] = "Some Description"
-            }
-
-            return result;
+            await JsRuntime.InvokeVoidAsync("tableExport", payload, dotNetRef);
         }
-
-        internal async Task ExportList()
+        catch (Exception e)
         {
-            if (ExportIsInProgress)
-                return;
-
-            try
-            {
-                this.ExportIsInProgress = true;
-
-                var payload = BuildExportPayload();
-
-                Snackbar.RemoveByKey($"export_table_{payload.Name}");
-                MessageService.Show($"📦 '{payload.Name}' export started", severity: Severity.Info, modalColor: Color.Info, icon: Icons.Material.TwoTone.FileCopy, key: $"export_table_{payload.Name}");
-
-                await JsRuntime.InvokeVoidAsync("tableExport", payload, dotNetRef);
-            }
-            catch (Exception e)
-            {
-                MessageService.Show($"❌ Export failed: {e.Message}", Severity.Error);
-                this.ExportIsInProgress = false;
-            }
+            MessageService.Show($"❌ Export failed: {e.Message}", Severity.Error);
+            this.ExportIsInProgress = false;
         }
+    }
 
-        internal ExportPayload BuildExportPayload()
-        {
-            var name = Title != null && ExportTitleRegex().IsMatch(Title)
-                ? Title
-                : EntitySet ?? typeof(T).Name;
+    internal ExportPayload BuildExportPayload()
+    {
+        var name = Title != null && ExportTitleRegex().IsMatch(Title)
+            ? Title
+            : EntitySet ?? typeof(T).Name;
 
-            name = ExportTitleRegex().Replace(name, "");
-            var date = DateTime.Now.ToString("yyyy-MM-dd");
-            var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}.csv";
+        name = ExportTitleRegex().Replace(name, "");
+        var date = DateTime.Now.ToString("yyyy-MM-dd");
+        var fileName = string.IsNullOrWhiteSpace(name) ? $"file_{date}.csv" : $"{name}.csv";
 
-            var urlValue = Values == null && CurrentUri != null
-                ? CleanExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "")
-                : string.Empty;
-            var values = Values ?? [];
+        var urlValue = Values == null && CurrentUri != null
+            ? CleanExportUrlRegex().Replace(CurrentUri.AbsoluteUri, "")
+            : string.Empty;
+        var values = Values ?? [];
 
-            var foreignColumns = DataGrid!
-                    .RenderedColumns
-                    .Where(x => x is IForeignColumn)
-                    .Select(x =>
-                    {
-                        var foreignColumn = x as IForeignColumn;
-
-                        var fullName = foreignColumn!.GetType().GetGenericArguments().Last().FullName;
-
-                        var parts = fullName!.Split('.');
-                        var tableName = parts.Length >= 2 ? parts[^2] : fullName;
-
-                        foreignColumn.ForeignEntityField = tableName;
-
-                        return foreignColumn;
-                    });
-
-            var columns = DataGrid!
+        var foreignColumns = DataGrid!
                 .RenderedColumns
-                .Where(x => x.GetType().GetProperty(nameof(PropertyColumn<object, object>.Property)) != null)
+                .Where(x => x is IForeignColumn)
                 .Select(x =>
                 {
-                    var key = x.PropertyName;
-                    if (x.GetType().GetProperty(nameof(PropertyColumn<object, object>.Property))?.GetValue(x) is LambdaExpression propertyExpression)
-                    {
-                        key = Misc.GetPropertyPath(propertyExpression).Split(".").First();
-                    }
+                    var foreignColumn = x as IForeignColumn;
 
-                    var property = typeof(T).GetProperty(key) ?? null;
-                    var propType = property != null
-                        ? Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType
-                        : null;
+                    var fullName = foreignColumn!.GetType().GetGenericArguments().Last().FullName;
 
-                    var attr = property?.GetCustomAttribute<ExportOptionsAttribute>();
-                    string? format = null;
-                    ExportCustomColumn? customColumn = null;
+                    var parts = fullName!.Split('.');
+                    var tableName = parts.Length >= 2 ? parts[^2] : fullName;
 
-                    if (attr?.Format != null && attr?.Args?.Count() > 0)
-                    {
-                        customColumn = new ExportCustomColumn(attr.Format, attr.Args);
-                    }
-                    else if (attr?.Format != null)
-                    {
-                        format = attr?.Format;
-                    }
+                    foreignColumn.ForeignEntityField = tableName;
 
-                    var enumValues = propType != null && propType.IsEnum
-                        ? GetEnumMap(propType)
-                        : null;
+                    return foreignColumn;
+                });
 
-                    // don't export column if the column is hidden or is readonly with no CustomColumnExport attr
-                    var isHidden = x.Hidden || attr?.Hidden == true || (property?.CanWrite == false && customColumn == null);
+        var columns = DataGrid!
+            .RenderedColumns
+            .Where(x => x.GetType().GetProperty(nameof(PropertyColumn<object, object>.Property)) != null)
+            .Select(x =>
+            {
+                var key = x.PropertyName;
+                if (x.GetType().GetProperty(nameof(PropertyColumn<object, object>.Property))?.GetValue(x) is LambdaExpression propertyExpression)
+                {
+                    key = Misc.GetPropertyPath(propertyExpression).Split(".").First();
+                }
 
-                    if (
-                        x.GetType().GetProperty(nameof(PropertyColumnExtended<T, object>.ForceExportIfHidden)) is PropertyInfo propertyInfo &&
-                        propertyInfo.GetValue(x) is bool forceExport &&
-                        forceExport
-                    )
-                    {
-                        isHidden = false;
-                    }
+                var property = typeof(T).GetProperty(key) ?? null;
+                var propType = property != null
+                    ? Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType
+                    : null;
 
-                    var type = propType?.Name;
+                var attr = property?.GetCustomAttribute<ExportOptionsAttribute>();
+                string? format = null;
+                ExportCustomColumn? customColumn = null;
+
+                if (attr?.Format != null && attr?.Args?.Count() > 0)
+                {
+                    customColumn = new ExportCustomColumn(attr.Format, attr.Args);
+                }
+                else if (attr?.Format != null)
+                {
+                    format = attr?.Format;
+                }
+
+                var enumValues = propType != null && propType.IsEnum
+                    ? GetEnumMap(propType)
+                    : null;
+
+                // don't export column if the column is hidden or is readonly with no CustomColumnExport attr
+                var isHidden = x.Hidden || attr?.Hidden == true || (property?.CanWrite == false && customColumn == null);
+
+                if (
+                    x.GetType().GetProperty(nameof(PropertyColumnExtended<T, object>.ForceExportIfHidden)) is PropertyInfo propertyInfo &&
+                    propertyInfo.GetValue(x) is bool forceExport &&
+                    forceExport
+                )
+                {
+                    isHidden = false;
+                }
+
+                var type = propType?.Name;
                     
-                    if (property?.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType == typeof(LocalizedTextJsonConverter))
-                        type = "LocalizedText";
+                if (property?.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType == typeof(LocalizedTextJsonConverter))
+                    type = "LocalizedText";
 
-                    return new ExportColumn(
-                        key,
-                        type,
-                        format,
-                        enumValues,
-                        customColumn,
-                        x.Title,
-                        isHidden
-                    );
-                })
-                .ToList();
+                return new ExportColumn(
+                    key,
+                    type,
+                    format,
+                    enumValues,
+                    customColumn,
+                    x.Title,
+                    isHidden
+                );
+            })
+            .ToList();
 
-            var lang = SettingManager.GetCulture().TwoLetterISOLanguageName;
+        var lang = SettingManager.GetCulture().TwoLetterISOLanguageName;
 
-            return new(
-                name,
-                urlValue,
-                values,
-                columns,
-                foreignColumns,
-                fileName,
-                lang
-            );
-        }
+        return new(
+            name,
+            urlValue,
+            values,
+            columns,
+            foreignColumns,
+            fileName,
+            lang
+        );
+    }
 
-        public sealed record ExportPayload(string Name, string UrlValue, IReadOnlyList<T>? Values, IEnumerable<ExportColumn> Columns, IEnumerable<IForeignColumn> ForeignColumns, string FileName, string Language);
-        public sealed record ExportColumn(string Key, string? type, string? Format, IReadOnlyDictionary<string, string>? EnumValues, ExportCustomColumn? CustomColumn, string Title, bool Hidden);
-        public sealed record ExportCustomColumn(string Format, string[] Args);
+    public sealed record ExportPayload(string Name, string UrlValue, IReadOnlyList<T>? Values, IEnumerable<ExportColumn> Columns, IEnumerable<IForeignColumn> ForeignColumns, string FileName, string Language);
+    public sealed record ExportColumn(string Key, string? type, string? Format, IReadOnlyDictionary<string, string>? EnumValues, ExportCustomColumn? CustomColumn, string Title, bool Hidden);
+    public sealed record ExportCustomColumn(string Format, string[] Args);
 
-        [JSInvokable]
-        public void OnExportProcessing(string name)
-        {
-            Snackbar.RemoveByKey($"export_table_{name}");
-            MessageService.Show($"'{name}' export is still processing... This might take a while.", severity: Severity.Warning, modalColor: Color.Warning, icon: Icons.Material.Filled.MoreTime, key: $"export_table_{name}");
-        }
+    [JSInvokable]
+    public void OnExportProcessing(string name)
+    {
+        Snackbar.RemoveByKey($"export_table_{name}");
+        MessageService.Show($"'{name}' export is still processing... This might take a while.", severity: Severity.Warning, modalColor: Color.Warning, icon: Icons.Material.Filled.MoreTime, key: $"export_table_{name}");
+    }
 
-        [JSInvokable]
-        public void OnExportProcessed(bool isSuccess, string message, string name, string? alertTitle = null)
-        {
-            this.ExportIsInProgress = false;
+    [JSInvokable]
+    public void OnExportProcessed(bool isSuccess, string message, string name, string? alertTitle = null)
+    {
+        this.ExportIsInProgress = false;
 
-            Snackbar.RemoveByKey($"export_table_{name}");
+        Snackbar.RemoveByKey($"export_table_{name}");
 
-            if (isSuccess)
-                MessageService.Show($"'{name}' export completed successfully!", severity: Severity.Success, modalColor: Color.Success, icon: Icons.Material.TwoTone.CheckCircle, key: $"export_table_{name}");
-            else
-                MessageService.Show(alertTitle ?? Loc["Export failed"], alertTitle ?? Loc["Export failed"], message, severity: Severity.Error, buttonText: Loc["DropdownViewButtonText"], modalColor: Color.Error, key: $"export_table_{name}");
+        if (isSuccess)
+            MessageService.Show($"'{name}' export completed successfully!", severity: Severity.Success, modalColor: Color.Success, icon: Icons.Material.TwoTone.CheckCircle, key: $"export_table_{name}");
+        else
+            MessageService.Show(alertTitle ?? Loc["Export failed"], alertTitle ?? Loc["Export failed"], message, severity: Severity.Error, buttonText: Loc["DropdownViewButtonText"], modalColor: Color.Error, key: $"export_table_{name}");
             
-            StateHasChanged();
-        }
+        StateHasChanged();
+    }
 
-        [GeneratedRegex("[^a-zA-Z]")]
-        private static partial Regex ExportTitleRegex();
-        [GeneratedRegex("\\$skip=[0-9]+&?|\\$top=[0-9]+&?")]
-        private static partial Regex CleanExportUrlRegex();
+    [GeneratedRegex("[^a-zA-Z]")]
+    private static partial Regex ExportTitleRegex();
+    [GeneratedRegex("\\$skip=[0-9]+&?|\\$top=[0-9]+&?")]
+    private static partial Regex CleanExportUrlRegex();
 
     #endregion
 
@@ -1354,8 +1480,20 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
         else
         {
-            Debouncer.Debounce(100, DataGrid!.ReloadServerData);
+            Debouncer.Debounce(100, ReloadServerData);
         }
+    }
+
+    private Task ReloadServerData()
+    {
+        var state = new GridState<T>
+        {
+            PageSize = _selectedPageSize,
+            Page = CurrentPage,
+            SortDefinitions = DataGrid?.SortDefinitions.Values.OrderBy(sd => sd.Index).ToList() ?? [],
+            FilterDefinitions = DataGrid?.FilterDefinitions.ToList() ?? [],
+        };
+        return ServerReload(state);
     }
 
     private async Task PrintItem(string id)
@@ -1387,7 +1525,69 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         dotNetRef?.Dispose();
         ShiftBlazorEvents.OnModalClosed -= ShiftBlazorEvents_OnModalClosed;
         IShortcutComponent.Remove(Id);
+        persistingSubscription.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    public int GetItemsCount()
+    {
+        return GridItems?.TotalItems ?? 0;
+    }
+
+    //private async Task RowsPerPageChanged(int pageSize)
+    //{
+    //    await SettingManager.SetListPageSize(GetListIdentifier(), pageSize);
+    //    SelectedPageSize = pageSize;
+    //    await ReloadServerData();
+    //}
+
+    public async Task SetRowsPerPageAsync(int size)
+    {
+        await SetRowsPerPageAsync(size, true);
+    }
+
+    public async Task SetRowsPerPageAsync(int size, bool resetPage)
+    {
+        if (_selectedPageSize == size)
+            return;
+
+        await SettingManager.SetListPageSize(GetListIdentifier(), size);
+        _selectedPageSize = size;
+
+        if (resetPage)
+        {
+            CurrentPage = 0;
+            await ReloadServerData();
+
+            //var currentPageHasChanged = _currentPage != 0;
+            //_currentPage = 0;
+            //if (currentPageHasChanged)
+            //    await CurrentPageChanged.InvokeAsync(_currentPage);
+        }
+
+        //await RowsPerPageChanged.InvokeAsync(_rowsPerPage.Value);
+
+        StateHasChanged();
+
+        //if (_isFirstRendered)
+        //    await InvokeAsync(InvokeServerLoadFunc);
+    }
+
+    private int numPages => (int)Math.Ceiling(GridItems.TotalItems / (double)RowsPerPage);
+
+    public void NavigateTo(Page page)
+    {
+        CurrentPage = page switch
+        {
+            Page.First => 0,
+            Page.Last => Math.Max(0, numPages - 1),
+            Page.Next => Math.Min(numPages - 1, CurrentPage + 1),
+            Page.Previous => Math.Max(0, CurrentPage - 1),
+            _ => CurrentPage
+        };
+        ReloadServerData();
+
+        DataGrid?.GroupItems();
     }
 }
 

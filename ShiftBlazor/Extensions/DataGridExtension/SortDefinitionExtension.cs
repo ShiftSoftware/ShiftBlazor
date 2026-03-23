@@ -15,10 +15,15 @@ public static class SortDefinitionExtension
         return GetFilterList(sortDefinitions);
     }
 
+    public static IEnumerable<string> ToODataFilter(this OrderedDictionary<string, SortDirection> sortDefinitions)
+    {
+        return sortDefinitions.Select(x => Misc.GetFieldFromPropertyPath(x.Key) + (x.Value == SortDirection.Descending ? " desc" : ""));
+    }
+
     private static IEnumerable<string> GetFilterList<T>(IEnumerable<SortDefinition<T>> sortDefinitions)
     {
         return sortDefinitions
                 .OrderBy(x => x.Index)
-                .Select(x => Misc.GetFieldFromPropertyPath(x.SortBy) +  (x.Descending ? " desc" : ""));
+                .Select(x => Misc.GetFieldFromPropertyPath(x.SortBy) + (x.Descending ? " desc" : ""));
     }
 }

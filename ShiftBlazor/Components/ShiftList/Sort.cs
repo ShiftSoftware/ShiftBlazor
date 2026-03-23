@@ -16,16 +16,4 @@ public class Sort<T, TProperty> : ComponentBase where T : ShiftEntityDTOBase, ne
     [Parameter]
     public SortDirection Direction { get; set; } = SortDirection.Ascending;
 
-    [CascadingParameter]
-    public ISortableComponent? SortableComponent { get; set; }
-
-    protected override void OnInitialized()
-    {
-        if (SortableComponent != null)
-        {
-            var PropertyPath = Misc.GetExpressionPath(Property);
-            SortableComponent.SetSort(PropertyPath, Direction);
-        }
-    }
-
 }

@@ -27,6 +27,7 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] ODataQuery OData { get; set; } = default!;
     [Inject] public SettingManager SettingManager { get; private set; } = default!;
+    [Inject] PersistentComponentState ApplicationState { get; set; } = default!;
 
     [Parameter]
     [EditorRequired]
@@ -67,7 +68,7 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
     public string TEntityTextField { get; private set; } = string.Empty;
     public string TEntityValueField { get; private set; } = nameof(ShiftEntityDTOBase.ID);
 
-    internal bool IsReady = false;
+    internal bool IsReady { get; set; }
     internal List<TEntity> RemoteData { get; set; } = [];
     internal bool IsFilterOpen = false;
     internal string FilterIcon => FilterItems.Count > 0 ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt;
@@ -78,6 +79,7 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
     private bool IsForbiddenStatusCode;
     private bool FailedToLoadData;
     private string? ErrorMessage = null;
+    private PersistingComponentStateSubscription persistingSubscription;
 
     protected override void OnInitialized()
     {
@@ -96,7 +98,23 @@ public partial class ForeignColumn<T, TProperty, TEntity> : PropertyColumnExtend
 
         Url = IODataRequestComponent<T>.GetPath(this);
 
+
+        // instead of using PersistentState, maybe we should call RequestForeignData in OnAfterRender
+        if (ApplicationState.TryTakeFromJson<bool>(
+            (this.Title ?? this.PropertyName) + nameof(IsReady), out var restored))
+        {
+            IsReady = restored;
+        }
+
+        persistingSubscription = ApplicationState.RegisterOnPersisting(PersistItems);
+
         base.OnInitialized();
+    }
+
+    private Task PersistItems()
+    {
+        ApplicationState.PersistAsJson((this.Title ?? this.PropertyName) + nameof(IsReady), IsReady);
+        return Task.CompletedTask;
     }
 
     protected override void OnParametersSet()

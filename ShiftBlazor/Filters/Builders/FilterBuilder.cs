@@ -11,7 +11,7 @@ using System.Reflection.Metadata;
 
 namespace ShiftSoftware.ShiftBlazor.Filters.Builders;
 
-public abstract class FilterBuilder<T, TProperty> : ComponentBase
+public abstract class FilterBuilder<T, TProperty> : ComponentBase, IFilterBuilder
 {
     [Parameter]
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -67,6 +67,11 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
     protected bool HasChanged = false;
 
     protected override void OnInitialized()
+    {
+        Build();
+    }
+
+    public void Build()
     {
         if (Parent == null)
         {
