@@ -32,7 +32,7 @@ public class SettingManager
     public DeviceInfo Device { get => field; internal set => field = value; } = new();
     public static AppConfiguration Configuration { get => field; internal set => field = value; } = new();
 
-private bool Initialized = false;
+    private bool Initialized = false;
 
     public SettingManager(ICookieService cookieService,
                           ILocalStorageService localStorageService,
@@ -60,6 +60,9 @@ private bool Initialized = false;
             return;
 
         var settings = await CookieService.GetValueAsync<AppSetting>(Key);
+        var explorerSettings = await CookieService.GetValueAsync<Dictionary<string, FileExplorerSettings>>($"{Key}-{nameof(FileExplorer)}");
+        var datagridSettings = await CookieService.GetValueAsync<Dictionary<string, DataGridSettings>>($"{Key}-{nameof(DataGrid)}");
+
         var cultureCookie = await CookieService.GetAsync(CookieRequestCultureProvider.DefaultCookieName);
         var cultures = cultureCookie?.Value;
 
@@ -68,14 +71,16 @@ private bool Initialized = false;
             : null;
 
         Settings = settings ?? new AppSetting();
+        FileExplorer = explorerSettings ?? new();
+        DataGrid = datagridSettings ?? new();
         SelectedLanguage = Configuration.Languages.FirstOrDefault(l => l.CultureName == cultureName) ?? DefaultAppSetting.Language;
 
         if (wasm)
         {
             UpdateCulture(cultureName);
 
-            FileExplorer = await LocalStorageService.GetItemAsync<Dictionary<string, FileExplorerSettings>>($"{Key}-{nameof(FileExplorer)}") ?? new();
-            DataGrid = await LocalStorageService.GetItemAsync<Dictionary<string, DataGridSettings>>($"{Key}-{nameof(DataGrid)}") ?? new();
+            //FileExplorer = await LocalStorageService.GetItemAsync<Dictionary<string, FileExplorerSettings>>($"{Key}-{nameof(FileExplorer)}") ?? new();
+            //DataGrid = await LocalStorageService.GetItemAsync<Dictionary<string, DataGridSettings>>($"{Key}-{nameof(DataGrid)}") ?? new();
         }
 
         Initialized = true;
@@ -284,7 +289,7 @@ private bool Initialized = false;
         if (Settings.IsDrawerOpen != open)
         {
             Settings.IsDrawerOpen = open;
-            SetItem(Key, Settings);
+            SetItem(Key, Settings, StorageType.Cookie);
         }
 
         return GetDrawerState();
@@ -315,7 +320,7 @@ private bool Initialized = false;
     public void SetFileExplorerSetting(string id, FileExplorerSettings setting)
     {
         var fileExplorer = setting;
-        SetItem($"{Key}-{nameof(FileExplorer)}", FileExplorer);
+        SetItem($"{Key}-{nameof(FileExplorer)}", FileExplorer, StorageType.Cookie);
     }
 
     public async Task<FileExplorerSettings> GetFileExplorerSetting(string id)
@@ -329,7 +334,7 @@ private bool Initialized = false;
         var datagrid = await GetDataGridSettings(id);
 
         datagrid.ColumnStates = columnNames;
-        SetItem($"{Key}-{nameof(DataGrid)}", DataGrid);
+        SetItem($"{Key}-{nameof(DataGrid)}", DataGrid, StorageType.Cookie);
     }
 
     public async Task<List<ColumnState>> GetColumnState(string id)
@@ -343,7 +348,7 @@ private bool Initialized = false;
         var datagrid = await GetDataGridSettings(id);
 
         datagrid.PageSize = size;
-        SetItem($"{Key}-{nameof(DataGrid)}", DataGrid);
+        SetItem($"{Key}-{nameof(DataGrid)}", DataGrid, StorageType.Cookie);
     }
 
     public async Task<int> GetListPageSize(string id, int? defaultSize = null)
@@ -361,7 +366,7 @@ private bool Initialized = false;
         var datagrid = await GetDataGridSettings(id);
 
         datagrid.IsFilterPanelOpen = open;
-        SetItem($"{Key}-{nameof(DataGrid)}", DataGrid);
+        SetItem($"{Key}-{nameof(DataGrid)}", DataGrid, StorageType.Cookie);
 
         return open;
     }
