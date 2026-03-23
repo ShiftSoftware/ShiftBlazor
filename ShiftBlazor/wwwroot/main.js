@@ -1,8 +1,15 @@
-﻿const getHeaders = () => ({
-    cookie: document.cookie,
-    "Content-Type": "application/json",
-    authorization: "Bearer " + JSON.parse(localStorage.token).Token,
-});
+﻿const getHeaders = () => {
+    var headers = {
+        cookie: document.cookie,
+        "Content-Type": "application/json",
+    };
+
+    try {
+        headers.authorization = "Bearer " + JSON.parse(localStorage.token).Token;
+    } catch { }
+
+    return headers;
+};
    
 window.tableExport = (payload, dotNetObjectRef) => {
     const worker = new Worker(

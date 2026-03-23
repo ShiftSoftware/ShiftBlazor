@@ -144,7 +144,7 @@ public class ShiftModal
     /// </summary>
     public async Task UpdateModals()
     {
-        var url = await JsRuntime.GetValueAsync<string>("window.location.href");
+        var url = NavManager.Uri;
         var modals = ParseModalUrl(url);
 
         if (modals.Count == 0)

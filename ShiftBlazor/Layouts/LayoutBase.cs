@@ -45,6 +45,7 @@ public class LayoutBase : LayoutComponentBase
 
     private async Task OpenModals()
     {
+        await Task.Delay(10);
         await ShiftModal.UpdateModals();
     }
 

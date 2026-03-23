@@ -209,7 +209,6 @@ public static class Misc
         return string.Join(".", path);
     }
 
-
     // Mud's FieldType.Identify doesn't work with DateTimeOffset
     public static bool IsDateTime(Type? type)
     {
