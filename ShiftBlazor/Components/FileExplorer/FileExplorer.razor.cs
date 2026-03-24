@@ -274,18 +274,40 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
             LoggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
         }
 
-        var userSettings = await SettingManager.GetFileExplorerSetting(SettingKey);
-        Settings = userSettings ?? DefaultSettings;
-        SetView(userSettings?.View ?? View ?? DefaultSettings.View, false);
+        if (RendererInfo.Name == "WebAssembly")
+        {
+            var userSettings = await SettingManager.GetFileExplorerSetting(SettingKey);
+            Settings = userSettings ?? DefaultSettings;
+            SetView(userSettings?.View ?? View ?? DefaultSettings.View, false);
+            
+            var urlPath = await JsRuntime.InvokeAsync<string?>("getQueryParam", URLPathKey);
 
-        var urlPath = await JsRuntime.InvokeAsync<string?>("getQueryParam", URLPathKey);
+            if (!string.IsNullOrWhiteSpace(urlPath))
+                await GoToPath(GetRoot() + urlPath);
+            else if (!string.IsNullOrWhiteSpace(CurrentPath))
+                await GoToPath(GetRoot() + CurrentPath);
+            else
+                await FetchData();
+        }
+    }
 
-        if (!string.IsNullOrWhiteSpace(urlPath))
-            await GoToPath(GetRoot() + urlPath);
-        else if (!string.IsNullOrWhiteSpace(CurrentPath))
-            await GoToPath(GetRoot() + CurrentPath);
-        else
-            await FetchData();
+    override protected async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && RendererInfo.Name != "WebAssembly")
+        {
+            var userSettings = await SettingManager.GetFileExplorerSetting(SettingKey);
+            Settings = userSettings ?? DefaultSettings;
+            SetView(userSettings?.View ?? View ?? DefaultSettings.View, false);
+
+            var urlPath = await JsRuntime.InvokeAsync<string?>("getQueryParam", URLPathKey);
+
+            if (!string.IsNullOrWhiteSpace(urlPath))
+                await GoToPath(GetRoot() + urlPath);
+            else if (!string.IsNullOrWhiteSpace(CurrentPath))
+                await GoToPath(GetRoot() + CurrentPath);
+            else
+                await FetchData();
+        }
     }
 
     public async ValueTask HandleShortcut(KeyboardKeys key)
@@ -456,6 +478,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
         }
 
         IsLoading = false;
+        StateHasChanged();
     }
 
     private void SetBreadcrumb(string path = "")

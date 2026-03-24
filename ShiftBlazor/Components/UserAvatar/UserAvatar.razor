@@ -1,6 +1,6 @@
 ﻿@using ShiftSoftware.ShiftIdentity.Blazor;
 @using ShiftSoftware.ShiftIdentity.Core;
-@inject ShiftIdentityBlazorOptions IdentityOptions
+@* @inject ShiftIdentityBlazorOptions IdentityOptions *@
 @inject ShiftBlazorLocalizer Loc
 
 @namespace ShiftSoftware.ShiftBlazor.Components
@@ -40,11 +40,11 @@
     <ChildContent>
         <MudList T="string">
 
-            <MudLink Href="@($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm")"
+            @* <MudLink Href="@($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm")"
                      Color="Color.Inherit"
                      Underline="Underline.None">
                 <MudListItem Icon="@Icons.Material.Filled.People">@Loc["IdentityProfileButton"]</MudListItem>
-            </MudLink>
+            </MudLink> *@
 
             <MudListItem Icon="@Icons.Material.Filled.Settings" OnClick="OpenSettings">@Loc["SettingsButton"]</MudListItem>
 

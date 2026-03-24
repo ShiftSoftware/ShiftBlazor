@@ -9,7 +9,7 @@ namespace ShiftSoftware.ShiftBlazor.Components;
 public partial class UserAvatar
 {
     [Inject] IDialogService Dialog { get; set; } = default!;
-    [Inject] IIdentityStore tokenStore { get; set; } = default!;
+    //[Inject] IIdentityStore tokenStore { get; set; } = default!;
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
     [Parameter]
@@ -33,12 +33,12 @@ public partial class UserAvatar
 
     protected override async Task OnInitializedAsync()
     {
-        userdata = (await tokenStore.GetTokenAsync())?.UserData;
+        //userdata = (await tokenStore.GetTokenAsync())?.UserData;
     }
 
     internal async Task Logout()
     {
-        await tokenStore.RemoveTokenAsync();
+        //await tokenStore.RemoveTokenAsync();
         NavigationManager.NavigateTo("/", true);
     }
 
@@ -48,6 +48,6 @@ public partial class UserAvatar
 
     internal void GoToIdentity()
     {
-        NavigationManager.NavigateTo($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm");
+        //NavigationManager.NavigateTo($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm");
     }
 }
