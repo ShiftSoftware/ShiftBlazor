@@ -12,7 +12,10 @@
                 {
                     <MudStack Row>
                         <MudText Typo="Typo.subtitle2">@Title</MudText>
-                        <ValidationMessage For="ValueExpression" />
+                        @if (EditContext != null)
+                        {
+                            <ValidationMessage For="ValueExpression" />
+                        }
                     </MudStack>
                 }
                 else
@@ -23,7 +26,7 @@
 
                 @if (!DisableCounter)
                 {
-                    <MudText Color="Mode > FormModes.Archive && Value.Count < Min && UseLimits ? Color.Error : Color.Default">
+                    <MudText Color="!ReadOnly && Value.Count < Min && UseLimits ? Color.Error : Color.Default">
                         @if (UseLimits)
                         {
                             <text>@Value.Count / @Math.Max(Min, 0)@(Max == 0 ? "+" : $"-{Max}")</text>
@@ -55,7 +58,7 @@
                 <MudItem lg="12" md="12" sm="12" xs="12" >
                     <MudDropContainer @ref="DropContainer" T="T" Items="Value" ItemsSelector="(_, _) => true">
                         <ChildContent>
-                            <MudDropZone AllowReorder="(!DisableDragAndDrop && Mode > FormModes.Archive)" T="T"></MudDropZone>
+                            <MudDropZone AllowReorder="(!DisableDragAndDrop && !ReadOnly)" T="T"></MudDropZone>
                         </ChildContent>
 
                         <ItemRenderer Context="item">
@@ -69,7 +72,7 @@
                                             @FieldBody(item)
                                         </MudItem>
                                         <MudItem lg="1" md="1" sm="1" xs="1">
-                                            @if (Mode > FormModes.Archive)
+                                            @if (!ReadOnly)
                                             {
                                                 @if (ControlTemplate == null)
                                                 {
@@ -113,7 +116,7 @@
                 </MudItem>
             }
 
-            @if (Mode > FormModes.Archive )
+            @if (!ReadOnly)
             {
                 if (FieldFooter == null)
                 {

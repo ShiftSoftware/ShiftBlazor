@@ -204,12 +204,14 @@
                     var value = GetProperty(item, DataValueField);
                     var text = GetProperty(item, DataTextField);
                     var isSelected = SelectedValues?.Any(x => x.Value == value) == true;
+                    var isDisabled = !isSelected && (IsAddValuesDisabled || DropdownItemDisabledFunc?.Invoke(item) == true);
                     <MudListItem T="TEntitySet"
                                  @key="item"
                                  id="@GetItemId(i)"
-                                 OnClick="@(() => SelectItem(item))"
+                                 OnClick="@(async () => await ListItemOnClick(item))"
                                  OnClickPreventDefault="true"
-                                 Class="@GetListItemClassname(isHighlighted)">
+                                 Class="@GetListItemClassname(isHighlighted)"
+                                 Disabled="@isDisabled">
 
                         @if (DropdownItemTemplate != null)
                         {
