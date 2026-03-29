@@ -66,11 +66,6 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase, IFilterBuilde
     protected bool HasInitialized = false;
     protected bool HasChanged = false;
 
-    protected override void OnInitialized()
-    {
-        Build();
-    }
-
     public void Build()
     {
         if (Parent == null)
