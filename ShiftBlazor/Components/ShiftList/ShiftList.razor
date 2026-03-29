@@ -7,411 +7,411 @@
 @inherits EventComponentBase
 
 @if (TypeAuthAction == null || TypeAuthService == null || TypeAuthService.Can(TypeAuthAction, TypeAuth.Core.Access.Read))
-{}
+{
+    <MudPaper Elevation="25" Outlined="Outlined" id="@($"Grid-{Id}")">
+        <CascadingValue Value="this" IsFixed="true">
+            <header>
+                @if (!DisableHeaderToolbar)
+                {
+                    <MudToolBar Style="@ToolbarStyle" Dense="@Dense" Class="light-toolbar shift-toolbar-header">
+                        <MudIcon Size="@IconSize" Icon="@IconSvg"></MudIcon>
+                        <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["ListDefaultTitle"])</MudText>
 
-<MudPaper Elevation="25" Outlined="Outlined" id="@($"Grid-{Id}")">
-    <CascadingValue Value="this" IsFixed="true">
-        <header>
-            @if (!DisableHeaderToolbar)
-            {
-                <MudToolBar Style="@ToolbarStyle" Dense="@Dense" Class="light-toolbar shift-toolbar-header">
-                    <MudIcon Size="@IconSize" Icon="@IconSvg"></MudIcon>
-                    <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["ListDefaultTitle"])</MudText>
+                        @ToolbarStartTemplate
 
-                    @ToolbarStartTemplate
+                        <MudSpacer></MudSpacer>
 
-                    <MudSpacer></MudSpacer>
+                        <ToolbarMenuItems>
 
-                    <ToolbarMenuItems>
+                            @ToolbarEndTemplate
 
-                        @ToolbarEndTemplate
+                            @if (!DisableReloadButton)
+                            {
+                                <MudTooltip Text="Refresh">
+                                    <MudIconButtonExtended Size="@IconSize"
+                                                            Icon="@Icons.Material.Outlined.Refresh"
+                                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                            Disabled="IsLoading"
+                                                            OnClick="Reload" />
+                                </MudTooltip>
+                            }
 
-                        @if (!DisableReloadButton)
-                        {
-                            <MudTooltip Text="Refresh">
-                                <MudIconButtonExtended Size="@IconSize"
-                                                        Icon="@Icons.Material.Outlined.Refresh"
-                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                        Disabled="IsLoading"
-                                                        OnClick="Reload" />
-                            </MudTooltip>
-                        }
+                            @if (EnableFilterPanel)
+                            {
+                                <MudTooltip Text="@Loc["ToggleFilterPanelTitle"]">
+                                    <MudIconButtonExtended Size="@IconSize"
+                                                            Icon="@(IsFilterPanelOpen ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
+                                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                            aria-label="@Loc["ToggleFilterPanelTitle"]"
+                                                            OnClick="ToggleFilterPanel" />
+                                </MudTooltip>
+                            }
 
-                        @if (EnableFilterPanel)
-                        {
-                            <MudTooltip Text="@Loc["ToggleFilterPanelTitle"]">
-                                <MudIconButtonExtended Size="@IconSize"
-                                                        Icon="@(IsFilterPanelOpen ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
-                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                        aria-label="@Loc["ToggleFilterPanelTitle"]"
-                                                        OnClick="ToggleFilterPanel" />
-                            </MudTooltip>
-                        }
-
-                        @if (!DisableGridEditor)
-                        {
-                            <MudTooltip Text="@Loc["ColumnChooserTitle"]">
-                                <MudIconButtonExtended Size="@IconSize"
-                                                        KeyboardKey="KeyboardKeys.KeyC"
-                                                        Icon="@Icons.Material.Filled.ViewColumn"
-                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                        aria-label="@Loc["ColumnChooserTitle"]"
-                                                        OnClick="OpenGridEditor" />
-                            </MudTooltip>
-                        }
+                            @if (!DisableGridEditor)
+                            {
+                                <MudTooltip Text="@Loc["ColumnChooserTitle"]">
+                                    <MudIconButtonExtended Size="@IconSize"
+                                                            KeyboardKey="KeyboardKeys.KeyC"
+                                                            Icon="@Icons.Material.Filled.ViewColumn"
+                                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                            aria-label="@Loc["ColumnChooserTitle"]"
+                                                            OnClick="OpenGridEditor" />
+                                </MudTooltip>
+                            }
 
                           
 
-                        @if (!DisableDeleteFilter && Values == null)
-                        {
-                            <MudTooltip Text="@Loc["FilterDeletedItemsTitle"]">
-                                <MudMenu Size="@IconSize"
-                                            Icon="@Icons.Material.Filled.RestoreFromTrash"
-                                            aria-label="@Loc["FilterDeletedItemsTitle"]"
-                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                            AnchorOrigin="Origin.BottomLeft"
-                                            Style="display: flex; flex-direction: column;">
-                                    <MudMenuItem OnClick="() => FilterDeleted()">@Loc["ShowBothDeletedAndActiveOption"]</MudMenuItem>
-                                    <MudMenuItem OnClick="() => FilterDeleted(true)">@Loc["ShowDeletedOnlyOption"]</MudMenuItem>
-                                    <MudMenuItem OnClick="() => FilterDeleted(false)">@Loc["ShowActiveOnlyOption"]</MudMenuItem>
-                                </MudMenu>
-                            </MudTooltip>
-                        }
-
-                        @* @if (EnableExport && (TypeAuthService is null || TypeAuthService.CanAccess(ShiftSoftware.ShiftEntity.Core.GeneralActionTree.DataGridExport))) *@
-                        @if (EnableExport)
-                        {
-                            <MudTooltip Text="@Loc["ExportButtonTitle"]">
-                                @if (this.ExportIsInProgress)
-                                {
-                                    <MudProgressCircular Class="pa-2" Color="Color.Warning" Size="IconSize" Indeterminate="true" />
-                                }
-
-                                else
-                                {
-                                    <MudIconButtonExtended Icon="@Icons.Material.Filled.FileDownload"
-                                    KeyboardKey="KeyboardKeys.KeyE"
-                                    Size="@IconSize"
-                                    Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
-                                    aria-label="@Loc["ExportButtonTitle"]"
-                                    OnClick="@ExportList" />
-                                }
-                            </MudTooltip>
-                        }
-
-                        @if (RenderAddButton)
-                        {
-                            <MudTooltip Text="@Loc["AddNewItemTitle"]">
-                                <MudIconButtonExtended Icon="@Icons.Material.Filled.AddCircle"
-                                                        KeyboardKey="KeyboardKeys.KeyA"
-                                                        Size="@IconSize"
-                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
-                                                        aria-label="@Loc["AddNewItemTitle"]"
-                                                        OnClick="() => ViewAddItem()" />
-                            </MudTooltip>
-                        }
-
-                        @if (MudDialog != null && IsEmbed != true)
-                        {
-                            @* @if (RenderAddButton || !DisableGridEditor || !DisableDeleteFilter || (EnableExport && (TypeAuthService is null || TypeAuthService.CanAccess(ShiftSoftware.ShiftEntity.Core.GeneralActionTree.DataGridExport)))) *@
-                            @if (RenderAddButton || !DisableGridEditor || !DisableDeleteFilter || EnableExport)
+                            @if (!DisableDeleteFilter && Values == null)
                             {
-                                <MudDivider Vertical="true" Class="shift-vertical-divider"></MudDivider>
+                                <MudTooltip Text="@Loc["FilterDeletedItemsTitle"]">
+                                    <MudMenu Size="@IconSize"
+                                                Icon="@Icons.Material.Filled.RestoreFromTrash"
+                                                aria-label="@Loc["FilterDeletedItemsTitle"]"
+                                                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                AnchorOrigin="Origin.BottomLeft"
+                                                Style="display: flex; flex-direction: column;">
+                                        <MudMenuItem OnClick="() => FilterDeleted()">@Loc["ShowBothDeletedAndActiveOption"]</MudMenuItem>
+                                        <MudMenuItem OnClick="() => FilterDeleted(true)">@Loc["ShowDeletedOnlyOption"]</MudMenuItem>
+                                        <MudMenuItem OnClick="() => FilterDeleted(false)">@Loc["ShowActiveOnlyOption"]</MudMenuItem>
+                                    </MudMenu>
+                                </MudTooltip>
                             }
 
-                            @ToolbarControlsTemplate
-
-                            <MudTooltip Text="@Loc["CloseModalButtonTitle"]">
-                                <MudButtonExtended Style="min-width:40px; z-index: 100;"
-                                                    KeyboardKey="KeyboardKeys.Escape"
-                                                    Variant="Variant.Text"
-                                                    Size="Size.Medium"
-                                                    Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                    aria-label="@Loc["CloseModalButtonTitle"]"
-                                                    OnClick="CloseDialog">
-                                    <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
-                                </MudButtonExtended>
-                            </MudTooltip>
-                        }
-
-                    </ToolbarMenuItems>
-                </MudToolBar>
-            }
-            @if (EnableFilterPanel)
-            {
-                <MudCollapse Expanded="IsFilterPanelOpen" Style="border:none" Class="light-toolbar">
-                    <MudForm Class="pa-4">
-
-                        <CascadingValue Value="Filters">
-                            <FilterPanel DTO="typeof(T)" />
-                        </CascadingValue>
-
-                    </MudForm>
-                </MudCollapse>
-            }
-
-            @HeaderTemplate
-
-            <MudOverlay Visible="IsGridEditorOpen" LockScroll="false" OnClick="@CloseGridEditor" />
-            <MudPopover Open="IsGridEditorOpen" Fixed AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Paper Elevation="8" Class="pa-4">
-                <MudPaper>
-                    @if (DataGrid != null)
-                    {
-
-                        <MudDropContainer @ref="_columnsPanelDropContainer" T="Column<T>" Items="@DraggableColumns" ItemsSelector="(item, dropzone) => true"
-                                            ItemDisabled="@((item) => false)" ItemDropped="ColumnOrderUpdated" Class="d-flex flex-wrap flex-grow-1">
-                            <ChildContent>
-                                <MudStack Spacing="0">
-                                    <MudStack Row="true" Spacing="2" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px; min-width: 500px;">
-                                        <MudText Typo="Typo.h6">@Loc["ColumnEditorColumnHeader"]</MudText>
-                                        <MudSpacer />
-                                        <MudText Typo="Typo.h6" Style="width: 70px;">@Loc["ColumnEditorVisiblityToggleHeader"]</MudText>
-                                        <MudText Typo="Typo.h6" Style="width: 70px;">@Loc["ColumnEditorStickyToggleHeader"]</MudText>
-                                        <MudIconButton Ripple="false" Disabled Icon="@Icons.Material.Filled.DragIndicator" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
-                                    </MudStack>
-
-                                    @if (EnableSelection)
+                            @if (EnableExport && (TypeAuthService is null || TypeAuthService.CanAccess(ShiftSoftware.ShiftEntity.Core.GeneralActionTree.DataGridExport)))
+                            @* @if (EnableExport) *@
+                            {
+                                <MudTooltip Text="@Loc["ExportButtonTitle"]">
+                                    @if (this.ExportIsInProgress)
                                     {
-                                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px;">
-                                            @{
-                                                var context = DataGrid.RenderedColumns.First();
-                                            }
-                                            <MudText Class="flex-grow-1">@context.Title</MudText>
-
-                                            <MudSpacer />
-
-                                            <MudSwitch T="bool"
-                                                        Ripple="false"
-                                                        Color="Color.Primary"
-                                                        Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
-                                                        Value="@context.Hidden"
-                                                        ValueChanged="@context.ToggleAsync"
-                                                        Converter="_oppositeBoolConverter"
-                                                        Style="width: 70px;" />
-
-                                            <MudSwitch T="bool"
-                                                        Ripple="false"
-                                                        Color="Color.Primary"
-                                                        Style="width: 70px;"
-                                                        Value="@context.StickyLeft"
-                                                        ValueChanged="(x) => ToggleSticky(context, x)" />
-
-                                            <MudIconButton Ripple="false" Disabled Icon="@context.DataGrid.DragIndicatorIcon" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
-                                        </MudStack>
+                                        <MudProgressCircular Class="pa-2" Color="Color.Warning" Size="IconSize" Indeterminate="true" />
                                     }
-                                    <MudDropZone T="Column<T>" Class="flex-grow-1" AllowReorder="true" Style="@($"overflow: auto;max-height: {GridEditorHeight};")" />
 
-                                    <MudButtonGroup>
-                                        <MudButton OnClick="ResetColumnSettings" FullWidth>@Loc["ColumnEditorResetSettingsButton"]</MudButton>
-                                        <MudButton OnClick="CloseGridEditor" FullWidth>@Loc["ColumnEditorCloseMenuButton"]</MudButton>
-                                    </MudButtonGroup>
-                                </MudStack>
-                            </ChildContent>
-                            <ItemRenderer>
-                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px;">
-
-                                    <MudText Class="flex-grow-1">@context.Title</MudText>
-
-                                    <MudSpacer />
-
-                                    <MudSwitch T="bool"
-                                                Ripple="false"
-                                                Color="Color.Primary"
-                                                Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
-                                                Style="width: 70px;"
-                                                Value="@context.Hidden"
-                                                ValueChanged="@context.ToggleAsync"
-                                                Converter="_oppositeBoolConverter" />
-
-                                    <MudSwitch T="bool"
-                                                Ripple="false"
-                                                Color="Color.Primary"
-                                                Style="width: 70px;"
-                                                Value="@context.StickyLeft"
-                                                ValueChanged="(x) => ToggleSticky(context, x)" />
-
-                                    <MudIconButton Ripple="false" Icon="@context.DataGrid.DragIndicatorIcon" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
-                                </MudStack>
-                            </ItemRenderer>
-                        </MudDropContainer>
-                    }
-                </MudPaper>
-            </MudPopover>
-        </header>
-
-        <MudDataGrid 
-                     @ref="DataGrid"
-                     Items="@Values"
-                     MultiSelection="@EnableSelection"
-                     Hideable="!DisableGridEditor"
-                     SortMode="@SortMode"
-                     FilterMode="DataGridFilterMode.Simple"
-                     Dense="@Dense"
-                     Elevation="0"
-                     RowClick="@RowClickHandler"
-                     Filterable="!DisableFilters"
-                     RowsPerPage="_selectedPageSize"
-                     Hover="true"
-                     Virtualize="@EnableVirtualization"
-                     Height="@Height"
-                     ShowColumnOptions="true"
-                     FixedHeader="!DisableStickyHeader"
-                     RowClassFunc="GetRowClassname"
-                     Class="@DataGridClass"
-                     Loading="@IsLoading"
-                     T="T">
-
-            <ColGroup>
-                @if (HighlightSortedColumn && DataGrid != null && DataGrid.SortDefinitions.Count > 0)
-                {
-                    foreach (var column in DataGrid.RenderedColumns.Where(x => !x.Hidden))
-                    {
-                        @if (DataGrid.SortDefinitions.Keys.Contains(column.PropertyName))
-                        {
-                            <col style="@SortedColgroupStylename" />
-                        }
-                        else
-                        {
-                            <col />
-                        }
-                    }
-                }
-            </ColGroup>
-
-            <NoRecordsContent>
-                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
-                {
-                    <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
-                }
-                else
-                {
-                    <MudText>@Loc["NoItemsFound"]</MudText>
-                }
-            </NoRecordsContent>
-
-            <LoadingContent>
-                <MudText>@Loc["GridItemsLoadingText"]</MudText>
-            </LoadingContent>
-
-            <Columns>
-
-                @if (EnableSelection)
-                {
-                    // Using SelectColumn doesn't work as expected with ServerData
-                    <TemplateColumn T="T" Tag="@("select-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%"
-                                    Filterable="false" Editable="false" StickyLeft Title="@Loc["SelectColumnHeaderText"]">
-                        <HeaderTemplate>
-                            <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
-                                <MudCheckBox T="bool" Size="@IconSize" Value="@SelectState.All" ValueChanged="SelectAll" />
-                            </MudTooltip>
-                        </HeaderTemplate>
-                        <CellTemplate>
-                            @{
-                                var isSelected = SelectState.Items.Any(x => x.ID == context.Item.ID) || SelectState.All;
-                                Func<bool, Task> changeHandler = (x) => SelectRow(context.Item);
+                                    else
+                                    {
+                                        <MudIconButtonExtended Icon="@Icons.Material.Filled.FileDownload"
+                                        KeyboardKey="KeyboardKeys.KeyE"
+                                        Size="@IconSize"
+                                        Color="NavIconFlatColor ? Color.Inherit : Color.Warning"
+                                        aria-label="@Loc["ExportButtonTitle"]"
+                                        OnClick="@ExportList" />
+                                    }
+                                </MudTooltip>
                             }
-                            <MudCheckBox T="bool" Size="@IconSize" Value="@isSelected" ValueChanged="@changeHandler" />
-                        </CellTemplate>
-                    </TemplateColumn>
-                }
 
-                @if (ShowIDColumn)
-                {
-                    <PropertyColumnExtended Property="x => x.ID"
-                                            Title="@Loc["IdColumnHeaderText"]"
-                                            IsButtonColumn="ComponentType != null"
-                                            StickyLeft
-                                            HeaderStyle="width: 0;" />
-                }
-
-                @if (ChildContent != null)
-                {
-                    @ChildContent(new(this))
-                }
-
-                <PropertyColumnExtended Property="x => x.IsDeleted" Title="@Loc["IsDeletedColumnHeaderText"]" Hidden="IsDeleteColumnHidden" />
-
-                @if (EnablePrintColumn)
-                {
-                    var color = PrintConfig?.Color ?? Color.Default;
-                    var icon = PrintConfig?.Icon ?? Icons.Material.Filled.Print;
-                    <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="Print">
-                        <CellTemplate>
-                            <div>
-                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="@color" StartIcon="@icon" OnClick="() => PrintItem(context.Item.ID!)">Print</MudButton>
-                            </div>
-                        </CellTemplate>
-                    </TemplateColumn>
-                }
-
-                @if (!DisableActionColumn && ComponentType != null)
-                {
-                    <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="@Loc["ActionsColumnHeaderText"]">
-                            
-                        <CellTemplate>
-                            @if (ActionsTemplate == null)
+                            @if (RenderAddButton)
                             {
-                                <MudButton OnClick="@(() => ViewAddItem(context.Item.ID))"
-                                            Variant="@Variant.Outlined"
-                                            EndIcon="@Icons.Material.Filled.OpenInNew"
-                                            Color="@Color.Primary"
-                                            Size="@(Dense ? Size.Small : Size.Medium)">
-                                    @Loc["ViewItemButtonText"]
-                                </MudButton>
+                                <MudTooltip Text="@Loc["AddNewItemTitle"]">
+                                    <MudIconButtonExtended Icon="@Icons.Material.Filled.AddCircle"
+                                                            KeyboardKey="KeyboardKeys.KeyA"
+                                                            Size="@IconSize"
+                                                            Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
+                                                            aria-label="@Loc["AddNewItemTitle"]"
+                                                            OnClick="() => ViewAddItem()" />
+                                </MudTooltip>
+                            }
+
+                            @if (MudDialog != null && IsEmbed != true)
+                            {
+                                @if (RenderAddButton || !DisableGridEditor || !DisableDeleteFilter || (EnableExport && (TypeAuthService is null || TypeAuthService.CanAccess(ShiftSoftware.ShiftEntity.Core.GeneralActionTree.DataGridExport))))
+                                @* @if (RenderAddButton || !DisableGridEditor || !DisableDeleteFilter || EnableExport) *@
+                                {
+                                    <MudDivider Vertical="true" Class="shift-vertical-divider"></MudDivider>
+                                }
+
+                                @ToolbarControlsTemplate
+
+                                <MudTooltip Text="@Loc["CloseModalButtonTitle"]">
+                                    <MudButtonExtended Style="min-width:40px; z-index: 100;"
+                                                        KeyboardKey="KeyboardKeys.Escape"
+                                                        Variant="Variant.Text"
+                                                        Size="Size.Medium"
+                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                        aria-label="@Loc["CloseModalButtonTitle"]"
+                                                        OnClick="CloseDialog">
+                                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
+
+                        </ToolbarMenuItems>
+                    </MudToolBar>
+                }
+                @if (EnableFilterPanel)
+                {
+                    <MudCollapse Expanded="IsFilterPanelOpen" Style="border:none" Class="light-toolbar">
+                        <MudForm Class="pa-4">
+
+                            <CascadingValue Value="Filters">
+                                <FilterPanel DTO="typeof(T)" />
+                            </CascadingValue>
+
+                        </MudForm>
+                    </MudCollapse>
+                }
+
+                @HeaderTemplate
+
+                <MudOverlay Visible="IsGridEditorOpen" LockScroll="false" OnClick="@CloseGridEditor" />
+                <MudPopover Open="IsGridEditorOpen" Fixed AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Paper Elevation="8" Class="pa-4">
+                    <MudPaper>
+                        @if (DataGrid != null)
+                        {
+
+                            <MudDropContainer @ref="_columnsPanelDropContainer" T="Column<T>" Items="@DraggableColumns" ItemsSelector="(item, dropzone) => true"
+                                                ItemDisabled="@((item) => false)" ItemDropped="ColumnOrderUpdated" Class="d-flex flex-wrap flex-grow-1">
+                                <ChildContent>
+                                    <MudStack Spacing="0">
+                                        <MudStack Row="true" Spacing="2" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px; min-width: 500px;">
+                                            <MudText Typo="Typo.h6">@Loc["ColumnEditorColumnHeader"]</MudText>
+                                            <MudSpacer />
+                                            <MudText Typo="Typo.h6" Style="width: 70px;">@Loc["ColumnEditorVisiblityToggleHeader"]</MudText>
+                                            <MudText Typo="Typo.h6" Style="width: 70px;">@Loc["ColumnEditorStickyToggleHeader"]</MudText>
+                                            <MudIconButton Ripple="false" Disabled Icon="@Icons.Material.Filled.DragIndicator" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
+                                        </MudStack>
+
+                                        @if (EnableSelection)
+                                        {
+                                            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px;">
+                                                @{
+                                                    var context = DataGrid.RenderedColumns.First();
+                                                }
+                                                <MudText Class="flex-grow-1">@context.Title</MudText>
+
+                                                <MudSpacer />
+
+                                                <MudSwitch T="bool"
+                                                            Ripple="false"
+                                                            Color="Color.Primary"
+                                                            Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
+                                                            Value="@context.Hidden"
+                                                            ValueChanged="@context.ToggleAsync"
+                                                            Converter="_oppositeBoolConverter"
+                                                            Style="width: 70px;" />
+
+                                                <MudSwitch T="bool"
+                                                            Ripple="false"
+                                                            Color="Color.Primary"
+                                                            Style="width: 70px;"
+                                                            Value="@context.StickyLeft"
+                                                            ValueChanged="(x) => ToggleSticky(context, x)" />
+
+                                                <MudIconButton Ripple="false" Disabled Icon="@context.DataGrid.DragIndicatorIcon" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
+                                            </MudStack>
+                                        }
+                                        <MudDropZone T="Column<T>" Class="flex-grow-1" AllowReorder="true" Style="@($"overflow: auto;max-height: {GridEditorHeight};")" />
+
+                                        <MudButtonGroup>
+                                            <MudButton OnClick="ResetColumnSettings" FullWidth>@Loc["ColumnEditorResetSettingsButton"]</MudButton>
+                                            <MudButton OnClick="CloseGridEditor" FullWidth>@Loc["ColumnEditorCloseMenuButton"]</MudButton>
+                                        </MudButtonGroup>
+                                    </MudStack>
+                                </ChildContent>
+                                <ItemRenderer>
+                                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px;">
+
+                                        <MudText Class="flex-grow-1">@context.Title</MudText>
+
+                                        <MudSpacer />
+
+                                        <MudSwitch T="bool"
+                                                    Ripple="false"
+                                                    Color="Color.Primary"
+                                                    Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
+                                                    Style="width: 70px;"
+                                                    Value="@context.Hidden"
+                                                    ValueChanged="@context.ToggleAsync"
+                                                    Converter="_oppositeBoolConverter" />
+
+                                        <MudSwitch T="bool"
+                                                    Ripple="false"
+                                                    Color="Color.Primary"
+                                                    Style="width: 70px;"
+                                                    Value="@context.StickyLeft"
+                                                    ValueChanged="(x) => ToggleSticky(context, x)" />
+
+                                        <MudIconButton Ripple="false" Icon="@context.DataGrid.DragIndicatorIcon" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
+                                    </MudStack>
+                                </ItemRenderer>
+                            </MudDropContainer>
+                        }
+                    </MudPaper>
+                </MudPopover>
+            </header>
+
+            <MudDataGrid 
+                         @ref="DataGrid"
+                         Items="@Values"
+                         MultiSelection="@EnableSelection"
+                         Hideable="!DisableGridEditor"
+                         SortMode="@SortMode"
+                         FilterMode="DataGridFilterMode.Simple"
+                         Dense="@Dense"
+                         Elevation="0"
+                         RowClick="@RowClickHandler"
+                         Filterable="!DisableFilters"
+                         RowsPerPage="_selectedPageSize"
+                         Hover="true"
+                         Virtualize="@EnableVirtualization"
+                         Height="@Height"
+                         ShowColumnOptions="true"
+                         FixedHeader="!DisableStickyHeader"
+                         RowClassFunc="GetRowClassname"
+                         Class="@DataGridClass"
+                         Loading="@IsLoading"
+                         T="T">
+
+                <ColGroup>
+                    @if (HighlightSortedColumn && DataGrid != null && DataGrid.SortDefinitions.Count > 0)
+                    {
+                        foreach (var column in DataGrid.RenderedColumns.Where(x => !x.Hidden))
+                        {
+                            @if (DataGrid.SortDefinitions.Keys.Contains(column.PropertyName))
+                            {
+                                <col style="@SortedColgroupStylename" />
                             }
                             else
                             {
-                                @ActionsTemplate(context);
+                                <col />
                             }
+                        }
+                    }
+                </ColGroup>
 
-                        </CellTemplate>
-                    </TemplateColumn>
-                }
-            </Columns>
+                <NoRecordsContent>
+                    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+                    }
+                    else
+                    {
+                        <MudText>@Loc["NoItemsFound"]</MudText>
+                    }
+                </NoRecordsContent>
 
-            <PagerContent>
-                @if (EnableSelection && SelectState.Count > 0)
-                {
-                    <MudText Style="padding-inline: 20px 2px;" Typo="Typo.body2">@Loc["SelectedItemsCounterLabel", SelectState.Count, SelectState.Total]</MudText>
-                    <MudIconButton OnClick="@SelectState.Clear" Size="Size.Small" Icon="@Icons.Material.Filled.Close" />
-                }
+                <LoadingContent>
+                    <MudText>@Loc["GridItemsLoadingText"]</MudText>
+                </LoadingContent>
 
-                @if (!EnableVirtualization && !DisablePagination)
-                {
-                    <MudSpacer/>
-                    @* <MudDataGridPager Style="border: 0;" PageSizeOptions="@PageSizes" RowsPerPageString="@Loc["ItemsPerPageLabel"]" /> *@
+                <Columns>
+
+                    @if (EnableSelection)
+                    {
+                        // Using SelectColumn doesn't work as expected with ServerData
+                        <TemplateColumn T="T" Tag="@("select-column")" Sortable="false" Resizable="false" ShowColumnOptions="false" HeaderStyle="width:0%"
+                                        Filterable="false" Editable="false" StickyLeft Title="@Loc["SelectColumnHeaderText"]">
+                            <HeaderTemplate>
+                                <MudTooltip Text="@Loc["SelectAllButtonTitle"]">
+                                    <MudCheckBox T="bool" Size="@IconSize" Value="@SelectState.All" ValueChanged="SelectAll" />
+                                </MudTooltip>
+                            </HeaderTemplate>
+                            <CellTemplate>
+                                @{
+                                    var isSelected = SelectState.Items.Any(x => x.ID == context.Item.ID) || SelectState.All;
+                                    Func<bool, Task> changeHandler = (x) => SelectRow(context.Item);
+                                }
+                                <MudCheckBox T="bool" Size="@IconSize" Value="@isSelected" ValueChanged="@changeHandler" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                    }
+
+                    @if (ShowIDColumn)
+                    {
+                        <PropertyColumnExtended Property="x => x.ID"
+                                                Title="@Loc["IdColumnHeaderText"]"
+                                                IsButtonColumn="ComponentType != null"
+                                                StickyLeft
+                                                HeaderStyle="width: 0;" />
+                    }
+
+                    @if (ChildContent != null)
+                    {
+                        @ChildContent(new(this))
+                    }
+
+                    <PropertyColumnExtended Property="x => x.IsDeleted" Title="@Loc["IsDeletedColumnHeaderText"]" Hidden="IsDeleteColumnHidden" />
+
+                    @if (EnablePrintColumn)
+                    {
+                        var color = PrintConfig?.Color ?? Color.Default;
+                        var icon = PrintConfig?.Icon ?? Icons.Material.Filled.Print;
+                        <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="Print">
+                            <CellTemplate>
+                                <div>
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="@color" StartIcon="@icon" OnClick="() => PrintItem(context.Item.ID!)">Print</MudButton>
+                                </div>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    }
+
+                    @if (!DisableActionColumn && ComponentType != null)
+                    {
+                        <TemplateColumn HeaderStyle="width: 0;" Sortable="false" Filterable="false" Title="@Loc["ActionsColumnHeaderText"]">
+                            
+                            <CellTemplate>
+                                @if (ActionsTemplate == null)
+                                {
+                                    <MudButton OnClick="@(() => ViewAddItem(context.Item.ID))"
+                                                Variant="@Variant.Outlined"
+                                                EndIcon="@Icons.Material.Filled.OpenInNew"
+                                                Color="@Color.Primary"
+                                                Size="@(Dense ? Size.Small : Size.Medium)">
+                                        @Loc["ViewItemButtonText"]
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    @ActionsTemplate(context);
+                                }
+
+                            </CellTemplate>
+                        </TemplateColumn>
+                    }
+                </Columns>
+
+                <PagerContent>
+                    @if (EnableSelection && SelectState.Count > 0)
+                    {
+                        <MudText Style="padding-inline: 20px 2px;" Typo="Typo.body2">@Loc["SelectedItemsCounterLabel", SelectState.Count, SelectState.Total]</MudText>
+                        <MudIconButton OnClick="@SelectState.Clear" Size="Size.Small" Icon="@Icons.Material.Filled.Close" />
+                    }
+
+                    @if (!EnableVirtualization && !DisablePagination)
+                    {
+                        <MudSpacer/>
+                        @* <MudDataGridPager Style="border: 0;" PageSizeOptions="@PageSizes" RowsPerPageString="@Loc["ItemsPerPageLabel"]" /> *@
                     
-                    <MudToolBar Class="@PagerClassname" Style="@PagerStyle">
-                        <div class="mud-table-pagination-spacer"></div>
+                        <MudToolBar Class="@PagerClassname" Style="@PagerStyle">
+                            <div class="mud-table-pagination-spacer"></div>
 
-                        <MudText Typo="Typo.body2" Class="mud-table-pagination-caption">
-                            @Loc["ItemsPerPageLabel"]
-                        </MudText>
+                            <MudText Typo="Typo.body2" Class="mud-table-pagination-caption">
+                                @Loc["ItemsPerPageLabel"]
+                            </MudText>
 
-                        <MudSelect T="int" ValueChanged="@SetRowsPerPageAsync" Value="@(RowsPerPage)" Class="mud-table-pagination-select" Underline="false" Dense="true" >
-                            @foreach (int pageSize in PageSizes)
-                            {
-                                <MudSelectItem T="int" Value="@pageSize">@pageSize.ToString().ToUpper()</MudSelectItem>
-                            }
-                        </MudSelect>
+                            <MudSelect T="int" ValueChanged="@SetRowsPerPageAsync" Value="@(RowsPerPage)" Class="mud-table-pagination-select" Underline="false" Dense="true" >
+                                @foreach (int pageSize in PageSizes)
+                                {
+                                    <MudSelectItem T="int" Value="@pageSize">@pageSize.ToString().ToUpper()</MudSelectItem>
+                                }
+                            </MudSelect>
 
-                        <MudText Typo="Typo.body2" Class="mud-table-pagination-caption">
-                            @PagerInfoFormat
-                        </MudText>
+                            <MudText Typo="Typo.body2" Class="mud-table-pagination-caption">
+                                @PagerInfoFormat
+                            </MudText>
 
-                        <div class="mud-table-pagination-actions">
-                            <MudIconButton Class="mud-flip-x-rtl" Icon="@Icons.Material.Filled.FirstPage" Disabled="@BackButtonsDisabled" @onclick="@(() => NavigateTo(Page.First))" />
-                            <MudIconButton Class="mud-flip-x-rtl" Icon="@Icons.Material.Filled.NavigateBefore" Disabled="@BackButtonsDisabled" @onclick="@(() => NavigateTo(Page.Previous))" />
-                            <MudIconButton Class="mud-flip-x-rtl" Icon="@Icons.Material.Filled.NavigateNext" Disabled="@ForwardButtonsDisabled" @onclick="@(() => NavigateTo(Page.Next))" />
-                            <MudIconButton Class="mud-flip-x-rtl" Icon="@Icons.Material.Filled.LastPage" Disabled="@ForwardButtonsDisabled" @onclick="@(() => NavigateTo(Page.Last))" />
-                        </div>
+                            <div class="mud-table-pagination-actions">
+                                <MudIconButton Class="mud-flip-x-rtl" Icon="@Icons.Material.Filled.FirstPage" Disabled="@BackButtonsDisabled" @onclick="@(() => NavigateTo(Page.First))" />
+                                <MudIconButton Class="mud-flip-x-rtl" Icon="@Icons.Material.Filled.NavigateBefore" Disabled="@BackButtonsDisabled" @onclick="@(() => NavigateTo(Page.Previous))" />
+                                <MudIconButton Class="mud-flip-x-rtl" Icon="@Icons.Material.Filled.NavigateNext" Disabled="@ForwardButtonsDisabled" @onclick="@(() => NavigateTo(Page.Next))" />
+                                <MudIconButton Class="mud-flip-x-rtl" Icon="@Icons.Material.Filled.LastPage" Disabled="@ForwardButtonsDisabled" @onclick="@(() => NavigateTo(Page.Last))" />
+                            </div>
 
-                    </MudToolBar>
-                }
-            </PagerContent>
-        </MudDataGrid>
-    </CascadingValue>
-</MudPaper>
+                        </MudToolBar>
+                    }
+                </PagerContent>
+            </MudDataGrid>
+        </CascadingValue>
+    </MudPaper>
+}
 
 @code {
     private MudDropContainer<Column<T>>? _columnsPanelDropContainer { get; set; }
