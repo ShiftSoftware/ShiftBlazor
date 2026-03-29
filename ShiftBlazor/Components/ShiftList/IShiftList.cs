@@ -18,8 +18,6 @@ public interface IShiftList : IODataRequest, IStandaloneComponent, ISortableComp
     public int RowsPerPage { get; }
     public int CurrentPage { get; }
 
-    public HashSet<Guid> ActiveOperations { get; set; }
-
     public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null);
     public void Reload();
     public int GetItemsCount();

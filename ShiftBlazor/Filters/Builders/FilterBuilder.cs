@@ -157,14 +157,6 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase, IFilterBuilde
                     break;
                 }
             }
-
-            parameters.TryGetValue(nameof(Parent), out IFilterableComponent? _parent);
-            (_parent as IShiftList)?.ActiveOperations.Remove(Id);
-        }
-        else
-        {
-            parameters.TryGetValue(nameof(Parent), out IFilterableComponent? _parent);
-            (_parent as IShiftList)?.ActiveOperations.Add(Id);
         }
 
         await base.SetParametersAsync(parameters);

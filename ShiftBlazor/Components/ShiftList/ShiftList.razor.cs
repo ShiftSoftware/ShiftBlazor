@@ -398,8 +398,6 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     public Dictionary<Guid, FilterModelBase> Filters { get; set; } = [];
     private Debouncer Debouncer { get; set; } = new Debouncer();
     private bool IsFilterPanelOpen { get; set; }
-    public HashSet<Guid> ActiveOperations { get; set; } = [];
-    private CancellationTokenSource? ReloadBlockTokenSource;
     public bool IsLoading { get; set; }
     private bool BackButtonsDisabled => CurrentPage == 0;
     private bool ForwardButtonsDisabled => (CurrentPage + 1) * RowsPerPage >= GetItemsCount();
@@ -796,23 +794,6 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     {
         IsLoading = true;
         StateHasChanged();
-
-        // Check if there are any active operations,
-        // if so, wait for them to finish before proceeding,
-        // only if it is the first request.
-        // Operations could be things like Filter, Sort...
-        //if (!ReadyToRender && ActiveOperations.Count > 0)
-        //{
-        //    try
-        //    {
-        //        ReloadBlockTokenSource = new CancellationTokenSource();
-        //        await Task.Delay(300, ReloadBlockTokenSource.Token);
-        //    }
-        //    catch (Exception) { }
-
-        //    ReloadBlockTokenSource?.Dispose();
-        //    ReloadBlockTokenSource = null;
-        //}
 
         ReloadCancellationTokenSource?.Cancel();
         ReloadCancellationTokenSource?.Dispose();
@@ -1473,14 +1454,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     public void Reload()
     {
-        if (ReloadBlockTokenSource?.IsCancellationRequested == false)
-        {
-            ReloadBlockTokenSource.Cancel();
-        }
-        else
-        {
-            Debouncer.Debounce(100, ReloadServerData);
-        }
+        Debouncer.Debounce(100, ReloadServerData);
     }
 
     private Task ReloadServerData()
