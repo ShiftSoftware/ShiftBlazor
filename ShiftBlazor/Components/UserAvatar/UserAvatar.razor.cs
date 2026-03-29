@@ -1,16 +1,17 @@
-﻿using ShiftSoftware.ShiftIdentity.Core.DTOs;
-using ShiftSoftware.ShiftIdentity.Core;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using ShiftSoftware.ShiftIdentity.Blazor;
+using ShiftSoftware.ShiftIdentity.Core;
+using ShiftSoftware.ShiftIdentity.Core.DTOs;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
 public partial class UserAvatar
 {
     [Inject] IDialogService Dialog { get; set; } = default!;
-    //[Inject] IIdentityStore tokenStore { get; set; } = default!;
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
 
     [Parameter]
     public MouseEvent ActivationEvent { get; set; } = MouseEvent.LeftClick;
@@ -30,15 +31,21 @@ public partial class UserAvatar
     public bool IsOpen = false;
     
     TokenUserDataDTO? userdata;
+    private ShiftIdentityBlazorOptions? IdentityOptions;
+    private IIdentityStore? tokenStore;
 
     protected override async Task OnInitializedAsync()
     {
-        //userdata = (await tokenStore.GetTokenAsync())?.UserData;
+        IdentityOptions = ServiceProvider.GetService<ShiftIdentityBlazorOptions>();
+        tokenStore = ServiceProvider.GetService<IIdentityStore>();
+
     }
 
     internal async Task Logout()
     {
-        //await tokenStore.RemoveTokenAsync();
+        if (tokenStore == null)
+            return;
+        await tokenStore.RemoveTokenAsync();
         NavigationManager.NavigateTo("/", true);
     }
 
@@ -48,6 +55,8 @@ public partial class UserAvatar
 
     internal void GoToIdentity()
     {
-        //NavigationManager.NavigateTo($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm");
+        if (IdentityOptions == null)
+            return;
+        NavigationManager.NavigateTo($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm");
     }
 }

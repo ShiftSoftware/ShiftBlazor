@@ -28,8 +28,12 @@
                 @if (App.EnableAutherization == true)
                 {
                     <AuthorizeView>
-                        <UserAvatar></UserAvatar>
+                        <UserAvatar/>
                     </AuthorizeView>
+                }
+                else
+                {
+                    <UserAvatar/>
                 }
 
             </MudAppBar>

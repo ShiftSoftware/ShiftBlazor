@@ -1,6 +1,4 @@
-﻿@using ShiftSoftware.ShiftIdentity.Blazor;
-@using ShiftSoftware.ShiftIdentity.Core;
-@* @inject ShiftIdentityBlazorOptions IdentityOptions *@
+﻿@using ShiftSoftware.ShiftIdentity.Core;
 @inject ShiftBlazorLocalizer Loc
 
 @namespace ShiftSoftware.ShiftBlazor.Components
@@ -23,7 +21,12 @@
             }
         </MudAvatar>
 
-        @if (userdata == null)
+
+        @if (tokenStore == null)
+        {
+            <MudText>@Loc["User"]</MudText>
+        }
+        else if (userdata == null)
         {
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="60px"></MudSkeleton>
         }
@@ -40,11 +43,14 @@
     <ChildContent>
         <MudList T="string">
 
-            @* <MudLink Href="@($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm")"
-                     Color="Color.Inherit"
-                     Underline="Underline.None">
-                <MudListItem Icon="@Icons.Material.Filled.People">@Loc["IdentityProfileButton"]</MudListItem>
-            </MudLink> *@
+            @if (IdentityOptions != null)
+            {
+                <MudLink Href="@($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm")"
+                         Color="Color.Inherit"
+                         Underline="Underline.None">
+                    <MudListItem Icon="@Icons.Material.Filled.People">@Loc["IdentityProfileButton"]</MudListItem>
+                </MudLink>
+            }
 
             <MudListItem Icon="@Icons.Material.Filled.Settings" OnClick="OpenSettings">@Loc["SettingsButton"]</MudListItem>
 
@@ -52,10 +58,17 @@
             {
                 <MudDivider/>
                 @MenuItemsTemplate
+            }
+
+            @if (MenuItemsTemplate != null && tokenStore != null)
+            {
                 <MudDivider />
             }
 
-            <MudListItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">@Loc["LogoutButton"]</MudListItem>
+            @if (tokenStore != null)
+            {
+                <MudListItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">@Loc["LogoutButton"]</MudListItem>
+            }
 
         </MudList>
 
