@@ -1,18 +1,14 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Components.Forms;
 using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Interfaces;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-public interface IShiftForm
+public interface IShiftForm : IStandaloneComponent
 {
-    public Guid Id { get; }
-    public string? Title { get; set; }
     public FormModes Mode { get; set; }
     public FormTasks TaskInProgress { get; set; }
-    public string IconSvg { get; set; }
-    public string? NavColor { get; set; }
-    public bool NavIconFlatColor { get; set; }
     public EditContext EditContext { get; set; }
     public IValidator? Validator { get; }
 

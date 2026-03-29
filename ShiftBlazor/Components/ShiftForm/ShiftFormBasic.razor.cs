@@ -31,6 +31,12 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     [CascadingParameter]
     public IMudDialogInstance? MudDialog { get; set; }
 
+    [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
+    public bool? ParentReadOnly { get; set; }
+
+    [CascadingParameter(Name = FormHelper.ParentDisabledName)]
+    public bool? ParentDisabled { get; set; }
+
     /// <summary>
     ///     The current Mode of the form.
     /// </summary>
@@ -188,7 +194,10 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     public bool AutoFocus { get; set; } = true;
 
     [Parameter]
-    public bool OnlyValidateOnSubmit { get; set;  }
+    public bool OnlyValidateOnSubmit { get; set; }
+
+    [Parameter]
+    public string? UniqueName { get; set; }
 
     public Guid Id { get; private set; } = Guid.NewGuid();
     public FormTasks TaskInProgress { get; set; }
@@ -220,6 +229,7 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
             .Build();
 
     internal bool DisableSubmit => TaskInProgress != FormTasks.None;
+    public string? Height { get; set; }
 
     protected override void OnInitialized()
     {

@@ -1,23 +1,24 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
+using MudBlazor;
+using Newtonsoft.Json.Linq;
+using ShiftSoftware.ShiftBlazor.Components.Print;
+using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Localization;
+using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core.Extensions;
+using ShiftSoftware.ShiftEntity.Model;
+using ShiftSoftware.ShiftEntity.Model.Dtos;
+using ShiftSoftware.TypeAuth.Core;
+using ShiftSoftware.TypeAuth.Core.Actions;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.JSInterop;
-using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Extensions;
-using ShiftSoftware.ShiftBlazor.Services;
-using ShiftSoftware.ShiftEntity.Model;
-using ShiftSoftware.ShiftEntity.Model.Dtos;
-using ShiftSoftware.ShiftBlazor.Enums;
-using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftBlazor.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
-using ShiftSoftware.TypeAuth.Core.Actions;
-using ShiftSoftware.TypeAuth.Core;
-using ShiftSoftware.ShiftBlazor.Localization;
-using ShiftSoftware.ShiftEntity.Core.Extensions;
-using ShiftSoftware.ShiftBlazor.Components.Print;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -33,6 +34,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] PrintService PrintService { get; set; } = default!;
+    [Inject] PersistentComponentState ApplicationState { get; set; } = default!;
 
     [Parameter] public string? BaseUrl { get; set; }
     [Parameter] public string? BaseUrlKey { get; set; }
@@ -177,8 +179,8 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     }
 
     private bool ReadyToRender = false;
-    [PersistentState]
     public T? FetchedEntity { get; set; }
+    private PersistingComponentStateSubscription persistingSubscription;
 
     protected override void OnInitialized()
     {
@@ -217,12 +219,24 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         {
             if (FetchedEntity == null)
             {
-            await FetchItem();
-        }
-        else
-        {
+                await FetchItem();
+            }
+            else
+            {
                 await SetValue(FetchedEntity);
             }
+
+            if (!ApplicationState.TryTakeFromJson<T>(
+                UniqueName + nameof(FetchedEntity), out var fetchedEntity))
+            {
+                await FetchItem();
+            }
+            else
+            {
+                await SetValue(FetchedEntity);
+            }
+
+            persistingSubscription = ApplicationState.RegisterOnPersisting(PersistItems);
         }
         else
         {
@@ -234,6 +248,12 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         CacheValue();
 
         ReadyToRender = true;
+    }
+
+    private Task PersistItems()
+    {
+        ApplicationState.PersistAsJson(UniqueName + nameof(FetchedEntity), FetchedEntity);
+        return Task.CompletedTask;
     }
 
     protected override bool ShouldRender()

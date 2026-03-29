@@ -120,7 +120,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// Sets the css height property for the Datagrid.
     /// </summary>
     [Parameter]
-    public string Height { get; set; } = string.Empty;
+    public string? Height { get; set; } = string.Empty;
 
     /// <summary>
     /// The title used for the form and the browser tab title.
@@ -520,7 +520,6 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     public int RowsPerPage => _selectedPageSize;
     public int CurrentPage { get; private set; }
     private PersistingComponentStateSubscription persistingSubscription;
-
     private OrderedDictionary<string, SortDirection> SortDefinitions { get; set; } = [];
 
     protected override async Task OnInitializedAsync()

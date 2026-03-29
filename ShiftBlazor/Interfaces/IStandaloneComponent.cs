@@ -12,7 +12,7 @@ public interface IStandaloneComponent
     public string IconSvg { get; }
     public bool? ParentReadOnly { get; set; }
     public bool? ParentDisabled { get; set; }
-    public string Height { get; set; }
+    public string? Height { get; set; }
     public string? NavColor { get; set; }
     public bool NavIconFlatColor { get; set; }
     //public bool Outlined { get; set; }
