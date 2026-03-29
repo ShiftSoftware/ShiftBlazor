@@ -157,7 +157,6 @@
             <MudDivider Style="flex-grow: initial;" />
 
             <div class="file-listing @GetViewClass()" @onclick="() => {if (IsIconsView) DeselectAllFiles();} " @oncontextmenu="ContextMenu" @oncontextmenu:preventDefault="DisplayContextMenu">
-
                 @if (DisplayedFiles.Count > 0)
                 {
                     if (Settings.View == FileView.Detailed)
@@ -166,7 +165,6 @@
                                      Dense
                                      Filterable="false"
                                      SortMode="SortMode.None"
-                                     Virtualize="Height != null"
                                      Height="@Height"
                                      Hover
                                      Striped
