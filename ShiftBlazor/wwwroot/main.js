@@ -106,7 +106,9 @@ window.SetAsSortable = function (id, counter = 0) {
 window.fixStickyColumn = function (gridId) {
 
     var grid = document.getElementById(gridId);
+    if (!grid) return;
     var headRow = grid.querySelector(".mud-table-container .mud-table-head .mud-table-row");
+    if (!headRow) return;
     var leftCells = [...headRow.getElementsByClassName("sticky-left")];
     var rightCells = [...headRow.getElementsByClassName("sticky-right")];
     var offset = 0;
