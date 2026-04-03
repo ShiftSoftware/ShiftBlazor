@@ -275,3 +275,12 @@ window.addEventListener("keydown", handleKeydown);
 window.addEventListener("keyup", releaseAltKey);
 window.addEventListener("blur", releaseAltKey);
 window.addEventListener("resize", responsiveFix);
+
+// Prevent browser auto-translation.
+// Browser translation tools (e.g. Google Translate) modify the DOM directly, which conflicts
+// with frameworks that manage their own DOM (Blazor, React, etc.). This can cause rendering
+// errors, broken event handlers, and hydration mismatches.
+document.documentElement.setAttribute('translate', 'no');
+if (!document.head.querySelector('meta[name="google"][content="notranslate"]')) {
+    document.head.insertAdjacentHTML('beforeend', '<meta name="google" content="notranslate">');
+}
