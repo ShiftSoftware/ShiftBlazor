@@ -40,7 +40,7 @@ public static class ServicesExtension
         services.AddScoped<PrintService>();
         services.AddScoped(x =>
         {
-            return new SettingManager(x.GetRequiredService<ILocalStorageService>(),
+            return new SettingManager(x.GetRequiredService<ISyncLocalStorageService>(),
                                x.GetRequiredService<NavigationManager>(),
                                x.GetRequiredService<HttpClient>(),
                                x.GetRequiredService<IJSRuntime>(),

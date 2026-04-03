@@ -10,7 +10,7 @@ namespace ShiftSoftware.ShiftBlazor.Services;
 
 public class SettingManager
 {
-    private readonly ILocalStorageService SyncLocalStorage;
+    private readonly ISyncLocalStorageService SyncLocalStorage;
     private readonly NavigationManager? NavManager;
     private readonly HttpClient? Http;
     private readonly IJSRuntime? JsRuntime;
@@ -20,7 +20,7 @@ public class SettingManager
     public DeviceInfo Device { get; set; } = new DeviceInfo();
     public AppConfiguration Configuration { get; set; } = new();
 
-    public SettingManager(ILocalStorageService syncLocalStorage,
+    public SettingManager(ISyncLocalStorageService syncLocalStorage,
                           NavigationManager? navManager,
                           HttpClient? http,
                           IJSRuntime? jsRuntime,
@@ -49,7 +49,7 @@ public class SettingManager
         if (Settings.DateFormat != format)
         {
             Settings.DateFormat = format;
-            SyncLocalStorage.SetItemAsync(Key, Settings);
+            SyncLocalStorage.SetItem(Key, Settings);
         }
     }
 
@@ -58,7 +58,7 @@ public class SettingManager
         if (Settings.TimeFormat != format)
         {
             Settings.TimeFormat = format;
-            SyncLocalStorage.SetItemAsync(Key, Settings);
+            SyncLocalStorage.SetItem(Key, Settings);
         }
     }
 
@@ -77,7 +77,7 @@ public class SettingManager
         if (Settings.ListPageSize != size)
         {
             Settings.ListPageSize = size;
-            SyncLocalStorage.SetItemAsync(Key, Settings);
+            SyncLocalStorage.SetItem(Key, Settings);
         }
     }
     public int GetListPageSize()
@@ -90,7 +90,7 @@ public class SettingManager
         if (Settings.ModalPosition != position)
         {
             Settings.ModalPosition = position;
-            SyncLocalStorage.SetItemAsync(Key, Settings);
+            SyncLocalStorage.SetItem(Key, Settings);
         }
     }
     public DialogPosition GetModalPosition()
@@ -103,7 +103,7 @@ public class SettingManager
         if (Settings.ModalWidth != width)
         {
             Settings.ModalWidth = width;
-            SyncLocalStorage.SetItemAsync(Key, Settings);
+            SyncLocalStorage.SetItem(Key, Settings);
         }
     }
     public MaxWidth GetModalWidth()
@@ -116,7 +116,7 @@ public class SettingManager
         if (Settings.FormOnSaveAction != action)
         {
             Settings.FormOnSaveAction = action;
-            SyncLocalStorage.SetItemAsync(Key, Settings);
+            SyncLocalStorage.SetItem(Key, Settings);
         }
     }
     public FormOnSaveAction GetFormOnSaveAction()
@@ -133,7 +133,7 @@ public class SettingManager
 
         Settings.ColumnStates.Remove(id);
         Settings.ColumnStates.Add(id, columnNames);
-        SyncLocalStorage.SetItemAsync(Key, Settings);
+        SyncLocalStorage.SetItem(Key, Settings);
     }
 
     public List<ColumnState> GetColumnState(string id)
@@ -145,7 +145,7 @@ public class SettingManager
     {
         Settings.Language = lang;
 
-        SyncLocalStorage.SetItemAsync(Key, Settings);
+        SyncLocalStorage.SetItem(Key, Settings);
 
         UpdateCulture();
 
@@ -162,7 +162,7 @@ public class SettingManager
     public void SetFormCloneSetting(bool enableClone)
     {
         Settings.EnableFormClone = enableClone;
-        SyncLocalStorage.SetItemAsync(Key, Settings);
+        SyncLocalStorage.SetItem(Key, Settings);
     }
 
     public bool GetFormCloneSetting()
@@ -176,7 +176,7 @@ public class SettingManager
 
         Settings.FileExplorerSettings.Remove(id);
         Settings.FileExplorerSettings.Add(id, setting);
-        SyncLocalStorage.SetItemAsync(Key, Settings);
+        SyncLocalStorage.SetItem(Key, Settings);
     }
 
     public FileExplorerSettings? GetFileExplorerSetting(string id)
@@ -209,14 +209,14 @@ public class SettingManager
 
         try
         {
-            settings = SyncLocalStorage.GetItemAsync<AppSetting>(Key).GetAwaiter().GetResult();
+            settings = SyncLocalStorage.GetItem<AppSetting>(Key);
         }
         catch { }
 
         if (settings == null)
         {
             settings = new AppSetting();
-            SyncLocalStorage.SetItemAsync(Key, settings);
+            SyncLocalStorage.SetItem(Key, settings);
         }
 
         return settings;
@@ -227,7 +227,7 @@ public class SettingManager
         if (Settings.IsDrawerOpen != open)
         {
             Settings.IsDrawerOpen = open;
-            SyncLocalStorage.SetItemAsync(Key, Settings);
+            SyncLocalStorage.SetItem(Key, Settings);
         }
 
         return GetDrawerState();
@@ -243,7 +243,7 @@ public class SettingManager
         if (Settings.IsDataGridFilterPanelOpen != open)
         {
             Settings.IsDataGridFilterPanelOpen = open;
-            SyncLocalStorage.SetItemAsync(Key, Settings);
+            SyncLocalStorage.SetItem(Key, Settings);
         }
 
         return GetFilterPanelState() ?? open;
