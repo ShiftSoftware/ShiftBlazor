@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace ShiftSoftware.ShiftBlazor.Services;
+﻿namespace ShiftSoftware.ShiftBlazor.Services;
 
 public class AppConfiguration
 {
@@ -21,8 +19,6 @@ public class AppConfiguration
     /// Width x Height format.
     /// </summary>
     public List<ValueTuple<int, int>> ThumbnailSizes = [(250, 250), (500, 500), (1000, 1000)];
-
-    public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
 
     public List<LanguageInfo> Languages = [];
 
