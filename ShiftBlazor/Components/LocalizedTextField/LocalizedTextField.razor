@@ -1,7 +1,11 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @using System.Linq.Expressions
 
-<LocalizedInput Value="@Value" ValueChanged="ValueChanged" Label="@Label" For="For">
+<LocalizedInput Value="@Value"
+                ValueChanged="ValueChanged"
+                Label="@Label"
+                For="For"
+                Languages="Languages">
     <MudTextFieldExtended T="string"
                           OnlyValidateIfDirty="@OnlyValidateIfDirty"
                           Value="@context.Value"
@@ -60,4 +64,7 @@
     public Adornment Adornment { get; set; }
     [Parameter]
     public String? AdornmentIcon { get; set; }
+    [Parameter]
+    public List<LanguageInfo>? Languages { get; set; }
+
 }
