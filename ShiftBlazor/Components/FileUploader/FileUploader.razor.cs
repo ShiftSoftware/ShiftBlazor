@@ -13,8 +13,10 @@ using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
+using Microsoft.AspNetCore.Components.Authorization;
 using ShiftSoftware.ShiftIdentity.Blazor;
 using System.Linq.Expressions;
+using System.Security.Claims;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Web;
@@ -105,6 +107,9 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftForm { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     private FormModes? _mode;
 
@@ -512,15 +517,26 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
                 { Constants.FileExplorerSizesMetadataKey, string.Join("|", thumbnailSizes)},
             };
 
-            var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+            string? loggedInUserId = null;
 
-            if (tokenStore != null)
+            if (AuthenticationStateTask != null)
             {
-                var loggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
-                if (loggedInUser != null)
+                var authState = await AuthenticationStateTask;
+                loggedInUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            }
+            else
+            {
+                // Fallback for standalone WASM with IIdentityStore
+                var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+                if (tokenStore != null)
                 {
-                    metadata.Add(Constants.FileExplorerCreatedByMetadataKey, loggedInUser.ID);
+                    loggedInUserId = (await tokenStore.GetTokenAsync())?.UserData?.ID;
                 }
+            }
+
+            if (loggedInUserId != null)
+            {
+                metadata.Add(Constants.FileExplorerCreatedByMetadataKey, loggedInUserId);
             }
 
             await blobClient.UploadAsync(

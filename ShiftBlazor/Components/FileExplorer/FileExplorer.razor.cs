@@ -12,8 +12,10 @@ using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.ShiftEntity.Model.FileExplorer.Dtos;
+using Microsoft.AspNetCore.Components.Authorization;
 using ShiftSoftware.ShiftIdentity.Blazor;
 using ShiftSoftware.ShiftIdentity.Core.DTOs;
+using System.Security.Claims;
 using ShiftSoftware.TypeAuth.Core;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -32,6 +34,8 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     [CascadingParameter(Name = FormHelper.ParentReadOnlyName)]
     public bool? ParentReadOnly { get; set; }
@@ -267,11 +271,29 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
 
     protected override async Task OnInitializedAsync()
     {
-        var tokenStore = ServiceProvider.GetService<IIdentityStore>();
-
-        if (tokenStore != null)
+        if (AuthenticationStateTask != null)
         {
-            LoggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                LoggedInUser = new TokenUserDataDTO
+                {
+                    ID = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "",
+                    FullName = user.FindFirst(ClaimTypes.GivenName)?.Value ?? "",
+                    Username = user.FindFirst(ClaimTypes.Name)?.Value ?? "",
+                };
+            }
+        }
+        else
+        {
+            // Fallback for standalone WASM with IIdentityStore
+            var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+            if (tokenStore != null)
+            {
+                LoggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
+            }
         }
 
         var userSettings = await SettingManager.GetFileExplorerSetting(SettingKey);

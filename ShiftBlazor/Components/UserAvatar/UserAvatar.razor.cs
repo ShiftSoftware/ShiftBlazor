@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using ShiftSoftware.ShiftIdentity.Blazor;
 using ShiftSoftware.ShiftIdentity.Core;
 using ShiftSoftware.ShiftIdentity.Core.DTOs;
+using System.Security.Claims;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -12,6 +14,10 @@ public partial class UserAvatar
     [Inject] IDialogService Dialog { get; set; } = default!;
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
+    [Inject] HttpClient Http { get; set; } = default!;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     [Parameter]
     public MouseEvent ActivationEvent { get; set; } = MouseEvent.LeftClick;
@@ -29,23 +35,60 @@ public partial class UserAvatar
     public string? IconOpen { get; set; } = Icons.Material.Filled.KeyboardArrowUp;
 
     public bool IsOpen = false;
-    
-    TokenUserDataDTO? userdata;
+
+
+    private string? userFullName;
+    private bool isAuthenticated;
     private ShiftIdentityBlazorOptions? IdentityOptions;
-    private IIdentityStore? tokenStore;
 
     protected override async Task OnInitializedAsync()
     {
         IdentityOptions = ServiceProvider.GetService<ShiftIdentityBlazorOptions>();
-        tokenStore = ServiceProvider.GetService<IIdentityStore>();
+
+        if (AuthenticationStateTask != null)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                isAuthenticated = true;
+                userFullName = user.FindFirst(ClaimTypes.GivenName)?.Value
+                    ?? user.FindFirst(ClaimTypes.Name)?.Value;
+            }
+        }
+        else
+        {
+            // Fallback for standalone WASM with IIdentityStore
+            var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+            if (tokenStore != null)
+            {
+                isAuthenticated = true;
+                var tokenData = await tokenStore.GetTokenAsync();
+                userFullName = tokenData?.UserData?.FullName;
+            }
+        }
 
     }
 
     internal async Task Logout()
     {
-        if (tokenStore == null)
+        if (!isAuthenticated)
             return;
-        await tokenStore.RemoveTokenAsync();
+
+        // Try cookie-based logout first
+        try
+        {
+            await Http.PostAsync("/api/identity/logout", null);
+        }
+        catch
+        {
+            // If cookie logout endpoint doesn't exist, try IIdentityStore (standalone WASM)
+            var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+            if (tokenStore != null)
+                await tokenStore.RemoveTokenAsync();
+        }
+
         NavigationManager.NavigateTo("/", true);
     }
 

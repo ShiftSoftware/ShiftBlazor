@@ -3,7 +3,6 @@
 @using Microsoft.Extensions.DependencyInjection
 @using ShiftSoftware.ShiftBlazor.Components.App
 @using ShiftSoftware.ShiftIdentity.Blazor.Components
-@using ShiftSoftware.ShiftIdentity.Blazor.Services
 @using ShiftSoftware.ShiftIdentity.Core
 
 @namespace ShiftSoftware.ShiftBlazor.Components
@@ -54,7 +53,6 @@
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
 
     [Inject] NavigationManager NavManager { get; set; } = default!;
-    ShiftIdentityService? ShiftIdentityService { get; set; }
     [Inject] SettingManager SettingManager { get; set; } = default!;
 
     [CascadingParameter]
@@ -105,8 +103,6 @@
     {
         await SettingManager.Setup(false);
         
-        ShiftIdentityService = ServiceProvider.GetService<ShiftIdentityService>();
-
         AppContext = new AppLayoutContext(SettingManager)
         {
             Title = AppTitle,
@@ -129,22 +125,13 @@
         {
             var returnUrl = NavManager.ToBaseRelativePath(NavManager.Uri);
 
-            if (IdentityHostingType == ShiftIdentityHostingTypes.Internal)
-            {
-                var queryStrings = new Dictionary<string, object?>();
+            var queryStrings = new Dictionary<string, object?>();
 
-                //Add return-url to login page
-                if (!string.IsNullOrWhiteSpace(returnUrl))
-                    queryStrings.Add("ReturnUrl", returnUrl);
+            if (!string.IsNullOrWhiteSpace(returnUrl))
+                queryStrings.Add("ReturnUrl", returnUrl);
 
-                var uri = NavManager.GetUriWithQueryParameters(url, queryStrings);
-                NavManager.NavigateTo(uri);
-            }
-            else
-            {
-                if (ShiftIdentityService is not null)
-                    await ShiftIdentityService.LoginAsync(returnUrl);
-            }
+            var uri = NavManager.GetUriWithQueryParameters(url, queryStrings);
+            NavManager.NavigateTo(uri, IdentityHostingType == ShiftIdentityHostingTypes.External);
         }
 
         await base.OnInitializedAsync();

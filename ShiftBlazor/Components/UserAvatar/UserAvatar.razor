@@ -12,27 +12,26 @@
 
     <ActivatorContent>
         <MudAvatar Color="Color.Tertiary">
-            @if (userdata == null) {
+            @if (string.IsNullOrEmpty(userFullName)) {
                 <MudIcon Color="Color.Dark" Icon="@Icons.Material.Filled.Person" />
             }
             else
             {
-                @userdata.FullName.First()
+                @userFullName.First()
             }
         </MudAvatar>
 
-
-        @if (tokenStore == null)
+        @if (!isAuthenticated)
         {
             <MudText>@Loc["User"]</MudText>
         }
-        else if (userdata == null)
+        else if (string.IsNullOrEmpty(userFullName))
         {
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="60px"></MudSkeleton>
         }
         else
         {
-            <MudText>@userdata.FullName</MudText>
+            <MudText>@userFullName</MudText>
         }
 
         @if (ShowClosedOpenIcon)
@@ -60,12 +59,12 @@
                 @MenuItemsTemplate
             }
 
-            @if (MenuItemsTemplate != null && tokenStore != null)
+            @if (MenuItemsTemplate != null && isAuthenticated)
             {
                 <MudDivider />
             }
 
-            @if (tokenStore != null)
+            @if (isAuthenticated)
             {
                 <MudListItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">@Loc["LogoutButton"]</MudListItem>
             }
