@@ -192,13 +192,13 @@ public partial class ShiftDateTimePicker : IDisposable, IShortcutComponent
     protected string Classname =>
             new CssBuilder("shift-datetime-picker shift-input")
                 .AddClass("mud-input-required", when: () => Required)
-                .AddClass($"mud-input-{Variant.ToStringFast().ToLowerInvariant()}-with-label", !string.IsNullOrEmpty(Label))
+                .AddClass($"mud-input-{Variant.ToString().ToLowerInvariant()}-with-label", !string.IsNullOrEmpty(Label))
                 .AddClass(Class)
                 .Build();
 
     protected string InputContainerClassname =>
             new CssBuilder("shift-input-wrapper")
-                .AddClass($"mud-input-{Variant.ToStringFast().ToLowerInvariant()}-with-label", !string.IsNullOrEmpty(Label))
+                .AddClass($"mud-input-{Variant.ToString().ToLowerInvariant()}-with-label", !string.IsNullOrEmpty(Label))
                 .AddClass("mud-shrink", this.DateTimeOffset != null || IsFocused || Adornment == Adornment.Start || !string.IsNullOrWhiteSpace(Placeholder))
                 .Build();
 
