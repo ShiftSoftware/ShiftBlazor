@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using ShiftSoftware.ShiftIdentity.Blazor;
 using ShiftSoftware.ShiftIdentity.Core;
-using ShiftSoftware.ShiftIdentity.Core.DTOs;
 using System.Security.Claims;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
@@ -39,11 +38,13 @@ public partial class UserAvatar
 
     private string? userFullName;
     private bool isAuthenticated;
-    private ShiftIdentityBlazorOptions? IdentityOptions;
+    private ShiftIdentityBlazorOptions? identityOptions;
+    private IIdentityStore? tokenStore;
 
     protected override async Task OnInitializedAsync()
     {
-        IdentityOptions = ServiceProvider.GetService<ShiftIdentityBlazorOptions>();
+        identityOptions = ServiceProvider.GetService<ShiftIdentityBlazorOptions>();
+        tokenStore = ServiceProvider.GetService<IIdentityStore>();
 
         if (AuthenticationStateTask != null)
         {
@@ -60,7 +61,6 @@ public partial class UserAvatar
         else
         {
             // Fallback for standalone WASM with IIdentityStore
-            var tokenStore = ServiceProvider.GetService<IIdentityStore>();
             if (tokenStore != null)
             {
                 isAuthenticated = true;
@@ -76,17 +76,14 @@ public partial class UserAvatar
         if (!isAuthenticated)
             return;
 
-        // Try cookie-based logout first
-        try
+        if (identityOptions?.UseCookieAuth == true)
         {
-            await Http.PostAsync("/api/identity/logout", null);
+            try { await Http.PostAsync("/api/identity/logout", null); } catch { }
         }
-        catch
+
+        if (tokenStore != null)
         {
-            // If cookie logout endpoint doesn't exist, try IIdentityStore (standalone WASM)
-            var tokenStore = ServiceProvider.GetService<IIdentityStore>();
-            if (tokenStore != null)
-                await tokenStore.RemoveTokenAsync();
+            await tokenStore.RemoveTokenAsync();
         }
 
         NavigationManager.NavigateTo("/", true);
@@ -98,8 +95,8 @@ public partial class UserAvatar
 
     internal void GoToIdentity()
     {
-        if (IdentityOptions == null)
+        if (identityOptions == null)
             return;
-        NavigationManager.NavigateTo($"{IdentityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm");
+        NavigationManager.NavigateTo($"{identityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm");
     }
 }

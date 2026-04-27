@@ -42,9 +42,9 @@
     <ChildContent>
         <MudList T="string">
 
-            @if (IdentityOptions != null)
+            @if (identityOptions != null)
             {
-                <MudLink Href="@IdentityOptions.FrontEndBaseUrl.AddUrlPath(Constants.IdentityRoutePreifix, "UserDataForm")"
+                <MudLink Href="@identityOptions.FrontEndBaseUrl.AddUrlPath(Constants.IdentityRoutePreifix, "UserDataForm")"
                          Color="Color.Inherit"
                          Underline="Underline.None">
                     <MudListItem Icon="@Icons.Material.Filled.People">@Loc["IdentityProfileButton"]</MudListItem>
