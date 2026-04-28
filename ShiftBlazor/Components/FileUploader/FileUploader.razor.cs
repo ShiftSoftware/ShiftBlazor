@@ -1,6 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
@@ -13,12 +14,12 @@ using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using Microsoft.AspNetCore.Components.Authorization;
 using ShiftSoftware.ShiftIdentity.Blazor;
+using ShiftSoftware.ShiftIdentity.Core.DTOs;
 using System.Linq.Expressions;
-using System.Security.Claims;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Web;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
@@ -191,6 +192,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     private string? ErrorText;
     private DateTime _lastProgressUpdate = DateTime.MinValue;
     private CancellationTokenSource UploaderToken = new CancellationTokenSource();
+    private TokenUserDataDTO? LoggedInUser;
 
     protected override void OnInitialized()
     {
@@ -222,6 +224,32 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
             }
         }
 
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationStateTask != null)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+
+            // The LoggedInUser doesn't have full information like emails and phones,
+            // but we only need the ID and name for this component.
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                LoggedInUser = new TokenUserDataDTO
+                {
+                    ID = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "",
+                    FullName = user.FindFirst(ClaimTypes.GivenName)?.Value ?? "",
+                    Username = user.FindFirst(ClaimTypes.Name)?.Value ?? "",
+                };
+            }
+        }
+        else if (ServiceProvider.GetService<IIdentityStore>() is IIdentityStore tokenStore)
+        {
+            // Fallback for standalone WASM with IIdentityStore
+            LoggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
+        }
     }
 
     private void OnValidationRequested(object? sender, ValidationRequestedEventArgs e)
@@ -517,26 +545,9 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
                 { Constants.FileExplorerSizesMetadataKey, string.Join("|", thumbnailSizes)},
             };
 
-            string? loggedInUserId = null;
-
-            if (AuthenticationStateTask != null)
+            if (LoggedInUser?.ID != null)
             {
-                var authState = await AuthenticationStateTask;
-                loggedInUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            }
-            else
-            {
-                // Fallback for standalone WASM with IIdentityStore
-                var tokenStore = ServiceProvider.GetService<IIdentityStore>();
-                if (tokenStore != null)
-                {
-                    loggedInUserId = (await tokenStore.GetTokenAsync())?.UserData?.ID;
-                }
-            }
-
-            if (loggedInUserId != null)
-            {
-                metadata.Add(Constants.FileExplorerCreatedByMetadataKey, loggedInUserId);
+                metadata.Add(Constants.FileExplorerCreatedByMetadataKey, LoggedInUser.ID);
             }
 
             await blobClient.UploadAsync(

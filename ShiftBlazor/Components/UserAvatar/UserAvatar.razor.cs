@@ -58,15 +58,12 @@ public partial class UserAvatar
                     ?? user.FindFirst(ClaimTypes.Name)?.Value;
             }
         }
-        else
+        else if (tokenStore != null)
         {
             // Fallback for standalone WASM with IIdentityStore
-            if (tokenStore != null)
-            {
-                isAuthenticated = true;
-                var tokenData = await tokenStore.GetTokenAsync();
-                userFullName = tokenData?.UserData?.FullName;
-            }
+            isAuthenticated = true;
+            var tokenData = await tokenStore.GetTokenAsync();
+            userFullName = tokenData?.UserData?.FullName;
         }
 
     }

@@ -276,6 +276,8 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
             var authState = await AuthenticationStateTask;
             var user = authState.User;
 
+            // The LoggedInUser doesn't have full information like emails and phones,
+            // but we only need the ID and name for this component.
             if (user.Identity?.IsAuthenticated == true)
             {
                 LoggedInUser = new TokenUserDataDTO
@@ -286,14 +288,10 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
                 };
             }
         }
-        else
+        else if (ServiceProvider.GetService<IIdentityStore>() is IIdentityStore tokenStore)
         {
             // Fallback for standalone WASM with IIdentityStore
-            var tokenStore = ServiceProvider.GetService<IIdentityStore>();
-            if (tokenStore != null)
-            {
-                LoggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
-            }
+            LoggedInUser = (await tokenStore.GetTokenAsync())?.UserData;
         }
 
         var userSettings = await SettingManager.GetFileExplorerSetting(SettingKey);
