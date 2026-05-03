@@ -270,6 +270,21 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
             await OnReady.InvokeAsync();
         }
         await base.OnAfterRenderAsync(firstRender);
+
+        if (_suppressDirtyOnLoad)
+        {
+            // Drain any continuations queued by the just-completed render
+            // (e.g. async ValueChanged callbacks from input components hydrating
+            // their initial display state) before lifting the suppression.
+            await Task.Yield();
+
+            if (EditContext != null)
+            {
+                EditContext.MarkAsUnmodified();
+                EditContext.OnFieldChanged -= SuppressDirtyOnLoadHandler;
+            }
+            _suppressDirtyOnLoad = false;
+        }
     }
 
     //internal ValueTask LocationChangingHandler(LocationChangingContext ctx)
@@ -354,10 +369,29 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
         {
             Value = value;
             await ValueChanged.InvokeAsync(Value);
+
+            if (EditContext != null)
+                EditContext.OnFieldChanged -= SuppressDirtyOnLoadHandler;
+
             EditContext = new EditContext(Value);
             EditContext.MarkAsUnmodified();
+
+            // Suppress spurious dirty notifications fired by input components during
+            // their initial post-load render. Lifted in OnAfterRenderAsync.
+            // See `.shift/repos/attention-and-notifications/docs/dirty-on-load-fix.md`.
+            EditContext.OnFieldChanged += SuppressDirtyOnLoadHandler;
+            _suppressDirtyOnLoad = true;
+
             StateHasChanged();
         }
+    }
+
+    private bool _suppressDirtyOnLoad;
+
+    private void SuppressDirtyOnLoadHandler(object? sender, FieldChangedEventArgs e)
+    {
+        if (_suppressDirtyOnLoad && sender is EditContext ctx)
+            ctx.MarkAsUnmodified();
     }
 
     internal virtual async Task InvalidSubmitHandler(EditContext context)
