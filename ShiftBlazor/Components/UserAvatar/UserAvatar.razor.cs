@@ -73,17 +73,23 @@ public partial class UserAvatar
         if (!isAuthenticated)
             return;
 
-        if (identityOptions?.UseCookieAuth == true)
+        // Unified logout: AuthRefreshService stops the loop, runs strategy-specific cleanup
+        // (clear localStorage for JWT, POST /api/identity/logout for cookie), and clears the
+        // in-memory AuthenticationState. No full page reload — cascading consumers see the
+        // anonymous principal via NotifyAuthenticationStateChanged.
+        var authRefresh = ServiceProvider.GetService<ShiftSoftware.ShiftIdentity.Blazor.Services.AuthSessionService>();
+        if (authRefresh != null)
         {
-            try { await Http.PostAsync("/api/identity/logout", null); } catch { }
+            await authRefresh.OnLogoutAsync();
+            NavigationManager.NavigateTo("/", forceLoad: false);
+            return;
         }
-
-        if (tokenStore != null)
+        else if (tokenStore != null)
         {
+            // Fallback for hosts that didn't register AuthRefreshService.
             await tokenStore.RemoveTokenAsync();
+            NavigationManager.NavigateTo("/", true);
         }
-
-        NavigationManager.NavigateTo("/", true);
     }
 
     internal async Task OpenSettings() => await Dialog.ShowAsync<Settings>();
