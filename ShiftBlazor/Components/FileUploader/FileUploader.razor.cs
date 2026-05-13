@@ -131,6 +131,9 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         }
     }
 
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object?> UserAttributes { get; set; } = new Dictionary<string, object?>();
+
     internal string InputId = "Input" + Guid.NewGuid().ToString().Replace("-", string.Empty);
     internal string UploaderId = "Uploader" + Guid.NewGuid().ToString().Replace("-", string.Empty);
     internal string ImageTypes = "image/*";
@@ -139,7 +142,6 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     private InputFile? InputFileRef { get; set; }
     private bool? IsDirectoryUpload = false;
     private bool DisplayUploadDialog { get; set; }
-    private Dictionary<string, object> AdditionalAttributes { get; set; } = new();
 
     internal TypeAuth.Core.ITypeAuthService? TypeAuthService { get; set; }
     [Parameter]
@@ -202,13 +204,11 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
         OnGridSort += HandleGridSort;
 
-        this.AdditionalAttributes = new()
-        {
-            ["id"] = this.InputId,
-            ["class"] = "file-uploader-input",
-            ["multiple"] = "multiple",
-            ["accept"] = InputAccept,
-        };
+        UserAttributes ??= [];
+        UserAttributes["id"] = InputId;
+        UserAttributes["class"] = "file-uploader-input";
+        UserAttributes["multiple"] = "multiple";
+        UserAttributes["accept"] = InputAccept;
 
         if (ShiftForm?.EditContext != null)
         {
@@ -277,7 +277,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
             if (this.Capture is not null)
             {
-                this.AdditionalAttributes["capture"] = this.Capture;
+                UserAttributes["capture"] = this.Capture;
             }
 
             StateHasChanged();
