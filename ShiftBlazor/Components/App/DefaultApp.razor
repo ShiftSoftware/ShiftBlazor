@@ -2,11 +2,13 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.Extensions.DependencyInjection
 @using ShiftSoftware.ShiftBlazor.Components.App
+@using ShiftSoftware.ShiftIdentity.Blazor
 @using ShiftSoftware.ShiftIdentity.Blazor.Components
 @using ShiftSoftware.ShiftIdentity.Core
 
 @namespace ShiftSoftware.ShiftBlazor.Components
 @inject ShiftBlazorLocalizer Loc
+@inject NavigationManager NavManager
 
 <CascadingValue Value="AppContext" IsFixed="true">
     <Router AppAssembly="@AppAssembly"
@@ -19,7 +21,11 @@
 
             @if (_initialized)
             {
-                @if (AuthenticationStateTask == null)
+                @if (ShouldRedirectToChangePassword())
+                {
+                    <RedirectToChangePassword />
+                }
+                else if (AuthenticationStateTask == null)
                 {
                     <RouteView RouteData="@routeData" DefaultLayout="@(MainLayout ?? typeof(ShiftMainLayout))" />
                 }
@@ -52,7 +58,6 @@
     </Router>
 </CascadingValue>
 
-<RedirectToChangePassword />
 
 @code {
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
@@ -117,5 +122,26 @@
         };
         
         _initialized = true;
+    }
+
+    private bool ShouldRedirectToChangePassword()
+    {
+        if (authState?.User.Identity?.IsAuthenticated != true)
+            return false;
+
+        var claimValue = authState.User.Claims
+            .FirstOrDefault(c => c.Type == ShiftIdentityClaims.RequirePasswordChange)?.Value;
+
+        if (!bool.TryParse(claimValue, out var requires) || !requires)
+            return false;
+
+        var options = ServiceProvider.GetService<ShiftIdentityBlazorOptions>();
+        if (options is null) return false;
+
+        var path = options.UseCookieAuth
+            ? Constants.CookieChangePasswordPath
+            : Constants.JwtChangePasswordPath;
+
+        return !NavManager.Uri.Contains(path);
     }
 }

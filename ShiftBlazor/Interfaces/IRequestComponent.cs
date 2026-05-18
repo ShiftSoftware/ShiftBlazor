@@ -35,7 +35,7 @@ public interface IRequestComponent : IRequest
     public Func<HttpResponseMessage, ValueTask<bool>>? OnResponse { get; }
     public Func<Exception, ValueTask<bool>>? OnError { get; }
 
-    public static string GetPath(IRequestComponent self)
+    public static string GetPath(IRequest self)
     {
         string? url = self.BaseUrl;
         var config = SettingManager.Configuration;
@@ -80,7 +80,7 @@ public interface IODataRequestComponent<T> : IODataRequest, IRequestComponent
             //Check if shift entity error
             var shiftEntityException = await res.Content.ReadFromJsonAsync<ShiftEntityException>(SerializerOptions, token);
 
-            if (shiftEntityException != null)
+            if (shiftEntityException != null && shiftEntityException.Message != null)
                 throw shiftEntityException;
 
             throw new Exception(self.Loc["DataReadStatusError", (int)res.StatusCode]);
