@@ -1,4 +1,5 @@
 ﻿@using ShiftSoftware.ShiftIdentity.Core;
+@using Microsoft.AspNetCore.Components.Forms
 @inject ShiftBlazorLocalizer Loc
 
 @namespace ShiftSoftware.ShiftBlazor.Components
@@ -44,7 +45,7 @@
 
             @if (identityOptions != null)
             {
-                <MudLink Href="@identityOptions.FrontEndBaseUrl.AddUrlPath(Constants.IdentityRoutePreifix, "UserDataForm")"
+                <MudLink Href="@identityOptions.FrontEndBaseUrl.AddUrlPath(Constants.IdentityRoutePrefix, "UserDataForm")"
                          Color="Color.Inherit"
                          Underline="Underline.None">
                     <MudListItem Icon="@Icons.Material.Filled.People">@Loc["IdentityProfileButton"]</MudListItem>
@@ -66,7 +67,25 @@
 
             @if (isAuthenticated)
             {
-                <MudListItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">@Loc["LogoutButton"]</MudListItem>
+                @if (identityOptions?.UseCookieAuth == true)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.Logout"
+                                 Style="position:relative;"
+                                 OnClick="() => Task.CompletedTask">
+                        @Loc["LogoutButton"]
+                        <form id="@logoutFormId" method="post" action="/api/identity/logout" style="display:none;">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="returnUrl" value="/" />
+                        </form>
+                        <button type="submit" form="@logoutFormId"
+                                aria-label="@Loc["LogoutButton"]"
+                                style="all:unset; position:absolute; inset:0; cursor:pointer;"></button>
+                    </MudListItem>
+                }
+                else
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">@Loc["LogoutButton"]</MudListItem>
+                }
             }
 
         </MudList>

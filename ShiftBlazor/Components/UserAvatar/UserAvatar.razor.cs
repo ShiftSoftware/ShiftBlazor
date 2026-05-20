@@ -15,6 +15,8 @@ public partial class UserAvatar
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
     [Inject] HttpClient Http { get; set; } = default!;
 
+    private readonly string logoutFormId = $"shift-logout-form-{Guid.NewGuid():N}";
+
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
@@ -34,7 +36,6 @@ public partial class UserAvatar
     public string? IconOpen { get; set; } = Icons.Material.Filled.KeyboardArrowUp;
 
     public bool IsOpen = false;
-
 
     private string? userFullName;
     private bool isAuthenticated;
@@ -73,23 +74,18 @@ public partial class UserAvatar
         if (!isAuthenticated)
             return;
 
-        // Unified logout: AuthRefreshService stops the loop, runs strategy-specific cleanup
-        // (clear localStorage for JWT, POST /api/identity/logout for cookie), and clears the
-        // in-memory AuthenticationState. No full page reload — cascading consumers see the
+        // JWT-mode logout (cookie mode posts the form directly in the .razor markup):
+        // stop the polling loop + clear in-memory AuthenticationState, then clear the
+        // stored JWT in localStorage. No full page reload — cascading consumers see the
         // anonymous principal via NotifyAuthenticationStateChanged.
-        var authRefresh = ServiceProvider.GetService<ShiftSoftware.ShiftIdentity.Blazor.Services.AuthSessionService>();
+        var authRefresh = ServiceProvider.GetService<ShiftSoftware.ShiftIdentity.Blazor.AuthRefresh.AuthSessionService>();
         if (authRefresh != null)
-        {
             await authRefresh.OnLogoutAsync();
-            NavigationManager.NavigateTo("/", forceLoad: false);
-            return;
-        }
-        else if (tokenStore != null)
-        {
-            // Fallback for hosts that didn't register AuthRefreshService.
+
+        if (tokenStore != null)
             await tokenStore.RemoveTokenAsync();
-            NavigationManager.NavigateTo("/", true);
-        }
+
+        NavigationManager.NavigateTo("/", true);
     }
 
     internal async Task OpenSettings() => await Dialog.ShowAsync<Settings>();
@@ -100,6 +96,6 @@ public partial class UserAvatar
     {
         if (identityOptions == null)
             return;
-        NavigationManager.NavigateTo($"{identityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePreifix}/UserDataForm");
+        NavigationManager.NavigateTo($"{identityOptions.FrontEndBaseUrl}/{Constants.IdentityRoutePrefix}/UserDataForm");
     }
 }
