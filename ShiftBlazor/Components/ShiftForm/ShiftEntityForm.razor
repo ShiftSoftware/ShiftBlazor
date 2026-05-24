@@ -39,6 +39,19 @@
                         <ToolbarMenuItems>
                             @ToolbarEndTemplate
 
+                            @if (_RenderAttentionBell)
+                            {
+                                <MudTooltip Text="Signal history">
+                                    <MudButtonExtended Variant="Variant.Text"
+                                                        Color="Color.Tertiary"
+                                                        Style="min-width:40px;"
+                                                        aria-label="Signal history"
+                                                        OnClick="OpenAttentionHistory">
+                                        <MudIcon Icon="@Icons.Material.Filled.NotificationsActive" />
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
+
                             @if (_RenderCloneButton)
                             {
                                 <MudTooltip Text="@Loc["Clone"]">
@@ -197,6 +210,14 @@
                 @if (Value.IsDeleted)
                 {
                     <MudAlert Severity="Severity.Error">@Loc["DeletedIndicator"]</MudAlert>
+                }
+
+                @if (AttentionSignals is { Count: > 0 })
+                {
+                    <AttentionBanner Signals="AttentionSignals"
+                                    ShowAcknowledgeButton="@(!ClearAttentionOnOpen)"
+                                    OnAcknowledge="OnAttentionCleared"
+                                    FooterNote="@(ClearAttentionOnOpen ? "Automatically acknowledged on open" : null)" />
                 }
 
                 @if (AlertEnabled)

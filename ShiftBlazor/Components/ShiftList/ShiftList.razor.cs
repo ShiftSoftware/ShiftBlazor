@@ -13,6 +13,7 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core.Attention;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
@@ -104,6 +105,13 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// </summary>
     [Parameter]
     public bool EnableSelection { get; set; }
+
+    /// <summary>
+    /// Optional function to extract the attention severity from a list item.
+    /// When set, rows with active attention are tinted by severity.
+    /// </summary>
+    [Parameter]
+    public Func<T, AttentionSeverity?>? GetAttentionSeverity { get; set; }
 
     /// <summary>
     /// Enable Virtualization and disable Paging.
@@ -392,11 +400,28 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     private TaskCompletionSource<GridData<T>> IndefiniteReloadTask = new();
     private CancellationTokenSource? ReloadCancellationTokenSource { get; set; }
 
-    protected string GetRowClassname(T item, int colIndex) =>
-        new CssBuilder()
+    protected string GetRowClassname(T item, int colIndex)
+    {
+        var builder = new CssBuilder()
             .AddClass("is-deleted", item.IsDeleted)
-            .AddClass("is-selected", SelectState.Items.Any(x => x.ID == item.ID) || SelectState.All)
-            .Build();
+            .AddClass("is-selected", SelectState.Items.Any(x => x.ID == item.ID) || SelectState.All);
+
+        if (GetAttentionSeverity is not null)
+        {
+            var severity = GetAttentionSeverity(item);
+            if (severity.HasValue)
+            {
+                builder.AddClass(severity.Value switch
+                {
+                    AttentionSeverity.Critical => "attention-row--critical",
+                    AttentionSeverity.Warning => "attention-row--warning",
+                    _ => "attention-row--info",
+                });
+            }
+        }
+
+        return builder.Build();
+    }
 
     protected string SortedColgroupStylename =>
         new StyleBuilder()

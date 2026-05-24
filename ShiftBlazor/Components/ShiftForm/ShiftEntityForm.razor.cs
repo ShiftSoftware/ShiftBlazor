@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.TypeAuth.Core.Actions;
 using ShiftSoftware.TypeAuth.Core;
 using ShiftSoftware.ShiftBlazor.Localization;
+using ShiftSoftware.ShiftEntity.Core.Attention;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftBlazor.Components.Print;
 
@@ -139,6 +140,30 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     [Parameter]
     public PrintFormConfig? PrintConfig { get; set; }
 
+    /// <summary>
+    /// Attention signals for this entity (active + cleared). When active signals exist,
+    /// the form renders an attention banner and a bell icon in the toolbar.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<StoredAttentionSignal>? AttentionSignals { get; set; }
+
+    /// <summary>
+    /// When true, the form invokes <see cref="OnAttentionCleared"/> on first load
+    /// to clear active attention signals automatically.
+    /// </summary>
+    [Parameter]
+    public bool ClearAttentionOnOpen { get; set; }
+
+    /// <summary>
+    /// Callback invoked when attention is cleared (either via ClearAttentionOnOpen
+    /// or the explicit Acknowledge button on the banner).
+    /// </summary>
+    [Parameter]
+    public EventCallback OnAttentionCleared { get; set; }
+
+    internal bool _RenderAttentionBell;
+    private bool _attentionClearFired;
+
     internal string? OriginalValue { get; set; }
     internal bool Maximized { get; set; }
 
@@ -242,7 +267,8 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         _RenderEditButton = !HideEdit && HasWriteAccess;
         _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
-        _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton;
+        _RenderAttentionBell = AttentionSignals is { Count: > 0 } && HasReadAccess;
+        _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton || _RenderAttentionBell;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -510,6 +536,26 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                 OriginalValue = JsonSerializer.Serialize(value);
             });
         }
+
+        if (ClearAttentionOnOpen && !_attentionClearFired &&
+            AttentionSignals?.Any(s => s.ClearedAt is null) == true &&
+            OnAttentionCleared.HasDelegate)
+        {
+            _attentionClearFired = true;
+            await OnAttentionCleared.InvokeAsync();
+        }
+    }
+
+    private async Task OpenAttentionHistory()
+    {
+        var parameters = new DialogParameters<AttentionHistoryDialog>
+        {
+            { x => x.Signals, AttentionSignals },
+            { x => x.EntityType, typeof(T).Name },
+            { x => x.EntityId, Key?.ToString() },
+        };
+        await DialogService.ShowAsync<AttentionHistoryDialog>("Signal history", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
     }
 
     public void ResizeForm()

@@ -1,0 +1,29 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@if (Severity is not null)
+{
+    <MudTooltip Text="@Tooltip" Placement="Placement.Top">
+        <span class="attention-inline-dot @DotClass @RowMarkerClass"></span>
+    </MudTooltip>
+}
+
+@code {
+    [Parameter] public AttentionSeverity? Severity { get; set; }
+    [Parameter] public string? Tooltip { get; set; }
+
+    private string DotClass => Severity switch
+    {
+        AttentionSeverity.Critical => "attention-inline-dot--critical",
+        AttentionSeverity.Warning => "attention-inline-dot--warning",
+        AttentionSeverity.Info => "attention-inline-dot--info",
+        _ => string.Empty,
+    };
+
+    private string RowMarkerClass => Severity switch
+    {
+        AttentionSeverity.Critical => "attention-row--critical",
+        AttentionSeverity.Warning => "attention-row--warning",
+        AttentionSeverity.Info => "attention-row--info",
+        _ => string.Empty,
+    };
+}

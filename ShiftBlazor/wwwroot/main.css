@@ -492,3 +492,44 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     transform: translateY(100%);
     opacity: 0.4;
 }
+
+/* =============== Attention System =============== */
+
+tr:has(> td .attention-row--critical) > td {
+    background: rgba(var(--mud-palette-error-rgb), 0.06);
+    font-weight: 600;
+}
+
+tr:has(> td .attention-row--warning) > td {
+    background: rgba(var(--mud-palette-warning-rgb), 0.06);
+    font-weight: 600;
+}
+
+tr:has(> td .attention-row--info) > td {
+    background: rgba(var(--mud-palette-info-rgb), 0.05);
+    font-weight: 600;
+}
+
+.attention-inline-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.attention-inline-dot--critical {
+    background: var(--mud-palette-error);
+}
+
+.attention-inline-dot--warning {
+    background: var(--mud-palette-warning);
+}
+
+.attention-inline-dot--info {
+    background: var(--mud-palette-info);
+}
+
+/* =============== Attention System End =============== */
