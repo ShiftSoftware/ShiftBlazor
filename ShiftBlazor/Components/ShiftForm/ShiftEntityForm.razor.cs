@@ -1,24 +1,24 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
+using MudBlazor;
+using ShiftSoftware.ShiftBlazor.Components.Print;
+using ShiftSoftware.ShiftBlazor.Enums;
+using ShiftSoftware.ShiftBlazor.Extensions;
+using ShiftSoftware.ShiftBlazor.Interfaces;
+using ShiftSoftware.ShiftBlazor.Localization;
+using ShiftSoftware.ShiftBlazor.Services;
+using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core.Attention;
+using ShiftSoftware.ShiftEntity.Core.Extensions;
+using ShiftSoftware.ShiftEntity.Model;
+using ShiftSoftware.ShiftEntity.Model.Dtos;
+using ShiftSoftware.TypeAuth.Core;
+using ShiftSoftware.TypeAuth.Core.Actions;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.JSInterop;
-using MudBlazor;
-using ShiftSoftware.ShiftBlazor.Extensions;
-using ShiftSoftware.ShiftBlazor.Services;
-using ShiftSoftware.ShiftEntity.Model;
-using ShiftSoftware.ShiftEntity.Model.Dtos;
-using ShiftSoftware.ShiftBlazor.Enums;
-using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftBlazor.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
-using ShiftSoftware.TypeAuth.Core.Actions;
-using ShiftSoftware.TypeAuth.Core;
-using ShiftSoftware.ShiftBlazor.Localization;
-using ShiftSoftware.ShiftEntity.Core.Attention;
-using ShiftSoftware.ShiftEntity.Core.Extensions;
-using ShiftSoftware.ShiftBlazor.Components.Print;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -163,6 +163,12 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
     internal bool _RenderAttentionBell;
     private bool _attentionClearFired;
+    private IReadOnlyList<StoredAttentionSignal>? _internalAttentionSignals;
+
+    internal IReadOnlyList<StoredAttentionSignal>? EffectiveAttentionSignals =>
+        AttentionSignals ?? _internalAttentionSignals;
+
+    private string? _attentionLoadedForKey;
 
     internal string? OriginalValue { get; set; }
     internal bool Maximized { get; set; }
@@ -267,7 +273,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         _RenderEditButton = !HideEdit && HasWriteAccess;
         _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
-        _RenderAttentionBell = AttentionSignals is { Count: > 0 } && HasReadAccess;
+        _RenderAttentionBell = EffectiveAttentionSignals is { Count: > 0 } && HasReadAccess;
         _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton || _RenderAttentionBell;
     }
 
@@ -537,20 +543,86 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             });
         }
 
+        if (AttentionSignals is null && !IsCreateMode)
+            await LoadAttentionSignalsInternal();
+
+        var signals = EffectiveAttentionSignals;
         if (ClearAttentionOnOpen && !_attentionClearFired &&
-            AttentionSignals?.Any(s => s.ClearedAt is null) == true &&
-            OnAttentionCleared.HasDelegate)
+            signals?.Any(s => s.ClearedAt is null) == true)
         {
             _attentionClearFired = true;
-            await OnAttentionCleared.InvokeAsync();
+            if (OnAttentionCleared.HasDelegate)
+                await OnAttentionCleared.InvokeAsync();
+            else
+                await ClearAttentionInternal();
         }
+    }
+
+    private async Task LoadAttentionSignalsInternal(bool forceReload = false)
+    {
+        var keyStr = Key?.ToString();
+        if (string.IsNullOrEmpty(keyStr))
+            return;
+
+        if (!forceReload && keyStr == _attentionLoadedForKey)
+            return;
+
+        _attentionLoadedForKey = keyStr;
+
+        try
+        {
+            var url = ItemUrl.TrimEnd('/') + "/attention";
+            using var request = HttpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url));
+            using var res = await HttpClient.SendAsync(request);
+
+            if (res.IsSuccessStatusCode)
+            {
+                _internalAttentionSignals = await res.Content.ReadFromJsonAsync<List<StoredAttentionSignal>>(
+                    new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            }
+        }
+        catch
+        {
+            _internalAttentionSignals = null;
+        }
+    }
+
+    private async Task ClearAttentionInternal()
+    {
+        var keyStr = Key?.ToString();
+        if (string.IsNullOrEmpty(keyStr) || Endpoint is null)
+            return;
+
+        try
+        {
+            var url = ItemUrl.TrimEnd('/') + "/attention/clear";
+            using var request = HttpClient.CreateRequestMessage(HttpMethod.Post, new Uri(url));
+            using var res = await HttpClient.SendAsync(request);
+
+            if (res.IsSuccessStatusCode)
+            {
+                await LoadAttentionSignalsInternal(forceReload: true);
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    internal async Task HandleAttentionAcknowledge()
+    {
+        if (OnAttentionCleared.HasDelegate)
+            await OnAttentionCleared.InvokeAsync();
+        else
+            await ClearAttentionInternal();
     }
 
     private async Task OpenAttentionHistory()
     {
         var parameters = new DialogParameters<AttentionHistoryDialog>
         {
-            { x => x.Signals, AttentionSignals },
+            { x => x.Signals, EffectiveAttentionSignals },
             { x => x.EntityType, typeof(T).Name },
             { x => x.EntityId, Key?.ToString() },
         };

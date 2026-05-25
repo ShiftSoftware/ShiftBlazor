@@ -113,6 +113,9 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     [Parameter]
     public Func<T, AttentionSeverity?>? GetAttentionSeverity { get; set; }
 
+    private bool _autoAttention;
+    private static readonly bool _hasAttentionSummary = typeof(IHasAttentionSummary).IsAssignableFrom(typeof(T));
+
     /// <summary>
     /// Enable Virtualization and disable Paging.
     /// 'Height' paramater should have a valid value when this is enabled.
@@ -473,6 +476,16 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     {
         dotNetRef = DotNetObjectReference.Create(this);
         IsEmbed = ParentDisabled != null || ParentReadOnly != null;
+
+        if (_hasAttentionSummary && GetAttentionSeverity is null)
+        {
+            _autoAttention = true;
+            GetAttentionSeverity = item =>
+            {
+                var summary = (IHasAttentionSummary)item!;
+                return summary.HasActiveAttention ? (AttentionSeverity?)summary.HighestSeverity : null;
+            };
+        }
 
         if (!IsEmbed)
         {

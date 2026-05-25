@@ -212,11 +212,11 @@
                     <MudAlert Severity="Severity.Error">@Loc["DeletedIndicator"]</MudAlert>
                 }
 
-                @if (AttentionSignals is { Count: > 0 })
+                @if (EffectiveAttentionSignals is { Count: > 0 })
                 {
-                    <AttentionBanner Signals="AttentionSignals"
+                    <AttentionBanner Signals="EffectiveAttentionSignals"
                                     ShowAcknowledgeButton="@(!ClearAttentionOnOpen)"
-                                    OnAcknowledge="OnAttentionCleared"
+                                    OnAcknowledge="HandleAttentionAcknowledge"
                                     FooterNote="@(ClearAttentionOnOpen ? "Automatically acknowledged on open" : null)" />
                 }
 
