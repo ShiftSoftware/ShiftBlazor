@@ -26,10 +26,19 @@
 }
 
 @code {
+    /// <summary>Severity level to display. The badge is hidden when <c>null</c>.</summary>
     [Parameter] public AttentionSeverity? Severity { get; set; }
+
+    /// <summary>Number of signals at this severity. Displayed as <c>(N)</c> when greater than 1.</summary>
     [Parameter] public int Count { get; set; } = 1;
+
+    /// <summary>Whether to show the severity label text (e.g. "Warning"). Defaults to <c>true</c>.</summary>
     [Parameter] public bool ShowLabel { get; set; } = true;
+
+    /// <summary>Chip size. Defaults to <see cref="Size.Small"/>.</summary>
     [Parameter] public Size Size { get; set; } = Size.Small;
+
+    /// <summary>Tooltip text shown on hover.</summary>
     [Parameter] public string? Tooltip { get; set; }
 
     internal static Color ColorFor(AttentionSeverity s) => s switch

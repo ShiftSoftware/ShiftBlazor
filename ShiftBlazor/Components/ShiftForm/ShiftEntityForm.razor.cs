@@ -165,6 +165,11 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     private bool _attentionClearFired;
     private IReadOnlyList<StoredAttentionSignal>? _internalAttentionSignals;
 
+    /// <summary>
+    /// Returns the explicit <see cref="AttentionSignals"/> parameter if provided, otherwise
+    /// falls back to internally fetched signals. Explicit parameter wins so consumers can
+    /// supply their own signal source.
+    /// </summary>
     internal IReadOnlyList<StoredAttentionSignal>? EffectiveAttentionSignals =>
         AttentionSignals ?? _internalAttentionSignals;
 
@@ -559,6 +564,11 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
     }
 
+    /// <summary>
+    /// Fetches attention signals from <c>GET {ItemUrl}/attention</c> and stores them in
+    /// <c>_internalAttentionSignals</c>. Skipped when the entity key hasn't changed since
+    /// the last load, unless <paramref name="forceReload"/> is <c>true</c>.
+    /// </summary>
     private async Task LoadAttentionSignalsInternal(bool forceReload = false)
     {
         var keyStr = Key?.ToString();
@@ -588,6 +598,11 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
     }
 
+    /// <summary>
+    /// Posts to <c>POST {ItemUrl}/attention/clear</c> to clear all active signals, then
+    /// force-reloads them. Sets <see cref="ShiftFormBasic{T}.MadeChanges"/> so the list
+    /// refreshes when the form closes.
+    /// </summary>
     private async Task ClearAttentionInternal()
     {
         var keyStr = Key?.ToString();
@@ -612,6 +627,10 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
     }
 
+    /// <summary>
+    /// Called when the user clicks Acknowledge on the attention banner. Delegates to
+    /// <see cref="OnAttentionCleared"/> if bound, otherwise calls <see cref="ClearAttentionInternal"/>.
+    /// </summary>
     internal async Task HandleAttentionAcknowledge()
     {
         if (OnAttentionCleared.HasDelegate)
@@ -620,6 +639,10 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             await ClearAttentionInternal();
     }
 
+    /// <summary>
+    /// Opens the <see cref="AttentionHistoryDialog"/> showing the timeline of all signals
+    /// (active + cleared) for the current entity.
+    /// </summary>
     private async Task OpenAttentionHistory()
     {
         var parameters = new DialogParameters<AttentionHistoryDialog>

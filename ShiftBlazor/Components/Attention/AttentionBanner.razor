@@ -61,10 +61,19 @@
 }
 
 @code {
+    /// <summary>All signals (active + cleared) for the entity. Only active (uncleared) signals are rendered.</summary>
     [Parameter] public IReadOnlyList<StoredAttentionSignal>? Signals { get; set; }
+
+    /// <summary>Whether to show the Acknowledge button. Defaults to <c>true</c>.</summary>
     [Parameter] public bool ShowAcknowledgeButton { get; set; } = true;
+
+    /// <summary>Callback invoked when the user clicks Acknowledge.</summary>
     [Parameter] public EventCallback OnAcknowledge { get; set; }
+
+    /// <summary>Overrides the default header text ("This record needs attention").</summary>
     [Parameter] public string? HeaderOverride { get; set; }
+
+    /// <summary>Note displayed in the header area when the acknowledge button is hidden (e.g. "Auto-cleared on open").</summary>
     [Parameter] public string? FooterNote { get; set; }
 
     private List<StoredAttentionSignal> ActiveSignals =>

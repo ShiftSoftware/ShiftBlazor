@@ -110,6 +110,7 @@
         await LoadSignals();
     }
 
+    /// <summary>Fetches active signals from <see cref="Endpoint"/> and refreshes the table.</summary>
     private async Task LoadSignals()
     {
         _loading = true;
@@ -125,6 +126,7 @@
         _loading = false;
     }
 
+    /// <summary>Resolves a navigation route for the signal's entity using <see cref="EntityRoutes"/>.</summary>
     private string? GetEntityRoute(StoredAttentionSignal signal)
     {
         if (signal.EntityType is null || signal.EntityId is null)
@@ -136,6 +138,7 @@
         return null;
     }
 
+    /// <summary>Opens the entity form in a modal popup, then reloads the list on close.</summary>
     private async Task OpenPopup(StoredAttentionSignal signal)
     {
         var prefix = EntityRoutes?.GetValueOrDefault(signal.EntityType!);
@@ -149,11 +152,13 @@
         }
     }
 
+    /// <summary>Navigates to the entity route in a new browser tab.</summary>
     private void OpenNewTab(string route)
     {
         NavManager.NavigateTo(route, forceLoad: true);
     }
 
+    /// <summary>Navigates to the entity route in the current tab.</summary>
     private void OpenSameTab(string route)
     {
         NavManager.NavigateTo(route);

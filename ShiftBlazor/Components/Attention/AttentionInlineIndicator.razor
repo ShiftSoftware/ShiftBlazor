@@ -8,7 +8,10 @@
 }
 
 @code {
+    /// <summary>Severity level determining dot color. The indicator is hidden when <c>null</c>.</summary>
     [Parameter] public AttentionSeverity? Severity { get; set; }
+
+    /// <summary>Tooltip text shown on hover.</summary>
     [Parameter] public string? Tooltip { get; set; }
 
     private string DotClass => Severity switch
