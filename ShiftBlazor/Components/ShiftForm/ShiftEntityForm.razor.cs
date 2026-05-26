@@ -509,6 +509,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                 await UpdateUrl(value.ID);
             }
             await SetMode(FormModes.View);
+            _attentionLoadedForKey = null;
             await SetValue(value);
         }
 
@@ -601,6 +602,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
             if (res.IsSuccessStatusCode)
             {
+                MadeChanges = true;
                 await LoadAttentionSignalsInternal(forceReload: true);
                 StateHasChanged();
             }
