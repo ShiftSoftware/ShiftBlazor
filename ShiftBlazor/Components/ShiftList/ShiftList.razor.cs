@@ -226,7 +226,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     public bool Dense { get; set; }
 
     /// <summary>
-    /// Fires when a row is clicked, sends 'DataGridRowClickEventArgs<T>' as argument.
+    /// Fires when a row is clicked, sends <c>DataGridRowClickEventArgs&lt;T&gt;</c> as argument.
     /// </summary>
     [Parameter]
     public EventCallback<ShiftEvent<DataGridRowClickEventArgs<T>>> OnRowClick { get; set; }
@@ -654,6 +654,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// <summary>
     /// Adds a filter to the data grid.
     /// </summary>
+    /// <param name="id">Unique identifier for this filter, used to update or remove it later.</param>
     /// <param name="field">The field to apply the filter on.</param>
     /// <param name="op">The comparison operator for the filter (e.g., Equal, GreaterThan).</param>
     /// <param name="value">The value to compare against for the filter.</param>
