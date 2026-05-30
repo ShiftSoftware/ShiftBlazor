@@ -532,7 +532,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
     }
 
-    internal async Task SetValue(T? value, bool copyValue = true)
+    internal async Task SetValue(T? value, bool copyValue = true, bool isOpen = false)
     {
         if (value == null)
         {
@@ -552,15 +552,20 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         if (AttentionSignals is null && !IsCreateMode)
             await LoadAttentionSignalsInternal();
 
+        // ClearAttentionOnOpen fires ONLY when the record is opened (isOpen) — never on the
+        // post-save reload. Otherwise a save that (re-)raises a signal would clear it instantly,
+        // which contradicts the property's name and hides freshly-raised attention from the user.
         var signals = EffectiveAttentionSignals;
-        if (ClearAttentionOnOpen && !_attentionClearFired &&
+        if (isOpen && ClearAttentionOnOpen && !_attentionClearFired &&
             signals?.Any(s => s.ClearedAt is null) == true)
         {
             _attentionClearFired = true;
             if (OnAttentionCleared.HasDelegate)
                 await OnAttentionCleared.InvokeAsync();
             else
-                await ClearAttentionInternal();
+                // Auto-acknowledge: clear server-side but keep the snapshot on screen so the
+                // banner stays visible this session (won't re-appear on the next open).
+                await ClearAttentionInternal(reloadAfter: false);
         }
     }
 
@@ -599,11 +604,18 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     }
 
     /// <summary>
-    /// Posts to <c>POST {ItemUrl}/attention/clear</c> to clear all active signals, then
-    /// force-reloads them. Sets <see cref="ShiftFormBasic{T}.MadeChanges"/> so the list
-    /// refreshes when the form closes.
+    /// Posts to <c>POST {ItemUrl}/attention/clear</c> to clear all active signals and sets
+    /// <see cref="ShiftFormBasic{T}.MadeChanges"/> so the list refreshes when the form closes.
+    /// <para>
+    /// When <paramref name="reloadAfter"/> is <c>true</c> (the explicit Acknowledge button) the
+    /// signals are re-fetched so the banner reflects the cleared state immediately — the user
+    /// deliberately dismissed it. For the auto-clear-on-open path it is <c>false</c>: the
+    /// already-loaded snapshot is left in place so the banner stays visible for this session
+    /// (the persisted signal is still cleared, so the next open shows nothing). Re-fetching
+    /// there would empty the banner instantly and the user would never see what was flagged.
+    /// </para>
     /// </summary>
-    private async Task ClearAttentionInternal()
+    private async Task ClearAttentionInternal(bool reloadAfter = true)
     {
         var keyStr = Key?.ToString();
         if (string.IsNullOrEmpty(keyStr) || Endpoint is null)
@@ -618,8 +630,11 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             if (res.IsSuccessStatusCode)
             {
                 MadeChanges = true;
-                await LoadAttentionSignalsInternal(forceReload: true);
-                StateHasChanged();
+                if (reloadAfter)
+                {
+                    await LoadAttentionSignalsInternal(forceReload: true);
+                    StateHasChanged();
+                }
             }
         }
         catch
@@ -688,7 +703,9 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
                     //res.Headers.TryGetValues(Constants.HttpHeaderVersioning, out IEnumerable<string>? versioning);
                     IsTemporal = true; //versioning?.Contains("Temporal") == true;
-                    await SetValue(await ParseEntityResponse(res), asOf == null);
+                    // isOpen: only a live open (asOf == null) auto-acknowledges; viewing a
+                    // historical revision must not clear the current record's attention.
+                    await SetValue(await ParseEntityResponse(res), copyValue: asOf == null, isOpen: asOf == null);
                 }
             }
             catch (Exception e)
