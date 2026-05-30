@@ -166,6 +166,14 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     private IReadOnlyList<StoredAttentionSignal>? _internalAttentionSignals;
 
     /// <summary>
+    /// Whether <typeparamref name="T"/> opts into the attention feature, i.e. implements
+    /// <see cref="IHasAttentionSignals"/>. Computed once per closed generic type. When false the
+    /// form never calls <c>GET {key}/attention</c>, so non-opted-in entities cause no request and
+    /// no 404. Mirrors how <c>ShiftList</c> keys off <c>IHasAttentionSummary</c>.
+    /// </summary>
+    private static readonly bool _entitySupportsAttention = typeof(IHasAttentionSignals).IsAssignableFrom(typeof(T));
+
+    /// <summary>
     /// Returns the explicit <see cref="AttentionSignals"/> parameter if provided, otherwise
     /// falls back to internally fetched signals. Explicit parameter wins so consumers can
     /// supply their own signal source.
@@ -576,6 +584,11 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     /// </summary>
     private async Task LoadAttentionSignalsInternal(bool forceReload = false)
     {
+        // Only opted-in entities expose signals; skip the round-trip (and the resulting network
+        // noise) entirely for everything else. Guards every call path into this method.
+        if (!_entitySupportsAttention)
+            return;
+
         var keyStr = Key?.ToString();
         if (string.IsNullOrEmpty(keyStr))
             return;
