@@ -120,7 +120,7 @@
             EnableAutherization = AuthenticationStateTask != null,
             MainLayout = MainLayout,
         };
-        
+
         _initialized = true;
     }
 
@@ -142,6 +142,8 @@
             ? Constants.CookieChangePasswordPath
             : Constants.JwtChangePasswordPath;
 
-        return !NavManager.Uri.Contains(path);
+        var currentPath = new Uri(NavManager.Uri).AbsolutePath;
+        var IsChangePassPath = currentPath == path || currentPath.StartsWith(path + "/");
+        return !IsChangePassPath;
     }
 }
