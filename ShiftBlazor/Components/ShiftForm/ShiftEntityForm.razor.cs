@@ -627,6 +627,13 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     /// (the persisted signal is still cleared, so the next open shows nothing). Re-fetching
     /// there would empty the banner instantly and the user would never see what was flagged.
     /// </para>
+    /// <para>
+    /// The clear updates the entity row server-side, advancing its audit stamp — and
+    /// <c>LastSaveDate</c> doubles as the optimistic-concurrency version checked on update.
+    /// The endpoint returns the post-clear stamp; it is patched onto the loaded DTO (and the
+    /// cancel-restore snapshot) so a subsequent edit + save doesn't trip a version conflict
+    /// with the pre-clear stamp.
+    /// </para>
     /// </summary>
     private async Task ClearAttentionInternal(bool reloadAfter = true)
     {
@@ -643,6 +650,9 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             if (res.IsSuccessStatusCode)
             {
                 MadeChanges = true;
+
+                await PatchConcurrencyStampFromClearResponse(res);
+
                 if (reloadAfter)
                 {
                     await LoadAttentionSignalsInternal(forceReload: true);
@@ -652,6 +662,45 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
         catch
         {
+        }
+    }
+
+    /// <summary>
+    /// Applies the post-clear <c>LastSaveDate</c> from a clear response onto the loaded DTO and
+    /// onto the cancel-restore snapshot (<see cref="OriginalValue"/>), keeping the form's
+    /// optimistic-concurrency version current. Only <c>LastSaveDate</c> is touched — any
+    /// in-progress edits on other fields are preserved (a manual acknowledge can happen in
+    /// edit mode).
+    /// </summary>
+    private async Task PatchConcurrencyStampFromClearResponse(HttpResponseMessage res)
+    {
+        try
+        {
+            var body = await res.Content.ReadFromJsonAsync<ClearAttentionResponse>(
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+            if (body?.LastSaveDate is not { } lastSaveDate)
+                return;
+
+            if (Value is not null)
+                Value.LastSaveDate = lastSaveDate;
+
+            // Without this, cancelling an edit after the clear would restore the snapshot's
+            // pre-clear stamp and the next save would conflict again.
+            if (!string.IsNullOrWhiteSpace(OriginalValue))
+            {
+                var original = JsonSerializer.Deserialize<T>(OriginalValue);
+                if (original is not null)
+                {
+                    original.LastSaveDate = lastSaveDate;
+                    OriginalValue = JsonSerializer.Serialize(original);
+                }
+            }
+        }
+        catch
+        {
+            // A missing/unparsable body degrades to the pre-fix behavior (stale stamp);
+            // never let it break the clear flow itself.
         }
     }
 
