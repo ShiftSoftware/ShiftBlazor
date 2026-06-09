@@ -6,89 +6,83 @@
 
 <MudMenu Class="py-1 px-3"
          OpenChanged="IsOpenHandler"
+         Modal="true"
          AnchorOrigin="Origin.BottomLeft"
          Style="align-items: center;gap: 8px"
          ActivationEvent="@ActivationEvent"
          ListClass="user-avatar-dropdown">
 
     <ActivatorContent>
-        <MudAvatar Color="Color.Tertiary">
-            @if (string.IsNullOrEmpty(userFullName)) {
-                <MudIcon Color="Color.Dark" Icon="@Icons.Material.Filled.Person" />
-            }
-            else
-            {
-                @userFullName.First()
-            }
-        </MudAvatar>
-
-        @if (!isAuthenticated)
-        {
-            <MudText>@Loc["User"]</MudText>
-        }
-        else if (string.IsNullOrEmpty(userFullName))
-        {
-            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="60px"></MudSkeleton>
-        }
-        else
-        {
-            <MudText>@userFullName</MudText>
-        }
-
-        @if (ShowClosedOpenIcon)
-        {
-            <MudIcon Icon="@(IsOpen ? IconOpen : IconClosed )" />
-        } 
-    </ActivatorContent>
-    <ChildContent>
-        <MudList T="string">
-
-            @if (identityOptions != null)
-            {
-                <MudLink Href="@identityOptions.FrontEndBaseUrl.AddUrlPath(Constants.IdentityRoutePrefix, "UserDataForm")"
-                         Color="Color.Inherit"
-                         Underline="Underline.None">
-                    <MudListItem Icon="@Icons.Material.Filled.People">@Loc["IdentityProfileButton"]</MudListItem>
-                </MudLink>
-            }
-
-            <MudListItem Icon="@Icons.Material.Filled.Settings" OnClick="OpenSettings">@Loc["SettingsButton"]</MudListItem>
-
-            @if (MenuItemsTemplate != null)
-            {
-                <MudDivider/>
-                @MenuItemsTemplate
-            }
-
-            @if (MenuItemsTemplate != null && isAuthenticated)
-            {
-                <MudDivider />
-            }
-
-            @if (isAuthenticated)
-            {
-                @if (identityOptions?.UseCookieAuth == true)
-                {
-                    <MudListItem Icon="@Icons.Material.Filled.Logout"
-                                 Style="position:relative;"
-                                 OnClick="() => Task.CompletedTask">
-                        @Loc["LogoutButton"]
-                        <form id="@logoutFormId" method="post" action="/api/identity/logout" style="display:none;">
-                            <AntiforgeryToken />
-                            <input type="hidden" name="returnUrl" value="/" />
-                        </form>
-                        <button type="submit" form="@logoutFormId"
-                                aria-label="@Loc["LogoutButton"]"
-                                style="all:unset; position:absolute; inset:0; cursor:pointer;"></button>
-                    </MudListItem>
+        <div @onclick="context.ToggleAsync" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <MudAvatar Color="Color.Tertiary">
+                @if (string.IsNullOrEmpty(userFullName)) {
+                    <MudIcon Color="Color.Dark" Icon="@Icons.Material.Filled.Person" />
                 }
                 else
                 {
-                    <MudListItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">@Loc["LogoutButton"]</MudListItem>
+                    @userFullName.First()
                 }
+            </MudAvatar>
+
+            @if (!isAuthenticated)
+            {
+                <MudText>@Loc["User"]</MudText>
+            }
+            else if (string.IsNullOrEmpty(userFullName))
+            {
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="60px"></MudSkeleton>
+            }
+            else
+            {
+                <MudText>@userFullName</MudText>
             }
 
-        </MudList>
+            @if (ShowClosedOpenIcon)
+            {
+                <MudIcon Icon="@(IsOpen ? IconOpen : IconClosed )" />
+            }
+        </div>
+    </ActivatorContent>
+    <ChildContent>
+        @if (identityOptions != null)
+        {
+            <MudMenuItem Icon="@Icons.Material.Filled.People" Href="@identityOptions.FrontEndBaseUrl.AddUrlPath(Constants.IdentityRoutePrefix, "UserDataForm")">@Loc["IdentityProfileButton"]</MudMenuItem>
+        }
 
+        <MudMenuItem Icon="@Icons.Material.Filled.Settings" OnClick="OpenSettings">@Loc["SettingsButton"]</MudMenuItem>
+
+        @if (MenuItemsTemplate != null)
+        {
+            <MudDivider/>
+            @MenuItemsTemplate
+        }
+
+        @if (MenuItemsTemplate != null && isAuthenticated)
+        {
+            <MudDivider />
+        }
+
+        @if (isAuthenticated)
+        {
+            @if (identityOptions?.UseCookieAuth == true)
+            {
+                <MudMenuItem Icon="@Icons.Material.Filled.Logout"
+                                Style="position:relative;"
+                                OnClick="() => Task.CompletedTask">
+                    @Loc["LogoutButton"]
+                    <form id="@logoutFormId" method="post" action="/api/identity/logout" style="display:none;">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="returnUrl" value="/" />
+                    </form>
+                    <button type="submit" form="@logoutFormId"
+                            aria-label="@Loc["LogoutButton"]"
+                            style="all:unset; position:absolute; inset:0; cursor:pointer;"></button>
+                </MudMenuItem>
+            }
+            else
+            {
+                <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">@Loc["LogoutButton"]</MudMenuItem>
+            }
+        }
     </ChildContent>
 </MudMenu>

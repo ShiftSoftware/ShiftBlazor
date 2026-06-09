@@ -2,9 +2,51 @@
     overflow: hidden;
 }
 
+.shift-modal-background + .mud-dialog:not(.mud-dialog-fullscreen) {
+    max-height: calc(100dvh - 64px);
+}
+
+.shift-modal-background + .mud-dialog .mud-dialog-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog article[id^="Form-"] {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog .shift-form-paper {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog .shift-form-paper > form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog .shift-form-paper > header,
+.shift-modal-background + .mud-dialog .shift-form-paper > form > footer {
+    flex-shrink: 0;
+}
+
 .shift-scrollable-content-wrapper {
-    max-height: calc(100vh - 175px);
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: auto;
+}
+
+.mud-dialog:not(.shift-modal-background + .mud-dialog) .shift-scrollable-content-wrapper {
+    max-height: calc(100vh - 175px);
 }
 
 .shift-toolbar-header > :last-child {
@@ -492,3 +534,44 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     transform: translateY(100%);
     opacity: 0.4;
 }
+
+/* =============== Attention System =============== */
+
+tr:has(> td .attention-row--critical) > td {
+    background: rgba(var(--mud-palette-error-rgb), 0.06);
+    font-weight: 600;
+}
+
+tr:has(> td .attention-row--warning) > td {
+    background: rgba(var(--mud-palette-warning-rgb), 0.06);
+    font-weight: 600;
+}
+
+tr:has(> td .attention-row--info) > td {
+    background: rgba(var(--mud-palette-info-rgb), 0.05);
+    font-weight: 600;
+}
+
+.attention-inline-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.attention-inline-dot--critical {
+    background: var(--mud-palette-error);
+}
+
+.attention-inline-dot--warning {
+    background: var(--mud-palette-warning);
+}
+
+.attention-inline-dot--info {
+    background: var(--mud-palette-info);
+}
+
+/* =============== Attention System End =============== */

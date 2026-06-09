@@ -43,17 +43,15 @@
                     {
                         var hasErrors = ShiftForm.EditContext.GetValidationMessages(field).Any();
 
-                        // store step error state in the step's Tag property
-                        // since we can't use the step.HasError property directly
                         if (hasErrors)
                         {
-                            step.Tag = true;
+                            step.HasValidationError = true;
                             step.SetHasErrorAsync(true);
                             break;
                         }
-                        else if (step.Tag != null && step.Tag.Equals(true))
+                        else if (step.HasValidationError)
                         {
-                            step.Tag = null;
+                            step.HasValidationError = false;
                             step.SetHasErrorAsync(false);
                         }
                     }
@@ -140,8 +138,7 @@
         // Reset error state when Next is clicked
         if (ShiftForm != null
             && args.Action == StepAction.Complete
-            && this.ActiveStep?.Tag != null
-            && this.ActiveStep.Tag.Equals(true))
+            && this.ActiveStep?.HasValidationError == true)
         {
             await this.ActiveStep.SetHasErrorAsync(false);
         }

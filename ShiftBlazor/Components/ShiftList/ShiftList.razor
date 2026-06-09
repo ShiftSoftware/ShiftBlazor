@@ -29,10 +29,10 @@
                             {
                                 <MudTooltip Text="Refresh">
                                     <MudIconButtonExtended Size="@IconSize"
-                                                            Icon="@Icons.Material.Outlined.Refresh"
-                                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                            Disabled="IsLoading"
-                                                            OnClick="Reload" />
+                                                           Icon="@Icons.Material.Outlined.Refresh"
+                                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                           Disabled="IsLoading"
+                                                           OnClick="() => DataGrid!.ReloadServerData()" />
                                 </MudTooltip>
                             }
 
@@ -40,10 +40,10 @@
                             {
                                 <MudTooltip Text="@Loc["ToggleFilterPanelTitle"]">
                                     <MudIconButtonExtended Size="@IconSize"
-                                                            Icon="@(IsFilterPanelOpen ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
-                                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                            aria-label="@Loc["ToggleFilterPanelTitle"]"
-                                                            OnClick="ToggleFilterPanel" />
+                                                           Icon="@(IsFilterPanelOpen ? Icons.Material.Filled.FilterAlt : Icons.Material.Outlined.FilterAlt)"
+                                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                           aria-label="@Loc["ToggleFilterPanelTitle"]"
+                                                           OnClick="ToggleFilterPanel" />
                                 </MudTooltip>
                             }
 
@@ -51,11 +51,11 @@
                             {
                                 <MudTooltip Text="@Loc["ColumnChooserTitle"]">
                                     <MudIconButtonExtended Size="@IconSize"
-                                                            KeyboardKey="KeyboardKeys.KeyC"
-                                                            Icon="@Icons.Material.Filled.ViewColumn"
-                                                            Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                            aria-label="@Loc["ColumnChooserTitle"]"
-                                                            OnClick="OpenGridEditor" />
+                                                           KeyboardKey="KeyboardKeys.KeyC"
+                                                           Icon="@Icons.Material.Filled.ViewColumn"
+                                                           Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                           aria-label="@Loc["ColumnChooserTitle"]"
+                                                           OnClick="OpenGridEditor" />
                                 </MudTooltip>
                             }
 
@@ -65,11 +65,11 @@
                             {
                                 <MudTooltip Text="@Loc["FilterDeletedItemsTitle"]">
                                     <MudMenu Size="@IconSize"
-                                                Icon="@Icons.Material.Filled.RestoreFromTrash"
-                                                aria-label="@Loc["FilterDeletedItemsTitle"]"
-                                                Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                AnchorOrigin="Origin.BottomLeft"
-                                                Style="display: flex; flex-direction: column;">
+                                             Icon="@Icons.Material.Filled.RestoreFromTrash"
+                                             aria-label="@Loc["FilterDeletedItemsTitle"]"
+                                             Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                             AnchorOrigin="Origin.BottomLeft"
+                                             Style="display: flex; flex-direction: column;">
                                         <MudMenuItem OnClick="() => FilterDeleted()">@Loc["ShowBothDeletedAndActiveOption"]</MudMenuItem>
                                         <MudMenuItem OnClick="() => FilterDeleted(true)">@Loc["ShowDeletedOnlyOption"]</MudMenuItem>
                                         <MudMenuItem OnClick="() => FilterDeleted(false)">@Loc["ShowActiveOnlyOption"]</MudMenuItem>
@@ -78,7 +78,6 @@
                             }
 
                             @if (EnableExport && (TypeAuthService is null || TypeAuthService.CanAccess(ShiftSoftware.ShiftEntity.Core.GeneralActionTree.DataGridExport)))
-                            @* @if (EnableExport) *@
                             {
                                 <MudTooltip Text="@Loc["ExportButtonTitle"]">
                                     @if (this.ExportIsInProgress)
@@ -102,18 +101,17 @@
                             {
                                 <MudTooltip Text="@Loc["AddNewItemTitle"]">
                                     <MudIconButtonExtended Icon="@Icons.Material.Filled.AddCircle"
-                                                            KeyboardKey="KeyboardKeys.KeyA"
-                                                            Size="@IconSize"
-                                                            Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
-                                                            aria-label="@Loc["AddNewItemTitle"]"
-                                                            OnClick="() => ViewAddItem()" />
+                                                           KeyboardKey="KeyboardKeys.KeyA"
+                                                           Size="@IconSize"
+                                                           Color="NavIconFlatColor ? Color.Inherit : Color.Primary"
+                                                           aria-label="@Loc["AddNewItemTitle"]"
+                                                           OnClick="() => ViewAddItem()" />
                                 </MudTooltip>
                             }
 
                             @if (MudDialog != null && IsEmbed != true)
                             {
                                 @if (RenderAddButton || !DisableGridEditor || !DisableDeleteFilter || (EnableExport && (TypeAuthService is null || TypeAuthService.CanAccess(ShiftSoftware.ShiftEntity.Core.GeneralActionTree.DataGridExport))))
-                                @* @if (RenderAddButton || !DisableGridEditor || !DisableDeleteFilter || EnableExport) *@
                                 {
                                     <MudDivider Vertical="true" Class="shift-vertical-divider"></MudDivider>
                                 }
@@ -122,12 +120,12 @@
 
                                 <MudTooltip Text="@Loc["CloseModalButtonTitle"]">
                                     <MudButtonExtended Style="min-width:40px; z-index: 100;"
-                                                        KeyboardKey="KeyboardKeys.Escape"
-                                                        Variant="Variant.Text"
-                                                        Size="Size.Medium"
-                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                        aria-label="@Loc["CloseModalButtonTitle"]"
-                                                        OnClick="CloseDialog">
+                                                       KeyboardKey="KeyboardKeys.Escape"
+                                                       Variant="Variant.Text"
+                                                       Size="Size.Medium"
+                                                       Color="NavIconFlatColor ? Color.Inherit : Color.Default"
+                                                       aria-label="@Loc["CloseModalButtonTitle"]"
+                                                       OnClick="CloseDialog">
                                         <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
                                     </MudButtonExtended>
                                 </MudTooltip>
@@ -158,7 +156,7 @@
                         {
 
                             <MudDropContainer @ref="_columnsPanelDropContainer" T="Column<T>" Items="@DraggableColumns" ItemsSelector="(item, dropzone) => true"
-                                                ItemDisabled="@((item) => false)" ItemDropped="ColumnOrderUpdated" Class="d-flex flex-wrap flex-grow-1">
+                                              ItemDisabled="@((item) => false)" ItemDropped="ColumnOrderUpdated" Class="d-flex flex-wrap flex-grow-1">
                                 <ChildContent>
                                     <MudStack Spacing="0">
                                         <MudStack Row="true" Spacing="2" Style="border-bottom: 1px solid var(--mud-palette-table-lines); padding: 0 10px; min-width: 500px;">
@@ -180,20 +178,19 @@
                                                 <MudSpacer />
 
                                                 <MudSwitch T="bool"
-                                                            Ripple="false"
-                                                            Color="Color.Primary"
-                                                            Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
-                                                            Value="@context.Hidden"
-                                                            ValueChanged="@context.ToggleAsync"
-                                                            Converter="_oppositeBoolConverter"
-                                                            Style="width: 70px;" />
+                                                           Ripple="false"
+                                                           Color="Color.Primary"
+                                                           Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
+                                                           Value="@(!context.Hidden)"
+                                                           ValueChanged="@context.ToggleAsync"
+                                                           Style="width: 70px;" />
 
                                                 <MudSwitch T="bool"
-                                                            Ripple="false"
-                                                            Color="Color.Primary"
-                                                            Style="width: 70px;"
-                                                            Value="@context.StickyLeft"
-                                                            ValueChanged="(x) => ToggleSticky(context, x)" />
+                                                           Ripple="false"
+                                                           Color="Color.Primary"
+                                                           Style="width: 70px;"
+                                                           Value="@context.StickyLeft"
+                                                           ValueChanged="(x) => ToggleSticky(context, x)" />
 
                                                 <MudIconButton Ripple="false" Disabled Icon="@context.DataGrid.DragIndicatorIcon" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
                                             </MudStack>
@@ -214,20 +211,19 @@
                                         <MudSpacer />
 
                                         <MudSwitch T="bool"
-                                                    Ripple="false"
-                                                    Color="Color.Primary"
-                                                    Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
-                                                    Style="width: 70px;"
-                                                    Value="@context.Hidden"
-                                                    ValueChanged="@context.ToggleAsync"
-                                                    Converter="_oppositeBoolConverter" />
+                                                   Ripple="false"
+                                                   Color="Color.Primary"
+                                                   Disabled="@(!(context.Hideable ?? DataGrid.Hideable))"
+                                                   Style="width: 70px;"
+                                                   Value="@(!context.Hidden)"
+                                                   ValueChanged="@context.ToggleAsync" />
 
                                         <MudSwitch T="bool"
-                                                    Ripple="false"
-                                                    Color="Color.Primary"
-                                                    Style="width: 70px;"
-                                                    Value="@context.StickyLeft"
-                                                    ValueChanged="(x) => ToggleSticky(context, x)" />
+                                                   Ripple="false"
+                                                   Color="Color.Primary"
+                                                   Style="width: 70px;"
+                                                   Value="@context.StickyLeft"
+                                                   ValueChanged="(x) => ToggleSticky(context, x)" />
 
                                         <MudIconButton Ripple="false" Icon="@context.DataGrid.DragIndicatorIcon" Size="@Size.Small" Class="drag-icon-options"></MudIconButton>
                                     </MudStack>
@@ -321,6 +317,16 @@
                                                 IsButtonColumn="ComponentType != null"
                                                 StickyLeft
                                                 HeaderStyle="width: 0;" />
+                    }
+
+                    @if (_autoAttention)
+                    {
+                        <TemplateColumn T="T" Title="" Sortable="false" Filterable="false" HeaderStyle="width: 0;">
+                            <CellTemplate>
+                                @{ var attnSeverity = GetAttentionSeverity?.Invoke(context.Item); }
+                                <AttentionInlineIndicator Severity="@attnSeverity" />
+                            </CellTemplate>
+                        </TemplateColumn>
                     }
 
                     @if (ChildContent != null)

@@ -680,7 +680,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
             MaxWidth = MaxWidth.ExtraSmall,
         };
 
-        bool? result = await DialogService.ShowMessageBox(
+        bool? result = await DialogService.ShowMessageBoxAsync(
             Loc["Delete File"],
             Loc["Are you sure you want to delete this file?"],
             yesText: Loc["Delete"], cancelText: Loc["CancelChanges"], options: options);
@@ -820,7 +820,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
             MaxWidth = MaxWidth.ExtraSmall,
         };
 
-        bool? result = await DialogService.ShowMessageBox(
+        bool? result = await DialogService.ShowMessageBoxAsync(
             Loc["Restore File"],
             Loc["Are you sure you want to undelete this file?"],
             yesText: Loc["Restore"], cancelText: Loc["CancelChanges"], options: options);
@@ -874,7 +874,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
                 MaxWidth = MaxWidth.ExtraSmall,
             };
 
-            bool? result = await DialogService.ShowMessageBox(
+            bool? result = await DialogService.ShowMessageBoxAsync(
                 Loc["Get Details"],
                 Loc["Are you sure you want to get this file details?"],
                 yesText: Loc["Get Details"], cancelText: Loc["CancelChanges"], options: options);

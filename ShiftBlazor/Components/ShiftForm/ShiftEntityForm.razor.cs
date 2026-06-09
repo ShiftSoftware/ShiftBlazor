@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using MudBlazor;
-using Newtonsoft.Json.Linq;
 using ShiftSoftware.ShiftBlazor.Components.Print;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Extensions;
@@ -11,6 +10,7 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core.Attention;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
@@ -140,6 +140,49 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
     [Parameter]
     public PrintFormConfig? PrintConfig { get; set; }
+
+    /// <summary>
+    /// Attention signals for this entity (active + cleared). When active signals exist,
+    /// the form renders an attention banner and a bell icon in the toolbar.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<StoredAttentionSignal>? AttentionSignals { get; set; }
+
+    /// <summary>
+    /// When true, the form invokes <see cref="OnAttentionCleared"/> on first load
+    /// to clear active attention signals automatically.
+    /// </summary>
+    [Parameter]
+    public bool ClearAttentionOnOpen { get; set; }
+
+    /// <summary>
+    /// Callback invoked when attention is cleared (either via ClearAttentionOnOpen
+    /// or the explicit Acknowledge button on the banner).
+    /// </summary>
+    [Parameter]
+    public EventCallback OnAttentionCleared { get; set; }
+
+    internal bool _RenderAttentionBell;
+    private bool _attentionClearFired;
+    private IReadOnlyList<StoredAttentionSignal>? _internalAttentionSignals;
+
+    /// <summary>
+    /// Whether <typeparamref name="T"/> opts into the attention feature, i.e. implements
+    /// <see cref="IHasAttentionSignals"/>. Computed once per closed generic type. When false the
+    /// form never calls <c>GET {key}/attention</c>, so non-opted-in entities cause no request and
+    /// no 404. Mirrors how <c>ShiftList</c> keys off <c>IHasAttentionSummary</c>.
+    /// </summary>
+    private static readonly bool _entitySupportsAttention = typeof(IHasAttentionSignals).IsAssignableFrom(typeof(T));
+
+    /// <summary>
+    /// Returns the explicit <see cref="AttentionSignals"/> parameter if provided, otherwise
+    /// falls back to internally fetched signals. Explicit parameter wins so consumers can
+    /// supply their own signal source.
+    /// </summary>
+    internal IReadOnlyList<StoredAttentionSignal>? EffectiveAttentionSignals =>
+        AttentionSignals ?? _internalAttentionSignals;
+
+    private string? _attentionLoadedForKey;
 
     internal string? OriginalValue { get; set; }
     internal bool Maximized { get; set; }
@@ -271,7 +314,8 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         _RenderEditButton = !HideEdit && HasWriteAccess;
         _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
-        _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton;
+        _RenderAttentionBell = EffectiveAttentionSignals is { Count: > 0 } && HasReadAccess;
+        _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton || _RenderAttentionBell;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -506,6 +550,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                 await UpdateUrl(value.ID);
             }
             await SetMode(FormModes.View);
+            _attentionLoadedForKey = null;
             await SetValue(value);
         }
 
@@ -523,7 +568,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
     }
 
-    internal async Task SetValue(T? value, bool copyValue = true)
+    internal async Task SetValue(T? value, bool copyValue = true, bool isOpen = false)
     {
         if (value == null)
         {
@@ -539,6 +584,180 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                 OriginalValue = JsonSerializer.Serialize(value);
             });
         }
+
+        if (AttentionSignals is null && !IsCreateMode)
+            await LoadAttentionSignalsInternal();
+
+        // ClearAttentionOnOpen fires ONLY when the record is opened (isOpen) — never on the
+        // post-save reload. Otherwise a save that (re-)raises a signal would clear it instantly,
+        // which contradicts the property's name and hides freshly-raised attention from the user.
+        var signals = EffectiveAttentionSignals;
+        if (isOpen && ClearAttentionOnOpen && !_attentionClearFired &&
+            signals?.Any(s => s.ClearedAt is null) == true)
+        {
+            _attentionClearFired = true;
+            if (OnAttentionCleared.HasDelegate)
+                await OnAttentionCleared.InvokeAsync();
+            else
+                // Auto-acknowledge: clear server-side but keep the snapshot on screen so the
+                // banner stays visible this session (won't re-appear on the next open).
+                await ClearAttentionInternal(reloadAfter: false);
+        }
+    }
+
+    /// <summary>
+    /// Fetches attention signals from <c>GET {ItemUrl}/attention</c> and stores them in
+    /// <c>_internalAttentionSignals</c>. Skipped when the entity key hasn't changed since
+    /// the last load, unless <paramref name="forceReload"/> is <c>true</c>.
+    /// </summary>
+    private async Task LoadAttentionSignalsInternal(bool forceReload = false)
+    {
+        // Only opted-in entities expose signals; skip the round-trip (and the resulting network
+        // noise) entirely for everything else. Guards every call path into this method.
+        if (!_entitySupportsAttention)
+            return;
+
+        var keyStr = Key?.ToString();
+        if (string.IsNullOrEmpty(keyStr))
+            return;
+
+        if (!forceReload && keyStr == _attentionLoadedForKey)
+            return;
+
+        _attentionLoadedForKey = keyStr;
+
+        try
+        {
+            var url = ItemUrl.TrimEnd('/') + "/attention";
+            using var request = HttpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url));
+            using var res = await HttpClient.SendAsync(request);
+
+            if (res.IsSuccessStatusCode)
+            {
+                _internalAttentionSignals = await res.Content.ReadFromJsonAsync<List<StoredAttentionSignal>>(
+                    new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            }
+        }
+        catch
+        {
+            _internalAttentionSignals = null;
+        }
+    }
+
+    /// <summary>
+    /// Posts to <c>POST {ItemUrl}/attention/clear</c> to clear all active signals and sets
+    /// <see cref="ShiftFormBasic{T}.MadeChanges"/> so the list refreshes when the form closes.
+    /// <para>
+    /// When <paramref name="reloadAfter"/> is <c>true</c> (the explicit Acknowledge button) the
+    /// signals are re-fetched so the banner reflects the cleared state immediately — the user
+    /// deliberately dismissed it. For the auto-clear-on-open path it is <c>false</c>: the
+    /// already-loaded snapshot is left in place so the banner stays visible for this session
+    /// (the persisted signal is still cleared, so the next open shows nothing). Re-fetching
+    /// there would empty the banner instantly and the user would never see what was flagged.
+    /// </para>
+    /// <para>
+    /// The clear updates the entity row server-side, advancing its audit stamp — and
+    /// <c>LastSaveDate</c> doubles as the optimistic-concurrency version checked on update.
+    /// The endpoint returns the post-clear stamp; it is patched onto the loaded DTO (and the
+    /// cancel-restore snapshot) so a subsequent edit + save doesn't trip a version conflict
+    /// with the pre-clear stamp.
+    /// </para>
+    /// </summary>
+    private async Task ClearAttentionInternal(bool reloadAfter = true)
+    {
+        var keyStr = Key?.ToString();
+        if (string.IsNullOrEmpty(keyStr) || Endpoint is null)
+            return;
+
+        try
+        {
+            var url = ItemUrl.TrimEnd('/') + "/attention/clear";
+            using var request = HttpClient.CreateRequestMessage(HttpMethod.Post, new Uri(url));
+            using var res = await HttpClient.SendAsync(request);
+
+            if (res.IsSuccessStatusCode)
+            {
+                MadeChanges = true;
+
+                await PatchConcurrencyStampFromClearResponse(res);
+
+                if (reloadAfter)
+                {
+                    await LoadAttentionSignalsInternal(forceReload: true);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    /// <summary>
+    /// Applies the post-clear <c>LastSaveDate</c> from a clear response onto the loaded DTO and
+    /// onto the cancel-restore snapshot (<see cref="OriginalValue"/>), keeping the form's
+    /// optimistic-concurrency version current. Only <c>LastSaveDate</c> is touched — any
+    /// in-progress edits on other fields are preserved (a manual acknowledge can happen in
+    /// edit mode).
+    /// </summary>
+    private async Task PatchConcurrencyStampFromClearResponse(HttpResponseMessage res)
+    {
+        try
+        {
+            var body = await res.Content.ReadFromJsonAsync<ClearAttentionResponse>(
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+            if (body?.LastSaveDate is not { } lastSaveDate)
+                return;
+
+            if (Value is not null)
+                Value.LastSaveDate = lastSaveDate;
+
+            // Without this, cancelling an edit after the clear would restore the snapshot's
+            // pre-clear stamp and the next save would conflict again.
+            if (!string.IsNullOrWhiteSpace(OriginalValue))
+            {
+                var original = JsonSerializer.Deserialize<T>(OriginalValue);
+                if (original is not null)
+                {
+                    original.LastSaveDate = lastSaveDate;
+                    OriginalValue = JsonSerializer.Serialize(original);
+                }
+            }
+        }
+        catch
+        {
+            // A missing/unparsable body degrades to the pre-fix behavior (stale stamp);
+            // never let it break the clear flow itself.
+        }
+    }
+
+    /// <summary>
+    /// Called when the user clicks Acknowledge on the attention banner. Delegates to
+    /// <see cref="OnAttentionCleared"/> if bound, otherwise calls <see cref="ClearAttentionInternal"/>.
+    /// </summary>
+    internal async Task HandleAttentionAcknowledge()
+    {
+        if (OnAttentionCleared.HasDelegate)
+            await OnAttentionCleared.InvokeAsync();
+        else
+            await ClearAttentionInternal();
+    }
+
+    /// <summary>
+    /// Opens the <see cref="AttentionHistoryDialog"/> showing the timeline of all signals
+    /// (active + cleared) for the current entity.
+    /// </summary>
+    private async Task OpenAttentionHistory()
+    {
+        var parameters = new DialogParameters<AttentionHistoryDialog>
+        {
+            { x => x.Signals, EffectiveAttentionSignals },
+            { x => x.EntityType, typeof(T).Name },
+            { x => x.EntityId, Key?.ToString() },
+        };
+        await DialogService.ShowAsync<AttentionHistoryDialog>("Signal history", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
     }
 
     public void ResizeForm()
@@ -575,7 +794,9 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                     //res.Headers.TryGetValues(Constants.HttpHeaderVersioning, out IEnumerable<string>? versioning);
                     IsTemporal = true; //versioning?.Contains("Temporal") == true;
                     FetchedEntity = await ParseEntityResponse(res);
-                    await SetValue(FetchedEntity, asOf == null);
+                    // isOpen: only a live open (asOf == null) auto-acknowledges; viewing a
+                    // historical revision must not clear the current record's attention.
+                    await SetValue(FetchedEntity, copyValue: asOf == null, isOpen: asOf == null);
                 }
             }
             catch (Exception e)

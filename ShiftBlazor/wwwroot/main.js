@@ -113,7 +113,9 @@ window.SetAsSortable = function (id, counter = 0) {
 window.fixStickyColumn = function (gridId) {
 
     var grid = document.getElementById(gridId);
+    if (!grid) return;
     var headRow = grid.querySelector(".mud-table-container .mud-table-head .mud-table-row");
+    if (!headRow) return;
     var leftCells = [...headRow.getElementsByClassName("sticky-left")];
     var rightCells = [...headRow.getElementsByClassName("sticky-right")];
     var offset = 0;
@@ -280,3 +282,12 @@ window.addEventListener("keydown", handleKeydown);
 window.addEventListener("keyup", releaseAltKey);
 window.addEventListener("blur", releaseAltKey);
 window.addEventListener("resize", responsiveFix);
+
+// Prevent browser auto-translation.
+// Browser translation tools (e.g. Google Translate) modify the DOM directly, which conflicts
+// with frameworks that manage their own DOM (Blazor, React, etc.). This can cause rendering
+// errors, broken event handlers, and hydration mismatches.
+document.documentElement.setAttribute('translate', 'no');
+if (!document.head.querySelector('meta[name="google"][content="notranslate"]')) {
+    document.head.insertAdjacentHTML('beforeend', '<meta name="google" content="notranslate">');
+}

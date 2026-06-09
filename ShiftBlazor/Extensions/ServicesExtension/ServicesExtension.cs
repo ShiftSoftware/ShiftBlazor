@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using MudBlazor;
 using MudBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Services;
@@ -12,8 +14,13 @@ public static class ServicesExtension
 {
     public static IServiceCollection AddShiftBlazor(this IServiceCollection services, Action<AppStartupOptions> configure)
     {
-        var options = new AppStartupOptions();
-        configure.Invoke(options);
+        services.Configure(configure);
+        return services.AddShiftBlazor();
+    }
+
+    public static IServiceCollection AddShiftBlazor(this IServiceCollection services)
+    {
+        services.TryAddSingleton(sp => sp.GetRequiredService<IOptions<AppStartupOptions>>().Value);
 
         services.AddMudServices(mudConfig =>
         {
@@ -26,11 +33,15 @@ public static class ServicesExtension
             mudConfig.SnackbarConfiguration.BackgroundBlurred = false;
             mudConfig.SnackbarConfiguration.PreventDuplicates = false;
             mudConfig.SnackbarConfiguration.MaxDisplayedSnackbars = 5;
-
-            mudConfig.PopoverOptions.Mode = PopoverMode.Default;
-
-            options.MudBlazorConfiguration?.Invoke(mudConfig);
         });
+
+        // Apply consumer's MudBlazor customization at resolve time
+        services.AddSingleton<IConfigureOptions<MudServicesConfiguration>>(sp =>
+            new ConfigureOptions<MudServicesConfiguration>(mudConfig =>
+            {
+                var appOptions = sp.GetRequiredService<AppStartupOptions>();
+                appOptions.MudBlazorConfiguration?.Invoke(mudConfig);
+            }));
 
         services.AddBlazoredLocalStorage();
         services.AddScoped<ClipboardService>();
@@ -45,10 +56,14 @@ public static class ServicesExtension
 
         services.AddLocalization();
 
-        if(options.LocalizationResource is null)
-            services.AddTransient(x => new ShiftBlazorLocalizer(x, typeof(Resource)));
-        else
-            services.AddTransient(x => new ShiftBlazorLocalizer(x, options.LocalizationResource));
+        services.AddTransient(x =>
+        {
+            var options = x.GetRequiredService<AppStartupOptions>();
+            if (options.LocalizationResource is null)
+                return new ShiftBlazorLocalizer(x, typeof(Resource));
+            else
+                return new ShiftBlazorLocalizer(x, options.LocalizationResource);
+        });
 
         return services;
     }

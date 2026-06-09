@@ -16,6 +16,7 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core.Attention;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
@@ -108,6 +109,16 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// </summary>
     [Parameter]
     public bool EnableSelection { get; set; }
+
+    /// <summary>
+    /// Optional function to extract the attention severity from a list item.
+    /// When set, rows with active attention are tinted by severity.
+    /// </summary>
+    [Parameter]
+    public Func<T, AttentionSeverity?>? GetAttentionSeverity { get; set; }
+
+    private bool _autoAttention;
+    private static readonly bool _hasAttentionSummary = typeof(IHasAttentionSummary).IsAssignableFrom(typeof(T));
 
     /// <summary>
     /// Enable Virtualization and disable Paging.
@@ -222,7 +233,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     public bool Dense { get; set; }
 
     /// <summary>
-    /// Fires when a row is clicked, sends 'DataGridRowClickEventArgs<T>' as argument.
+    /// Fires when a row is clicked, sends <c>DataGridRowClickEventArgs&lt;T&gt;</c> as argument.
     /// </summary>
     [Parameter]
     public EventCallback<ShiftEvent<DataGridRowClickEventArgs<T>>> OnRowClick { get; set; }
@@ -416,11 +427,28 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     private TaskCompletionSource<GridData<T>> IndefiniteReloadTask = new();
     private CancellationTokenSource? ReloadCancellationTokenSource { get; set; }
 
-    protected string GetRowClassname(T item, int colIndex) =>
-        new CssBuilder()
+    protected string GetRowClassname(T item, int colIndex)
+    {
+        var builder = new CssBuilder()
             .AddClass("is-deleted", item.IsDeleted)
-            .AddClass("is-selected", SelectState.Items.Any(x => x.ID == item.ID) || SelectState.All)
-            .Build();
+            .AddClass("is-selected", SelectState.Items.Any(x => x.ID == item.ID) || SelectState.All);
+
+        if (GetAttentionSeverity is not null)
+        {
+            var severity = GetAttentionSeverity(item);
+            if (severity.HasValue)
+            {
+                builder.AddClass(severity.Value switch
+                {
+                    AttentionSeverity.Critical => "attention-row--critical",
+                    AttentionSeverity.Warning => "attention-row--warning",
+                    _ => "attention-row--info",
+                });
+            }
+        }
+
+        return builder.Build();
+    }
 
     protected string SortedColgroupStylename =>
         new StyleBuilder()
@@ -475,6 +503,16 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     {
         dotNetRef = DotNetObjectReference.Create(this);
         IsEmbed = ParentDisabled != null || ParentReadOnly != null;
+
+        if (_hasAttentionSummary && GetAttentionSeverity is null)
+        {
+            _autoAttention = true;
+            GetAttentionSeverity = item =>
+            {
+                var summary = (IHasAttentionSummary)item!;
+                return summary.HasActiveAttention ? (AttentionSeverity?)summary.HighestSeverity : null;
+            };
+        }
 
         if (!IsEmbed)
         {
@@ -755,6 +793,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// <summary>
     /// Adds a filter to the data grid.
     /// </summary>
+    /// <param name="id">Unique identifier for this filter, used to update or remove it later.</param>
     /// <param name="field">The field to apply the filter on.</param>
     /// <param name="op">The comparison operator for the filter (e.g., Equal, GreaterThan).</param>
     /// <param name="value">The value to compare against for the filter.</param>
@@ -790,7 +829,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
     }
 
-    private async Task<GridData<T>> ServerReload(GridState<T> state)
+    private async Task<GridData<T>> ServerReload(GridState<T> state, CancellationToken cancellationToken = default)
     {
         IsLoading = true;
         StateHasChanged();
@@ -1486,12 +1525,6 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             await PrintService.OpenPrintFormAsync(url, id, PrintConfig);
         }
     }
-
-    private readonly MudBlazor.Converter<bool, bool?> _oppositeBoolConverter = new()
-    {
-        SetFunc = value => !value,
-        GetFunc = value => !value ?? true,
-    };
 
     public void Dispose()
     {

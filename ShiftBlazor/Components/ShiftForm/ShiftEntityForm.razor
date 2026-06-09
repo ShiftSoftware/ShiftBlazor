@@ -12,7 +12,7 @@
 <article style="height: 100%;" id="@($"Form-{Id}")">
     <MudFocusTrap Disabled="MudDialog == null" DefaultFocus="DefaultFocus.Element">
 
-        <MudPaper Elevation="25" Style="height: 100%;">
+        <MudPaper Elevation="25" Class="shift-form-paper" Style="height: 100%;">
 
             <header>
                 @if (!DisableHeaderToolbar)
@@ -38,6 +38,19 @@
 
                         <ToolbarMenuItems>
                             @ToolbarEndTemplate
+
+                            @if (_RenderAttentionBell)
+                            {
+                                <MudTooltip Text="Signal history">
+                                    <MudButtonExtended Variant="Variant.Text"
+                                                        Color="Color.Tertiary"
+                                                        Style="min-width:40px;"
+                                                        aria-label="Signal history"
+                                                        OnClick="OpenAttentionHistory">
+                                        <MudIcon Icon="@Icons.Material.Filled.NotificationsActive" />
+                                    </MudButtonExtended>
+                                </MudTooltip>
+                            }
 
                             @if (_RenderCloneButton)
                             {
@@ -197,6 +210,14 @@
                 @if (Value.IsDeleted)
                 {
                     <MudAlert Severity="Severity.Error">@Loc["DeletedIndicator"]</MudAlert>
+                }
+
+                @if (EffectiveAttentionSignals is { Count: > 0 })
+                {
+                    <AttentionBanner Signals="EffectiveAttentionSignals"
+                                    ShowAcknowledgeButton="@(!ClearAttentionOnOpen)"
+                                    OnAcknowledge="HandleAttentionAcknowledge"
+                                    FooterNote="@(ClearAttentionOnOpen ? "Automatically acknowledged on open" : null)" />
                 }
 
                 @if (AlertEnabled)

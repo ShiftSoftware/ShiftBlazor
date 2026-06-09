@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Services;
 
@@ -15,12 +15,18 @@ public class AppConfiguration
     /// </summary>
     public List<ValueTuple<int, int>> ThumbnailSizes = [(250, 250), (500, 500), (1000, 1000)];
 
-    public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
+    public List<LanguageInfo> Languages = [];
+    public List<LanguageInfo> ContentLanguages = [];
 
-    public readonly List<LanguageInfo> Languages = [];
 
-    public AppConfiguration AddLanguage(string culture, string label, bool rtl = false)
+    public AppConfiguration AddLanguage(string culture, string label, LanguageScope scope)
     {
+        return this.AddLanguage(culture, label, false, scope);
+    }
+
+    public AppConfiguration AddLanguage(string culture, string label, bool rtl = false, LanguageScope scope = LanguageScope.Both)
+    {
+        //NullReferenceException.ThrowIfNull(culture, nameof(culture));
         if (string.IsNullOrWhiteSpace(culture)) throw new NullReferenceException(nameof(culture));
 
         if (string.IsNullOrWhiteSpace(label))
@@ -28,12 +34,25 @@ public class AppConfiguration
             label = culture;
         }
 
-        Languages.Add(new LanguageInfo
+        if (scope.HasFlag(LanguageScope.UI))
         {
-            CultureName = culture,
-            Label = label,
-            RTL = rtl
-        });
+            Languages.Add(new LanguageInfo
+            {
+                CultureName = culture,
+                Label = label,
+                RTL = rtl
+            });
+        }
+
+        if (scope.HasFlag(LanguageScope.Content))
+        {
+            ContentLanguages.Add(new LanguageInfo
+            {
+                CultureName = culture,
+                Label = label,
+                RTL = rtl
+            });
+        }
 
         return this;
     }

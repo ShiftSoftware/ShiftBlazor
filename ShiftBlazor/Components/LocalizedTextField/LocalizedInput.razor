@@ -12,7 +12,7 @@
 <MudGrid>
     @foreach (var (lang, value) in Values)
     {
-        var langLabel = languageInfo[lang].FirstOrDefault()?.Label;
+        var langLabel = languageLookup[lang].FirstOrDefault()?.Label;
         var label = Label == null
             ? langLabel
             : string.IsNullOrWhiteSpace(langLabel)
@@ -34,7 +34,7 @@
     }
 </MudGrid>
 
-@code {
+    @code {
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftEntityForm { get; set; }
 
@@ -66,6 +66,9 @@
     [Parameter]
     public Expression<Func<string?>>? For { get; set; }
 
+    [Parameter]
+    public List<LanguageInfo>? Languages { get; set; }
+
     private int xsColSize;
     private int smColSize;
     private int mdColSize;
@@ -78,14 +81,16 @@
     private IEnumerable<ValidationAttribute>? validationAttributes;
     private string modelName = string.Empty;
     private string? fieldName;
-    private ILookup<string, LanguageInfo> languageInfo = default!;
+    private ILookup<string, LanguageInfo> languageLookup = default!;
 
     protected override void OnInitialized()
     {
-        this.languageInfo = SettingManager.Configuration.Languages
+        var languages = Languages ?? SettingManager.Configuration.ContentLanguages;
+
+        this.languageLookup = languages
             .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
 
-        var langCodes = this.languageInfo.Select(x => x.Key).Distinct().ToList();
+        var langCodes = this.languageLookup.Select(x => x.Key).Distinct().ToList();
         var langCount = langCodes.Count;
         Values = langCodes.ToDictionary(lang => lang, lang => string.Empty);
 
@@ -100,7 +105,15 @@
             {
                 // LocalizedTextField expects a JSON string in the format {"en":"Hello","fr":"Bonjour"}
                 var json = JsonDocument.Parse(Value);
-                Values = json.Deserialize<Dictionary<string, string>>() ?? new();
+                var remoteValues = json.Deserialize<Dictionary<string, string>>() ?? new();
+
+                foreach (var item in Values.Keys)
+                {
+                    if (remoteValues.ContainsKey(item))
+                    {
+                        Values[item] = remoteValues[item];
+                    }
+                }
             }
         }
         catch

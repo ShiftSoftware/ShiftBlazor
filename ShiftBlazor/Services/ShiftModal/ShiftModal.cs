@@ -18,7 +18,7 @@ public class ShiftModal
     private readonly MessageService MessageService;
 
     private static readonly string QueryKey = "modal";
-    private readonly List<Assembly> Assemblies;
+    private Dictionary<string, Type>? _routeTypeCache;
 
     public ShiftModal(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService, SettingManager settingManager, MessageService messageService)
     {
@@ -27,13 +27,6 @@ public class ShiftModal
         DialogService = dialogService;
         SettingManager = settingManager;
         MessageService = messageService;
-
-        Assemblies = [Assembly.GetEntryAssembly()!];
-
-        if (SettingManager.Configuration.AdditionalAssemblies != null)
-        {
-            Assemblies.AddRange(SettingManager.Configuration.AdditionalAssemblies);
-        }
     }
 
     /// <summary>
@@ -88,17 +81,13 @@ public class ShiftModal
         }
         else if (openMode == ModalOpenMode.Popup)
         {
-            foreach (var assembly in Assemblies)
+            var identifier = GetComponentIdentifier(ComponentType);
+            if (identifier != null)
             {
-                var assemblyName = assembly.GetName().Name!;
-                if (ComponentType.FullName?.Contains(assemblyName) == true)
-                {
-                    var fullname = ComponentType.FullName.Substring(assemblyName.Length + 1);
-                    var queryParams = skipQueryParamUpdate ? null : parameters;
-                    await UpdateModalQueryUrl(fullname, key, queryParams);
-                }
+                var queryParams = skipQueryParamUpdate ? null : parameters;
+                await UpdateModalQueryUrl(identifier, key, queryParams);
             }
-            
+
             return await OpenDialog(ComponentType, key, parameters);
         }
 
@@ -196,18 +185,93 @@ public class ShiftModal
 
     internal Type? GetComponentType(string name)
     {
-        foreach (var assembly in Assemblies)
-        {
-            var assemblyName = assembly.GetName().Name;
-            var compName = $"{assemblyName}.{name}";
-            var type = assembly.GetType(compName);
+        var cache = GetRouteTypeCache();
+        return cache.TryGetValue(NormalizeRouteTemplate(name), out var routeType) ? routeType : null;
+    }
 
-            if (type != null)
+    /// <summary>
+    /// Returns the identifier used to represent a component in the modal URL,
+    /// derived from the first <see cref="RouteAttribute"/> on the component.
+    /// </summary>
+    private static string? GetComponentIdentifier(Type componentType)
+    {
+        var routeAttr = componentType.GetCustomAttributes<RouteAttribute>().FirstOrDefault();
+        return routeAttr == null ? null : NormalizeRouteTemplate(routeAttr.Template);
+    }
+
+    /// <summary>
+    /// When parameters are deserialized from the modal URL JSON, their values arrive as
+    /// <see cref="JsonElement"/> regardless of the target component property type. This helper
+    /// reflects on <paramref name="componentType"/>, finds the matching <c>[Parameter]</c>
+    /// property by name, and converts the JsonElement to the declared CLR type. Values that
+    /// are not JsonElement (i.e. came from a direct in-process Open call) are passed through.
+    /// </summary>
+    private static object CoerceParameter(Type componentType, string parameterName, object? value)
+    {
+        if (value is not JsonElement element) return value!;
+
+        var prop = componentType.GetProperty(
+            parameterName,
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+        if (prop == null) return element;
+
+        try
+        {
+            var converted = element.Deserialize(prop.PropertyType);
+            return converted ?? element;
+        }
+        catch
+        {
+            return element;
+        }
+    }
+
+    /// <summary>
+    /// Strips the leading slash and any "{...}" route parameter segments from a route template,
+    /// so the stored identifier is stable regardless of whether route parameters are bound.
+    /// E.g. "/ProductBrandForm/{Key?}" -> "ProductBrandForm".
+    /// </summary>
+    private static string NormalizeRouteTemplate(string template)
+    {
+        var trimmed = template.TrimStart('/');
+        var segments = trimmed
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .Where(s => !s.StartsWith('{'));
+        return string.Join('/', segments);
+    }
+
+    private Dictionary<string, Type> GetRouteTypeCache()
+    {
+        if (_routeTypeCache != null)
+        {
+            return _routeTypeCache;
+        }
+
+        var cache = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            if (assembly.IsDynamic) continue;
+            Type[] types;
+            try { types = assembly.GetTypes(); }
+            catch (ReflectionTypeLoadException ex) { types = ex.Types.Where(t => t != null).ToArray()!; }
+
+            foreach (var t in types)
             {
-                return type;
+                if (t == null || !typeof(ComponentBase).IsAssignableFrom(t)) continue;
+                foreach (var attr in t.GetCustomAttributes<RouteAttribute>())
+                {
+                    var key = NormalizeRouteTemplate(attr.Template);
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        cache[key] = t;
+                    }
+                }
             }
         }
-        return null;
+
+        _routeTypeCache = cache;
+        return _routeTypeCache;
     }
 
     private async Task<DialogResult?> OpenDialog(Type TComponent, object? key = null, Dictionary<string, object>? parameters = null)
@@ -216,14 +280,14 @@ public class ShiftModal
 
         if (key != null)
         {
-            dParams.Add("Key", key);
+            dParams.Add("Key", CoerceParameter(TComponent, "Key", key));
         }
 
         if (parameters != null)
         {
             foreach (var item in parameters)
             {
-                dParams.Add(item.Key, item.Value);
+                dParams.Add(item.Key, CoerceParameter(TComponent, item.Key, item.Value));
             }
         }
 

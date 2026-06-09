@@ -3,6 +3,7 @@
 @using Microsoft.Extensions.DependencyInjection
 @using ShiftSoftware.ShiftBlazor.Components.App
 @using ShiftSoftware.ShiftIdentity.Blazor
+@using ShiftSoftware.ShiftBlazor.Extensions
 @using ShiftSoftware.ShiftIdentity.Blazor.Components
 @using ShiftSoftware.ShiftIdentity.Core
 
@@ -12,7 +13,7 @@
 
 <CascadingValue Value="AppContext" IsFixed="true">
     <Router AppAssembly="@AppAssembly"
-            AdditionalAssemblies="@AdditionalAssemblies"
+            AdditionalAssemblies="@AllAdditionalAssemblies"
             NotFoundPage="@(NotFoundPage ?? typeof(NotFound))"
             Navigating="Navigating"
             OnNavigateAsync="OnNavigateAsync">
@@ -73,6 +74,8 @@
     [Parameter]
     public IEnumerable<System.Reflection.Assembly>? AdditionalAssemblies { get; set; }
 
+    private IEnumerable<System.Reflection.Assembly>? AllAdditionalAssemblies { get; set; }
+
     [Parameter]
     public string? AppTitle { get; set; }
 
@@ -110,6 +113,13 @@
         await SettingManager.Setup(false);
 
         authState = AuthenticationStateTask != null ? await AuthenticationStateTask : null;
+
+        var startupOptions = ServiceProvider.GetRequiredService<AppStartupOptions>();
+        var optionsAssemblies = startupOptions.AdditionalAssemblies;
+
+        AllAdditionalAssemblies = AdditionalAssemblies is not null
+            ? AdditionalAssemblies.Concat(optionsAssemblies).Distinct()
+            : optionsAssemblies;
 
         AppContext = new AppLayoutContext(SettingManager)
         {
