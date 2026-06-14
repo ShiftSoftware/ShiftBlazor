@@ -1,0 +1,47 @@
+@page "/tags/{Key?}"
+@namespace ShiftSoftware.ShiftBlazor.Pages.Tagging
+@using Microsoft.Extensions.Options
+@using MudBlazor
+@using ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftBlazor.Tagging
+@using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@inject IOptions<ShiftBlazorTaggingOptions> Options
+
+<ShiftEntityForm T="TagDTO"
+                 Endpoint="@(Opts.Endpoint ?? Opts.EntitySet)"
+                 BaseUrl="@Opts.BaseUrl"
+                 BaseUrlKey="@Opts.BaseUrlKey"
+                 Title="@Opts.FormTitle"
+                 @bind-Value="TagItem"
+                 TypeAuthAction="@Opts.TypeAuthAction"
+                 @bind-Key="@Key">
+    <MudTextField @bind-Value="context.Item.Name"
+                  For="() => context.Item.Name"
+                  Label="Name"
+                  Required="true" />
+
+    <MudTextField @bind-Value="context.Item.Color"
+                  For="() => context.Item.Color"
+                  Label="Color (hex, e.g. #FF0000)"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Palette" />
+
+    <MudTextField @bind-Value="context.Item.Description"
+                  For="() => context.Item.Description"
+                  Label="Description"
+                  Lines="2" />
+
+    <MudTextField @bind-Value="context.Item.IntegrationID"
+                  For="() => context.Item.IntegrationID"
+                  Label="Integration ID"
+                  HelperText="Optional external-system identifier. Must be unique if set." />
+</ShiftEntityForm>
+
+@code {
+    [Parameter] public object? Key { get; set; }
+
+    private TagDTO TagItem = new();
+
+    private ShiftBlazorTaggingOptions Opts => Options.Value;
+}

@@ -277,6 +277,12 @@
                                         @ChildContent(new(this))
                                     }
 
+                                    @if (Value is ShiftSoftware.ShiftEntity.Model.Dtos.Tagging.IShiftEntityTaggableDTO dtoWithTags)
+                                    {
+                                        <ShiftTagPicker Label="Tags"
+                                                        Value="dtoWithTags.Tags"
+                                                        ValueChanged="(value) => { dtoWithTags.Tags = value; EditContext.NotifyValidationStateChanged(); }" />
+                                    }
 
                                     @if (Value is ShiftSoftware.ShiftEntity.Core.Flags.IHasDraftCheckBox<T> dtoWithDraftFlag)
                                     {

@@ -1,0 +1,37 @@
+@page "/tags"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@namespace ShiftSoftware.ShiftBlazor.Pages.Tagging
+@using Microsoft.Extensions.Options
+@using ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftBlazor.Tagging
+@using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@inject IOptions<ShiftBlazorTaggingOptions> Options
+
+<ShiftList EntitySet="@Opts.EntitySet"
+           Endpoint="@Opts.Endpoint"
+           BaseUrl="@Opts.BaseUrl"
+           BaseUrlKey="@Opts.BaseUrlKey"
+           Title="@Opts.ListTitle"
+           T="TagListDTO"
+           Dense
+           ComponentType="typeof(TagFormPage)"
+           HighlightSortedColumn
+           TypeAuthAction="@Opts.TypeAuthAction"
+           EnableExport>
+    <ButtonColumn Property="x => x.Name" Title="Name" />
+    <PropertyColumnExtended Property="x => x.Color" Title="Color">
+        <CellTemplate Context="cell">
+            @if (!string.IsNullOrWhiteSpace(cell.Item.Color))
+            {
+                <span style="@($"display:inline-block;width:14px;height:14px;border-radius:3px;background-color:{cell.Item.Color};vertical-align:middle;")"></span>
+                <span class="ms-2">@cell.Item.Color</span>
+            }
+        </CellTemplate>
+    </PropertyColumnExtended>
+    <PropertyColumn Property="x => x.IntegrationID" Title="Integration ID" Hidden />
+</ShiftList>
+
+@code {
+    private ShiftBlazorTaggingOptions Opts => Options.Value;
+}

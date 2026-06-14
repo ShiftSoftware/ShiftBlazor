@@ -1,0 +1,114 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+@using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@*
+    Multi-select tag picker. Thin wrapper around <ShiftAutocomplete> against the standard
+    Tag CRUD OData endpoint (default GET /api/tags?$filter=contains(Name,'…')&$top=N).
+    Binds to a List<TagDTO> on the parent DTO. Supports free-text creation: typing a
+    name that doesn't exist in the vocabulary produces a TagDTO with no ID; the
+    framework's TaggingPipeline auto-creates the tag on save (gated by Tags.Write).
+*@
+
+<ShiftAutocomplete TEntitySet="TagListDTO"
+                   EntitySet="@EntitySet"
+                   Endpoint="@Endpoint"
+                   BaseUrl="@BaseUrl"
+                   BaseUrlKey="@BaseUrlKey"
+                   Label="@Label"
+                   Placeholder="@Placeholder"
+                   Variant="@Variant"
+                   MultiSelect="true"
+                   FreeInput="true"
+                   MaxItems="@MaxSuggestions"
+                   ReadOnly="@_effectivelyReadOnly"
+                   SelectedValues="_selected"
+                   SelectedValuesChanged="OnSelectedChanged">
+    <SelectedValuesTemplate Context="ctx">
+        @{
+            var tag = ctx.Item.Data as TagDTO;
+            var color = tag?.Color;
+            var style = string.IsNullOrWhiteSpace(color) ? null : $"background-color: {color}; color: white;";
+            var localCtx = ctx;
+            var onClose = _effectivelyReadOnly
+                ? default
+                : EventCallback.Factory.Create<MudChip<string>>(this, async _ => await localCtx.RemoveItem());
+        }
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Style="@style"
+                 Value="@ctx.Item.Text"
+                 OnClose="@onClose" />
+    </SelectedValuesTemplate>
+    <DropdownItemTemplate Context="ctx">
+        <div class="d-flex align-center" style="gap: 8px;">
+            @if (!string.IsNullOrWhiteSpace(ctx.Item.Color))
+            {
+                <span style="@($"display:inline-block;width:10px;height:10px;border-radius:2px;background-color:{ctx.Item.Color};")"></span>
+            }
+            <span>@ctx.Item.Name</span>
+        </div>
+    </DropdownItemTemplate>
+</ShiftAutocomplete>
+
+@code {
+    [Parameter] public List<TagDTO> Value { get; set; } = new();
+    [Parameter] public EventCallback<List<TagDTO>> ValueChanged { get; set; }
+
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
+
+    /// <summary>OData entity set name for tags. Default <c>tags</c>.</summary>
+    [Parameter] public string EntitySet { get; set; } = "tags";
+
+    /// <summary>Override the OData endpoint path (rare).</summary>
+    [Parameter] public string? Endpoint { get; set; }
+
+    /// <summary>Absolute base URL for the tagging API (overrides SettingManager).</summary>
+    [Parameter] public string? BaseUrl { get; set; }
+
+    /// <summary>Lookup key for resolving the API base URL from settings.</summary>
+    [Parameter] public string? BaseUrlKey { get; set; }
+
+    [Parameter] public int MaxSuggestions { get; set; } = 25;
+
+    [Parameter] public bool ReadOnly { get; set; }
+
+    [CascadingParameter(Name = "ParentReadOnly")]
+    private bool ParentReadOnly { get; set; }
+
+    [CascadingParameter(Name = "ParentDisabled")]
+    private bool ParentDisabled { get; set; }
+
+    private bool _effectivelyReadOnly => ReadOnly || ParentReadOnly || ParentDisabled;
+
+    private List<ShiftEntitySelectDTO> _selected = new();
+
+    protected override void OnParametersSet()
+    {
+        // Re-project Value into the SelectDTO shape ShiftAutocomplete binds to. The TagDTO
+        // is stashed in Data so the chip template can read Color without re-fetching.
+        _selected = Value.Select(t => new ShiftEntitySelectDTO
+        {
+            Value = t.ID ?? string.Empty,
+            Text = t.Name,
+            Data = t,
+        }).ToList();
+    }
+
+    private async Task OnSelectedChanged(List<ShiftEntitySelectDTO> incoming)
+    {
+        _selected = incoming;
+        Value = incoming.Select(s => s.Data as TagDTO ?? new TagDTO
+        {
+            // Free-typed entry: ShiftAutocomplete emits Value=Text and Data=null.
+            ID = string.IsNullOrEmpty(s.Value) ? null : s.Value,
+            Name = s.Text ?? s.Value ?? string.Empty,
+        }).ToList();
+
+        await ValueChanged.InvokeAsync(Value);
+    }
+}
