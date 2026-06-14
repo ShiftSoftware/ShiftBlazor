@@ -516,7 +516,7 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
         return Sections.Remove(section);
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         IShortcutComponent.Remove(Id);
     }

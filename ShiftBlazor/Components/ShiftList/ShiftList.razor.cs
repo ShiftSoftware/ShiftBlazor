@@ -40,6 +40,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
     [Inject] PrintService PrintService { get; set; } = default!;
+    [Inject] IAttentionHubClient AttentionHubClient { get; set; } = default!;
 
 
     [CascadingParameter]
@@ -115,6 +116,27 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     private bool _autoAttention;
     private static readonly bool _hasAttentionSummary = typeof(IHasAttentionSummary).IsAssignableFrom(typeof(T));
+
+    /// <summary>
+    /// When <c>true</c>, the list connects to the framework's attention hub and calls
+    /// <see cref="Reload"/> whenever a signal is raised on this list's entity type — from any
+    /// session, background job, service-bus consumer, or timer trigger. <see cref="Reload"/>
+    /// preserves scroll position, active filters, and sort, so the grid does not jump.
+    /// Default <c>false</c>; independent of <see cref="ShowAttentionToast"/>.
+    /// </summary>
+    [Parameter]
+    public bool ListenForAttentionUpdates { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, a passive snackbar is shown when a signal is raised on this list's
+    /// entity type — no automatic reload. Use where a silent reload would be jarring, or as a
+    /// visible confirmation alongside <see cref="ListenForAttentionUpdates"/>. Default <c>false</c>.
+    /// </summary>
+    [Parameter]
+    public bool ShowAttentionToast { get; set; }
+
+    private IAsyncDisposable? _attentionSubscription;
+    private bool _attentionSubscribeStarted;
 
     /// <summary>
     /// Enable Virtualization and disable Paging.
@@ -549,7 +571,61 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender) => await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+
+        if (firstRender)
+            await SubscribeToAttentionUpdatesAsync();
+    }
+
+    /// <summary>
+    /// On first render, subscribes to the attention hub for this list's entity type when either
+    /// real-time switch is set. A failed connection is swallowed — real-time is a progressive
+    /// enhancement and must never break the list.
+    /// </summary>
+    private async Task SubscribeToAttentionUpdatesAsync()
+    {
+        if (_attentionSubscribeStarted || !(ListenForAttentionUpdates || ShowAttentionToast))
+            return;
+
+        _attentionSubscribeStarted = true;
+
+        // The hub keys groups by the entity name, which the list already names via EntitySet (its
+        // OData identity). Take the first path segment so a custom endpoint like
+        // "ProductCategory/custom-list" still resolves to "ProductCategory". A Values-mode list
+        // (no EntitySet) has no server entity to watch, so it doesn't subscribe.
+        var entityType = EntitySet?.Split('/', 2)[0];
+        if (string.IsNullOrWhiteSpace(entityType))
+            return;
+
+        var config = SettingManager.Configuration;
+        var baseAddress = BaseUrl
+            ?? (BaseUrlKey is not null ? config.ExternalAddresses.TryGet(BaseUrlKey) : null)
+            ?? config.BaseAddress;
+
+        if (string.IsNullOrWhiteSpace(baseAddress))
+            return;
+
+        try
+        {
+            _attentionSubscription = await AttentionHubClient.SubscribeAsync(baseAddress, entityType, OnAttentionRaised);
+        }
+        catch
+        {
+            // No real-time updates this session; the list still works and refreshes on user action.
+        }
+    }
+
+    private Task OnAttentionRaised(AttentionRealtimePayload payload) => InvokeAsync(() =>
+    {
+        // Toast only on a raise; a clear drops the row tint silently via the reload below.
+        if (ShowAttentionToast && payload.Kind == AttentionRealtimeKind.Raised)
+            Snackbar.Add(Loc["AttentionRealtimeToast"], Severity.Info);
+
+        if (ListenForAttentionUpdates)
+            Reload();
+    });
 
     protected override bool ShouldRender()
     {
@@ -1415,6 +1491,10 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         dotNetRef?.Dispose();
         ShiftBlazorEvents.OnModalClosed -= ShiftBlazorEvents_OnModalClosed;
         IShortcutComponent.Remove(Id);
+        // Best-effort async unsubscribe; the hub client leaves the server group once its last
+        // local subscriber is gone.
+        if (_attentionSubscription is not null)
+            _ = _attentionSubscription.DisposeAsync();
         GC.SuppressFinalize(this);
     }
 }

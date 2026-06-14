@@ -51,6 +51,13 @@ public static class ServicesExtension
         services.AddScoped<ShiftModal>();
         services.AddScoped<MessageService>();
         services.AddScoped<PrintService>();
+
+        // Real-time attention (opt-in per list/form via ListenForAttentionUpdates /
+        // ShowAttentionToast). TryAdd so a consumer or test can substitute its own client /
+        // connection transport. The SignalR connection itself is created lazily on first
+        // subscription, so apps that never opt in pay nothing.
+        services.TryAddScoped<IAttentionHubConnectionFactory, SignalRAttentionHubConnectionFactory>();
+        services.TryAddScoped<IAttentionHubClient, AttentionHubClient>();
         services.AddScoped(x =>
         {
             var options = x.GetRequiredService<AppStartupOptions>();

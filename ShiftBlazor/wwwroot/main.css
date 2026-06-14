@@ -2,9 +2,51 @@
     overflow: hidden;
 }
 
+.shift-modal-background + .mud-dialog:not(.mud-dialog-fullscreen) {
+    max-height: calc(100dvh - 64px);
+}
+
+.shift-modal-background + .mud-dialog .mud-dialog-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog article[id^="Form-"] {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog .shift-form-paper {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog .shift-form-paper > form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog .shift-form-paper > header,
+.shift-modal-background + .mud-dialog .shift-form-paper > form > footer {
+    flex-shrink: 0;
+}
+
 .shift-scrollable-content-wrapper {
-    max-height: calc(100vh - 175px);
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: auto;
+}
+
+.mud-dialog:not(.shift-modal-background + .mud-dialog) .shift-scrollable-content-wrapper {
+    max-height: calc(100vh - 175px);
 }
 
 .shift-toolbar-header > :last-child {

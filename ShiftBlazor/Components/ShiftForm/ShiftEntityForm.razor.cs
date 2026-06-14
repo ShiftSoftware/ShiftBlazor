@@ -34,6 +34,8 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;
     [Inject] IJSRuntime JsRuntime { get; set; } = default!;
     [Inject] PrintService PrintService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+    [Inject] IAttentionHubClient AttentionHubClient { get; set; } = default!;
 
     [Parameter] public string? BaseUrl { get; set; }
     [Parameter] public string? BaseUrlKey { get; set; }
@@ -160,6 +162,26 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     /// </summary>
     [Parameter]
     public EventCallback OnAttentionCleared { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, the form connects to the framework's attention hub and refreshes its
+    /// attention banner when a signal is raised on <em>this record</em> (matched by hashed ID) —
+    /// from any session, background job, or trigger. Only the attention banner is refreshed; the
+    /// form's editable fields are left untouched so an in-progress edit is never clobbered.
+    /// Default <c>false</c>; independent of <see cref="ShowAttentionToast"/>.
+    /// </summary>
+    [Parameter]
+    public bool ListenForAttentionUpdates { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, a passive snackbar is shown when a signal is raised on this record — no
+    /// automatic refresh. Independent of <see cref="ListenForAttentionUpdates"/>. Default <c>false</c>.
+    /// </summary>
+    [Parameter]
+    public bool ShowAttentionToast { get; set; }
+
+    private IAsyncDisposable? _attentionSubscription;
+    private bool _attentionSubscribeStarted;
 
     internal bool _RenderAttentionBell;
     private bool _attentionClearFired;
@@ -301,6 +323,101 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+            await SubscribeToAttentionUpdatesAsync();
+    }
+
+    /// <summary>
+    /// On first render, subscribes to the attention hub for this form's entity type when either
+    /// real-time switch is set. A failed connection is swallowed — real-time is a progressive
+    /// enhancement and must never break the form.
+    /// </summary>
+    private async Task SubscribeToAttentionUpdatesAsync()
+    {
+        if (_attentionSubscribeStarted || !(ListenForAttentionUpdates || ShowAttentionToast))
+            return;
+
+        _attentionSubscribeStarted = true;
+
+        // The hub keys groups by the entity name, which the form already names via Endpoint (its
+        // CRUD identity, e.g. "Invoice"). Take the first path segment to stay robust to any
+        // trailing route. No Endpoint ⇒ nothing to watch.
+        var entityType = Endpoint?.Split('/', 2)[0];
+        if (string.IsNullOrWhiteSpace(entityType))
+            return;
+
+        var baseAddress = ResolveAttentionBaseAddress();
+        if (string.IsNullOrWhiteSpace(baseAddress))
+            return;
+
+        try
+        {
+            _attentionSubscription = await AttentionHubClient.SubscribeAsync(baseAddress, entityType, OnAttentionRaised);
+        }
+        catch
+        {
+            // No real-time updates this session; the form still works and reflects attention on next open.
+        }
+    }
+
+    /// <summary>
+    /// The API base address used both for the attention hub subscription and for the origin
+    /// header on mutations: explicit <see cref="BaseUrl"/>, else the <see cref="BaseUrlKey"/>
+    /// external address, else the app's configured base.
+    /// </summary>
+    private string? ResolveAttentionBaseAddress()
+    {
+        var config = SettingManager.Configuration;
+        return BaseUrl
+            ?? (BaseUrlKey is not null ? config.ExternalAddresses.TryGet(BaseUrlKey) : null)
+            ?? config.BaseAddress;
+    }
+
+    /// <summary>
+    /// Stamps this window's attention hub connection id onto a mutating request (save / delete /
+    /// clear) via <see cref="AttentionRealtime.OriginHeader"/>, so the server excludes this window
+    /// from the real-time hint the change produces — the window already reflects its own change.
+    /// No-op when this window holds no hub connection: then it isn't subscribed either, so no echo
+    /// can reach it. All lists/forms in the window share one connection per API base, so excluding
+    /// this id suppresses the echo for the whole window, not just this form.
+    /// </summary>
+    private void AddAttentionOriginHeader(HttpRequestMessage request)
+    {
+        var baseAddress = ResolveAttentionBaseAddress();
+        if (string.IsNullOrWhiteSpace(baseAddress))
+            return;
+
+        var connectionId = AttentionHubClient.GetConnectionId(baseAddress);
+        if (!string.IsNullOrWhiteSpace(connectionId))
+            request.Headers.Add(AttentionRealtime.OriginHeader, connectionId);
+    }
+
+    /// <summary>
+    /// Handles a real-time attention event. The form is open on a single record, so it reacts
+    /// only when the event's (hashed) entity id matches this form's <see cref="Key"/>. Refreshing
+    /// re-fetches the attention signals only — the editable fields are left untouched so an
+    /// in-progress edit is never lost.
+    /// </summary>
+    private Task OnAttentionRaised(AttentionRealtimePayload payload) => InvokeAsync(async () =>
+    {
+        if (!string.Equals(payload.EntityId, Key?.ToString(), StringComparison.Ordinal))
+            return;
+
+        // Toast only on a raise; a clear refreshes the banner silently via the reload below.
+        if (ShowAttentionToast && payload.Kind == AttentionRealtimeKind.Raised)
+            Snackbar.Add(Loc["AttentionRealtimeToast"], Severity.Info);
+
+        if (ListenForAttentionUpdates)
+        {
+            await LoadAttentionSignalsInternal(forceReload: true);
+            StateHasChanged();
+        }
+    });
+
     public override async ValueTask HandleShortcut(KeyboardKeys key)
     {
         switch (key)
@@ -373,6 +490,8 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                 try
                 {
                     using var requestMessage = HttpClient.CreateRequestMessage(HttpMethod.Delete, new Uri(ItemUrl));
+
+                    AddAttentionOriginHeader(requestMessage);
 
                     if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(requestMessage)))
                         return;
@@ -470,6 +589,8 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             using var request = IsCreateMode ?
                 HttpClient.CreatePostRequest(Value, ItemUrl, Guid.NewGuid()) :
                 HttpClient.CreatePutRequest(Value, ItemUrl);
+
+            AddAttentionOriginHeader(request);
 
             if (OnBeforeRequest != null && !(await OnBeforeRequest.Invoke(request)))
                 return;
@@ -627,6 +748,13 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     /// (the persisted signal is still cleared, so the next open shows nothing). Re-fetching
     /// there would empty the banner instantly and the user would never see what was flagged.
     /// </para>
+    /// <para>
+    /// The clear updates the entity row server-side, advancing its audit stamp — and
+    /// <c>LastSaveDate</c> doubles as the optimistic-concurrency version checked on update.
+    /// The endpoint returns the post-clear stamp; it is patched onto the loaded DTO (and the
+    /// cancel-restore snapshot) so a subsequent edit + save doesn't trip a version conflict
+    /// with the pre-clear stamp.
+    /// </para>
     /// </summary>
     private async Task ClearAttentionInternal(bool reloadAfter = true)
     {
@@ -638,11 +766,15 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         {
             var url = ItemUrl.TrimEnd('/') + "/attention/clear";
             using var request = HttpClient.CreateRequestMessage(HttpMethod.Post, new Uri(url));
+            AddAttentionOriginHeader(request);
             using var res = await HttpClient.SendAsync(request);
 
             if (res.IsSuccessStatusCode)
             {
                 MadeChanges = true;
+
+                await PatchConcurrencyStampFromClearResponse(res);
+
                 if (reloadAfter)
                 {
                     await LoadAttentionSignalsInternal(forceReload: true);
@@ -652,6 +784,45 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         }
         catch
         {
+        }
+    }
+
+    /// <summary>
+    /// Applies the post-clear <c>LastSaveDate</c> from a clear response onto the loaded DTO and
+    /// onto the cancel-restore snapshot (<see cref="OriginalValue"/>), keeping the form's
+    /// optimistic-concurrency version current. Only <c>LastSaveDate</c> is touched — any
+    /// in-progress edits on other fields are preserved (a manual acknowledge can happen in
+    /// edit mode).
+    /// </summary>
+    private async Task PatchConcurrencyStampFromClearResponse(HttpResponseMessage res)
+    {
+        try
+        {
+            var body = await res.Content.ReadFromJsonAsync<ClearAttentionResponse>(
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+            if (body?.LastSaveDate is not { } lastSaveDate)
+                return;
+
+            if (Value is not null)
+                Value.LastSaveDate = lastSaveDate;
+
+            // Without this, cancelling an edit after the clear would restore the snapshot's
+            // pre-clear stamp and the next save would conflict again.
+            if (!string.IsNullOrWhiteSpace(OriginalValue))
+            {
+                var original = JsonSerializer.Deserialize<T>(OriginalValue);
+                if (original is not null)
+                {
+                    original.LastSaveDate = lastSaveDate;
+                    OriginalValue = JsonSerializer.Serialize(original);
+                }
+            }
+        }
+        catch
+        {
+            // A missing/unparsable body degrades to the pre-fix behavior (stale stamp);
+            // never let it break the clear flow itself.
         }
     }
 
@@ -959,5 +1130,14 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     internal void CacheValue()
     {
         OriginalValue = JsonSerializer.Serialize(Value);
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        // Best-effort async unsubscribe; the hub client leaves the server group once its last
+        // local subscriber is gone.
+        if (_attentionSubscription is not null)
+            _ = _attentionSubscription.DisposeAsync();
     }
 }
