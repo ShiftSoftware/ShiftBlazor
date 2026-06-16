@@ -51,8 +51,9 @@ public static class ServicesExtension
         services.AddScoped<PrintService>();
         services.AddScoped<SettingManager>();
 
-        if (options.ShiftConfiguration != null)
-            services.AddOptions<AppConfiguration>().Configure(options.ShiftConfiguration);
+        services.AddOptions<AppConfiguration>()
+            .Configure<AppStartupOptions>((options, appOptions) =>
+                appOptions.ShiftConfiguration?.Invoke(options));
 
         services.AddLocalization();
 
