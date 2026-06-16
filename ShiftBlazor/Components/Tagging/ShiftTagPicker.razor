@@ -1,6 +1,7 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.AspNetCore.Components
 @using MudBlazor
+@using ShiftSoftware.ShiftBlazor.Pages.Tagging
 @using ShiftSoftware.ShiftEntity.Model.Dtos
 @using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
 
@@ -10,24 +11,24 @@
     against the tag CRUD OData endpoint (default GET /api/tags?$filter=contains(Name,'…')).
 
     It binds to a List<TagDTO> (the DTO's Tags) instead of ShiftAutocomplete's
-    List<ShiftEntitySelectDTO>, and renders colored tag chips. Free-typing a name that
-    doesn't exist produces a TagDTO with no ID; the framework's TaggingPipeline auto-creates
-    it on save (gated by Tags.Write).
+    List<ShiftEntitySelectDTO>, and renders colored tag chips. You select from EXISTING tags
+    only — there is no free-typed "create on save". To add a new tag, use the "+" add button
+    (point QuickAdd at the tag form), exactly like the other autocompletes.
 
     Any ShiftAutocomplete parameter not listed below (Variant, Placeholder, MaxItems, Dense,
     Clearable, Class, Style, Margin, …) can be set directly on <ShiftTagPicker> — it is
     forwarded to the inner ShiftAutocomplete. Don't want this component? Bind a
     <ShiftAutocomplete> yourself, or render tags however you like.
 
-    Usage:
+    The "+" add button and double-click-to-view are on by default — they open the framework's
+    built-in TagFormPage (QuickAddComponentType / QuickAddParameterName default to it). So the
+    minimal usage already has add + view:
         <ShiftTagPicker @bind-Value="context.Item.Tags" Label="Tags" />
 
-    Add button + view/edit (same as the other autocompletes): point QuickAdd at the tag form.
-    The "+" button opens it to create a tag (the typed text is passed via QuickAddParameterName);
-    double-clicking a selected chip opens that tag in the same form.
+    Override to use your own tag form (or set QuickAddComponentType="null" to hide the add button):
         <ShiftTagPicker @bind-Value="context.Item.Tags" Label="Tags"
-                        QuickAddComponentType="typeof(TagFormPage)"
-                        QuickAddParameterName="@nameof(TagFormPage.TagName)" />
+                        QuickAddComponentType="typeof(MyTagForm)"
+                        QuickAddParameterName="@nameof(MyTagForm.Name)" />
 *@
 
 <ShiftAutocomplete TEntitySet="TagListDTO"
@@ -37,7 +38,6 @@
                    BaseUrl="@BaseUrl"
                    BaseUrlKey="@BaseUrlKey"
                    Label="@Label"
-                   FreeInput="@FreeInput"
                    ReadOnly="@_effectivelyReadOnly"
                    QuickAddComponentType="@QuickAddComponentType"
                    QuickAddParameterName="@QuickAddParameterName"
@@ -92,25 +92,24 @@
     /// <summary>Lookup key for resolving the API base URL from settings.</summary>
     [Parameter] public string? BaseUrlKey { get; set; }
 
-    /// <summary>Allow free-typing a new tag (auto-created on save if permitted). Default <c>true</c>.</summary>
-    [Parameter] public bool FreeInput { get; set; } = true;
-
     /// <summary>Render read-only (also honors the form's ParentReadOnly/ParentDisabled).</summary>
     [Parameter] public bool ReadOnly { get; set; }
 
     /// <summary>
-    /// Form opened by the "+" add button (and by double-clicking a chip to view/edit). Typically
-    /// the tag form, e.g. <c>typeof(TagFormPage)</c>. Declared as a strongly-typed parameter
-    /// (not forwarded via the attribute splat) because a <see cref="Type"/> cannot round-trip
-    /// through <see cref="CaptureUnmatchedValues"/> without an invalid-cast at render time.
+    /// Form opened by the "+" add button (and by double-clicking a chip to view/edit). Defaults
+    /// to the framework's built-in <see cref="TagFormPage"/>. Set to a custom component to use
+    /// your own tag form, or to <c>null</c> to hide the add button. Declared as a strongly-typed
+    /// parameter (not forwarded via the attribute splat) because a <see cref="Type"/> cannot
+    /// round-trip through <see cref="CaptureUnmatchedValues"/> without an invalid-cast at render time.
     /// </summary>
-    [Parameter] public Type? QuickAddComponentType { get; set; }
+    [Parameter] public Type? QuickAddComponentType { get; set; } = typeof(TagFormPage);
 
     /// <summary>
     /// Name of the parameter on <see cref="QuickAddComponentType"/> that receives the typed text
-    /// when adding a new tag (e.g. <c>nameof(TagFormPage.TagName)</c>).
+    /// when adding a new tag. Defaults to <see cref="TagFormPage.TagName"/>. Set to match your
+    /// custom form's name-prefill parameter.
     /// </summary>
-    [Parameter] public string? QuickAddParameterName { get; set; }
+    [Parameter] public string? QuickAddParameterName { get; set; } = nameof(TagFormPage.TagName);
 
     /// <summary>
     /// Any other <see cref="ShiftAutocomplete{TEntitySet}"/> parameter (Variant, Placeholder,
@@ -148,7 +147,8 @@
         _selected = incoming;
         Value = incoming.Select(s => s.Data as TagDTO ?? new TagDTO
         {
-            // Free-typed entry: ShiftAutocomplete emits Value=Text and Data=null.
+            // Picked from the dropdown (Data is a TagListDTO) or via the "+" form — always an
+            // existing tag, so Value carries its real ID.
             ID = string.IsNullOrEmpty(s.Value) ? null : s.Value,
             Name = s.Text ?? s.Value ?? string.Empty,
         }).ToList();
