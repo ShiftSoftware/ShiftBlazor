@@ -1,10 +1,18 @@
-@page "/tags"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
-@namespace ShiftSoftware.ShiftBlazor.Pages.Tagging
+@namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.Extensions.Options
-@using ShiftSoftware.ShiftBlazor.Components
 @using ShiftSoftware.ShiftBlazor.Tagging
 @using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@*
+    Tag vocabulary management list — a component, not a routed page. Host it in your own page:
+
+        @page "/tags"
+        @attribute [Authorize]
+        <ShiftTagList />
+
+    Row click opens ShiftTagForm (as a dialog) to view/edit; the toolbar Add opens it to create.
+    Configure entity set / title / permission via services.AddShiftBlazorTagging(...).
+*@
 
 @inject IOptions<ShiftBlazorTaggingOptions> Options
 
@@ -15,7 +23,7 @@
            Title="@Opts.ListTitle"
            T="TagListDTO"
            Dense
-           ComponentType="typeof(TagFormPage)"
+           ComponentType="typeof(ShiftTagForm)"
            HighlightSortedColumn
            TypeAuthAction="@Opts.TypeAuthAction"
            EnableExport>

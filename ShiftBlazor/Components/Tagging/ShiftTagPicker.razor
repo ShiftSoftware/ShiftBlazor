@@ -1,7 +1,6 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.AspNetCore.Components
 @using MudBlazor
-@using ShiftSoftware.ShiftBlazor.Pages.Tagging
 @using ShiftSoftware.ShiftEntity.Model.Dtos
 @using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
 
@@ -21,8 +20,8 @@
     <ShiftAutocomplete> yourself, or render tags however you like.
 
     The "+" add button and double-click-to-view are on by default — they open the framework's
-    built-in TagFormPage (QuickAddComponentType / QuickAddParameterName default to it). So the
-    minimal usage already has add + view:
+    built-in ShiftTagForm component (QuickAddComponentType / QuickAddParameterName default to it).
+    So the minimal usage already has add + view:
         <ShiftTagPicker @bind-Value="context.Item.Tags" Label="Tags" />
 
     Override to use your own tag form (or set QuickAddComponentType="null" to hide the add button):
@@ -97,19 +96,19 @@
 
     /// <summary>
     /// Form opened by the "+" add button (and by double-clicking a chip to view/edit). Defaults
-    /// to the framework's built-in <see cref="TagFormPage"/>. Set to a custom component to use
-    /// your own tag form, or to <c>null</c> to hide the add button. Declared as a strongly-typed
-    /// parameter (not forwarded via the attribute splat) because a <see cref="Type"/> cannot
-    /// round-trip through <see cref="CaptureUnmatchedValues"/> without an invalid-cast at render time.
+    /// to the framework's built-in <see cref="ShiftTagForm"/> component. Set to a custom component
+    /// to use your own tag form, or to <c>null</c> to hide the add button. Declared as a
+    /// strongly-typed parameter (not forwarded via the attribute splat) because a <see cref="Type"/>
+    /// cannot round-trip through <see cref="CaptureUnmatchedValues"/> without an invalid-cast.
     /// </summary>
-    [Parameter] public Type? QuickAddComponentType { get; set; } = typeof(TagFormPage);
+    [Parameter] public Type? QuickAddComponentType { get; set; } = typeof(ShiftTagForm);
 
     /// <summary>
     /// Name of the parameter on <see cref="QuickAddComponentType"/> that receives the typed text
-    /// when adding a new tag. Defaults to <see cref="TagFormPage.TagName"/>. Set to match your
+    /// when adding a new tag. Defaults to <see cref="ShiftTagForm.TagName"/>. Set to match your
     /// custom form's name-prefill parameter.
     /// </summary>
-    [Parameter] public string? QuickAddParameterName { get; set; } = nameof(TagFormPage.TagName);
+    [Parameter] public string? QuickAddParameterName { get; set; } = nameof(ShiftTagForm.TagName);
 
     /// <summary>
     /// Any other <see cref="ShiftAutocomplete{TEntitySet}"/> parameter (Variant, Placeholder,

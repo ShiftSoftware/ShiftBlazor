@@ -1,10 +1,20 @@
-@page "/tags/{Key?}"
-@namespace ShiftSoftware.ShiftBlazor.Pages.Tagging
+@namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.Extensions.Options
 @using MudBlazor
-@using ShiftSoftware.ShiftBlazor.Components
 @using ShiftSoftware.ShiftBlazor.Tagging
 @using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@*
+    Tag create/edit form — a component, not a routed page. Host it in your own page:
+
+        @page "/tags/{Key?}"
+        <ShiftTagForm Key="@Key" />
+        @code { [Parameter] public string? Key { get; set; } }
+
+    It is also opened as a dialog automatically — by ShiftTagList's row click and by
+    ShiftTagPicker's "+" add button (which default their form component to this one).
+    Configure endpoint/title/permission via services.AddShiftBlazorTagging(...).
+*@
 
 @inject IOptions<ShiftBlazorTaggingOptions> Options
 

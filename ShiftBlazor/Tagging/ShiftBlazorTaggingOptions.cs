@@ -3,16 +3,10 @@ using ShiftSoftware.TypeAuth.Core.Actions;
 namespace ShiftSoftware.ShiftBlazor.Tagging;
 
 /// <summary>
-/// Configures the framework-provided tag management pages (<c>TagListPage</c>,
-/// <c>TagFormPage</c>) hosted in <c>ShiftSoftware.ShiftBlazor.Pages.Tagging</c>.
-/// Programmer registers via <c>services.AddShiftBlazorTagging(o =&gt; ...)</c> and
-/// adds the ShiftBlazor assembly to <c>Router.AdditionalAssemblies</c> so the
-/// <c>@page</c> routes become active.
-///
-/// To use custom pages instead, simply do NOT register this and do NOT add the
-/// ShiftBlazor assembly to <c>AdditionalAssemblies</c> — author your own routed
-/// pages composing <c>ShiftList&lt;TagListDTO&gt;</c> and
-/// <c>ShiftEntityForm&lt;TagDTO&gt;</c> directly.
+/// Configures the framework-provided tag management components
+/// (<c>ShiftTagList</c>, <c>ShiftTagForm</c>, <c>ShiftTagPicker</c>).
+/// Programmer registers via <c>services.AddShiftBlazorTagging(o =&gt; ...)</c>, then hosts the
+/// components in their own routed pages (e.g. <c>@page "/tags"</c> → <c>&lt;ShiftTagList/&gt;</c>).
 /// </summary>
 public class ShiftBlazorTaggingOptions
 {
