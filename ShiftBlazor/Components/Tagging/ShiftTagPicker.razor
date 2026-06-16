@@ -1,8 +1,12 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Options
 @using MudBlazor
+@using ShiftSoftware.ShiftBlazor.Tagging
 @using ShiftSoftware.ShiftEntity.Model.Dtos
 @using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@inject IOptions<ShiftBlazorTaggingOptions> TaggingOptions
 
 @*
     Multi-select tag picker — a drop-in component you place wherever you want in a form
@@ -32,10 +36,10 @@
 
 <ShiftAutocomplete TEntitySet="TagListDTO"
                    @attributes="AdditionalAttributes"
-                   EntitySet="@EntitySet"
-                   Endpoint="@Endpoint"
-                   BaseUrl="@BaseUrl"
-                   BaseUrlKey="@BaseUrlKey"
+                   EntitySet="@(EntitySet ?? Opts.EntitySet)"
+                   Endpoint="@(Endpoint ?? Opts.Endpoint)"
+                   BaseUrl="@(BaseUrl ?? Opts.BaseUrl)"
+                   BaseUrlKey="@(BaseUrlKey ?? Opts.BaseUrlKey)"
                    Label="@Label"
                    ReadOnly="@_effectivelyReadOnly"
                    QuickAddComponentType="@QuickAddComponentType"
@@ -80,16 +84,20 @@
     /// <summary>Input label. Default <c>"Tags"</c>.</summary>
     [Parameter] public string? Label { get; set; } = "Tags";
 
-    /// <summary>OData entity set name for tags. Default <c>tags</c>.</summary>
-    [Parameter] public string EntitySet { get; set; } = "tags";
+    /// <summary>OData entity set name for tags. When unset, falls back to
+    /// <see cref="ShiftBlazorTaggingOptions.EntitySet"/> (default <c>"tags"</c>).</summary>
+    [Parameter] public string? EntitySet { get; set; }
 
-    /// <summary>Override the OData endpoint path (rare).</summary>
+    /// <summary>Override the OData endpoint path (rare). When unset, falls back to
+    /// <see cref="ShiftBlazorTaggingOptions.Endpoint"/>.</summary>
     [Parameter] public string? Endpoint { get; set; }
 
-    /// <summary>Absolute base URL for the tagging API (overrides SettingManager).</summary>
+    /// <summary>Absolute base URL for the tagging API (overrides SettingManager). When unset,
+    /// falls back to <see cref="ShiftBlazorTaggingOptions.BaseUrl"/>.</summary>
     [Parameter] public string? BaseUrl { get; set; }
 
-    /// <summary>Lookup key for resolving the API base URL from settings.</summary>
+    /// <summary>Lookup key for resolving the API base URL from settings. When unset, falls back to
+    /// <see cref="ShiftBlazorTaggingOptions.BaseUrlKey"/> (set once via <c>AddShiftBlazorTagging</c>).</summary>
     [Parameter] public string? BaseUrlKey { get; set; }
 
     /// <summary>Render read-only (also honors the form's ParentReadOnly/ParentDisabled).</summary>
@@ -127,6 +135,10 @@
     private bool ParentDisabled { get; set; }
 
     private bool _effectivelyReadOnly => ReadOnly || ParentReadOnly || ParentDisabled;
+
+    // Central tag UI config (set once via AddShiftBlazorTagging). Resolves to a default instance
+    // even when never configured, so the per-call parameters above are the only required input.
+    private ShiftBlazorTaggingOptions Opts => TaggingOptions.Value;
 
     private List<ShiftEntitySelectDTO> _selected = new();
 
