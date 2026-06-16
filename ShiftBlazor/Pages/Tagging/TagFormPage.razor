@@ -41,7 +41,20 @@
 @code {
     [Parameter] public object? Key { get; set; }
 
+    /// <summary>
+    /// Pre-fills the tag name when the form is opened to create a new tag — e.g. from
+    /// <c>ShiftTagPicker</c>'s QuickAdd "+" button, which passes the text the user typed.
+    /// Ignored when editing an existing tag (the loaded entity wins).
+    /// </summary>
+    [Parameter] public string? TagName { get; set; }
+
     private TagDTO TagItem = new();
 
     private ShiftBlazorTaggingOptions Opts => Options.Value;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrWhiteSpace(TagName))
+            TagItem.Name = TagName;
+    }
 }

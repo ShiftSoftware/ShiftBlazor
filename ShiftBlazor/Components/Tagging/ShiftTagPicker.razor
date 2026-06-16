@@ -5,25 +5,43 @@
 @using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
 
 @*
-    Multi-select tag picker. Thin wrapper around <ShiftAutocomplete> against the standard
-    Tag CRUD OData endpoint (default GET /api/tags?$filter=contains(Name,'…')&$top=N).
-    Binds to a List<TagDTO> on the parent DTO. Supports free-text creation: typing a
-    name that doesn't exist in the vocabulary produces a TagDTO with no ID; the
-    framework's TaggingPipeline auto-creates the tag on save (gated by Tags.Write).
+    Multi-select tag picker — a drop-in component you place wherever you want in a form
+    (like any other <ShiftAutocomplete>). It wraps <ShiftAutocomplete TEntitySet="TagListDTO">
+    against the tag CRUD OData endpoint (default GET /api/tags?$filter=contains(Name,'…')).
+
+    It binds to a List<TagDTO> (the DTO's Tags) instead of ShiftAutocomplete's
+    List<ShiftEntitySelectDTO>, and renders colored tag chips. Free-typing a name that
+    doesn't exist produces a TagDTO with no ID; the framework's TaggingPipeline auto-creates
+    it on save (gated by Tags.Write).
+
+    Any ShiftAutocomplete parameter not listed below (Variant, Placeholder, MaxItems, Dense,
+    Clearable, Class, Style, Margin, …) can be set directly on <ShiftTagPicker> — it is
+    forwarded to the inner ShiftAutocomplete. Don't want this component? Bind a
+    <ShiftAutocomplete> yourself, or render tags however you like.
+
+    Usage:
+        <ShiftTagPicker @bind-Value="context.Item.Tags" Label="Tags" />
+
+    Add button + view/edit (same as the other autocompletes): point QuickAdd at the tag form.
+    The "+" button opens it to create a tag (the typed text is passed via QuickAddParameterName);
+    double-clicking a selected chip opens that tag in the same form.
+        <ShiftTagPicker @bind-Value="context.Item.Tags" Label="Tags"
+                        QuickAddComponentType="typeof(TagFormPage)"
+                        QuickAddParameterName="@nameof(TagFormPage.TagName)" />
 *@
 
 <ShiftAutocomplete TEntitySet="TagListDTO"
+                   @attributes="AdditionalAttributes"
                    EntitySet="@EntitySet"
                    Endpoint="@Endpoint"
                    BaseUrl="@BaseUrl"
                    BaseUrlKey="@BaseUrlKey"
                    Label="@Label"
-                   Placeholder="@Placeholder"
-                   Variant="@Variant"
-                   MultiSelect="true"
-                   FreeInput="true"
-                   MaxItems="@MaxSuggestions"
+                   FreeInput="@FreeInput"
                    ReadOnly="@_effectivelyReadOnly"
+                   QuickAddComponentType="@QuickAddComponentType"
+                   QuickAddParameterName="@QuickAddParameterName"
+                   MultiSelect="true"
                    SelectedValues="_selected"
                    SelectedValuesChanged="OnSelectedChanged">
     <SelectedValuesTemplate Context="ctx">
@@ -40,6 +58,7 @@
                  Size="Size.Small"
                  Style="@style"
                  Value="@ctx.Item.Text"
+                 @ondblclick="@(() => localCtx.OpenItem())"
                  OnClose="@onClose" />
     </SelectedValuesTemplate>
     <DropdownItemTemplate Context="ctx">
@@ -54,12 +73,12 @@
 </ShiftAutocomplete>
 
 @code {
+    /// <summary>The bound tag list (usually a DTO's <c>Tags</c> property).</summary>
     [Parameter] public List<TagDTO> Value { get; set; } = new();
     [Parameter] public EventCallback<List<TagDTO>> ValueChanged { get; set; }
 
-    [Parameter] public string? Label { get; set; }
-    [Parameter] public string? Placeholder { get; set; }
-    [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
+    /// <summary>Input label. Default <c>"Tags"</c>.</summary>
+    [Parameter] public string? Label { get; set; } = "Tags";
 
     /// <summary>OData entity set name for tags. Default <c>tags</c>.</summary>
     [Parameter] public string EntitySet { get; set; } = "tags";
@@ -73,9 +92,34 @@
     /// <summary>Lookup key for resolving the API base URL from settings.</summary>
     [Parameter] public string? BaseUrlKey { get; set; }
 
-    [Parameter] public int MaxSuggestions { get; set; } = 25;
+    /// <summary>Allow free-typing a new tag (auto-created on save if permitted). Default <c>true</c>.</summary>
+    [Parameter] public bool FreeInput { get; set; } = true;
 
+    /// <summary>Render read-only (also honors the form's ParentReadOnly/ParentDisabled).</summary>
     [Parameter] public bool ReadOnly { get; set; }
+
+    /// <summary>
+    /// Form opened by the "+" add button (and by double-clicking a chip to view/edit). Typically
+    /// the tag form, e.g. <c>typeof(TagFormPage)</c>. Declared as a strongly-typed parameter
+    /// (not forwarded via the attribute splat) because a <see cref="Type"/> cannot round-trip
+    /// through <see cref="CaptureUnmatchedValues"/> without an invalid-cast at render time.
+    /// </summary>
+    [Parameter] public Type? QuickAddComponentType { get; set; }
+
+    /// <summary>
+    /// Name of the parameter on <see cref="QuickAddComponentType"/> that receives the typed text
+    /// when adding a new tag (e.g. <c>nameof(TagFormPage.TagName)</c>).
+    /// </summary>
+    [Parameter] public string? QuickAddParameterName { get; set; }
+
+    /// <summary>
+    /// Any other <see cref="ShiftAutocomplete{TEntitySet}"/> parameter (Variant, Placeholder,
+    /// MaxItems, Dense, Clearable, Class, Style, Margin, …) — forwarded to the inner autocomplete.
+    /// Note: strongly-typed parameters like <see cref="Type"/> (e.g. another component type) must
+    /// be added as dedicated parameters, not splatted, to avoid an invalid-cast at render time.
+    /// </summary>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object?>? AdditionalAttributes { get; set; }
 
     [CascadingParameter(Name = "ParentReadOnly")]
     private bool ParentReadOnly { get; set; }
