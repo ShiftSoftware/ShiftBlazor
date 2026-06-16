@@ -45,8 +45,9 @@
                    SelectedValuesChanged="OnSelectedChanged">
     <SelectedValuesTemplate Context="ctx">
         @{
-            var tag = ctx.Item.Data as TagDTO;
-            var color = tag?.Color;
+            // Data is a TagDTO for loaded tags (view) but a TagListDTO for freshly-picked ones
+            // (ShiftAutocomplete stashes the TEntitySet) — read Color from whichever it is.
+            var color = ColorOf(ctx.Item.Data);
             var style = string.IsNullOrWhiteSpace(color) ? null : $"background-color: {color}; color: white;";
             var localCtx = ctx;
             var onClose = _effectivelyReadOnly
@@ -144,14 +145,36 @@
     private async Task OnSelectedChanged(List<ShiftEntitySelectDTO> incoming)
     {
         _selected = incoming;
-        Value = incoming.Select(s => s.Data as TagDTO ?? new TagDTO
-        {
-            // Picked from the dropdown (Data is a TagListDTO) or via the "+" form — always an
-            // existing tag, so Value carries its real ID.
-            ID = string.IsNullOrEmpty(s.Value) ? null : s.Value,
-            Name = s.Text ?? s.Value ?? string.Empty,
-        }).ToList();
+        Value = incoming.Select(ToTagDTO).ToList();
 
         await ValueChanged.InvokeAsync(Value);
     }
+
+    // The selected item's Data is a TagDTO for tags loaded into Value, but a TagListDTO for ones
+    // just picked from the dropdown (ShiftAutocomplete stashes the queried TEntitySet). Normalize
+    // to a full TagDTO that carries Color, so the chip keeps its color after the value round-trips.
+    private static TagDTO ToTagDTO(ShiftEntitySelectDTO s) => s.Data switch
+    {
+        TagDTO t => t,
+        TagListDTO l => new TagDTO
+        {
+            ID = l.ID,
+            Name = l.Name,
+            Color = l.Color,
+            IntegrationID = l.IntegrationID,
+        },
+        // Fallback (e.g. nothing stashed): an existing tag, so Value carries its real ID.
+        _ => new TagDTO
+        {
+            ID = string.IsNullOrEmpty(s.Value) ? null : s.Value,
+            Name = s.Text ?? s.Value ?? string.Empty,
+        },
+    };
+
+    private static string? ColorOf(object? data) => data switch
+    {
+        TagDTO t => t.Color,
+        TagListDTO l => l.Color,
+        _ => null,
+    };
 }
