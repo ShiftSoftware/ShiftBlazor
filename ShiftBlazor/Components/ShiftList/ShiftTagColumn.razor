@@ -1,0 +1,40 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using MudBlazor
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+@using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+@typeparam T where T : ShiftEntityDTOBase, IShiftEntityTaggableDTO, new()
+@inherits TemplateColumn<T>
+
+@*
+    Drop this inside a <ShiftList> wherever you want the tags column to appear:
+
+        <ShiftList T="ProductListDTO" EntitySet="Product">
+            <PropertyColumn Property="x => x.Name" />
+            <ShiftTagColumn />
+        </ShiftList>
+
+    It reads the row's Tags (the DTO implements IShiftEntityTaggableDTO) and renders read-only
+    chips via ShiftTagDisplay. Not using it is fine — render tags yourself with a TemplateColumn
+    + <ShiftTagDisplay> (or anything else).
+*@
+
+@{
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+    /// <summary>Chip size. Defaults to <see cref="Size.Small"/>.</summary>
+    [Parameter] public Size Size { get; set; } = Size.Small;
+
+    protected override void OnParametersSet()
+    {
+        Title ??= "Tags";
+        Sortable ??= false;
+        Filterable ??= false;
+
+        base.CellTemplate ??= context =>
+            @<ShiftTagDisplay Tags="@((context.Item as IShiftEntityTaggableDTO)?.Tags)" Size="@Size" />;
+
+        base.OnParametersSet();
+    }
+}
