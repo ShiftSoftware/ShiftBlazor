@@ -684,9 +684,11 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         // ClearAttentionOnOpen fires ONLY when the record is opened (isOpen) — never on the
         // post-save reload. Otherwise a save that (re-)raises a signal would clear it instantly,
         // which contradicts the property's name and hides freshly-raised attention from the user.
+        // It clears only the DEFAULT scope: signals an evaluator placed in a named ClearScope
+        // (e.g. "Chat") are left for the surface that owns them (call ClearAttention("Chat") there).
         var signals = EffectiveAttentionSignals;
         if (isOpen && ClearAttentionOnOpen && !_attentionClearFired &&
-            signals?.Any(s => s.ClearedAt is null) == true)
+            signals?.Any(s => s.ClearedAt is null && string.IsNullOrEmpty(s.ClearScope)) == true)
         {
             _attentionClearFired = true;
             if (OnAttentionCleared.HasDelegate)
@@ -694,7 +696,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             else
                 // Auto-acknowledge: clear server-side but keep the snapshot on screen so the
                 // banner stays visible this session (won't re-appear on the next open).
-                await ClearAttentionInternal(reloadAfter: false);
+                await ClearAttentionInternal(reloadAfter: false, AttentionClearFilter.DefaultScope);
         }
     }
 
@@ -756,7 +758,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     /// with the pre-clear stamp.
     /// </para>
     /// </summary>
-    private async Task ClearAttentionInternal(bool reloadAfter = true)
+    private async Task ClearAttentionInternal(bool reloadAfter = true, AttentionClearFilter? filter = null)
     {
         var keyStr = Key?.ToString();
         if (string.IsNullOrEmpty(keyStr) || Endpoint is null)
@@ -767,6 +769,10 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             var url = ItemUrl.TrimEnd('/') + "/attention/clear";
             using var request = HttpClient.CreateRequestMessage(HttpMethod.Post, new Uri(url));
             AddAttentionOriginHeader(request);
+            // A null filter posts no body — the server clears every active signal (back-compat).
+            // A scoped / per-signal filter is sent as the body and clears only the matching subset.
+            if (filter is not null)
+                request.Content = JsonContent.Create(filter);
             using var res = await HttpClient.SendAsync(request);
 
             if (res.IsSuccessStatusCode)
@@ -839,6 +845,38 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     }
 
     /// <summary>
+    /// Clears active attention signals in the given <paramref name="scopes"/> on demand — for
+    /// callers that gate clearing on their own logic (e.g. only once a Chat tab is shown) instead
+    /// of the form-open trigger (<see cref="ClearAttentionOnOpen"/>). With no scopes, clears every
+    /// active signal. No-op when nothing active matches.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the banner's acknowledge-all / on-open paths, the on-demand clear methods always use
+    /// the framework clear endpoint; the parameterless <see cref="OnAttentionCleared"/> override
+    /// can't express a scope or single signal and so does not intercept them.
+    /// </remarks>
+    public Task ClearAttention(params string[] scopes)
+        => ClearAttentionMatchingAsync(
+            scopes is { Length: > 0 } ? AttentionClearFilter.ByScope(scopes) : AttentionClearFilter.All);
+
+    /// <summary>
+    /// Clears a single active signal by its dedup key — wired to the banner's per-signal dismiss.
+    /// No-op when that signal isn't currently active.
+    /// </summary>
+    public Task ClearAttentionSignal(StoredAttentionSignal signal)
+        => ClearAttentionMatchingAsync(AttentionClearFilter.Signal(signal.Source, signal.Category));
+
+    /// <summary>
+    /// Shared path for the on-demand clear methods: skips the round-trip when no active signal
+    /// matches, otherwise posts the scoped / per-signal clear and refreshes the banner.
+    /// </summary>
+    private Task ClearAttentionMatchingAsync(AttentionClearFilter filter)
+    {
+        var hasMatch = EffectiveAttentionSignals?.Any(s => s.ClearedAt is null && filter.Matches(s)) == true;
+        return hasMatch ? ClearAttentionInternal(reloadAfter: true, filter) : Task.CompletedTask;
+    }
+
+    /// <summary>
     /// Opens the <see cref="AttentionHistoryDialog"/> showing the timeline of all signals
     /// (active + cleared) for the current entity.
     /// </summary>
@@ -907,7 +945,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                     await OnReady.InvokeAsync();
                 }
             }
-            
+
         });
     }
 
@@ -992,7 +1030,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
         if (Key != null && Mode == FormModes.View)
         {
-            if(Key.GetType() == typeof(string) && !string.IsNullOrWhiteSpace(Key.ToString()))
+            if (Key.GetType() == typeof(string) && !string.IsNullOrWhiteSpace(Key.ToString()))
                 DocumentTitle = Loc["ViewingForm", Title, Key];
             else
                 DocumentTitle = Loc["ViewingForm1", Title];

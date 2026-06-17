@@ -217,6 +217,7 @@
                     <AttentionBanner Signals="EffectiveAttentionSignals"
                                     ShowAcknowledgeButton="@(!ClearAttentionOnOpen)"
                                     OnAcknowledge="HandleAttentionAcknowledge"
+                                    OnClearSignal="ClearAttentionSignal"
                                     FooterNote="@(ClearAttentionOnOpen ? "Automatically acknowledged on open" : null)" />
                 }
 

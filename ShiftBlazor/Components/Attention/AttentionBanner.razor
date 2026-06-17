@@ -19,7 +19,7 @@
                            StartIcon="@Icons.Material.Filled.Check"
                            Size="Size.Small"
                            OnClick="HandleAcknowledge">
-                    Acknowledge
+                    @(ActiveSignals.Count > 1 ? "Acknowledge all" : "Acknowledge")
                 </MudButton>
             }
             else if (!string.IsNullOrEmpty(FooterNote))
@@ -54,6 +54,15 @@
                             <span> · @signal.Source</span>
                         }
                     </MudText>
+                    @if (OnClearSignal.HasDelegate)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Check"
+                                       Size="Size.Small"
+                                       Color="@AttentionBadge.ColorFor(signal.Severity)"
+                                       OnClick="@(() => OnClearSignal.InvokeAsync(signal))"
+                                       aria-label="Acknowledge this signal"
+                                       title="Acknowledge this signal" />
+                    }
                 </div>
             }
         </div>
@@ -67,8 +76,14 @@
     /// <summary>Whether to show the Acknowledge button. Defaults to <c>true</c>.</summary>
     [Parameter] public bool ShowAcknowledgeButton { get; set; } = true;
 
-    /// <summary>Callback invoked when the user clicks Acknowledge.</summary>
+    /// <summary>Callback invoked when the user clicks the header acknowledge button (clears all).</summary>
     [Parameter] public EventCallback OnAcknowledge { get; set; }
+
+    /// <summary>
+    /// Invoked with a single signal when the user dismisses that row. When unset, rows are
+    /// display-only and only the header acknowledge button (if enabled) clears.
+    /// </summary>
+    [Parameter] public EventCallback<StoredAttentionSignal> OnClearSignal { get; set; }
 
     /// <summary>Overrides the default header text ("This record needs attention").</summary>
     [Parameter] public string? HeaderOverride { get; set; }
