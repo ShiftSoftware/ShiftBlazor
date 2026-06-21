@@ -28,4 +28,22 @@ public static class ShiftBlazorTaggingServiceCollectionExtensions
         services.Configure<ShiftBlazorTaggingOptions>(o => configure?.Invoke(o));
         return services;
     }
+
+    /// <summary>
+    /// Same as <see cref="AddShiftBlazorTagging(IServiceCollection, Action{ShiftBlazorTaggingOptions})"/>,
+    /// but also registers <typeparamref name="TActionTree"/> with client-side TypeAuth — so the tree
+    /// that owns the tag node (typically set via <c>o.TypeAuthAction</c>) is known to the Blazor
+    /// authorization layer without a separate <c>AddTypeAuth(x =&gt; x.AddActionTree&lt;TActionTree&gt;())</c>.
+    /// Registering the same tree again elsewhere is harmless — <c>AddActionTree</c> is idempotent.
+    /// </summary>
+    public static IServiceCollection AddShiftBlazorTagging<TActionTree>(
+        this IServiceCollection services,
+        Action<ShiftBlazorTaggingOptions>? configure = null)
+        where TActionTree : class
+    {
+        services.AddShiftBlazorTagging(configure);
+        services.Configure<ShiftSoftware.TypeAuth.Blazor.TypeAuthBlazorOptions>(o => o.AddActionTree<TActionTree>());
+
+        return services;
+    }
 }
