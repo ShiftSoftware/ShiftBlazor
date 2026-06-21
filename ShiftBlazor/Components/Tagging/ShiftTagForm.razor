@@ -60,9 +60,14 @@
                       Clearable="true"
                       Class="flex-grow-1" />
         <span class="shift-tag-color-swatch" style="@($"background-color:{SwatchColor(context.Item.Color)};")">
+            @* The swatch always shows the colour, but the OS picker only opens in Create/Edit —
+               disabled in View/Archive (context.ReadOnly) or while a task runs (context.Disabled),
+               matching the rest of the form. (Native <input> doesn't honour the form's read-only
+               cascade on its own.) *@
             <input type="color"
                    aria-label="Pick colour"
                    value="@PickerInitial(context.Item.Color)"
+                   disabled="@(context.ReadOnly || context.Disabled)"
                    @oninput="@(e => OnSwatchPicked(context.Item, e.Value?.ToString()))" />
         </span>
     </div>
@@ -93,6 +98,10 @@
             border: none;
             opacity: 0;
             cursor: pointer;
+        }
+        /* View/Archive (or busy): the swatch still shows the colour but isn't a picker. */
+        .shift-tag-color-swatch input[type=color]:disabled {
+            cursor: default;
         }
     </style>
 
