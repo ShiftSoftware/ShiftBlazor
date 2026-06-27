@@ -505,7 +505,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             GetAttentionSeverity = item =>
             {
                 var summary = (IHasAttentionSummary)item!;
-                return summary.HasActiveAttention ? (AttentionSeverity?)summary.HighestSeverity : null;
+                return summary.HasActiveAttention ? summary.HighestSeverity : null;
             };
         }
 
