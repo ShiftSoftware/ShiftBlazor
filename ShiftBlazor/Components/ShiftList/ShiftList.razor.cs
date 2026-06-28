@@ -387,6 +387,14 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     [Parameter]
     public bool HeaderNowrap { get; set; } = true;
 
+    /// <summary>
+    /// When true (default), long cell text is kept on a single line and clipped with an ellipsis (…)
+    /// instead of wrapping to multiple lines. The full text is shown in a tooltip on hover.
+    /// Set to false to let cells wrap. Can be overridden per column via the column's own CellNowrap.
+    /// </summary>
+    [Parameter]
+    public bool CellNowrap { get; set; } = true;
+
     public Uri? CurrentUri { get; set; }
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = [];

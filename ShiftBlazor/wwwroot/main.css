@@ -67,6 +67,17 @@
     overflow: hidden;
 }
 
+/* Single-line cell text: clip overflow to an ellipsis instead of wrapping to a new line.
+   Applied to the data cell (td) so the column's inherited MudBlazor CellStyle/CellClass can customize it
+   (e.g. CellStyle="max-width: 500px;"). max-width is required for the ellipsis to trigger inside the
+   grid's auto-layout table; 320px is the default (overridable via the --shift-cell-max-width variable). */
+.shift-cell-truncate {
+    max-width: var(--shift-cell-max-width, 320px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .multi-select input.mud-input-root::placeholder {
     opacity: 1 !important;
 }
