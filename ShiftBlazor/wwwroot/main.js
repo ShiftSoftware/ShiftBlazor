@@ -266,6 +266,74 @@ window.removeSlideDownEvent = function (element) {
     element.children[0].ontransitionend = null;
 }
 
+// Single-line chip overflow (see ShiftChipDisplay.razor): hide whole chips that don't fit and
+// reveal a trailing "+N" indicator. Measurement-driven so chips are never sliced. One ResizeObserver
+// per host element, disposed by the component to avoid leaking observers as grid rows recycle.
+window.shiftChipOverflow = (function () {
+    const observers = new WeakMap();
+
+    function layout(el) {
+        if (!el || !el.isConnected) return;
+        const available = el.clientWidth;
+        if (available <= 0) return;
+
+        const items = Array.from(el.querySelectorAll(":scope > .shift-chip-display__item"));
+        const overflow = el.querySelector(":scope > .shift-chip-display__overflow");
+        if (items.length === 0) {
+            if (overflow) overflow.style.display = "none";
+            return;
+        }
+
+        // Reset to "everything visible, no +N".
+        items.forEach(i => i.classList.remove("shift-chip-hidden"));
+        if (overflow) overflow.style.display = "none";
+
+        const left = el.getBoundingClientRect().left;
+        const lastRight = items[items.length - 1].getBoundingClientRect().right - left;
+        if (lastRight <= available + 0.5) return; // all chips fit, nothing to collapse
+
+        // Overflow: reveal the +N indicator to measure its width, then reserve room for it.
+        if (overflow) overflow.style.display = "";
+        const reserve = overflow ? overflow.getBoundingClientRect().width + 4 : 0;
+        const budget = available - reserve;
+
+        // Record positions before hiding anything (hiding reflows and would invalidate later reads).
+        const rights = items.map(i => i.getBoundingClientRect().right - left);
+        let hidden = 0;
+        for (let i = 0; i < items.length; i++) {
+            // Never hide the first chip — it ellipsizes via CSS so at least one chip is always shown.
+            if (i > 0 && rights[i] > budget) {
+                items[i].classList.add("shift-chip-hidden");
+                hidden++;
+            }
+        }
+
+        if (hidden === 0) {
+            // Only the first chip itself was too wide; it truncates via CSS — no +N needed.
+            if (overflow) overflow.style.display = "none";
+            return;
+        }
+
+        const countEl = overflow ? overflow.querySelector(".shift-chip-display__count") : null;
+        if (countEl) countEl.textContent = String(hidden);
+    }
+
+    return {
+        init(el) {
+            if (!el || observers.has(el)) { layout(el); return; }
+            const ro = new ResizeObserver(() => layout(el));
+            ro.observe(el);
+            observers.set(el, ro);
+            layout(el);
+        },
+        layout: layout,
+        dispose(el) {
+            const ro = observers.get(el);
+            if (ro) { ro.disconnect(); observers.delete(el); }
+        }
+    };
+})();
+
 function responsiveFix() {
     fixAllStickyColumns();
     resizeMenuItems();

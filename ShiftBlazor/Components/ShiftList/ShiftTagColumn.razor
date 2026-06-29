@@ -26,15 +26,39 @@
     /// <summary>Chip size. Defaults to <see cref="Size.Small"/>.</summary>
     [Parameter] public Size Size { get; set; } = Size.Small;
 
+    /// <summary>
+    /// Maximum width the tags cell may grow to before tags collapse into a trailing "+N" overflow chip.
+    /// Any valid CSS length. Defaults to "320px".
+    /// </summary>
+    [Parameter] public string CellMaxWidth { get; set; } = "320px";
+
     protected override void OnParametersSet()
     {
         Title ??= "Tags";
         Sortable ??= false;
         Filterable ??= false;
 
+        // Bound the cell width so the chips collapse into a "+N" overflow chip instead of widening the column.
+        if (CellStyle?.Contains("max-width") != true)
+        {
+            var bound = $"max-width: {CellMaxWidth}; overflow: hidden;";
+            CellStyle = string.IsNullOrWhiteSpace(CellStyle) ? bound : $"{CellStyle}; {bound}";
+        }
+
         base.CellTemplate ??= context =>
-            @<ShiftTagDisplay Tags="@((context.Item as IShiftEntityTaggableDTO)?.Tags)" Size="@Size" />;
+            @<ShiftChipDisplay T="TagDTO" Items="@((context.Item as IShiftEntityTaggableDTO)?.Tags)" Size="@Size">
+                <ChipTemplate Context="tag">
+                    <MudTooltip Text="@(tag.Description ?? string.Empty)" Placement="Placement.Top" Disabled="@string.IsNullOrWhiteSpace(tag.Description)">
+                        <MudChip @key="tag" T="string" Size="@Size" Style="@ChipStyle(tag.Color)" Value="@tag.Name" />
+                    </MudTooltip>
+                </ChipTemplate>
+            </ShiftChipDisplay>;
 
         base.OnParametersSet();
     }
+
+    private static string ChipStyle(string? color)
+        => string.IsNullOrWhiteSpace(color)
+            ? string.Empty
+            : $"background-color: {color}; color: white;";
 }

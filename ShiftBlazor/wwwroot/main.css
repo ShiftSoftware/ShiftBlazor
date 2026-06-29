@@ -78,6 +78,56 @@
     white-space: nowrap;
 }
 
+/* Single-line chip row with a trailing "+N" overflow indicator (see ShiftChipDisplay.razor).
+   JS hides whole overflowing chips (.shift-chip-hidden); a single over-long chip ellipsizes its label. */
+.shift-chip-display {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.shift-chip-display__item {
+    flex: 0 0 auto;
+    display: inline-flex;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.shift-chip-display__item .mud-chip {
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Best-effort ellipsis for a single chip whose own label is wider than the cell. The chip box also
+   clips (overflow:hidden above) so an over-long chip can never blow out the single-line row. */
+.shift-chip-display__item .mud-chip .mud-chip-content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.shift-chip-display .shift-chip-hidden {
+    display: none !important;
+}
+
+.shift-chip-display__overflow {
+    flex: 0 0 auto;
+}
+
+.shift-chip-display__more-chip {
+    cursor: pointer;
+}
+
+.shift-chip-display__menu {
+    max-height: 280px;
+    overflow: auto;
+}
+
+
 .multi-select input.mud-input-root::placeholder {
     opacity: 1 !important;
 }

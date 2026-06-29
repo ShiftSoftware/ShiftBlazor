@@ -1,0 +1,90 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.JSInterop
+@using MudBlazor
+@typeparam T
+@implements IAsyncDisposable
+
+@*
+    Renders a collection as a single line of chips that never wraps. When the chips don't fit the
+    available width, the overflowing ones are hidden (whole chips only — never sliced) and collapsed
+    into a trailing "+N" chip; clicking it opens a menu listing the full set. A single chip that is
+    itself wider than the cell truncates its own label with an ellipsis instead of overflowing, so at
+    least one chip is always shown. Width is measured in JS (ResizeObserver), so it reflows on resize.
+
+    The host element MUST be width-constrained (e.g. a data-grid cell with a max-width); otherwise the
+    row simply grows to fit every chip and nothing is ever collapsed.
+
+        <ShiftChipDisplay Items="row.Tags">
+            <ChipTemplate Context="tag"><MudChip T="string">@tag.Name</MudChip></ChipTemplate>
+        </ShiftChipDisplay>
+*@
+
+@if (_items.Count > 0)
+{
+    <div class="shift-chip-display" @ref="_element">
+        @foreach (var item in _items)
+        {
+            <span class="shift-chip-display__item">@ChipTemplate(item)</span>
+        }
+        <span class="shift-chip-display__overflow" style="display:none;" @onclick:stopPropagation="true">
+            <MudTooltip Placement="Placement.Top" ShowOnHover="true" ShowOnClick="true" ShowOnFocus="true">
+                <ChildContent>
+                    <MudChip T="string" Size="@Size" Class="shift-chip-display__more-chip">+<span class="shift-chip-display__count">0</span></MudChip>
+                </ChildContent>
+                <TooltipContent>
+                    <div class="shift-chip-display__menu d-flex flex-wrap pa-1" style="gap: 4px;">
+                        @foreach (var item in _items)
+                        {
+                            @ChipTemplate(item)
+                        }
+                    </div>
+                </TooltipContent>
+            </MudTooltip>
+        </span>
+    </div>
+}
+
+@code {
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    /// <summary>The items to render as chips. Renders nothing when null or empty.</summary>
+    [Parameter] public IEnumerable<T>? Items { get; set; }
+
+    /// <summary>Template for a single chip; receives one item. Used both inline and in the overflow menu.</summary>
+    [Parameter, EditorRequired] public RenderFragment<T> ChipTemplate { get; set; } = default!;
+
+    /// <summary>Size of the trailing "+N" chip. Defaults to <see cref="Size.Small"/>.</summary>
+    [Parameter] public Size Size { get; set; } = Size.Small;
+
+    private ElementReference _element;
+    private List<T> _items = new();
+    private bool _observing;
+
+    protected override void OnParametersSet()
+        => _items = Items as List<T> ?? Items?.ToList() ?? new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_items.Count == 0) return;
+
+        if (!_observing)
+        {
+            _observing = true;
+            await JS.InvokeVoidAsync("shiftChipOverflow.init", _element);
+        }
+        else
+        {
+            // Re-measure after a content change (data load, sort, filter). Resize is handled by the observer.
+            await JS.InvokeVoidAsync("shiftChipOverflow.layout", _element);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_observing)
+        {
+            try { await JS.InvokeVoidAsync("shiftChipOverflow.dispose", _element); }
+            catch { /* circuit/JS already gone */ }
+        }
+    }
+}
