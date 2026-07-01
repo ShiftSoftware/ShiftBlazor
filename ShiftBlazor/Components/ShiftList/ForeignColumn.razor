@@ -35,9 +35,16 @@
                     <a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
                         @if (ButtonTemplate == null)
                         {
-                            <span class="button-column-button" title="@(EffectiveCellNowrap ? value?.ToString() : null)">
-                                @value
-                            </span>
+                            @if (EffectiveCellNowrap)
+                            {
+                                <MudTooltip Text="@value?.ToString()" Placement="Placement.Top" Arrow="true" Disabled="@string.IsNullOrEmpty(value?.ToString())">
+                                    <span class="button-column-button">@value</span>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <span class="button-column-button">@value</span>
+                            }
                         }
                         else
                         {
@@ -47,7 +54,8 @@
                 }
                 else if (EffectiveCellNowrap)
                 {
-                    <span title="@value?.ToString()">@value</span>
+                    var text = value?.ToString();
+                    <MudTooltip Text="@text" Placement="Placement.Top" Arrow="true" Disabled="@string.IsNullOrEmpty(text)">@value</MudTooltip>
                 }
                 else
                 {

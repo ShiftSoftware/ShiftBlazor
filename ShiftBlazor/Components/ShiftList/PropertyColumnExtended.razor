@@ -72,7 +72,8 @@
 
                 if (EffectiveCellNowrap)
                 {
-                    return @<span title="@content?.ToString()">@content</span>;
+                    var text = content?.ToString();
+                    return @<MudTooltip Text="@text" Placement="Placement.Top" Arrow="true" Disabled="@string.IsNullOrEmpty(text)">@content</MudTooltip>;
                 }
 
                 return @<text>@content</text>;
@@ -136,9 +137,16 @@
         }
         @if (ButtonTemplate == null)
         {
-            <span class="button-column-button" title="@(EffectiveCellNowrap ? content?.ToString() : null)">
-                @content
-            </span>
+            @if (EffectiveCellNowrap)
+            {
+                <MudTooltip Text="@content?.ToString()" Placement="Placement.Top" Arrow="true" Disabled="@string.IsNullOrEmpty(content?.ToString())">
+                    <span class="button-column-button">@content</span>
+                </MudTooltip>
+            }
+            else
+            {
+                <span class="button-column-button">@content</span>
+            }
         }
         else
         {
