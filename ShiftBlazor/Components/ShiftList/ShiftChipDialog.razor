@@ -1,0 +1,20 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using MudBlazor
+
+@*
+    Simple popup used by ShiftChipDisplay to show the full set of chips when the "+N" overflow
+    chip is clicked. Just renders the pre-built chip fragment inside a dialog.
+*@
+
+<MudDialog>
+    <DialogContent>
+        <div class="d-flex flex-wrap pa-1" style="gap: 4px; max-width: 420px;">
+            @Content
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    /// <summary>The chips to display, pre-rendered by ShiftChipDisplay.</summary>
+    [Parameter] public RenderFragment? Content { get; set; }
+}

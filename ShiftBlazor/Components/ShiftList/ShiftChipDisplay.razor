@@ -7,7 +7,7 @@
 @*
     Renders a collection as a single line of chips that never wraps. When the chips don't fit the
     available width, the overflowing ones are hidden (whole chips only — never sliced) and collapsed
-    into a trailing "+N" chip; clicking it opens a menu listing the full set. A single chip that is
+    into a trailing "+N" chip; clicking it opens a popup listing the full set. A single chip that is
     itself wider than the cell truncates its own label with an ellipsis instead of overflowing, so at
     least one chip is always shown. Width is measured in JS (ResizeObserver), so it reflows on resize.
 
@@ -27,34 +27,26 @@
             <span class="shift-chip-display__item">@ChipTemplate(item)</span>
         }
         <span class="shift-chip-display__overflow" style="display:none;" @onclick:stopPropagation="true">
-            <MudTooltip Placement="Placement.Top" ShowOnHover="true" ShowOnClick="true" ShowOnFocus="true">
-                <ChildContent>
-                    <MudChip T="string" Size="@Size" Class="shift-chip-display__more-chip">+<span class="shift-chip-display__count">0</span></MudChip>
-                </ChildContent>
-                <TooltipContent>
-                    <div class="shift-chip-display__menu d-flex flex-wrap pa-1" style="gap: 4px;">
-                        @foreach (var item in _items)
-                        {
-                            @ChipTemplate(item)
-                        }
-                    </div>
-                </TooltipContent>
-            </MudTooltip>
+            <MudChip T="string" Size="@Size" Class="shift-chip-display__more-chip" OnClick="@ShowAllAsync">+<span class="shift-chip-display__count">0</span></MudChip>
         </span>
     </div>
 }
 
 @code {
     [Inject] private IJSRuntime JS { get; set; } = default!;
+    [Inject] private IDialogService DialogService { get; set; } = default!;
 
     /// <summary>The items to render as chips. Renders nothing when null or empty.</summary>
     [Parameter] public IEnumerable<T>? Items { get; set; }
 
-    /// <summary>Template for a single chip; receives one item. Used both inline and in the overflow menu.</summary>
+    /// <summary>Template for a single chip; receives one item. Used both inline and in the overflow popup.</summary>
     [Parameter, EditorRequired] public RenderFragment<T> ChipTemplate { get; set; } = default!;
 
     /// <summary>Size of the trailing "+N" chip. Defaults to <see cref="Size.Small"/>.</summary>
     [Parameter] public Size Size { get; set; } = Size.Small;
+
+    /// <summary>Optional title for the popup shown when the "+N" chip is clicked.</summary>
+    [Parameter] public string? Title { get; set; }
 
     private ElementReference _element;
     private List<T> _items = new();
@@ -62,6 +54,31 @@
 
     protected override void OnParametersSet()
         => _items = Items as List<T> ?? Items?.ToList() ?? new();
+
+    // The full chip set, rendered on demand into the click-opened popup.
+    private RenderFragment ChipsFragment => builder =>
+    {
+        var seq = 0;
+        foreach (var item in _items)
+            builder.AddContent(seq++, ChipTemplate(item));
+    };
+
+    private async Task ShowAllAsync()
+    {
+        var parameters = new DialogParameters<ShiftChipDialog>
+        {
+            { x => x.Content, ChipsFragment }
+        };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            NoHeader = string.IsNullOrEmpty(Title),
+            CloseButton = false,
+            BackdropClick = true,     // click outside to close
+            CloseOnEscapeKey = true
+        };
+        await DialogService.ShowAsync<ShiftChipDialog>(Title ?? string.Empty, parameters, options);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
