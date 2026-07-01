@@ -18,6 +18,7 @@
               Variant="Variant.Outlined"
               Error="!string.IsNullOrWhiteSpace(ErrorText)"
               ErrorText="@ErrorText"
+              HelperText="@HelperText"
               Style="@(HideUI ? "display: none;" : "")">
 
         @if (Items.Count > 0 || !ReadOnly)

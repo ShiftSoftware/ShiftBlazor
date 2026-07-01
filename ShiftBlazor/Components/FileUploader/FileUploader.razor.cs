@@ -89,6 +89,9 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
     public string? Prefix { get; set; }
 
     [Parameter]
+    public string? HelperText { get; set; }
+
+    [Parameter]
     public bool HideUI { get; set; }
 
     [Parameter]

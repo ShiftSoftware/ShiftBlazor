@@ -174,6 +174,9 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
     [Parameter]
     public Func<TEntitySet, bool>? DropdownItemDisabledFunc { get; set; }
 
+    [Parameter]
+    public string? HelperText { get; set; }
+
     // ======== Classes and Styles =========
     [Parameter]
     [Description("CSS class applied to the root element.")]
