@@ -7,9 +7,11 @@
 @*
     Renders a collection as a single line of chips that never wraps. When the chips don't fit the
     available width, the overflowing ones are hidden (whole chips only — never sliced) and collapsed
-    into a trailing "+N" chip; clicking it opens a popup listing the full set. A single chip that is
-    itself wider than the cell truncates its own label with an ellipsis instead of overflowing, so at
-    least one chip is always shown. Width is measured in JS (ResizeObserver), so it reflows on resize.
+    into a trailing "+N" chip; clicking it opens a popup listing the full set. The first chip is never
+    hidden, so at least one is always shown: an over-long first chip truncates its label with an
+    ellipsis instead of overflowing, shrinking further when needed to keep the "+N" chip in view.
+    Width is measured in JS (ResizeObserver), so it reflows on resize; measurement is width-based,
+    so it also works in RTL layouts.
 
     The host element MUST be width-constrained (e.g. a data-grid cell with a max-width); otherwise the
     row simply grows to fit every chip and nothing is ever collapsed.
@@ -84,16 +86,11 @@
     {
         if (_items.Count == 0) return;
 
-        if (!_observing)
-        {
-            _observing = true;
-            await JS.InvokeVoidAsync("shiftChipOverflow.init", _element);
-        }
-        else
-        {
-            // Re-measure after a content change (data load, sort, filter). Resize is handled by the observer.
-            await JS.InvokeVoidAsync("shiftChipOverflow.layout", _element);
-        }
+        // Always init: it is idempotent per element (an already-observed element is just re-measured),
+        // and when the list empties the @if above tears the element down — the fresh element Blazor
+        // creates once items return needs its own ResizeObserver, not just a re-layout.
+        _observing = true;
+        await JS.InvokeVoidAsync("shiftChipOverflow.init", _element);
     }
 
     public async ValueTask DisposeAsync()

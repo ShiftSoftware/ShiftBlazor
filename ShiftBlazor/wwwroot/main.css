@@ -109,9 +109,23 @@
     overflow: hidden;
 }
 
-/* Best-effort ellipsis for a single chip whose own label is wider than the cell. The chip box also
-   clips (overflow:hidden above) so an over-long chip can never blow out the single-line row. */
+/* Chips are often wrapped in a MudTooltip (e.g. ShiftTagColumn). Its inline-block activator wrapper
+   sits between the item and the chip and refuses to shrink below the label's full width (flex
+   min-width:auto), which would defeat the item's width cap and let a long chip slide under the "+N"
+   chip — let it shrink so the chip's own max-width/overflow take over. */
+.shift-chip-display__item .mud-tooltip-root {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Ellipsis for a chip whose label is wider than its cap. MudBlazor's .mud-chip-content is
+   inline-flex, where text-overflow never draws the "…" — a block container restores it. MudBlazor
+   also sets height:100% on it, which would pin block text to the top of the chip; height:auto lets
+   the chip's own align-items:center re-center the line. The chip box also clips (overflow:hidden
+   above) so an over-long chip can never blow out the row. */
 .shift-chip-display__item .mud-chip .mud-chip-content {
+    display: block;
+    height: auto;
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;

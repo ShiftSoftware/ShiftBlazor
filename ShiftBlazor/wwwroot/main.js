@@ -274,8 +274,6 @@ window.shiftChipOverflow = (function () {
 
     function layout(el) {
         if (!el || !el.isConnected) return;
-        const available = el.clientWidth;
-        if (available <= 0) return;
 
         const items = Array.from(el.querySelectorAll(":scope > .shift-chip-display__item"));
         const overflow = el.querySelector(":scope > .shift-chip-display__overflow");
@@ -284,37 +282,58 @@ window.shiftChipOverflow = (function () {
             return;
         }
 
-        // Reset to "everything visible, no +N".
-        items.forEach(i => i.classList.remove("shift-chip-hidden"));
+        // Reset to "everything visible, no +N, first chip uncapped" BEFORE measuring the host:
+        // in hosts that shrink to fit their content (auto-layout table cells), measuring first
+        // would lock onto the previously collapsed width and over-truncate.
+        items.forEach(i => { i.classList.remove("shift-chip-hidden"); i.style.maxWidth = ""; });
         if (overflow) overflow.style.display = "none";
 
-        const left = el.getBoundingClientRect().left;
-        const lastRight = items[items.length - 1].getBoundingClientRect().right - left;
-        if (lastRight <= available + 0.5) return; // all chips fit, nothing to collapse
+        // Fractional width (clientWidth rounds to an integer, off by up to 0.5px at fractional
+        // zoom), and widths rather than left/right positions so the math also holds in RTL,
+        // where chips flow right-to-left and position-based checks never detect overflow.
+        const available = el.getBoundingClientRect().width;
+        if (available <= 0) return;
 
-        // Overflow: reveal the +N indicator to measure its width, then reserve room for it.
+        const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
+        const widths = items.map(i => i.getBoundingClientRect().width);
+        const total = widths.reduce((sum, w) => sum + w + gap, -gap);
+        if (total <= available + 0.5) return; // all chips fit, nothing to collapse
+
+        // Overflow: reveal the +N indicator to measure it, then reserve room for it. Measure with
+        // the widest possible count (everything but the first chip hidden) so a multi-digit count
+        // can never outgrow the reservation and clip.
+        const countEl = overflow ? overflow.querySelector(".shift-chip-display__count") : null;
+        if (countEl) countEl.textContent = String(items.length - 1);
         if (overflow) overflow.style.display = "";
-        const reserve = overflow ? overflow.getBoundingClientRect().width + 4 : 0;
+        const reserve = overflow ? overflow.getBoundingClientRect().width + gap : 0;
         const budget = available - reserve;
 
-        // Record positions before hiding anything (hiding reflows and would invalidate later reads).
-        const rights = items.map(i => i.getBoundingClientRect().right - left);
+        // Never hide the first chip, so at least one is always shown — but cap it to the budget:
+        // CSS alone only caps it at the full row width, which would push the +N out of the row.
+        let used = widths[0];
+        if (used > budget) {
+            used = Math.max(0, budget);
+            items[0].style.maxWidth = used + "px";
+        }
+
+        // Keep the longest prefix that fits alongside the +N; hide the rest.
         let hidden = 0;
-        for (let i = 0; i < items.length; i++) {
-            // Never hide the first chip — it ellipsizes via CSS so at least one chip is always shown.
-            if (i > 0 && rights[i] > budget) {
+        for (let i = 1; i < items.length; i++) {
+            if (hidden > 0 || used + gap + widths[i] > budget) {
                 items[i].classList.add("shift-chip-hidden");
                 hidden++;
+            } else {
+                used += gap + widths[i];
             }
         }
 
         if (hidden === 0) {
-            // Only the first chip itself was too wide; it truncates via CSS — no +N needed.
+            // Sub-pixel disagreement between total and the per-chip pass — nothing to collapse.
+            items[0].style.maxWidth = "";
             if (overflow) overflow.style.display = "none";
             return;
         }
 
-        const countEl = overflow ? overflow.querySelector(".shift-chip-display__count") : null;
         if (countEl) countEl.textContent = String(hidden);
     }
 
