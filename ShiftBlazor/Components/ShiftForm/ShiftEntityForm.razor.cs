@@ -180,7 +180,58 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     [Parameter]
     public bool ShowAttentionToast { get; set; }
 
+    /// <summary>
+    /// When <c>true</c>, the form reports viewing presence: while an existing record is shown,
+    /// the form tells the server "this record's form is open right now" through the attention
+    /// hub (<see cref="IAttentionHubClient.StartViewingAsync"/>). Server-side evaluators can
+    /// read that presence to skip raising a signal the viewer would acknowledge right away.
+    /// The report starts after the record loads, follows the <see cref="Key"/> when it
+    /// changes, and stops when the form is disposed. Never reported in create mode — there is
+    /// no record yet. Best-effort: a failed report never breaks the form. Default <c>false</c>.
+    /// </summary>
+    /// <remarks>
+    /// The report only means "the record's form is open" — nothing more precise. An app that
+    /// needs presence for one specific part of the screen (for example one tab) should either
+    /// set <see cref="ViewingPresenceScope"/> and start/stop the report from its own component
+    /// logic (calling <see cref="IAttentionHubClient.StartViewingAsync"/> when that part is
+    /// shown and disposing the handle when it is hidden), or update the server's
+    /// <c>IEntityViewerTracker</c> from its own server-side hubs. In both cases the evaluator
+    /// side must ask for the same scope the report was made with.
+    /// </remarks>
+    [Parameter]
+    public bool ReportViewingPresence { get; set; }
+
+    /// <summary>
+    /// Optional scope name sent with the viewing presence report. A scope names which part of
+    /// the record is viewed — the same idea as the attention clear scope. <c>null</c> (the
+    /// default) means the record as a whole, with no named part. Only used when
+    /// <see cref="ReportViewingPresence"/> is <c>true</c>. The report still starts and stops
+    /// with the form itself; setting a scope here does not make it follow any inner part of
+    /// the screen. An evaluator that checks presence for a scope only finds reports made with
+    /// that exact scope.
+    /// </summary>
+    [Parameter]
+    public string? ViewingPresenceScope { get; set; }
+
     private IAsyncDisposable? _attentionSubscription;
+    // The active viewing presence report and the Key it was started for. Both are set
+    // together. The Key is tracked so that a Key change stops the old report and starts a new
+    // one for the new record.
+    private IAsyncDisposable? _viewingPresenceHandle;
+    private string? _viewingPresenceKey;
+    // Set when the form is disposed. UpdateViewingPresenceAsync checks it after its await, so
+    // a report that finishes starting on a dead form is stopped instead of stored (and leaked).
+    private bool _viewingPresenceDisposed;
+    // Counts every stop of the viewing presence report. A start attempt remembers the count and
+    // only stores its handle when the count is unchanged after the await. Comparing the Key
+    // alone is not enough: when the Key moves away and back (A to B to A) while the first start
+    // is still in flight, the first and the last attempt see the same Key, and the last handle
+    // would overwrite the first one without disposing it.
+    private int _viewingPresenceVersion;
+    // The running SubscribeToAttentionUpdatesAsync call, captured on first render. The local
+    // Cleared echo awaits this task first. That makes sure the exclusion handle above has its
+    // final value before the echo is published.
+    private Task? _attentionSubscribeTask;
     private bool _attentionSubscribeStarted;
 
     internal bool _RenderAttentionBell;
@@ -328,7 +379,98 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         await base.OnAfterRenderAsync(firstRender);
 
         if (firstRender)
-            await SubscribeToAttentionUpdatesAsync();
+        {
+            // The task is stored so the local Cleared echo can await it before publishing.
+            // The subscription handle is the echo's exclusion token. Without this wait, a
+            // clear that runs right after opening could publish before the handle is set.
+            _attentionSubscribeTask = SubscribeToAttentionUpdatesAsync();
+            await _attentionSubscribeTask;
+        }
+
+        // Runs after every render, not only the first: the first render happens after the
+        // record has loaded, and a later render is what follows a Key change. The method
+        // returns without doing anything when the reported record is already current.
+        await UpdateViewingPresenceAsync();
+    }
+
+    /// <summary>
+    /// Keeps the viewing presence report in line with what the form shows. Starts the report
+    /// when an existing record is shown, restarts it when the <see cref="Key"/> changes, and
+    /// stops it when the form no longer shows a record (create mode). Does nothing when
+    /// <see cref="ReportViewingPresence"/> is off. Best-effort: a failed report never breaks
+    /// the form — the server then treats the record as not viewed and raises signals as normal.
+    /// </summary>
+    private async Task UpdateViewingPresenceAsync()
+    {
+        // Only report an existing record that has actually loaded. Create mode has no record
+        // yet. When the record was never fetched (for example, the user has no read access),
+        // nothing is being viewed either.
+        var targetKey = ReportViewingPresence && !IsCreateMode && InitialRequestCompleted
+            ? Key?.ToString()
+            : null;
+
+        if (string.IsNullOrEmpty(targetKey))
+            targetKey = null;
+
+        if (string.Equals(targetKey, _viewingPresenceKey, StringComparison.Ordinal))
+            return;
+
+        await StopViewingPresenceAsync();
+
+        if (targetKey is null)
+            return;
+
+        var entityType = AttentionEntityType;
+        var baseAddress = ResolveAttentionBaseAddress();
+        if (string.IsNullOrWhiteSpace(entityType) || string.IsNullOrWhiteSpace(baseAddress))
+            return;
+
+        // The key is stored before the call, so a failed start is not retried on every
+        // later render. A retry happens naturally when the Key changes again.
+        _viewingPresenceKey = targetKey;
+        var version = _viewingPresenceVersion;
+
+        try
+        {
+            // The form's Key is already the hashed ID; the server decodes it, the reverse of
+            // the encoding the notifier applies when sending.
+            var handle = await AttentionHubClient.StartViewingAsync(baseAddress, entityType, targetKey, ViewingPresenceScope);
+
+            // While the call above was in flight, the form may have moved to another Key or
+            // been disposed. Storing the handle then would leak the report: nothing would ever
+            // dispose it, the reconnect logic would keep re-sending it, and evaluators would
+            // keep skipping signals for a record nobody is viewing. Stop the just-started
+            // report instead of storing it. The version check catches every such move, even
+            // one that ends back on this same Key (see the field's comment).
+            if (_viewingPresenceDisposed || version != _viewingPresenceVersion)
+            {
+                try { await handle.DisposeAsync(); } catch { }
+                return;
+            }
+
+            _viewingPresenceHandle = handle;
+        }
+        catch
+        {
+            // No presence this session; evaluators raise signals as normal.
+        }
+    }
+
+    /// <summary>Stops the active viewing presence report, when there is one. Best-effort.</summary>
+    private async Task StopViewingPresenceAsync()
+    {
+        // Invalidates every start attempt that is still in flight: when it finishes, it stops
+        // its just-started report instead of storing it.
+        _viewingPresenceVersion++;
+
+        var handle = _viewingPresenceHandle;
+        _viewingPresenceHandle = null;
+        _viewingPresenceKey = null;
+
+        if (handle is null)
+            return;
+
+        try { await handle.DisposeAsync(); } catch { }
     }
 
     /// <summary>
@@ -343,10 +485,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
         _attentionSubscribeStarted = true;
 
-        // The hub keys groups by the entity name, which the form already names via Endpoint (its
-        // CRUD identity, e.g. "Invoice"). Take the first path segment to stay robust to any
-        // trailing route. No Endpoint ⇒ nothing to watch.
-        var entityType = Endpoint?.Split('/', 2)[0];
+        var entityType = AttentionEntityType;
         if (string.IsNullOrWhiteSpace(entityType))
             return;
 
@@ -363,6 +502,16 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             // No real-time updates this session; the form still works and reflects attention on next open.
         }
     }
+
+    /// <summary>
+    /// The entity-type string used for the attention hub group. The hub names its groups after
+    /// the entity name, and the form already carries that name in <see cref="Endpoint"/>
+    /// (e.g. <c>"Invoice"</c>). Only the first path segment is used, so any extra route parts
+    /// after the entity name are ignored. The subscription and the local echo both read this
+    /// property, so they always use the same value. When there is no Endpoint, there is
+    /// nothing to watch and nothing to echo.
+    /// </summary>
+    private string? AttentionEntityType => Endpoint?.Split('/', 2)[0];
 
     /// <summary>
     /// The API base address used both for the attention hub subscription and for the origin
@@ -786,7 +935,72 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                     await LoadAttentionSignalsInternal(forceReload: true);
                     StateHasChanged();
                 }
+
+                // Not awaited on purpose. The echo triggers work in every other subscribed
+                // component in this window (badge count queries, list reloads). Awaiting it
+                // would make the clear request wait for the slowest of those re-fetches.
+                // The method catches its own errors.
+                _ = PublishLocalClearedEchoAsync();
             }
+        }
+        catch
+        {
+        }
+    }
+
+    /// <summary>
+    /// Publishes a local <see cref="AttentionRealtimeKind.Cleared"/> echo after a successful
+    /// server-side clear. The clear request carried the origin header, so the server does not
+    /// broadcast the hint back to this window. Without the echo, another component in this
+    /// window that shows combined attention state (e.g. a navigation count badge) would never
+    /// learn about the clear. The form's own subscription is excluded from the echo. The form
+    /// keeps the cleared snapshot on screen on purpose (see <see cref="ClearAttentionInternal"/>),
+    /// and its own echo would trigger a re-fetch that removes that snapshot. Like the real-time
+    /// hint itself, this is best-effort: a failed publish must never break the clear flow. That
+    /// is also why the caller does not await this method.
+    /// </summary>
+    private async Task PublishLocalClearedEchoAsync()
+    {
+        try
+        {
+            var entityType = AttentionEntityType;
+            var baseAddress = ResolveAttentionBaseAddress();
+            var entityId = Key?.ToString();
+
+            if (string.IsNullOrWhiteSpace(entityType) || string.IsNullOrWhiteSpace(baseAddress) || string.IsNullOrEmpty(entityId))
+                return;
+
+            // SubscribeAsync registers this form's handler right away, but it returns the
+            // handle only after the connection has started. A clear that runs right after
+            // opening can reach this point before that happens. Wait for the subscribe task
+            // to finish so the exclusion below can work. Publishing too early would deliver
+            // the echo to the form's own already-registered handler and remove the kept
+            // snapshot.
+            if (_attentionSubscribeTask is not null)
+                await _attentionSubscribeTask;
+
+            // The form tried to subscribe but got no handle back (the connection failed to
+            // start). Its handler may still be registered, and without a handle there is no
+            // way to exclude it. In that case skip the echo, so the form cannot receive its
+            // own clear. Components that show combined counts still update on their next
+            // periodic fallback poll. When the form never subscribes at all (both real-time
+            // switches are off), no handler exists, so publishing without an exclusion is
+            // safe. Other subscribed components in this window still receive the clear.
+            if ((ListenForAttentionUpdates || ShowAttentionToast) && _attentionSubscription is null)
+                return;
+
+            await AttentionHubClient.PublishLocalAsync(baseAddress, new AttentionRealtimePayload
+            {
+                EntityType = entityType,
+                // The form's Key is already the hashed ID. OnAttentionRaised compares against
+                // the same format, and the server's broadcasts carry the same format.
+                EntityId = entityId,
+                Kind = AttentionRealtimeKind.Cleared,
+                // A clear has no meaningful severity. Info is only a placeholder here; the
+                // server's Cleared broadcasts use the same value.
+                Severity = AttentionSeverity.Info,
+                RaisedAt = DateTimeOffset.UtcNow,
+            }, _attentionSubscription);
         }
         catch
         {
@@ -1177,5 +1391,13 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         // local subscriber is gone.
         if (_attentionSubscription is not null)
             _ = _attentionSubscription.DisposeAsync();
+
+        // Best-effort stop of the viewing presence report. Even when this send is lost, the
+        // server removes all of the connection's viewer entries once the connection closes.
+        // The flag also covers a report that is still starting: when it finishes on this dead
+        // form, UpdateViewingPresenceAsync stops it instead of storing it.
+        _viewingPresenceDisposed = true;
+        if (_viewingPresenceHandle is not null)
+            _ = StopViewingPresenceAsync();
     }
 }

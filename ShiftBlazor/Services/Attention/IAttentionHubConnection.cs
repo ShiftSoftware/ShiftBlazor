@@ -30,6 +30,13 @@ internal interface IAttentionHubConnection : IAsyncDisposable
 
     /// <summary>Invokes a hub method (<c>SubscribeToEntityType</c> / <c>UnsubscribeFromEntityType</c>) with one string argument.</summary>
     Task SendAsync(string method, string entityType);
+
+    /// <summary>
+    /// Invokes a viewing presence hub method (<c>StartViewingEntity</c> / <c>StopViewingEntity</c>)
+    /// with the three arguments those methods take. A <c>null</c> <paramref name="scope"/> is
+    /// normal and means the record as a whole, with no named part.
+    /// </summary>
+    Task SendAsync(string method, string entityType, string entityId, string? scope);
 }
 
 /// <summary>Creates an <see cref="IAttentionHubConnection"/> for a hub URL. Swapped for a fake in tests.</summary>

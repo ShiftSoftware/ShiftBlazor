@@ -656,4 +656,43 @@ tr:has(> td .attention-row--info) > td {
     background: var(--mud-palette-info);
 }
 
+/* Inside a navigation link, the AttentionNavBadge always renders as a small count bubble.
+   The bubble sits on the top-right corner of the link's icon. It looks the same when the
+   drawer is open and when it is collapsed to its narrow icon-only (mini) state. The link is
+   the positioning parent, because MudBlazor nav links have position: relative.
+   inset-inline-start keeps the bubble on the icon side in right-to-left layouts. Outside a
+   nav link, the badge renders as a normal inline pill. */
+.mud-nav-link .attention-nav-badge.mud-chip.mud-chip-size-small {
+    position: absolute;
+    top: 4px;
+    inset-inline-start: 28px;
+    height: 16px;
+    min-width: 16px;
+    font-size: 10px;
+    padding: 0 5px;
+    margin: 0;
+    z-index: 1;
+    /* This overrides any app rule that hides labels in the mini (collapsed) drawer state
+       (see the wrapper rule below). It has no effect while the drawer is open. Note: a link
+       inside a collapsed nav group stays hidden anyway. The group's collapse container clips
+       its content by height, and that is intended. */
+    visibility: visible !important;
+}
+
+/* In the mini (collapsed) drawer state, apps (and MudBlazor itself) hide the label wrapper
+   with visibility: hidden, opacity: 0, or both, and with any specificity. These two
+   properties behave differently. With visibility: hidden on a parent, a child can still set
+   visibility: visible on itself and become visible. With opacity: 0 on a parent, the whole
+   subtree becomes fully transparent, and no child rule can undo that. So when the wrapper
+   contains a badge, this rule sets both properties again. The !important is on purpose: it
+   must override the app's own styles. opacity: 1 makes the subtree visible again, and
+   visibility: hidden keeps the label text invisible no matter which of the two properties
+   the app used. The badge rule above then sets visibility: visible on the badge only.
+   There is no way to work around display: none — if the app hides the wrapper that way,
+   the badge stays hidden too. Hide mini-state labels with visibility or opacity instead. */
+.mud-drawer-mini.mud-drawer--closed .mud-nav-link-text:has(.attention-nav-badge) {
+    opacity: 1 !important;
+    visibility: hidden !important;
+}
+
 /* =============== Attention System End =============== */

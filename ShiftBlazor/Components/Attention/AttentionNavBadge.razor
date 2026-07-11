@@ -1,0 +1,18 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@if (_count > 0)
+{
+    @* The attention-nav-badge class connects this chip to the stylesheet rules that position
+       the count as a bubble on the hosting nav link's icon. The bubble looks the same when
+       the drawer is open and when it is collapsed to its narrow icon-only (mini) state
+       (see the Attention System section of main.css). *@
+    <MudChip T="string"
+             Size="Size.Small"
+             Color="Color.Error"
+             Variant="Variant.Filled"
+             Class="@($"attention-nav-badge {Class}")"
+             Style="@($"cursor: default;{Style}")"
+             aria-label="@AriaLabel">
+        @DisplayCount
+    </MudChip>
+}

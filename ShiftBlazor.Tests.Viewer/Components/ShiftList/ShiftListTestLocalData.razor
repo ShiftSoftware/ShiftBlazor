@@ -8,8 +8,8 @@
     <PropertyColumn Property="x => x.Email" />
 </ShiftList>
 
-<MudCheckBox @bind-Checked="IsDense">IsDense</MudCheckBox>
-<MudCheckBox @bind-Checked="EnableSelection">EnableSelection</MudCheckBox>
+<MudCheckBox T="bool" @bind-Value="IsDense">IsDense</MudCheckBox>
+<MudCheckBox T="bool" @bind-Value="EnableSelection">EnableSelection</MudCheckBox>
 @code {
     [Parameter]
     public List<User> Users { get; set; } = User.GenerateData(50, 50, false);

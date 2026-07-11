@@ -44,6 +44,9 @@ internal sealed class SignalRAttentionHubConnection : IAttentionHubConnection
 
     public Task SendAsync(string method, string entityType) => connection.SendAsync(method, entityType);
 
+    public Task SendAsync(string method, string entityType, string entityId, string? scope) =>
+        connection.SendAsync(method, entityType, entityId, scope);
+
     public ValueTask DisposeAsync() => connection.DisposeAsync();
 }
 

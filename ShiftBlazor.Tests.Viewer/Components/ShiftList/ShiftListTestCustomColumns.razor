@@ -10,12 +10,12 @@
         <PropertyColumn Property="x => x.Email" />
 
         <TemplateColumn Title="Email Providor">
-            <CellTemplate>
+            <CellTemplate Context="cell">
                 @{
-                    var atIndex = context.Item.Email.IndexOf('@');
-                    var dotIndex = context.Item.Email.LastIndexOf('.');
+                    var atIndex = cell.Item.Email.IndexOf('@');
+                    var dotIndex = cell.Item.Email.LastIndexOf('.');
                 }
-                <MudText>@context.Item.Email.Substring(atIndex + 1, dotIndex - atIndex - 1).ToUpper()</MudText>
+                <MudText>@cell.Item.Email.Substring(atIndex + 1, dotIndex - atIndex - 1).ToUpper()</MudText>
             </CellTemplate>
         </TemplateColumn>
     </ChildContent>
@@ -25,7 +25,7 @@
         {
             <MudStack Row>
                 <MudIconButton Icon="@Icons.Material.Filled.ViewDay" OnClick="() => ShiftList.ViewAddItem(context.Item.ID)" />
-                <MudIconButton Icon="@(context.IsSelected ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" OnClick="() => context.Actions.SetSelectedItemAsync(!context.IsSelected)" />
+                <MudIconButton Icon="@(context.Selected ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" OnClick="() => context.Actions.SetSelectedItemAsync(!context.Selected)" />
              </MudStack>
         }
         else
