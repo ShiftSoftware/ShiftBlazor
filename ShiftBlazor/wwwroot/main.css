@@ -78,12 +78,9 @@
     white-space: nowrap;
 }
 
-/* The cell's full-text hover uses a MudTooltip. MudTooltip's activator wrapper is display:inline-block,
-   which would stop the cell's "…" from rendering — force it inline inside truncation cells so the
-   ellipsis still works while keeping the nicer MudTooltip. */
-.shift-cell-truncate .mud-tooltip-root {
-    display: inline !important;
-}
+/* The cell's full-text hover uses the native HTML title attribute (browser-rendered) instead of a
+   MudTooltip — a per-cell Blazor component is too costly on large lists. The title lives on a plain
+   inline <span> wrapping the cell content, so the cell's "…" ellipsis still renders. */
 
 /* Single-line chip row with a trailing "+N" overflow indicator (see ShiftChipDisplay.razor).
    JS hides whole overflowing chips (.shift-chip-hidden); a single over-long chip ellipsizes its label. */

@@ -73,7 +73,9 @@
                 if (EffectiveCellNowrap)
                 {
                     var text = content?.ToString();
-                    return @<MudTooltip Text="@text" Placement="Placement.Top" Arrow="true" Disabled="@string.IsNullOrEmpty(text)">@content</MudTooltip>;
+                    // Native HTML title tooltip (browser-rendered) rather than MudTooltip: MudTooltip
+                    // instantiates a Blazor component per cell, which is a heavy cost on large lists.
+                    return @<span title="@(string.IsNullOrEmpty(text) ? null : text)">@content</span>;
                 }
 
                 return @<text>@content</text>;
@@ -134,14 +136,13 @@
         
         @{
             var content = FormatContent(base.CellContent(context.Item));
+            var contentText = content?.ToString();
         }
         @if (ButtonTemplate == null)
         {
             @if (EffectiveCellNowrap)
             {
-                <MudTooltip Text="@content?.ToString()" Placement="Placement.Top" Arrow="true" Disabled="@string.IsNullOrEmpty(content?.ToString())">
-                    <span class="button-column-button">@content</span>
-                </MudTooltip>
+                <span class="button-column-button" title="@(string.IsNullOrEmpty(contentText) ? null : contentText)">@content</span>
             }
             else
             {
