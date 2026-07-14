@@ -1,6 +1,8 @@
 ﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
+using System.Collections;
+using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Filters.Models;
 
@@ -17,8 +19,12 @@ public abstract class FilterModelBase
     public FilterUIOptions UIOptions { get; set; } = new();
     internal bool IsDefault { get; set; }
     internal FilterModelBase OriginalState;
+    public bool IsNoValueOperator => Operator == ODataOperator.IsEmpty || Operator == ODataOperator.IsNotEmpty;
 
     public abstract ODataFilterGenerator ToODataFilter();
+    public abstract object? ParseValue(object? obj);
+    public abstract string? ValueToString();
+    public abstract bool HasValue();
 
     public FilterModelBase()
     {
@@ -29,6 +35,30 @@ public abstract class FilterModelBase
     {
         OriginalState = (FilterModelBase)this.MemberwiseClone();
         return OriginalState;
+    }
+
+    protected static string? Join(IEnumerable? values)
+    {
+        if (values == null)
+            return null;
+
+        var items = values.Cast<object>().Select(x => x?.ToString());
+        return JsonSerializer.Serialize(items);
+    }
+
+    protected static IEnumerable<string>? Split(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public void Reset(bool resetHidden = false)

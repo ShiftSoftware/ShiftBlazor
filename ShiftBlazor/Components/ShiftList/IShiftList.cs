@@ -26,5 +26,6 @@ public interface IShiftList : IODataRequest
     public HashSet<Guid> ActiveOperations { get; set; }
 
     public Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null);
+    public string GetIdentifier();
     public void Reload();
 }

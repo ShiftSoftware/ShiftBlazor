@@ -22,35 +22,52 @@ public class EnumFilterModel : FilterModelBase
         }
     }
 
+    public override bool HasValue()
+    {
+        var val = GetAsEnum(Value);
+        return val != null && val.Any();
+    }
+
+    private IEnumerable<object>? GetAsEnum(object? value)
+    {
+        return (value as IEnumerable)?.Cast<object>();
+    }
+
+    public override object? ParseValue(object? obj)
+    {
+        var names = Split(obj as string);
+
+        if (names == null || EnumTypeToUse == null)
+            return null;
+
+        return names.Select(name => Enum.Parse(EnumTypeToUse, name)).ToList();
+    }
+
+    public override string? ValueToString()
+    {
+        return Join(GetAsEnum(Value));
+    }
+
     public override ODataFilterGenerator ToODataFilter()
     {
         var filter = new ODataFilterGenerator(true, Id);
-
-        if (Operator == ODataOperator.IsEmpty || Operator == ODataOperator.IsNotEmpty)
+        var builder = new ODataFilter
         {
-            filter.Add(new ODataFilter
-            {
-                Field = Field,
-                Operator = Operator,
-                Prefix = Prefix,
-                IsCollection = IsCollection,
-            });
+            Field = Field,
+            Operator = Operator,
+            Prefix = Prefix,
+            IsCollection = IsCollection,
+        };
 
-            return filter;
+        if (IsNoValueOperator)
+        {
+            filter.Add(builder);
         }
-
-        var val = (Value as IEnumerable)?.Cast<object>();
-
-        if (val != null && val.Any())
+        else if (this.HasValue())
         {
-            filter.Add(new ODataFilter
-            {
-                Field = Field,
-                Operator = Operator == ODataOperator.NotIn ? Operator : ODataOperator.In,
-                Value = Value,
-                Prefix = Prefix,
-                IsCollection = IsCollection,
-            });
+            builder.Operator = Operator == ODataOperator.NotIn ? Operator : ODataOperator.In;
+            builder.Value = Value;
+            filter.Add(builder);
         }
 
         return filter;

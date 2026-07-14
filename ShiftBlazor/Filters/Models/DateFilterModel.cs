@@ -1,12 +1,48 @@
-﻿using System.Globalization;
-using MudBlazor;
+﻿using MudBlazor;
+using MudBlazor.Utilities;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Utils;
+using System.Globalization;
 
 namespace ShiftSoftware.ShiftBlazor.Filters.Models;
 
 public class DateFilterModel : FilterModelBase
 {
+    private DefaultConverter<DateTime?> _converter = new DefaultConverter<DateTime?>
+    {
+        Culture = () => CultureInfo.CurrentCulture,
+        Format = () => CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern,
+    };
+
+    public override bool HasValue()
+    {
+        (DateTime valueStart, DateTime valueEnd) = GetDateRange(DateFilterOperator.Range, range: Value as DateRange);
+        return _HasValue(valueStart, valueEnd);
+    }
+
+    private bool _HasValue(DateTime valueStart, DateTime valueEnd)
+    {
+        return valueStart != default || (valueEnd != default && valueEnd != DateTime.MaxValue.ToUniversalTime());
+    }
+
+    public override object? ParseValue(object? obj)
+    {
+        var str = obj?.ToString();
+
+        if (!string.IsNullOrEmpty(str) && DateRange.TryParse(str, _converter, out var dateRange))
+            return dateRange;
+
+        return null;
+    }
+
+    public override string? ValueToString()
+    {
+        if (Value is DateRange dateRange)
+            return dateRange.ToString(_converter);
+
+        return Value?.ToString();
+    }
+
     public override ODataFilterGenerator ToODataFilter()
     {
         DateTime valueStart = default;
@@ -17,7 +53,7 @@ public class DateFilterModel : FilterModelBase
         {
             (valueStart, valueEnd) = GetDateRange(DateFilterOperator.Range, range: Value as DateRange);
 
-            if (valueStart != default || (valueEnd != default && valueEnd != DateTime.MaxValue.ToUniversalTime()))
+            if (_HasValue(valueStart, valueEnd))
             {
                 var filterStart = new ODataFilter
                 {
@@ -37,7 +73,6 @@ public class DateFilterModel : FilterModelBase
                     IsCollection = IsCollection,
                 };
 
-
                 if (Operator == ODataOperator.NotEqual)
                 {
                     filterStart.Value = valueEnd;
@@ -47,7 +82,7 @@ public class DateFilterModel : FilterModelBase
                 filter.Add(filterStart).Add(filterEnd);
             }
         }
-        else if (Operator == ODataOperator.IsEmpty || Operator == ODataOperator.IsNotEmpty)
+        else if (IsNoValueOperator)
         {
             filter.Add(new ODataFilter
             {

@@ -5,6 +5,7 @@ using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 using System.Globalization;
 using System.Net.Http.Headers;
+using static ShiftSoftware.ShiftBlazor.Filters.FilterPanel;
 
 namespace ShiftSoftware.ShiftBlazor.Services;
 
@@ -252,6 +253,20 @@ public class SettingManager
     public bool? GetFilterPanelState()
     {
         return Settings.IsDataGridFilterPanelOpen;
+    }
+
+    public void AddFilterToHistory(string id, List<List<BasicFilter>> filter)
+    {
+        Settings.FilterHistory ??= [];
+
+        Settings.FilterHistory.Remove(id);
+        Settings.FilterHistory.Add(id, filter);
+        SyncLocalStorage.SetItem(Key, Settings);
+    }
+
+    public List<List<BasicFilter>>? GetFilterHistory(string id)
+    {
+        return Settings.FilterHistory?.GetValueOrDefault(id);
     }
 
     private async Task<DeviceInfo> GetDeviceInfo()

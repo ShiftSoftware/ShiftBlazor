@@ -503,7 +503,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         {
             if (!DisableGridEditor)
             {
-                var columnStates = SettingManager.GetColumnState(GetListIdentifier());
+                var columnStates = SettingManager.GetColumnState(GetIdentifier());
                 HideDisabledColumns(columnStates);
                 MakeColumnsSticky(columnStates);
                 ReorderColumns(columnStates);
@@ -946,7 +946,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
     }
 
-    private string GetListIdentifier()
+    public string GetIdentifier()
     {
         return $"{EntitySet}_{typeof(T).Name}";
     }
@@ -1088,7 +1088,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
         }
 
-        SettingManager.SetColumnState(GetListIdentifier(), columnStates);
+        SettingManager.SetColumnState(GetIdentifier(), columnStates);
     }
 
     private void OpenGridEditor()
@@ -1103,7 +1103,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     private void ResetColumnSettings()
     {
-        SettingManager.SetColumnState(GetListIdentifier(), []);
+        SettingManager.SetColumnState(GetIdentifier(), []);
         NavigationManager.Refresh(true);
     }
 

@@ -5,11 +5,26 @@ namespace ShiftSoftware.ShiftBlazor.Filters.Models;
 
 public class BooleanFilterModel : FilterModelBase
 {
+    public override bool HasValue()
+    {
+        return Value != null;
+    }
+
+    public override object? ParseValue(object? obj)
+    {
+        return bool.TryParse(obj?.ToString(), out var value) ? value : null;
+    }
+
+    public override string? ValueToString()
+    {
+        return Value?.ToString();
+    }
+
     public override ODataFilterGenerator ToODataFilter()
     {
         var filter = new ODataFilterGenerator(true, Id);
 
-        if (Value != null)
+        if (this.HasValue())
         {
             filter.Add(new ODataFilter
             {
