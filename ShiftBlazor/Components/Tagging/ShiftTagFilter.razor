@@ -1,0 +1,82 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.Extensions.Options
+@using ShiftSoftware.ShiftBlazor.Enums
+@using ShiftSoftware.ShiftBlazor.Tagging
+@using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@inject IOptions<ShiftBlazorTaggingOptions> TaggingOptions
+
+@*
+    Drop-in tag filter for a <ShiftList> whose entity is taggable. Place it in the list's
+    ChildContent (the list needs EnableFilterPanel) and it adds a "Tags" filter to the filter
+    panel: a multi-select tag autocomplete that filters the list to rows having any of the
+    selected tags (OData: Tags/any(item: item/ID in (...))).
+
+        <ShiftList T="ProductListDTO" EntitySet="Product" EnableFilterPanel>
+            <ShiftTagFilter />
+            <PropertyColumn Property="x => x.Name" />
+        </ShiftList>
+
+    It's a thin preset over <ForeignFilter ... CollectionPrefix=["Tags"]> (the framework's M:N
+    collection-filter pattern). The OData Tags collection element is a TagDTO, so we filter on its
+    string ID — which matches the IDs the tag autocomplete emits. Need different config (custom
+    endpoint, label, a different collection nav, sizing)? Set the parameters below, or use
+    ForeignFilter directly.
+*@
+
+<ForeignFilter T="TagListDTO"
+               TProperty="string"
+               Property="x => x.ID"
+               DTOType="typeof(TagListDTO)"
+               EntitySet="@(EntitySet ?? Opts.EntitySet)"
+               Endpoint="@(Endpoint ?? Opts.Endpoint)"
+               BaseUrl="@(BaseUrl ?? Opts.BaseUrl)"
+               BaseUrlKey="@(BaseUrlKey ?? Opts.BaseUrlKey)"
+               Label="@Label"
+               Operator="ODataOperator.In"
+               CollectionPrefix="@(new List<string> { CollectionField })"
+               Immediate="@Immediate"
+               Order="@Order"
+               xs="@ItemXs" sm="@ItemSm" md="@ItemMd" lg="@ItemLg" xl="@ItemXl" xxl="@ItemXxl" />
+
+@code {
+    /// <summary>Filter label. Default <c>"Tags"</c>.</summary>
+    [Parameter] public string Label { get; set; } = "Tags";
+
+    /// <summary>OData entity set the tag autocomplete reads from. When unset, falls back to
+    /// <see cref="ShiftBlazorTaggingOptions.EntitySet"/> (default <c>"tags"</c>).</summary>
+    [Parameter] public string? EntitySet { get; set; }
+
+    /// <summary>Override the tag autocomplete endpoint path (rare). When unset, falls back to
+    /// <see cref="ShiftBlazorTaggingOptions.Endpoint"/>.</summary>
+    [Parameter] public string? Endpoint { get; set; }
+
+    /// <summary>Absolute base URL for the tag API (overrides SettingManager). When unset, falls back
+    /// to <see cref="ShiftBlazorTaggingOptions.BaseUrl"/>.</summary>
+    [Parameter] public string? BaseUrl { get; set; }
+
+    /// <summary>Lookup key for resolving the tag API base URL from settings. When unset, falls back
+    /// to <see cref="ShiftBlazorTaggingOptions.BaseUrlKey"/> (set once via <c>AddShiftBlazorTagging</c>).</summary>
+    [Parameter] public string? BaseUrlKey { get; set; }
+
+    /// <summary>The taggable entity's tags navigation name. Default <c>"Tags"</c>.</summary>
+    [Parameter] public string CollectionField { get; set; } = "Tags";
+
+    /// <summary>Reload the list as soon as the selection changes (vs. on the panel's Filter button).</summary>
+    [Parameter] public bool Immediate { get; set; }
+
+    /// <summary>Order of this filter within the panel.</summary>
+    [Parameter] public int Order { get; set; } = int.MaxValue;
+
+    // Responsive width of the filter cell (MudGrid breakpoints).
+    [Parameter] public int ItemXs { get; set; } = 12;
+    [Parameter] public int ItemSm { get; set; } = 12;
+    [Parameter] public int ItemMd { get; set; } = 6;
+    [Parameter] public int ItemLg { get; set; } = 3;
+    [Parameter] public int ItemXl { get; set; } = 3;
+    [Parameter] public int ItemXxl { get; set; } = 3;
+
+    // Central tag UI config (set once via AddShiftBlazorTagging); resolves to a default instance even
+    // when never configured, so EntitySet/Endpoint/BaseUrl(Key) need no per-call value.
+    private ShiftBlazorTaggingOptions Opts => TaggingOptions.Value;
+}

@@ -2,9 +2,51 @@
     overflow: hidden;
 }
 
+.shift-modal-background + .mud-dialog:not(.mud-dialog-fullscreen) {
+    max-height: calc(100dvh - 64px);
+}
+
+.shift-modal-background + .mud-dialog .mud-dialog-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog article[id^="Form-"] {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog .shift-form-paper {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog .shift-form-paper > form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.shift-modal-background + .mud-dialog .shift-form-paper > header,
+.shift-modal-background + .mud-dialog .shift-form-paper > form > footer {
+    flex-shrink: 0;
+}
+
 .shift-scrollable-content-wrapper {
-    max-height: calc(100vh - 175px);
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: auto;
+}
+
+.mud-dialog:not(.shift-modal-background + .mud-dialog) .shift-scrollable-content-wrapper {
+    max-height: calc(100vh - 175px);
 }
 
 .shift-toolbar-header > :last-child {
@@ -24,6 +66,85 @@
     white-space: nowrap;
     overflow: hidden;
 }
+
+/* Single-line cell text: clip overflow to an ellipsis instead of wrapping to a new line.
+   Applied to the data cell (td) so the column's inherited MudBlazor CellStyle/CellClass can customize it
+   (e.g. CellStyle="max-width: 500px;"). max-width is required for the ellipsis to trigger inside the
+   grid's auto-layout table; 320px is the default (overridable via the --shift-cell-max-width variable). */
+.shift-cell-truncate {
+    max-width: var(--shift-cell-max-width, 320px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The cell's full-text hover uses the native HTML title attribute (browser-rendered) instead of a
+   MudTooltip — a per-cell Blazor component is too costly on large lists. The title lives on a plain
+   inline <span> wrapping the cell content, so the cell's "…" ellipsis still renders. */
+
+/* Single-line chip row with a trailing "+N" overflow indicator (see ShiftChipDisplay.razor).
+   JS hides whole overflowing chips (.shift-chip-hidden); a single over-long chip ellipsizes its label. */
+.shift-chip-display {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.shift-chip-display__item {
+    flex: 0 0 auto;
+    display: inline-flex;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.shift-chip-display__item .mud-chip {
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Chips are often wrapped in a MudTooltip (e.g. ShiftTagColumn). Its inline-block activator wrapper
+   sits between the item and the chip and refuses to shrink below the label's full width (flex
+   min-width:auto), which would defeat the item's width cap and let a long chip slide under the "+N"
+   chip — let it shrink so the chip's own max-width/overflow take over. */
+.shift-chip-display__item .mud-tooltip-root {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Ellipsis for a chip whose label is wider than its cap. MudBlazor's .mud-chip-content is
+   inline-flex, where text-overflow never draws the "…" — a block container restores it. MudBlazor
+   also sets height:100% on it, which would pin block text to the top of the chip; height:auto lets
+   the chip's own align-items:center re-center the line. The chip box also clips (overflow:hidden
+   above) so an over-long chip can never blow out the row. */
+.shift-chip-display__item .mud-chip .mud-chip-content {
+    display: block;
+    height: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.shift-chip-display .shift-chip-hidden {
+    display: none !important;
+}
+
+.shift-chip-display__overflow {
+    flex: 0 0 auto;
+}
+
+.shift-chip-display__more-chip {
+    cursor: pointer;
+}
+
+.shift-chip-display__menu {
+    max-height: 280px;
+    overflow: auto;
+}
+
 
 .multi-select input.mud-input-root::placeholder {
     opacity: 1 !important;
@@ -492,3 +613,83 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     transform: translateY(100%);
     opacity: 0.4;
 }
+
+/* =============== Attention System =============== */
+
+tr:has(> td .attention-row--critical) > td {
+    background: rgba(var(--mud-palette-error-rgb), 0.06);
+    font-weight: 600;
+}
+
+tr:has(> td .attention-row--warning) > td {
+    background: rgba(var(--mud-palette-warning-rgb), 0.06);
+    font-weight: 600;
+}
+
+tr:has(> td .attention-row--info) > td {
+    background: rgba(var(--mud-palette-info-rgb), 0.05);
+    font-weight: 600;
+}
+
+.attention-inline-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.attention-inline-dot--critical {
+    background: var(--mud-palette-error);
+}
+
+.attention-inline-dot--warning {
+    background: var(--mud-palette-warning);
+}
+
+.attention-inline-dot--info {
+    background: var(--mud-palette-info);
+}
+
+/* Inside a navigation link, the AttentionNavBadge always renders as a small count bubble.
+   The bubble sits on the top-right corner of the link's icon. It looks the same when the
+   drawer is open and when it is collapsed to its narrow icon-only (mini) state. The link is
+   the positioning parent, because MudBlazor nav links have position: relative.
+   inset-inline-start keeps the bubble on the icon side in right-to-left layouts. Outside a
+   nav link, the badge renders as a normal inline pill. */
+.mud-nav-link .attention-nav-badge.mud-chip.mud-chip-size-small {
+    position: absolute;
+    top: 4px;
+    inset-inline-start: 28px;
+    height: 16px;
+    min-width: 16px;
+    font-size: 10px;
+    padding: 0 5px;
+    margin: 0;
+    z-index: 1;
+    /* This overrides any app rule that hides labels in the mini (collapsed) drawer state
+       (see the wrapper rule below). It has no effect while the drawer is open. Note: a link
+       inside a collapsed nav group stays hidden anyway. The group's collapse container clips
+       its content by height, and that is intended. */
+    visibility: visible !important;
+}
+
+/* In the mini (collapsed) drawer state, apps (and MudBlazor itself) hide the label wrapper
+   with visibility: hidden, opacity: 0, or both, and with any specificity. These two
+   properties behave differently. With visibility: hidden on a parent, a child can still set
+   visibility: visible on itself and become visible. With opacity: 0 on a parent, the whole
+   subtree becomes fully transparent, and no child rule can undo that. So when the wrapper
+   contains a badge, this rule sets both properties again. The !important is on purpose: it
+   must override the app's own styles. opacity: 1 makes the subtree visible again, and
+   visibility: hidden keeps the label text invisible no matter which of the two properties
+   the app used. The badge rule above then sets visibility: visible on the badge only.
+   There is no way to work around display: none — if the app hides the wrapper that way,
+   the badge stays hidden too. Hide mini-state labels with visibility or opacity instead. */
+.mud-drawer-mini.mud-drawer--closed .mud-nav-link-text:has(.attention-nav-badge) {
+    opacity: 1 !important;
+    visibility: hidden !important;
+}
+
+/* =============== Attention System End =============== */

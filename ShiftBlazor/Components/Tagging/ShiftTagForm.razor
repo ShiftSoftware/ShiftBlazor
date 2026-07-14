@@ -1,0 +1,179 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.Extensions.Options
+@using MudBlazor
+@using ShiftSoftware.ShiftBlazor.Tagging
+@using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@*
+    Tag create/edit form — a component, not a routed page. Host it in your own page:
+
+        @page "/tags/{Key?}"
+        <ShiftTagForm Key="@Key" />
+        @code { [Parameter] public string? Key { get; set; } }
+
+    It is also opened as a dialog automatically — by ShiftTagList's row click and by
+    ShiftTagPicker's "+" add button (which default their form component to this one).
+    Configure endpoint/title/permission via services.AddShiftBlazorTagging(...).
+*@
+
+@inject IOptions<ShiftBlazorTaggingOptions> Options
+
+<ShiftEntityForm T="TagDTO"
+                 Endpoint="@(Opts.Endpoint ?? Opts.EntitySet)"
+                 BaseUrl="@Opts.BaseUrl"
+                 BaseUrlKey="@Opts.BaseUrlKey"
+                 Title="@Opts.FormTitle"
+                 @bind-Value="TagItem"
+                 TypeAuthAction="@Opts.TypeAuthAction"
+                 @bind-Key="@Key">
+    <MudTextField @bind-Value="context.Item.Name"
+                  For="() => context.Item.Name"
+                  Label="Name"
+                  Required="true" />
+
+    @* Color: a hex field. The '#' is a fixed prefix (a start adornment), NOT part of the editable
+       text — the box holds digits only. A bordered swatch sits at the end (the border keeps
+       white/light colours visible) and doubles as a colour picker — click it to open the OS picker.
+       The swatch updates live on any change, but only paints for a *valid* hex (empty otherwise);
+       an invalid value is flagged by the `For`-bound [RegularExpression] on TagDTO.Color (validated
+       on the form and again on the backend). Stored on the model as "#" + digits; the '#' is stripped
+       for display on load. TagDTO.Color's setter upper-cases the value, so it's saved canonically. *@
+    @{
+        // Keep the digits box in sync whenever the model colour changes from outside the textbox
+        // (load, picker, clear). Typing updates _syncedColor itself, so this won't clobber it.
+        if (context.Item.Color != _syncedColor)
+        {
+            _syncedColor = context.Item.Color;
+            _digits = context.Item.Color?.TrimStart('#') ?? string.Empty;
+        }
+    }
+    <div class="shift-tag-color">
+        <MudTextField T="string"
+                      Value="@_digits"
+                      ValueChanged="@(v => OnDigitsChanged(context.Item, v))"
+                      For="@(() => context.Item.Color)"
+                      Immediate="true"
+                      Label="Color"
+                      Placeholder="FF0000"
+                      Adornment="Adornment.Start"
+                      AdornmentText="#"
+                      Clearable="true"
+                      Class="flex-grow-1" />
+        <span class="shift-tag-color-swatch" style="@($"background-color:{SwatchColor(context.Item.Color)};")">
+            @* The swatch always shows the colour, but the OS picker only opens in Create/Edit —
+               disabled in View/Archive (context.ReadOnly) or while a task runs (context.Disabled),
+               matching the rest of the form. (Native <input> doesn't honour the form's read-only
+               cascade on its own.) *@
+            <input type="color"
+                   aria-label="Pick colour"
+                   value="@PickerInitial(context.Item.Color)"
+                   disabled="@(context.ReadOnly || context.Disabled)"
+                   @oninput="@(e => OnSwatchPicked(context.Item, e.Value?.ToString()))" />
+        </span>
+    </div>
+    <style>
+        /* Hex field: text box grows, swatch sits at the end. The swatch is a bordered box (the border
+           keeps white/light colours visible) with a transparent native colour input layered on top,
+           so clicking the box opens the OS colour picker. */
+        .shift-tag-color { display: flex; align-items: flex-start; gap: 8px; }
+        .shift-tag-color-swatch {
+            position: relative;
+            flex: 0 0 auto;
+            width: 1.5rem;
+            height: 1.5rem;
+            /* Anchor to the top + drop onto the input line (below the floating label). Top-anchoring
+               keeps the swatch put when a validation message grows the field downward. */
+            margin-top: 1rem;
+            border: 1px solid var(--mud-palette-lines-default);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .shift-tag-color-swatch input[type=color] {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            border: none;
+            opacity: 0;
+            cursor: pointer;
+        }
+        /* View/Archive (or busy): the swatch still shows the colour but isn't a picker. */
+        .shift-tag-color-swatch input[type=color]:disabled {
+            cursor: default;
+        }
+    </style>
+
+    <MudTextField @bind-Value="context.Item.Description"
+                  For="() => context.Item.Description"
+                  Label="Description"
+                  Lines="2" />
+
+    <MudTextField @bind-Value="context.Item.IntegrationID"
+                  For="() => context.Item.IntegrationID"
+                  Label="Integration ID"
+                  HelperText="Optional external-system identifier. Must be unique if set." />
+</ShiftEntityForm>
+
+@code {
+    [Parameter] public object? Key { get; set; }
+
+    /// <summary>
+    /// Pre-fills the tag name when the form is opened to create a new tag — e.g. from
+    /// <c>ShiftTagPicker</c>'s QuickAdd "+" button, which passes the text the user typed.
+    /// Ignored when editing an existing tag (the loaded entity wins).
+    /// </summary>
+    [Parameter] public string? TagName { get; set; }
+
+    private TagDTO TagItem = new();
+
+    private ShiftBlazorTaggingOptions Opts => Options.Value;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrWhiteSpace(TagName))
+            TagItem.Name = TagName;
+    }
+
+    private string _digits = string.Empty;   // what's shown in the textbox (digits only, no '#')
+    private string? _syncedColor;            // last model colour we pushed into _digits
+
+    // A solid hex colour: #RGB or #RRGGBB (no alpha — ShowAlpha is off for tags).
+    private static bool IsValidHex(string? c) => !string.IsNullOrWhiteSpace(c)
+        && System.Text.RegularExpressions.Regex.IsMatch(c.Trim(), "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$");
+
+    // CSS colour for the swatch box: the value when valid, otherwise transparent (empty bordered box).
+    private static string SwatchColor(string? c) => IsValidHex(c) ? c!.Trim() : "transparent";
+
+    // The native <input type=color> needs a lowercase #rrggbb; fall back to black so it opens sensibly.
+    private static string PickerInitial(string? c) =>
+        (c != null && System.Text.RegularExpressions.Regex.IsMatch(c.Trim(), "^#[0-9a-fA-F]{6}$"))
+            ? c.Trim().ToLowerInvariant()
+            : "#000000";
+
+    // Typed digits (live, no '#'). Commit "#"+digits to the model so validation runs against it: the
+    // swatch (SwatchColor) only paints for a valid hex, and the For-bound [RegularExpression] flags an
+    // invalid value live (and the backend re-checks it). Empty → null (a colour is optional).
+    private void OnDigitsChanged(TagDTO item, string? value)
+    {
+        _digits = value?.Trim() ?? string.Empty;
+        item.Color = _digits.Length == 0 ? null : "#" + _digits.TrimStart('#');   // '#' is the fixed prefix
+        _syncedColor = item.Color;                                                // keep the sync marker aligned
+    }
+
+    // Picked from the swatch's OS colour picker — always a valid #rrggbb.
+    private void OnSwatchPicked(TagDTO item, string? hex)
+    {
+        if (string.IsNullOrWhiteSpace(hex))
+            return;
+
+        var c = hex.StartsWith("#") ? hex.Trim() : "#" + hex.Trim();
+        if (!IsValidHex(c))
+            return;
+
+        item.Color = c;
+        _digits = c.TrimStart('#');
+        _syncedColor = c;
+    }
+}

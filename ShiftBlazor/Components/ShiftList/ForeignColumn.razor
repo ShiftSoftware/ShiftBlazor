@@ -35,9 +35,15 @@
                     <a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
                         @if (ButtonTemplate == null)
                         {
-                            <span class="button-column-button">
-                                @value
-                            </span>
+                            var buttonText = value?.ToString();
+                            @if (EffectiveCellNowrap)
+                            {
+                                <span class="button-column-button" title="@(string.IsNullOrEmpty(buttonText) ? null : buttonText)">@value</span>
+                            }
+                            else
+                            {
+                                <span class="button-column-button">@value</span>
+                            }
                         }
                         else
                         {
@@ -45,7 +51,13 @@
                         }
                     </a>
                 }
-                else {
+                else if (EffectiveCellNowrap)
+                {
+                    var text = value?.ToString();
+                    <span title="@(string.IsNullOrEmpty(text) ? null : text)">@value</span>
+                }
+                else
+                {
                     @value
                 }
             }

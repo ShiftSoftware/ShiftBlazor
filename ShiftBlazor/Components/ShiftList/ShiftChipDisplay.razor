@@ -1,0 +1,104 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.JSInterop
+@using MudBlazor
+@typeparam T
+@implements IAsyncDisposable
+
+@*
+    Renders a collection as a single line of chips that never wraps. When the chips don't fit the
+    available width, the overflowing ones are hidden (whole chips only — never sliced) and collapsed
+    into a trailing "+N" chip; clicking it opens a popup listing the full set. The first chip is never
+    hidden, so at least one is always shown: an over-long first chip truncates its label with an
+    ellipsis instead of overflowing, shrinking further when needed to keep the "+N" chip in view.
+    Width is measured in JS (ResizeObserver), so it reflows on resize; measurement is width-based,
+    so it also works in RTL layouts.
+
+    The host element MUST be width-constrained (e.g. a data-grid cell with a max-width); otherwise the
+    row simply grows to fit every chip and nothing is ever collapsed.
+
+        <ShiftChipDisplay Items="row.Tags">
+            <ChipTemplate Context="tag"><MudChip T="string">@tag.Name</MudChip></ChipTemplate>
+        </ShiftChipDisplay>
+*@
+
+@if (_items.Count > 0)
+{
+    <div class="shift-chip-display" @ref="_element">
+        @foreach (var item in _items)
+        {
+            <span class="shift-chip-display__item">@ChipTemplate(item)</span>
+        }
+        <span class="shift-chip-display__overflow" style="display:none;" @onclick:stopPropagation="true">
+            <MudChip T="string" Size="@Size" Class="shift-chip-display__more-chip" OnClick="@ShowAllAsync">+<span class="shift-chip-display__count">0</span></MudChip>
+        </span>
+    </div>
+}
+
+@code {
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+
+    /// <summary>The items to render as chips. Renders nothing when null or empty.</summary>
+    [Parameter] public IEnumerable<T>? Items { get; set; }
+
+    /// <summary>Template for a single chip; receives one item. Used both inline and in the overflow popup.</summary>
+    [Parameter, EditorRequired] public RenderFragment<T> ChipTemplate { get; set; } = default!;
+
+    /// <summary>Size of the trailing "+N" chip. Defaults to <see cref="Size.Small"/>.</summary>
+    [Parameter] public Size Size { get; set; } = Size.Small;
+
+    /// <summary>Optional title for the popup shown when the "+N" chip is clicked.</summary>
+    [Parameter] public string? Title { get; set; }
+
+    private ElementReference _element;
+    private List<T> _items = new();
+    private bool _observing;
+
+    protected override void OnParametersSet()
+        => _items = Items as List<T> ?? Items?.ToList() ?? new();
+
+    // The full chip set, rendered on demand into the click-opened popup.
+    private RenderFragment ChipsFragment => builder =>
+    {
+        var seq = 0;
+        foreach (var item in _items)
+            builder.AddContent(seq++, ChipTemplate(item));
+    };
+
+    private async Task ShowAllAsync()
+    {
+        var parameters = new DialogParameters<ShiftChipDialog>
+        {
+            { x => x.Content, ChipsFragment }
+        };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            NoHeader = string.IsNullOrEmpty(Title),
+            CloseButton = false,
+            BackdropClick = true,     // click outside to close
+            CloseOnEscapeKey = true
+        };
+        await DialogService.ShowAsync<ShiftChipDialog>(Title ?? string.Empty, parameters, options);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_items.Count == 0) return;
+
+        // Always init: it is idempotent per element (an already-observed element is just re-measured),
+        // and when the list empties the @if above tears the element down — the fresh element Blazor
+        // creates once items return needs its own ResizeObserver, not just a re-layout.
+        _observing = true;
+        await JS.InvokeVoidAsync("shiftChipOverflow.init", _element);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_observing)
+        {
+            try { await JS.InvokeVoidAsync("shiftChipOverflow.dispose", _element); }
+            catch { /* circuit/JS already gone */ }
+        }
+    }
+}

@@ -19,16 +19,16 @@
 </ShiftList>
 
 <MudStack Row>
-    <MudSwitch @bind-Checked="DisablePagination">Pagination</MudSwitch>
-    <MudSwitch @bind-Checked="DisableActionColumn">ActionColumn</MudSwitch>
-    <MudSwitch @bind-Checked="DisableAdd">Add</MudSwitch>
-    <MudSwitch @bind-Checked="DisableColumnChooser">ColumnChooser</MudSwitch>
-    <MudSwitch @bind-Checked="DisableDeleteFilter">DeleteFilters</MudSwitch>
-    <MudSwitch @bind-Checked="DisableFilters">Filters</MudSwitch>
-    <MudSwitch @bind-Checked="DisableHeaderToolbar">HeaderToolbar</MudSwitch>
-    <MudSwitch @bind-Checked="DisableMultiSorting">MultiSorting</MudSwitch>
-    <MudSwitch @bind-Checked="DisableSorting">Sorting</MudSwitch>
-    <MudSwitch @bind-Checked="DisableStickyHeader">StickyHeader</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisablePagination">Pagination</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisableActionColumn">ActionColumn</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisableAdd">Add</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisableColumnChooser">ColumnChooser</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisableDeleteFilter">DeleteFilters</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisableFilters">Filters</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisableHeaderToolbar">HeaderToolbar</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisableMultiSorting">MultiSorting</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisableSorting">Sorting</MudSwitch>
+    <MudSwitch T="bool" @bind-Value="DisableStickyHeader">StickyHeader</MudSwitch>
 </MudStack>
 
 @code {

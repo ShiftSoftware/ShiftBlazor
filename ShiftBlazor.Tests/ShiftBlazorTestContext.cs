@@ -1,6 +1,7 @@
 ﻿using Bunit.TestDoubles;
 using RichardSzalay.MockHttp;
 using ShiftBlazor.Tests.Shared.DTOs;
+using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.TypeAuth.Blazor.Extensions;
 
@@ -9,8 +10,10 @@ namespace ShiftSoftware.ShiftBlazor.Tests;
 public class ShiftBlazorTestContext : TestContext
 {
     public static string BaseUrl = "http://localhost";
-    public static string ODataBaseUrl = "/odata";
-    public static string ApiBaseUrl = "/api";
+    // The configuration no longer has separate API and OData paths. Components resolve
+    // every URL against the single configured base address.
+    public static string ODataBaseUrl = "";
+    public static string ApiBaseUrl = "";
 
     public List<SampleDTO> Values = new();
 
@@ -58,8 +61,6 @@ public class ShiftBlazorTestContext : TestContext
             config.ShiftConfiguration = options =>
             {
                 options.BaseAddress = BaseUrl;
-                options.ApiPath = ApiBaseUrl;
-                options.ODataPath = ODataBaseUrl;
                 options.UserListEndpoint = BaseUrl + "/odata/PublicUser";
                 options.AddLanguage("en-US", "EN")
                        .AddLanguage("es-US", "EN")

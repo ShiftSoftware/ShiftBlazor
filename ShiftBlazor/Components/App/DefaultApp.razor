@@ -10,6 +10,7 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @inject ShiftBlazorLocalizer Loc
 
+<RedirectToAuthFlow />
 <CascadingValue Value="AppContext" IsFixed="true">
     <Router AppAssembly="@AppAssembly"
             AdditionalAssemblies="@AllAdditionalAssemblies"
@@ -40,8 +41,6 @@
         </Found>
     </Router>
 </CascadingValue>
-
-<RedirectToChangePassword />
 
 @code {
     [Inject] IServiceProvider ServiceProvider { get; set; } = default!;

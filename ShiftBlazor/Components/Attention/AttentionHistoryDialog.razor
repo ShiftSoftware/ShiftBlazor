@@ -1,0 +1,111 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<MudDialog>
+    <TitleContent>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <MudIcon Icon="@Icons.Material.Filled.History" />
+            <MudText Typo="Typo.h6">Signal history</MudText>
+            @if (!string.IsNullOrWhiteSpace(EntityType))
+            {
+                <MudText Typo="Typo.caption" Style="opacity: 0.7; margin-left: 4px;">
+                    @EntityType @if (!string.IsNullOrWhiteSpace(EntityId)) { <span>· @EntityId</span> }
+                </MudText>
+            }
+        </div>
+    </TitleContent>
+
+    <DialogContent>
+        @if (Signals is null || Signals.Count == 0)
+        {
+            <div style="padding: 24px; text-align: center; opacity: 0.7;">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Large" Color="Color.Success" />
+                <MudText Typo="Typo.body1" Class="mt-2">No signals have ever been raised for this record.</MudText>
+            </div>
+        }
+        else
+        {
+            <MudTimeline TimelinePosition="TimelinePosition.Left"
+                         TimelineOrientation="TimelineOrientation.Vertical"
+                         DisableModifiers="true">
+                @foreach (var signal in Signals.OrderByDescending(s => s.RaisedAt))
+                {
+                    var isActive = signal.ClearedAt is null;
+                    <MudTimelineItem Color="@AttentionBadge.ColorFor(signal.Severity)"
+                                     Size="Size.Small"
+                                     Icon="@(isActive ? Icons.Material.Filled.Warning : Icons.Material.Filled.CheckCircle)">
+                        <ItemContent>
+                            <MudPaper Elevation="0" Class="pa-3"
+                                      Style="@($"border-left: 3px solid var({PaletteVarFor(signal.Severity)}); background: rgba(var({PaletteVarFor(signal.Severity)}-rgb), 0.04);")">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">
+                                        @signal.Category
+                                    </MudText>
+                                    <MudChip T="string"
+                                             Size="Size.Small"
+                                             Variant="Variant.Filled"
+                                             Color="@(isActive ? Color.Warning : Color.Default)">
+                                        @(isActive ? "Active" : "Cleared")
+                                    </MudChip>
+                                    <MudSpacer />
+                                    @if (!string.IsNullOrWhiteSpace(signal.Source))
+                                    {
+                                        <MudText Typo="Typo.caption" Style="opacity: 0.7;">
+                                            @signal.Source
+                                        </MudText>
+                                    }
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(signal.Reason))
+                                {
+                                    <MudText Typo="Typo.body2" Style="margin-top: 4px;">
+                                        @signal.Reason
+                                    </MudText>
+                                }
+
+                                <div style="display: flex; gap: 16px; margin-top: 6px; opacity: 0.8;">
+                                    <MudText Typo="Typo.caption">
+                                        <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Style="vertical-align: middle;" />
+                                        Raised: @signal.RaisedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                    </MudText>
+                                    @if (signal.ClearedAt.HasValue)
+                                    {
+                                        <MudText Typo="Typo.caption">
+                                            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Style="vertical-align: middle;" />
+                                            Cleared: @signal.ClearedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                        </MudText>
+                                    }
+                                </div>
+                            </MudPaper>
+                        </ItemContent>
+                    </MudTimelineItem>
+                }
+            </MudTimeline>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    /// <summary>All signals (active + cleared) to display in the timeline.</summary>
+    [Parameter] public IReadOnlyList<StoredAttentionSignal>? Signals { get; set; }
+
+    /// <summary>Entity type name shown in the dialog header.</summary>
+    [Parameter] public string? EntityType { get; set; }
+
+    /// <summary>Entity identifier shown in the dialog header.</summary>
+    [Parameter] public string? EntityId { get; set; }
+
+    private void Close() => MudDialog.Close(DialogResult.Ok(true));
+
+    private static string PaletteVarFor(AttentionSeverity s) => s switch
+    {
+        AttentionSeverity.Critical => "--mud-palette-error",
+        AttentionSeverity.Warning => "--mud-palette-warning",
+        _ => "--mud-palette-info",
+    };
+}

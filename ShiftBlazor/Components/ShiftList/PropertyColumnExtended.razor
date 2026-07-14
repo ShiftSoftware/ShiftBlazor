@@ -40,9 +40,25 @@
     [Parameter]
     public bool ForceExportIfHidden { get; set; }
 
+    /// <summary>
+    /// Keep this column's text on a single line and clip overflow with an ellipsis (…).
+    /// When null (default) the owning ShiftList's CellNowrap value is used. Set to false to let this column wrap.
+    /// </summary>
+    [Parameter]
+    public bool? CellNowrap { get; set; }
+
+    protected bool EffectiveCellNowrap => CellNowrap ?? ShiftList?.CellNowrap ?? true;
+
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
+
+        // Single-line truncation lives on the cell (td) so the inherited MudBlazor CellClass/CellStyle
+        // can customize it (e.g. CellStyle="max-width: 500px;"). Append without clobbering the programmer's class.
+        if (EffectiveCellNowrap && CellClass?.Contains("shift-cell-truncate") != true)
+        {
+            CellClass = string.IsNullOrWhiteSpace(CellClass) ? "shift-cell-truncate" : $"{CellClass} shift-cell-truncate";
+        }
 
         if (IsButtonColumn)
         {
@@ -52,7 +68,17 @@
         {
             base.CellTemplate ??= (context) =>
             {
-                return @<text>@FormatContent(base.CellContent(context.Item))</text>;
+                var content = FormatContent(base.CellContent(context.Item));
+
+                if (EffectiveCellNowrap)
+                {
+                    var text = content?.ToString();
+                    // Native HTML title tooltip (browser-rendered) rather than MudTooltip: MudTooltip
+                    // instantiates a Blazor component per cell, which is a heavy cost on large lists.
+                    return @<span title="@(string.IsNullOrEmpty(text) ? null : text)">@content</span>;
+                }
+
+                return @<text>@content</text>;
             };
         }
     }
@@ -110,12 +136,18 @@
         
         @{
             var content = FormatContent(base.CellContent(context.Item));
+            var contentText = content?.ToString();
         }
         @if (ButtonTemplate == null)
         {
-            <span class="button-column-button">
-                @content
-            </span>
+            @if (EffectiveCellNowrap)
+            {
+                <span class="button-column-button" title="@(string.IsNullOrEmpty(contentText) ? null : contentText)">@content</span>
+            }
+            else
+            {
+                <span class="button-column-button">@content</span>
+            }
         }
         else
         {

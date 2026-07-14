@@ -320,6 +320,16 @@
                                                 HeaderStyle="width: 0;" />
                     }
 
+                    @if (_autoAttention)
+                    {
+                        <TemplateColumn T="T" Title="" Sortable="false" Filterable="false" HeaderStyle="width: 0;">
+                            <CellTemplate>
+                                @{ var attnSeverity = GetAttentionSeverity?.Invoke(context.Item); }
+                                <AttentionInlineIndicator Severity="@attnSeverity" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                    }
+
                     @if (ChildContent != null)
                     {
                         @ChildContent(new(this))

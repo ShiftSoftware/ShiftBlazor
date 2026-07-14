@@ -1,0 +1,143 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@if (ActiveSignals.Count > 0)
+{
+    <MudPaper Elevation="0"
+              Class="mb-4"
+              Style="@PaperStyle">
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--mud-palette-divider);">
+            <MudIcon Icon="@HeaderIcon" Color="@HeaderColor" Size="Size.Small" />
+            <MudText Typo="Typo.subtitle2" Style="font-weight: 600; flex: 1;">
+                @HeaderText
+            </MudText>
+
+            @if (ShowAcknowledgeButton && OnAcknowledge.HasDelegate)
+            {
+                <MudButton Variant="Variant.Text"
+                           Color="@HeaderColor"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           Size="Size.Small"
+                           OnClick="HandleAcknowledge">
+                    @(ActiveSignals.Count > 1 ? "Acknowledge all" : "Acknowledge")
+                </MudButton>
+            }
+            else if (!string.IsNullOrEmpty(FooterNote))
+            {
+                <MudText Typo="Typo.caption" Style="opacity: 0.75; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
+                    <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Small" />
+                    @FooterNote
+                </MudText>
+            }
+        </div>
+
+        <div style="padding: 6px 14px 10px 14px;">
+            @foreach (var signal in ActiveSignals.OrderByDescending(s => s.Severity).ThenByDescending(s => s.RaisedAt))
+            {
+                <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0;">
+                    <MudIcon Icon="@AttentionBadge.IconFor(signal.Severity)"
+                             Color="@AttentionBadge.ColorFor(signal.Severity)"
+                             Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Style="font-weight: 600; white-space: nowrap;">@signal.Category</MudText>
+                    @if (!string.IsNullOrWhiteSpace(signal.Reason))
+                    {
+                        <MudText Typo="Typo.body2" Style="flex: 1;">@signal.Reason</MudText>
+                    }
+                    else
+                    {
+                        <span style="flex: 1;"></span>
+                    }
+                    <MudText Typo="Typo.caption" Style="opacity: 0.7; white-space: nowrap;">
+                        @FormatTimeAgo(signal.RaisedAt)
+                        @if (!string.IsNullOrWhiteSpace(signal.Source))
+                        {
+                            <span> · @signal.Source</span>
+                        }
+                    </MudText>
+                    @if (OnClearSignal.HasDelegate)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Check"
+                                       Size="Size.Small"
+                                       Color="@AttentionBadge.ColorFor(signal.Severity)"
+                                       OnClick="@(() => OnClearSignal.InvokeAsync(signal))"
+                                       aria-label="Acknowledge this signal"
+                                       title="Acknowledge this signal" />
+                    }
+                </div>
+            }
+        </div>
+    </MudPaper>
+}
+
+@code {
+    /// <summary>All signals (active + cleared) for the entity. Only active (uncleared) signals are rendered.</summary>
+    [Parameter] public IReadOnlyList<StoredAttentionSignal>? Signals { get; set; }
+
+    /// <summary>Whether to show the Acknowledge button. Defaults to <c>true</c>.</summary>
+    [Parameter] public bool ShowAcknowledgeButton { get; set; } = true;
+
+    /// <summary>Callback invoked when the user clicks the header acknowledge button (clears all).</summary>
+    [Parameter] public EventCallback OnAcknowledge { get; set; }
+
+    /// <summary>
+    /// Invoked with a single signal when the user dismisses that row. When unset, rows are
+    /// display-only and only the header acknowledge button (if enabled) clears.
+    /// </summary>
+    [Parameter] public EventCallback<StoredAttentionSignal> OnClearSignal { get; set; }
+
+    /// <summary>Overrides the default header text ("This record needs attention").</summary>
+    [Parameter] public string? HeaderOverride { get; set; }
+
+    /// <summary>Note displayed in the header area when the acknowledge button is hidden (e.g. "Auto-cleared on open").</summary>
+    [Parameter] public string? FooterNote { get; set; }
+
+    private List<StoredAttentionSignal> ActiveSignals =>
+        Signals?.Where(s => s.ClearedAt is null).ToList() ?? [];
+
+    private AttentionSeverity HighestSeverity =>
+        ActiveSignals.Count > 0 ? ActiveSignals.Max(s => s.Severity) : AttentionSeverity.Info;
+
+    private Color HeaderColor => AttentionBadge.ColorFor(HighestSeverity);
+    private string HeaderIcon => AttentionBadge.IconFor(HighestSeverity);
+
+    private string PaperStyle
+    {
+        get
+        {
+            var paletteVar = HighestSeverity switch
+            {
+                AttentionSeverity.Critical => "--mud-palette-error",
+                AttentionSeverity.Warning => "--mud-palette-warning",
+                _ => "--mud-palette-info",
+            };
+            return $"width: 100%; background: rgba(var({paletteVar}-rgb), 0.08); border: 1px solid rgba(var({paletteVar}-rgb), 0.35); border-left: 4px solid var({paletteVar});";
+        }
+    }
+
+    private string HeaderText
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(HeaderOverride)) return HeaderOverride;
+            var count = ActiveSignals.Count;
+            return count == 1
+                ? "This record needs attention"
+                : $"This record needs attention ({count} signals)";
+        }
+    }
+
+    private async Task HandleAcknowledge()
+    {
+        if (OnAcknowledge.HasDelegate)
+            await OnAcknowledge.InvokeAsync();
+    }
+
+    internal static string FormatTimeAgo(DateTimeOffset raisedAt)
+    {
+        var span = DateTimeOffset.Now - raisedAt;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        return $"{(int)span.TotalDays}d ago";
+    }
+}

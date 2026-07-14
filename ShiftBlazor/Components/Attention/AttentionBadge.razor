@@ -1,0 +1,64 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@if (Severity is not null)
+{
+    <MudTooltip Text="@Tooltip" Placement="Placement.Top">
+        <MudChip T="string"
+                 Size="@Size"
+                 Color="@ColorFor(Severity.Value)"
+                 Variant="Variant.Filled"
+                 Icon="@IconFor(Severity.Value)"
+                 Style="cursor: default;">
+            @if (ShowLabel)
+            {
+                @LabelFor(Severity.Value)
+                @if (Count > 1)
+                {
+                    <MudText Typo="Typo.caption" Class="ml-1">(@Count)</MudText>
+                }
+            }
+            else if (Count > 1)
+            {
+                @Count
+            }
+        </MudChip>
+    </MudTooltip>
+}
+
+@code {
+    /// <summary>Severity level to display. The badge is hidden when <c>null</c>.</summary>
+    [Parameter] public AttentionSeverity? Severity { get; set; }
+
+    /// <summary>Number of signals at this severity. Displayed as <c>(N)</c> when greater than 1.</summary>
+    [Parameter] public int Count { get; set; } = 1;
+
+    /// <summary>Whether to show the severity label text (e.g. "Warning"). Defaults to <c>true</c>.</summary>
+    [Parameter] public bool ShowLabel { get; set; } = true;
+
+    /// <summary>Chip size. Defaults to <see cref="Size.Small"/>.</summary>
+    [Parameter] public Size Size { get; set; } = Size.Small;
+
+    /// <summary>Tooltip text shown on hover.</summary>
+    [Parameter] public string? Tooltip { get; set; }
+
+    internal static Color ColorFor(AttentionSeverity s) => s switch
+    {
+        AttentionSeverity.Critical => Color.Error,
+        AttentionSeverity.Warning => Color.Warning,
+        _ => Color.Info,
+    };
+
+    internal static string IconFor(AttentionSeverity s) => s switch
+    {
+        AttentionSeverity.Critical => Icons.Material.Filled.Error,
+        AttentionSeverity.Warning => Icons.Material.Filled.Warning,
+        _ => Icons.Material.Filled.Info,
+    };
+
+    internal static string LabelFor(AttentionSeverity s) => s switch
+    {
+        AttentionSeverity.Critical => "Critical",
+        AttentionSeverity.Warning => "Warning",
+        _ => "Info",
+    };
+}

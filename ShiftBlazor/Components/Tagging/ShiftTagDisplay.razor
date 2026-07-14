@@ -1,0 +1,32 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using MudBlazor
+@using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@if (Tags is { Count: > 0 })
+{
+    <div class="d-flex flex-wrap" style="gap: 4px;">
+        @foreach (var tag in Tags)
+        {
+            <MudTooltip Text="@(tag.Description ?? string.Empty)" Placement="Placement.Top" Disabled="@string.IsNullOrWhiteSpace(tag.Description)">
+                <MudChip @key="tag"
+                         T="string"
+                         Size="@Size"
+                         Style="@ChipStyle(tag.Color)"
+                         Value="@tag.Name" />
+            </MudTooltip>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Tags to render. Renders nothing when null or empty.</summary>
+    [Parameter] public List<TagDTO>? Tags { get; set; }
+
+    /// <summary>Chip size. Defaults to <see cref="Size.Small"/>.</summary>
+    [Parameter] public Size Size { get; set; } = Size.Small;
+
+    private static string ChipStyle(string? color)
+        => string.IsNullOrWhiteSpace(color)
+            ? string.Empty
+            : $"background-color: {color}; color: white;";
+}

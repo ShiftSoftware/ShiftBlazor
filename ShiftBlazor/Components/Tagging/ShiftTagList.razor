@@ -1,0 +1,53 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.Extensions.Options
+@using ShiftSoftware.ShiftBlazor.Enums
+@using ShiftSoftware.ShiftBlazor.Tagging
+@using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@*
+    Tag vocabulary management list — a component, not a routed page. Host it in your own page:
+
+        @page "/tags"
+        @attribute [Authorize]
+        <ShiftTagList />
+
+    Row click opens ShiftTagForm (as a dialog) to view/edit; the toolbar Add opens it to create.
+    Configure entity set / title / permission via services.AddShiftBlazorTagging(...).
+*@
+
+@inject IOptions<ShiftBlazorTaggingOptions> Options
+
+<ShiftList EntitySet="@Opts.EntitySet"
+           Endpoint="@Opts.Endpoint"
+           BaseUrl="@Opts.BaseUrl"
+           BaseUrlKey="@Opts.BaseUrlKey"
+           Title="@Opts.ListTitle"
+           T="TagListDTO"
+           Dense
+           ComponentType="typeof(ShiftTagForm)"
+           HighlightSortedColumn
+           TypeAuthAction="@Opts.TypeAuthAction"
+           EnableFilterPanel
+           EnableExport>
+    <StringFilter T="TagListDTO" TProperty="string" Property="x => x.Name" Label="Name"
+                  Operator="ODataOperator.Contains"
+                  xs="12" sm="12" md="6" lg="6" xl="6" xxl="6" />
+    <StringFilter T="TagListDTO" TProperty="string" Property="x => x.IntegrationID" Label="Integration ID"
+                  Operator="ODataOperator.Contains"
+                  xs="12" sm="12" md="6" lg="6" xl="6" xxl="6" />
+    <ButtonColumn Property="x => x.Name" Title="Name" />
+    <PropertyColumn Property="x => x.IntegrationID" Title="Integration ID" />
+    <PropertyColumnExtended Property="x => x.Color" Title="Color">
+        <CellTemplate Context="cell">
+            @if (!string.IsNullOrWhiteSpace(cell.Item.Color))
+            {
+                <span style="@($"display:inline-block;width:14px;height:14px;border-radius:3px;background-color:{cell.Item.Color};vertical-align:middle;")"></span>
+                <span class="ms-2">@cell.Item.Color</span>
+            }
+        </CellTemplate>
+    </PropertyColumnExtended>
+</ShiftList>
+
+@code {
+    private ShiftBlazorTaggingOptions Opts => Options.Value;
+}

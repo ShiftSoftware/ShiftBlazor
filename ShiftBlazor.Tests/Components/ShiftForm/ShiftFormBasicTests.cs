@@ -1,5 +1,4 @@
-﻿using Blazored.FluentValidation;
-using Bunit.Rendering;
+﻿using Bunit.Rendering;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
@@ -68,10 +67,10 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         var validator = new SampleValidator();
         var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters.Add(p => p.Validator, validator));
 
-        var fluentValidator = cut.FindComponent<FluentValidationValidator>().Instance;
+        var shiftValidator = cut.FindComponent<ShiftValidator>().Instance;
 
-        Assert.NotNull(fluentValidator.Validator);
-        Assert.True(fluentValidator.DisableAssemblyScanning);
+        Assert.NotNull(shiftValidator.Validator);
+        Assert.True(shiftValidator.EnableFluentValidation);
     }
 
     [Fact]
@@ -166,12 +165,12 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         Func<string, string> text = e => $"This is the {e} section in the header";
 
         var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
-            .Add<MudChip>(p => p.ToolbarStartTemplate, z => z.AddChildContent(text("1st")))
-            .Add<MudChip>(p => p.ToolbarCenterTemplate, z => z.AddChildContent(text("2nd")))
-            .Add<MudChip>(p => p.ToolbarEndTemplate, z => z.AddChildContent(text("3rd")))
+            .Add<MudChip<string>>(p => p.ToolbarStartTemplate, z => z.AddChildContent(text("1st")))
+            .Add<MudChip<string>>(p => p.ToolbarCenterTemplate, z => z.AddChildContent(text("2nd")))
+            .Add<MudChip<string>>(p => p.ToolbarEndTemplate, z => z.AddChildContent(text("3rd")))
         );
 
-        var chips = cut.FindComponent<MudToolBar>().FindComponents<MudChip>();
+        var chips = cut.FindComponent<MudToolBar>().FindComponents<MudChip<string>>();
 
         //Make sure they are in the correct order
         Assert.Contains(text("1st"), chips.ElementAt(0).Markup);
@@ -185,12 +184,12 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         Func<string, string> text = e => $"This is the {e} section in the footer";
 
         var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
-            .Add<MudChip>(p => p.FooterToolbarStartTemplate, z => z.AddChildContent(text("1st")))
-            .Add<MudChip>(p => p.FooterToolbarCenterTemplate, z => z.AddChildContent(text("2nd")))
-            .Add<MudChip>(p => p.FooterToolbarEndTemplate, z => z.AddChildContent(text("3rd")))
+            .Add<MudChip<string>>(p => p.FooterToolbarStartTemplate, z => z.AddChildContent(text("1st")))
+            .Add<MudChip<string>>(p => p.FooterToolbarCenterTemplate, z => z.AddChildContent(text("2nd")))
+            .Add<MudChip<string>>(p => p.FooterToolbarEndTemplate, z => z.AddChildContent(text("3rd")))
         );
 
-        var chips = cut.FindComponents<MudToolBar>().Last().FindComponents<MudChip>();
+        var chips = cut.FindComponents<MudToolBar>().Last().FindComponents<MudChip<string>>();
 
         //Make sure they are in the correct order
         Assert.Contains(text("1st"), chips.ElementAt(0).Markup);
@@ -204,7 +203,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         var text = "This is the controls section";
 
         var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
-            .Add<MudChip>(p => p.ToolbarControlsTemplate, z => z.AddChildContent(text))
+            .Add<MudChip<string>>(p => p.ToolbarControlsTemplate, z => z.AddChildContent(text))
         );
 
         var toolbar = cut.FindComponent<MudToolBar>();
@@ -218,8 +217,8 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var text = "This is the controls section";
 
-        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters =>
-            parameters.Add(p => p.Value, new MudDialogInstance()));
+        RenderTree.Add<CascadingValue<IMudDialogInstance>>(parameters =>
+            parameters.Add(p => p.Value, new MudDialogContainer()));
 
         var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add<MudTooltip>(p => p.ToolbarControlsTemplate, z => z.Add(p => p.Text, text))
@@ -267,8 +266,8 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderDivider()
     {
-        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters =>
-            parameters.Add(p => p.Value, new MudDialogInstance()));
+        RenderTree.Add<CascadingValue<IMudDialogInstance>>(parameters =>
+            parameters.Add(p => p.Value, new MudDialogContainer()));
         var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.ToolbarEndTemplate, "some text")
         );
@@ -282,8 +281,8 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderDivider()
     {
-        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters =>
-            parameters.Add(p => p.Value, new MudDialogInstance()));
+        RenderTree.Add<CascadingValue<IMudDialogInstance>>(parameters =>
+            parameters.Add(p => p.Value, new MudDialogContainer()));
         var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
 
         Assert.Throws<ComponentNotFoundException>(() => cut.FindComponent<MudToolBar>().FindComponent<MudDivider>());
@@ -354,8 +353,8 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldMakeFormScrollableInModal()
     {
-        RenderTree.Add<CascadingValue<MudDialogInstance>>(parameters =>
-            parameters.Add(p => p.Value, new MudDialogInstance()));
+        RenderTree.Add<CascadingValue<IMudDialogInstance>>(parameters =>
+            parameters.Add(p => p.Value, new MudDialogContainer()));
         var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
 
         cut.Find(".shift-scrollable-content-wrapper");

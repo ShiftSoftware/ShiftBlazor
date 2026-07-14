@@ -1,0 +1,166 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ShiftModal ShiftModal
+
+<MudPaper Elevation="0" Class="pa-4">
+
+    @if (_loading)
+    {
+        <div style="text-align: center; padding: 48px;">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else if (_signals.Count == 0)
+    {
+        <div style="text-align: center; padding: 48px; opacity: 0.7;">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Large" Color="Color.Success" />
+            <MudText Typo="Typo.h6" Class="mt-2">All clear</MudText>
+            <MudText Typo="Typo.body2">No records currently need attention.</MudText>
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@_signals" Hover="true" Dense="true" Striped="false" Elevation="0">
+            <HeaderContent>
+                <MudTh>Severity</MudTh>
+                <MudTh>Entity</MudTh>
+                <MudTh>Category</MudTh>
+                <MudTh>Reason</MudTh>
+                <MudTh>Raised</MudTh>
+                <MudTh Style="width: 1%; white-space: nowrap;">Actions</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>
+                    <AttentionBadge Severity="@context.Severity" ShowLabel="true" />
+                </MudTd>
+                <MudTd>
+                    <MudText Typo="Typo.body2" Style="font-weight: 600;">
+                        @context.EntityType
+                        <MudText Typo="Typo.caption" Style="opacity: 0.7;"> #@context.EntityId</MudText>
+                    </MudText>
+                </MudTd>
+                <MudTd>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@context.Category</MudChip>
+                </MudTd>
+                <MudTd>
+                    <MudText Typo="Typo.body2">@context.Reason</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudTooltip Text="@context.RaisedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")">
+                        <MudText Typo="Typo.body2">@AttentionBanner.FormatTimeAgo(context.RaisedAt)</MudText>
+                    </MudTooltip>
+                </MudTd>
+                <MudTd>
+                    @{ var route = GetEntityRoute(context); }
+                    @if (route is not null)
+                    {
+                        <div style="display: flex; gap: 2px;">
+                            <MudTooltip Text="Open (popup)">
+                                <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser"
+                                               Size="Size.Small"
+                                               OnClick="() => OpenPopup(context)" />
+                            </MudTooltip>
+                            <MudTooltip Text="Open in new tab">
+                                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                               Size="Size.Small"
+                                               OnClick="() => OpenNewTab(route)" />
+                            </MudTooltip>
+                            <MudTooltip Text="Open in same tab">
+                                <MudIconButton Icon="@Icons.Material.Filled.ArrowForward"
+                                               Size="Size.Small"
+                                               OnClick="() => OpenSameTab(route)" />
+                            </MudTooltip>
+                        </div>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    /// <summary>
+    /// API endpoint URL that returns active attention signals (e.g. "api/attention/active").
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Endpoint { get; set; } = default!;
+
+    /// <summary>
+    /// Maps entity type names to route prefixes for navigation.
+    /// For example: { "Invoice" => "/invoices", "Product" => "/products" }.
+    /// </summary>
+    [Parameter]
+    public Dictionary<string, string>? EntityRoutes { get; set; }
+
+    /// <summary>
+    /// Callback invoked after a popup is closed, to refresh the list.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnPopupClosed { get; set; }
+
+    private List<StoredAttentionSignal> _signals = [];
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSignals();
+    }
+
+    /// <summary>Fetches active signals from <see cref="Endpoint"/> and refreshes the table.</summary>
+    private async Task LoadSignals()
+    {
+        _loading = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<StoredAttentionSignal>>(Endpoint);
+            _signals = result ?? [];
+        }
+        catch
+        {
+            _signals = [];
+        }
+        _loading = false;
+    }
+
+    /// <summary>Resolves a navigation route for the signal's entity using <see cref="EntityRoutes"/>.</summary>
+    private string? GetEntityRoute(StoredAttentionSignal signal)
+    {
+        if (signal.EntityType is null || signal.EntityId is null)
+            return null;
+
+        if (EntityRoutes?.TryGetValue(signal.EntityType, out var prefix) == true)
+            return $"{prefix.TrimEnd('/')}/{signal.EntityId}";
+
+        return null;
+    }
+
+    /// <summary>Opens the entity form in a modal popup, then reloads the list on close.</summary>
+    private async Task OpenPopup(StoredAttentionSignal signal)
+    {
+        var prefix = EntityRoutes?.GetValueOrDefault(signal.EntityType!);
+        if (prefix is not null)
+        {
+            await ShiftModal.Open(prefix.TrimEnd('/'), signal.EntityId);
+            if (OnPopupClosed.HasDelegate)
+                await OnPopupClosed.InvokeAsync();
+            else
+                await LoadSignals();
+        }
+    }
+
+    /// <summary>Navigates to the entity route in a new browser tab.</summary>
+    private void OpenNewTab(string route)
+    {
+        NavManager.NavigateTo(route, forceLoad: true);
+    }
+
+    /// <summary>Navigates to the entity route in the current tab.</summary>
+    private void OpenSameTab(string route)
+    {
+        NavManager.NavigateTo(route);
+    }
+}

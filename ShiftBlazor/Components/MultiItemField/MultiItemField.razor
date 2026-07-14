@@ -120,15 +120,15 @@
             {
                 if (FieldFooter == null)
                 {
-                    <SlideDown Toggle="!UseLimits || Value.Count < Max || Max == 0" Style="margin:auto; margin-top:15px;">
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Info"
-                                   Size="Size.Small"
-                                   OnClick="CreateNew"
-                                   StartIcon="@Icons.Material.Filled.Add">
-                            Add Line
-                        </MudButton>
-                    </SlideDown>
+                    <MudButton Variant="Variant.Filled"
+                                Color="Color.Info"
+                                Size="Size.Small"
+                                OnClick="CreateNew"
+                                Style="margin:auto; margin-top:15px;"
+                                Disabled="UseLimits && Max > 0 && Value.Count >= Max"
+                                StartIcon="@Icons.Material.Filled.Add">
+                        Add Line
+                    </MudButton>
                 }
                 else
                 {

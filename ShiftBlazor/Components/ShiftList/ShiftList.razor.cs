@@ -13,6 +13,7 @@ using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftEntity.Core.Attention;
 using ShiftSoftware.ShiftEntity.Core.Extensions;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
@@ -39,6 +40,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
     [Inject] PrintService PrintService { get; set; } = default!;
+    [Inject] IAttentionHubClient AttentionHubClient { get; set; } = default!;
 
 
     [CascadingParameter]
@@ -104,6 +106,37 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// </summary>
     [Parameter]
     public bool EnableSelection { get; set; }
+
+    /// <summary>
+    /// Optional function to extract the attention severity from a list item.
+    /// When set, rows with active attention are tinted by severity.
+    /// </summary>
+    [Parameter]
+    public Func<T, AttentionSeverity?>? GetAttentionSeverity { get; set; }
+
+    private bool _autoAttention;
+    private static readonly bool _hasAttentionSummary = typeof(IHasAttentionSummary).IsAssignableFrom(typeof(T));
+
+    /// <summary>
+    /// When <c>true</c>, the list connects to the framework's attention hub and calls
+    /// <see cref="Reload"/> whenever a signal is raised on this list's entity type — from any
+    /// session, background job, service-bus consumer, or timer trigger. <see cref="Reload"/>
+    /// preserves scroll position, active filters, and sort, so the grid does not jump.
+    /// Default <c>false</c>; independent of <see cref="ShowAttentionToast"/>.
+    /// </summary>
+    [Parameter]
+    public bool ListenForAttentionUpdates { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, a passive snackbar is shown when a signal is raised on this list's
+    /// entity type — no automatic reload. Use where a silent reload would be jarring, or as a
+    /// visible confirmation alongside <see cref="ListenForAttentionUpdates"/>. Default <c>false</c>.
+    /// </summary>
+    [Parameter]
+    public bool ShowAttentionToast { get; set; }
+
+    private IAsyncDisposable? _attentionSubscription;
+    private bool _attentionSubscribeStarted;
 
     /// <summary>
     /// Enable Virtualization and disable Paging.
@@ -215,7 +248,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     public bool Dense { get; set; }
 
     /// <summary>
-    /// Fires when a row is clicked, sends 'DataGridRowClickEventArgs<T>' as argument.
+    /// Fires when a row is clicked, sends <c>DataGridRowClickEventArgs&lt;T&gt;</c> as argument.
     /// </summary>
     [Parameter]
     public EventCallback<ShiftEvent<DataGridRowClickEventArgs<T>>> OnRowClick { get; set; }
@@ -354,6 +387,14 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     [Parameter]
     public bool HeaderNowrap { get; set; } = true;
 
+    /// <summary>
+    /// When true (default), long cell text is kept on a single line and clipped with an ellipsis (…)
+    /// instead of wrapping to multiple lines. The full text is shown in a tooltip on hover.
+    /// Set to false to let cells wrap. Can be overridden per column via the column's own CellNowrap.
+    /// </summary>
+    [Parameter]
+    public bool CellNowrap { get; set; } = true;
+
     public Uri? CurrentUri { get; set; }
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = [];
@@ -392,11 +433,28 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     private TaskCompletionSource<GridData<T>> IndefiniteReloadTask = new();
     private CancellationTokenSource? ReloadCancellationTokenSource { get; set; }
 
-    protected string GetRowClassname(T item, int colIndex) =>
-        new CssBuilder()
+    protected string GetRowClassname(T item, int colIndex)
+    {
+        var builder = new CssBuilder()
             .AddClass("is-deleted", item.IsDeleted)
-            .AddClass("is-selected", SelectState.Items.Any(x => x.ID == item.ID) || SelectState.All)
-            .Build();
+            .AddClass("is-selected", SelectState.Items.Any(x => x.ID == item.ID) || SelectState.All);
+
+        if (GetAttentionSeverity is not null)
+        {
+            var severity = GetAttentionSeverity(item);
+            if (severity.HasValue)
+            {
+                builder.AddClass(severity.Value switch
+                {
+                    AttentionSeverity.Critical => "attention-row--critical",
+                    AttentionSeverity.Warning => "attention-row--warning",
+                    _ => "attention-row--info",
+                });
+            }
+        }
+
+        return builder.Build();
+    }
 
     protected string SortedColgroupStylename =>
         new StyleBuilder()
@@ -448,6 +506,16 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     {
         dotNetRef = DotNetObjectReference.Create(this);
         IsEmbed = ParentDisabled != null || ParentReadOnly != null;
+
+        if (_hasAttentionSummary && GetAttentionSeverity is null)
+        {
+            _autoAttention = true;
+            GetAttentionSeverity = item =>
+            {
+                var summary = (IHasAttentionSummary)item!;
+                return summary.HasActiveAttention ? summary.HighestSeverity : null;
+            };
+        }
 
         if (!IsEmbed)
         {
@@ -511,7 +579,61 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender) => await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+
+        if (firstRender)
+            await SubscribeToAttentionUpdatesAsync();
+    }
+
+    /// <summary>
+    /// On first render, subscribes to the attention hub for this list's entity type when either
+    /// real-time switch is set. A failed connection is swallowed — real-time is a progressive
+    /// enhancement and must never break the list.
+    /// </summary>
+    private async Task SubscribeToAttentionUpdatesAsync()
+    {
+        if (_attentionSubscribeStarted || !(ListenForAttentionUpdates || ShowAttentionToast))
+            return;
+
+        _attentionSubscribeStarted = true;
+
+        // The hub keys groups by the entity name, which the list already names via EntitySet (its
+        // OData identity). Take the first path segment so a custom endpoint like
+        // "ProductCategory/custom-list" still resolves to "ProductCategory". A Values-mode list
+        // (no EntitySet) has no server entity to watch, so it doesn't subscribe.
+        var entityType = EntitySet?.Split('/', 2)[0];
+        if (string.IsNullOrWhiteSpace(entityType))
+            return;
+
+        var config = SettingManager.Configuration;
+        var baseAddress = BaseUrl
+            ?? (BaseUrlKey is not null ? config.ExternalAddresses.TryGet(BaseUrlKey) : null)
+            ?? config.BaseAddress;
+
+        if (string.IsNullOrWhiteSpace(baseAddress))
+            return;
+
+        try
+        {
+            _attentionSubscription = await AttentionHubClient.SubscribeAsync(baseAddress, entityType, OnAttentionRaised);
+        }
+        catch
+        {
+            // No real-time updates this session; the list still works and refreshes on user action.
+        }
+    }
+
+    private Task OnAttentionRaised(AttentionRealtimePayload payload) => InvokeAsync(() =>
+    {
+        // Toast only on a raise; a clear drops the row tint silently via the reload below.
+        if (ShowAttentionToast && payload.Kind == AttentionRealtimeKind.Raised)
+            Snackbar.Add(Loc["AttentionRealtimeToast"], Severity.Info);
+
+        if (ListenForAttentionUpdates)
+            Reload();
+    });
 
     protected override bool ShouldRender()
     {
@@ -616,6 +738,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// <summary>
     /// Adds a filter to the data grid.
     /// </summary>
+    /// <param name="id">Unique identifier for this filter, used to update or remove it later.</param>
     /// <param name="field">The field to apply the filter on.</param>
     /// <param name="op">The comparison operator for the filter (e.g., Equal, GreaterThan).</param>
     /// <param name="value">The value to compare against for the filter.</param>
@@ -1376,6 +1499,10 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         dotNetRef?.Dispose();
         ShiftBlazorEvents.OnModalClosed -= ShiftBlazorEvents_OnModalClosed;
         IShortcutComponent.Remove(Id);
+        // Best-effort async unsubscribe; the hub client leaves the server group once its last
+        // local subscriber is gone.
+        if (_attentionSubscription is not null)
+            _ = _attentionSubscription.DisposeAsync();
         GC.SuppressFinalize(this);
     }
 }

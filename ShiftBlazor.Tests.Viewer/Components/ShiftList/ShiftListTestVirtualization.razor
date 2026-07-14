@@ -7,7 +7,7 @@
     <PropertyColumn Property="x => x.Email" />
 </ShiftList>
 
-<MudSwitch @bind-Checked="EnableVirtualization">EnableVirtualization</MudSwitch>
+<MudSwitch T="bool" @bind-Value="EnableVirtualization">EnableVirtualization</MudSwitch>
 
 @code {
     [Parameter]

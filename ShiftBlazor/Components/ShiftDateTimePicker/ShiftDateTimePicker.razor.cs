@@ -129,6 +129,9 @@ public partial class ShiftDateTimePicker : IDisposable, IShortcutComponent
     [Parameter]
     public DateTime? MinDate { get; set; }
 
+    [Parameter]
+    public string? HelperText { get; set; }
+
     // ======== Adornment Parameters ========
 
     [Parameter]

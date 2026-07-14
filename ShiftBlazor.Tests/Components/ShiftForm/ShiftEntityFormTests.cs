@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using ShiftSoftware.ShiftEntity.Core.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
@@ -13,7 +14,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldInheritShiftFormBasic()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         Assert.IsAssignableFrom<ShiftFormBasic<SampleDTO>>(comp.Instance);
@@ -29,7 +30,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldOpenInCreateMode()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         Assert.Equal(FormModes.Create, comp.Instance.Mode);
@@ -39,7 +40,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldOpenInViewMode()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.Key, "1")
         );
 
@@ -50,7 +51,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     //public void ShouldAllowSettingMode()
     //{
     //    var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
-    //        .Add(p => p.Action, path)
+    //        .Add(p => p.Endpoint, path)
     //        .Add(p => p.Mode, Form.Modes.Archive)
     //    );
 
@@ -61,7 +62,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldRenderHeaderToolbarButtonsCorrectly()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.Key, "1")
         );
 
@@ -74,7 +75,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldDisableHeaderToolbarButtons()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         var buttons = comp.FindComponent<MudToolBar>().FindComponents<MudButton>();
@@ -86,7 +87,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldDisableDeleteButton()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.Key, "1")
             .Add(p => p.DisableDelete, true)
         );
@@ -104,7 +105,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldNotRenderDeleteButton()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.HideDelete, true)
         );
 
@@ -119,7 +120,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldDisableEditButton()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.Key, "1")
             .Add(p => p.DisableEdit, true)
         );
@@ -137,7 +138,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldNotRenderEditButton()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.HideEdit, true)
         );
 
@@ -152,7 +153,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldDisableRevisionsButton()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.Key, "1")
             .Add(p => p.DisableRevisions, true)
         );
@@ -170,7 +171,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldNotRenderRevisionsButton()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.HideRevisions, true)
         );
 
@@ -189,7 +190,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         var taskFinished = false;
 
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.Key, "1")
             .Add(p => p.OnTaskStart, (task) => taskStarted = task.Data == FormTasks.Print)
             .Add(p => p.OnTaskFinished, (task) => taskFinished = task == FormTasks.Print)
@@ -217,7 +218,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldAddFullPathToItemUrl()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         var url = BaseUrl.AddUrlPath(ApiBaseUrl, path);
@@ -230,7 +231,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
             .Add(p => p.Key, "1")
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         var url = BaseUrl.AddUrlPath(ApiBaseUrl, path, "1");
@@ -243,7 +244,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     //{
     //    var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
     //        .Add(p => p.Key, "1")
-    //        .Add(p => p.Action, path)
+    //        .Add(p => p.Endpoint, path)
     //    );
 
     //    Assert.True(comp.Instance.HideSubmit);
@@ -253,7 +254,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     public void ShouldHaveCreateAsSubmitButtonText()
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         Assert.Equal("Create", comp.Instance._SubmitText);
@@ -264,7 +265,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
             .Add(p => p.Key, "1")
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         var button = comp.FindComponent<MudToolBar>()
@@ -284,7 +285,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
 
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
             .Add(p => p.Key, "1")
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.OnTaskStart, (task) => taskInprogress = task.Data)
         );
 
@@ -300,7 +301,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     {
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
             .Add(p => p.Key, "1")
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         comp.WaitForAssertion(() => Assert.NotNull(comp.Instance.OriginalValue));
@@ -325,7 +326,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     //    var comp = RenderComponent<IncludeMudProviders>(_params => _params.AddChildContent<ShiftEntityForm<SampleDTO>>(
     //        parameters => parameters
     //            .Add(p => p.Key, "1")
-    //            .Add(p => p.Action, path)
+    //            .Add(p => p.Endpoint, path)
     //            .Add(p => p.OnTaskStart, (task) => deleteTaskStarted = task.Data == FormTasks.Delete)
     //            .Add(p => p.OnTaskFinished, (task) => deleteTaskFinished = task == FormTasks.Delete)
     //    ));
@@ -361,7 +362,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     //{
     //    var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
     //        .Add(p => p.Key, "1")
-    //        .Add(p => p.Action, path)
+    //        .Add(p => p.Endpoint, path)
     //    );
 
     //    Assert.NotEqual(Form.Modes.Edit, comp.Instance.Mode);
@@ -382,7 +383,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
 
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
             .Add(p => p.Key, "1")
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         comp.FindComponent<MudToolBar>()
@@ -413,7 +414,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         var title = "this is a title";
 
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.Value, value)
             .Add(p => p.Title, title)
         );
@@ -440,7 +441,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     //        .Add(p => p.Title, "Dialog Title")
     //        .Add(p => p.Options, new DialogOptions { FullScreen = false })
     //        .Add<ShiftEntityForm<SampleDTO>>(p => p.Content, z => z
-    //            .Add(p => p.Action, path)
+    //            .Add(p => p.Endpoint, path)
     //            .Add(p => p.Key, "1")
     //        )
     //    );
@@ -473,7 +474,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         var submitHandled = false;
 
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
             .Add(p => p.OnTaskStart, (task) => taskStarted = task.Data == FormTasks.Save)
             .Add(p => p.OnTaskFinished, (task) => taskFinished = task == FormTasks.Save)
             .Add(p => p.OnValidSubmit, () => submitHandled = true)
@@ -503,7 +504,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         };
 
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
         Assert.Equal(JsonSerializer.Serialize(comp.Instance.Value), comp.Instance.OriginalValue);
@@ -530,7 +531,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     //    };
 
     //    var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
-    //        .Add(p => p.Action, path)
+    //        .Add(p => p.Endpoint, path)
     //    );
 
     //    comp.Instance.Value.Name = "Test2";
@@ -548,10 +549,10 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
 
         var comp = RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
             .Add(p => p.Key, "1")
-            .Add(p => p.Action, path)
+            .Add(p => p.Endpoint, path)
         );
 
-        await comp.Instance.UpdateUrl(1);
+        await comp.Instance.UpdateUrl("1");
 
         Assert.NotEqual(url, navManager.Uri);
     }
@@ -569,10 +570,10 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
 
     //    var comp = RenderComponent<ShiftEntityForm<Sample>>(parameters => parameters
     //        .Add(p => p.Key, "1")
-    //        .Add(p => p.Action, path)
+    //        .Add(p => p.Endpoint, path)
     //    );
 
-    //    await comp.Instance.UpdateUrl(1);
+    //    await comp.Instance.UpdateUrl("1");
 
     //    Assert.NotEqual(url, navManager.Uri);
     //}

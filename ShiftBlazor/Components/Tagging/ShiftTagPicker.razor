@@ -1,0 +1,192 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Options
+@using MudBlazor
+@using ShiftSoftware.ShiftBlazor.Tagging
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+@using ShiftSoftware.ShiftEntity.Model.Dtos.Tagging
+
+@inject IOptions<ShiftBlazorTaggingOptions> TaggingOptions
+
+@*
+    Multi-select tag picker — a drop-in component you place wherever you want in a form
+    (like any other <ShiftAutocomplete>). It wraps <ShiftAutocomplete TEntitySet="TagListDTO">
+    against the tag CRUD OData endpoint (default GET /api/tags?$filter=contains(Name,'…')).
+
+    It binds to a List<TagDTO> (the DTO's Tags) instead of ShiftAutocomplete's
+    List<ShiftEntitySelectDTO>, and renders colored tag chips. You select from EXISTING tags
+    only — there is no free-typed "create on save". To add a new tag, use the "+" add button
+    (point QuickAdd at the tag form), exactly like the other autocompletes.
+
+    Any ShiftAutocomplete parameter not listed below (Variant, Placeholder, MaxItems, Dense,
+    Clearable, Class, Style, Margin, …) can be set directly on <ShiftTagPicker> — it is
+    forwarded to the inner ShiftAutocomplete. Don't want this component? Bind a
+    <ShiftAutocomplete> yourself, or render tags however you like.
+
+    The "+" add button and double-click-to-view are on by default — they open the framework's
+    built-in ShiftTagForm component (QuickAddComponentType / QuickAddParameterName default to it).
+    So the minimal usage already has add + view:
+        <ShiftTagPicker @bind-Value="context.Item.Tags" Label="Tags" />
+
+    Override to use your own tag form (or set QuickAddComponentType="null" to hide the add button):
+        <ShiftTagPicker @bind-Value="context.Item.Tags" Label="Tags"
+                        QuickAddComponentType="typeof(MyTagForm)"
+                        QuickAddParameterName="@nameof(MyTagForm.Name)" />
+*@
+
+<ShiftAutocomplete TEntitySet="TagListDTO"
+                   @attributes="AdditionalAttributes"
+                   EntitySet="@(EntitySet ?? Opts.EntitySet)"
+                   Endpoint="@(Endpoint ?? Opts.Endpoint)"
+                   BaseUrl="@(BaseUrl ?? Opts.BaseUrl)"
+                   BaseUrlKey="@(BaseUrlKey ?? Opts.BaseUrlKey)"
+                   Label="@Label"
+                   ReadOnly="@_effectivelyReadOnly"
+                   QuickAddComponentType="@QuickAddComponentType"
+                   QuickAddParameterName="@QuickAddParameterName"
+                   MultiSelect="true"
+                   SelectedValues="_selected"
+                   SelectedValuesChanged="OnSelectedChanged">
+    <SelectedValuesTemplate Context="ctx">
+        @{
+            // Data is a TagDTO for loaded tags (view) but a TagListDTO for freshly-picked ones
+            // (ShiftAutocomplete stashes the TEntitySet) — read Color from whichever it is.
+            var color = ColorOf(ctx.Item.Data);
+            var style = string.IsNullOrWhiteSpace(color) ? null : $"background-color: {color}; color: white;";
+            var localCtx = ctx;
+            var onClose = _effectivelyReadOnly
+                ? default
+                : EventCallback.Factory.Create<MudChip<string>>(this, async _ => await localCtx.RemoveItem());
+        }
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Style="@style"
+                 Value="@ctx.Item.Text"
+                 @ondblclick="@(() => localCtx.OpenItem())"
+                 OnClose="@onClose" />
+    </SelectedValuesTemplate>
+    <DropdownItemTemplate Context="ctx">
+        <div class="d-flex align-center" style="gap: 8px;">
+            @if (!string.IsNullOrWhiteSpace(ctx.Item.Color))
+            {
+                <span style="@($"display:inline-block;width:10px;height:10px;border-radius:2px;background-color:{ctx.Item.Color};")"></span>
+            }
+            <span>@ctx.Item.Name</span>
+        </div>
+    </DropdownItemTemplate>
+</ShiftAutocomplete>
+
+@code {
+    /// <summary>The bound tag list (usually a DTO's <c>Tags</c> property).</summary>
+    [Parameter] public List<TagDTO> Value { get; set; } = new();
+    [Parameter] public EventCallback<List<TagDTO>> ValueChanged { get; set; }
+
+    /// <summary>Input label. Default <c>"Tags"</c>.</summary>
+    [Parameter] public string? Label { get; set; } = "Tags";
+
+    /// <summary>OData entity set name for tags. When unset, falls back to
+    /// <see cref="ShiftBlazorTaggingOptions.EntitySet"/> (default <c>"tags"</c>).</summary>
+    [Parameter] public string? EntitySet { get; set; }
+
+    /// <summary>Override the OData endpoint path (rare). When unset, falls back to
+    /// <see cref="ShiftBlazorTaggingOptions.Endpoint"/>.</summary>
+    [Parameter] public string? Endpoint { get; set; }
+
+    /// <summary>Absolute base URL for the tagging API (overrides SettingManager). When unset,
+    /// falls back to <see cref="ShiftBlazorTaggingOptions.BaseUrl"/>.</summary>
+    [Parameter] public string? BaseUrl { get; set; }
+
+    /// <summary>Lookup key for resolving the API base URL from settings. When unset, falls back to
+    /// <see cref="ShiftBlazorTaggingOptions.BaseUrlKey"/> (set once via <c>AddShiftBlazorTagging</c>).</summary>
+    [Parameter] public string? BaseUrlKey { get; set; }
+
+    /// <summary>Render read-only (also honors the form's ParentReadOnly/ParentDisabled).</summary>
+    [Parameter] public bool ReadOnly { get; set; }
+
+    /// <summary>
+    /// Form opened by the "+" add button (and by double-clicking a chip to view/edit). Defaults
+    /// to the framework's built-in <see cref="ShiftTagForm"/> component. Set to a custom component
+    /// to use your own tag form, or to <c>null</c> to hide the add button. Declared as a
+    /// strongly-typed parameter (not forwarded via the attribute splat) because a <see cref="Type"/>
+    /// cannot round-trip through <see cref="CaptureUnmatchedValues"/> without an invalid-cast.
+    /// </summary>
+    [Parameter] public Type? QuickAddComponentType { get; set; } = typeof(ShiftTagForm);
+
+    /// <summary>
+    /// Name of the parameter on <see cref="QuickAddComponentType"/> that receives the typed text
+    /// when adding a new tag. Defaults to <see cref="ShiftTagForm.TagName"/>. Set to match your
+    /// custom form's name-prefill parameter.
+    /// </summary>
+    [Parameter] public string? QuickAddParameterName { get; set; } = nameof(ShiftTagForm.TagName);
+
+    /// <summary>
+    /// Any other <see cref="ShiftAutocomplete{TEntitySet}"/> parameter (Variant, Placeholder,
+    /// MaxItems, Dense, Clearable, Class, Style, Margin, …) — forwarded to the inner autocomplete.
+    /// Note: strongly-typed parameters like <see cref="Type"/> (e.g. another component type) must
+    /// be added as dedicated parameters, not splatted, to avoid an invalid-cast at render time.
+    /// </summary>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object?>? AdditionalAttributes { get; set; }
+
+    [CascadingParameter(Name = "ParentReadOnly")]
+    private bool ParentReadOnly { get; set; }
+
+    [CascadingParameter(Name = "ParentDisabled")]
+    private bool ParentDisabled { get; set; }
+
+    private bool _effectivelyReadOnly => ReadOnly || ParentReadOnly || ParentDisabled;
+
+    // Central tag UI config (set once via AddShiftBlazorTagging). Resolves to a default instance
+    // even when never configured, so the per-call parameters above are the only required input.
+    private ShiftBlazorTaggingOptions Opts => TaggingOptions.Value;
+
+    private List<ShiftEntitySelectDTO> _selected = new();
+
+    protected override void OnParametersSet()
+    {
+        // Re-project Value into the SelectDTO shape ShiftAutocomplete binds to. The TagDTO
+        // is stashed in Data so the chip template can read Color without re-fetching.
+        _selected = Value.Select(t => new ShiftEntitySelectDTO
+        {
+            Value = t.ID ?? string.Empty,
+            Text = t.Name,
+            Data = t,
+        }).ToList();
+    }
+
+    private async Task OnSelectedChanged(List<ShiftEntitySelectDTO> incoming)
+    {
+        _selected = incoming;
+        Value = incoming.Select(ToTagDTO).ToList();
+
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    // The selected item's Data is a TagDTO for tags loaded into Value, but a TagListDTO for ones
+    // just picked from the dropdown (ShiftAutocomplete stashes the queried TEntitySet). Normalize
+    // to a full TagDTO that carries Color, so the chip keeps its color after the value round-trips.
+    private static TagDTO ToTagDTO(ShiftEntitySelectDTO s) => s.Data switch
+    {
+        TagDTO t => t,
+        TagListDTO l => new TagDTO
+        {
+            ID = l.ID,
+            Name = l.Name,
+            Color = l.Color,
+            IntegrationID = l.IntegrationID,
+        },
+        // Fallback (e.g. nothing stashed): an existing tag, so Value carries its real ID.
+        _ => new TagDTO
+        {
+            ID = string.IsNullOrEmpty(s.Value) ? null : s.Value,
+            Name = s.Text ?? s.Value ?? string.Empty,
+        },
+    };
+
+    private static string? ColorOf(object? data) => data switch
+    {
+        TagDTO t => t.Color,
+        TagListDTO l => l.Color,
+        _ => null,
+    };
+}

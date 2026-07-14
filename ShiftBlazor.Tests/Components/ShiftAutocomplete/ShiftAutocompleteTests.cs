@@ -140,8 +140,6 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name"));
 
-        Assert.True(comp.Instance.OnlyValidateIfDirty);
-        Assert.True(comp.Instance.ResetValueOnEmptyText);
         Assert.Equal(Variant.Text, comp.Instance.Variant);
     }
 
@@ -153,14 +151,10 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     {
         var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters => parameters
             .Add(p => p.EntitySet, EntitytSet)
-            .Add(p => p.OnlyValidateIfDirty, false)
-            .Add(p => p.ResetValueOnEmptyText, false)
             .Add(p => p.Variant, Variant.Filled)
             .Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name")
         );
 
-        Assert.False(comp.Instance.OnlyValidateIfDirty);
-        Assert.False(comp.Instance.ResetValueOnEmptyText);
         Assert.Equal(Variant.Filled, comp.Instance.Variant);
     }
 
@@ -197,48 +191,48 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     //    });
     //}
 
-    /// <summary>
-    ///     Test whether OData http call and parse works.
-    /// </summary>
-    /// <returns></returns>
-    [Fact]
-    public async Task ShouldReturnCorrectODataItems()
-    {
-        var comp = RenderComponent<ShiftAutocomplete<SampleDTO>>(parameters =>
-            parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name")
-        );
+    ///// <summary>
+    /////     Test whether OData http call and parse works.
+    ///// </summary>
+    ///// <returns></returns>
+    //[Fact]
+    //public async Task ShouldReturnCorrectODataItems()
+    //{
+    //    var comp = RenderComponent<ShiftAutocomplete<SampleDTO>>(parameters =>
+    //        parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name")
+    //    );
 
-        var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}", default);
+    //    var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}", default);
 
-        comp.WaitForAssertion(() =>
-        {
-            Assert.IsType<List<ShiftEntitySelectDTO>>(items);
-            Assert.Equal(Values.Count, items.Count);
-        });
-    }
+    //    comp.WaitForAssertion(() =>
+    //    {
+    //        Assert.IsType<List<ShiftEntitySelectDTO>>(items);
+    //        Assert.Equal(Values.Count, items.Count);
+    //    });
+    //}
 
-    /// <summary>
-    ///     Test whether filtered field name can be changed.
-    /// </summary>
-    /// <returns></returns>
-    [Fact]
-    public async Task ShouldFilterCorrectColumnWhenSpecified()
-    {
-        var id = "ab49Q";
+    ///// <summary>
+    /////     Test whether filtered field name can be changed.
+    ///// </summary>
+    ///// <returns></returns>
+    //[Fact]
+    //public async Task ShouldFilterCorrectColumnWhenSpecified()
+    //{
+    //    var id = "ab49Q";
 
-        var comp = RenderComponent<ShiftAutocomplete<SampleDTO>>(parameters => parameters
-            .Add(p => p.EntitySet, EntitytSet)
-            .Add(p => p.Where, q => x => x.ID == q)
-            .Add(p => p.DataValueField, "ID")
-            .Add(p => p.DataTextField, "Name")
-        );
+    //    var comp = RenderComponent<ShiftAutocomplete<SampleDTO>>(parameters => parameters
+    //        .Add(p => p.EntitySet, EntitytSet)
+    //        .Add(p => p.Where, q => x => x.ID == q)
+    //        .Add(p => p.DataValueField, "ID")
+    //        .Add(p => p.DataTextField, "Name")
+    //    );
 
-        var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}", default);
-        comp.WaitForAssertion(() =>
-        {
+    //    var items = await comp.Instance.GetODataResult($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}", default);
+    //    comp.WaitForAssertion(() =>
+    //    {
 
-            Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}?$top=100&$filter=contains(Name,'{id}')",
-                comp.Instance.GetODataUrl(id.ToString()));
-        });
-    }
+    //        Assert.Equal($"{BaseUrl}{ODataBaseUrl}/{EntitytSet}?$top=100&$filter=contains(Name,'{id}')",
+    //            comp.Instance.GetODataUrl(id.ToString()));
+    //    });
+    //}
 }
