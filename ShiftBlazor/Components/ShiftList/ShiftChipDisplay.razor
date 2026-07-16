@@ -1,20 +1,17 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
-@using Microsoft.JSInterop
 @using MudBlazor
 @typeparam T
-@implements IAsyncDisposable
 
 @*
-    Renders a collection as a single line of chips that never wraps. When the chips don't fit the
-    available width, the overflowing ones are hidden (whole chips only — never sliced) and collapsed
-    into a trailing "+N" chip; clicking it opens a popup listing the full set. The first chip is never
-    hidden, so at least one is always shown: an over-long first chip truncates its label with an
-    ellipsis instead of overflowing, shrinking further when needed to keep the "+N" chip in view.
-    Width is measured in JS (ResizeObserver), so it reflows on resize; measurement is width-based,
-    so it also works in RTL layouts.
+    Renders a collection as a single line of chips. At most MaxVisible chips are rendered; the rest
+    collapse into a trailing "+N" chip that opens a popup listing the full set. The cutoff is
+    deterministic (always the first MaxVisible items) — chips are NOT measured against the available
+    width, so there is no JS, no ResizeObserver, and no per-render layout work. When the visible
+    chips don't fit a width-constrained host, they shrink and ellipsize their labels via CSS —
+    every rendered chip stays visible; nothing is silently clipped.
 
-    The host element MUST be width-constrained (e.g. a data-grid cell with a max-width); otherwise the
-    row simply grows to fit every chip and nothing is ever collapsed.
+    MaxVisible="0" renders count-only mode: a single count chip that opens the popup, for data
+    where most rows have more chips than any sensible inline threshold.
 
         <ShiftChipDisplay Items="row.Tags">
             <ChipTemplate Context="tag"><MudChip T="string">@tag.Name</MudChip></ChipTemplate>
@@ -23,19 +20,34 @@
 
 @if (_items.Count > 0)
 {
-    <div class="shift-chip-display" @ref="_element">
-        @foreach (var item in _items)
+    var maxVisible = Math.Max(0, MaxVisible);
+    <div class="shift-chip-display">
+        @if (maxVisible == 0)
         {
-            <span class="shift-chip-display__item">@ChipTemplate(item)</span>
+            @* Count-only mode: one chip with the total that opens the full list. For data where most
+               rows exceed any inline threshold, inline chips cost space and the click is needed
+               anyway — a single count button is clearer and cheaper. *@
+            <span class="shift-chip-display__overflow" @onclick:stopPropagation="true">
+                <MudChip T="string" Size="@Size" Icon="@CountModeIcon" Class="shift-chip-display__more-chip" OnClick="@ShowAllAsync">@_items.Count</MudChip>
+            </span>
         }
-        <span class="shift-chip-display__overflow" style="display:none;" @onclick:stopPropagation="true">
-            <MudChip T="string" Size="@Size" Class="shift-chip-display__more-chip" OnClick="@ShowAllAsync">+<span class="shift-chip-display__count">0</span></MudChip>
-        </span>
+        else
+        {
+            @foreach (var item in _items.Take(maxVisible))
+            {
+                <span class="shift-chip-display__item">@ChipTemplate(item)</span>
+            }
+            @if (_items.Count > maxVisible)
+            {
+                <span class="shift-chip-display__overflow" @onclick:stopPropagation="true">
+                    <MudChip T="string" Size="@Size" Class="shift-chip-display__more-chip" OnClick="@ShowAllAsync">+@(_items.Count - maxVisible)</MudChip>
+                </span>
+            }
+        }
     </div>
 }
 
 @code {
-    [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private IDialogService DialogService { get; set; } = default!;
 
     /// <summary>The items to render as chips. Renders nothing when null or empty.</summary>
@@ -44,15 +56,24 @@
     /// <summary>Template for a single chip; receives one item. Used both inline and in the overflow popup.</summary>
     [Parameter, EditorRequired] public RenderFragment<T> ChipTemplate { get; set; } = default!;
 
+    /// <summary>
+    /// How many chips to render before the rest collapse into the "+N" chip. Defaults to 3.
+    /// 0 (or negative) switches to count-only mode: no inline chips, just a single chip showing the
+    /// total that opens the popup — the right choice when most rows exceed any inline threshold,
+    /// so the popup click is needed anyway.
+    /// </summary>
+    [Parameter] public int MaxVisible { get; set; } = 3;
+
+    /// <summary>Optional icon for the count chip in count-only mode (MaxVisible = 0).</summary>
+    [Parameter] public string? CountModeIcon { get; set; }
+
     /// <summary>Size of the trailing "+N" chip. Defaults to <see cref="Size.Small"/>.</summary>
     [Parameter] public Size Size { get; set; } = Size.Small;
 
     /// <summary>Optional title for the popup shown when the "+N" chip is clicked.</summary>
     [Parameter] public string? Title { get; set; }
 
-    private ElementReference _element;
     private List<T> _items = new();
-    private bool _observing;
 
     protected override void OnParametersSet()
         => _items = Items as List<T> ?? Items?.ToList() ?? new();
@@ -80,25 +101,5 @@
             CloseOnEscapeKey = true
         };
         await DialogService.ShowAsync<ShiftChipDialog>(Title ?? string.Empty, parameters, options);
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_items.Count == 0) return;
-
-        // Always init: it is idempotent per element (an already-observed element is just re-measured),
-        // and when the list empties the @if above tears the element down — the fresh element Blazor
-        // creates once items return needs its own ResizeObserver, not just a re-layout.
-        _observing = true;
-        await JS.InvokeVoidAsync("shiftChipOverflow.init", _element);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_observing)
-        {
-            try { await JS.InvokeVoidAsync("shiftChipOverflow.dispose", _element); }
-            catch { /* circuit/JS already gone */ }
-        }
     }
 }

@@ -152,14 +152,60 @@ public class ShiftListTests : ShiftBlazorTestContext
     }
 
     [Fact]
-    public void ShouldEnableVirtualizationAndDisablePaging()
+    public void ShouldAddNativeTitleToEveryCell()
+    {
+        var users = User.GenerateData(20, 20, false);
+        var cut = RenderComponent<ShiftListTestExtendedColumns>(parameters => parameters
+            .Add(p => p.Users, users)
+        );
+
+        // Every PropertyColumnExtended cell carries its full text as a native HTML title
+        // (browser tooltip), unconditionally — not only when the cell truncates.
+        cut.WaitForAssertion(() =>
+        {
+            var titledSpans = cut.FindAll(".mud-table-body .mud-table-cell span[title]");
+            Assert.NotEmpty(titledSpans);
+            Assert.Contains(titledSpans, x => x.GetAttribute("title") == users[0].Name);
+        });
+    }
+
+    [Fact]
+    public void ShouldEnableVirtualizationAndKeepPaging()
     {
         var comp = RenderComponent<ShiftListTestVirtualization>(parameters => parameters.Add(p => p.EnableVirtualization, true));
 
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
+        // Virtualization is render-only: it virtualizes the current page's rows and must not disable paging.
         Assert.True(grid.Virtualize);
-        Assert.False(comp.HasComponent<MudDataGridPager<User>>(), "Found MudDataGridPager");
+        Assert.True(comp.HasComponent<MudDataGridPager<User>>(), "MudDataGridPager not found");
+    }
+
+    [Fact]
+    public void ShouldAutoVirtualizeAtLargePageSizes()
+    {
+        // Large pages must virtualize even without the explicit flag — hundreds of full rows freeze
+        // the UI on load and lag every layout change. A viewport-height fallback is applied because
+        // virtualization requires a fixed height.
+        var comp = RenderComponent<ShiftListTest2>(parameters => parameters
+            .Add(p => p.PageSize, 100)
+        );
+
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
+        Assert.True(grid.Virtualize);
+        Assert.False(string.IsNullOrEmpty(grid.Height));
+    }
+
+    [Fact]
+    public void ShouldNotAutoVirtualizeAtSmallPageSizes()
+    {
+        var comp = RenderComponent<ShiftListTest2>(parameters => parameters
+            .Add(p => p.PageSize, 25)
+        );
+
+        var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
+        Assert.False(grid.Virtualize);
+        Assert.True(string.IsNullOrEmpty(grid.Height));
     }
 
     [Fact]

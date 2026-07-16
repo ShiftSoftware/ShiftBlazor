@@ -83,7 +83,8 @@
    inline <span> wrapping the cell content, so the cell's "…" ellipsis still renders. */
 
 /* Single-line chip row with a trailing "+N" overflow indicator (see ShiftChipDisplay.razor).
-   JS hides whole overflowing chips (.shift-chip-hidden); a single over-long chip ellipsizes its label. */
+   The component renders at most its first MaxVisible chips plus the "+N" chip — no measurement.
+   These rules only keep the row on one line and ellipsize an over-long chip's label. */
 .shift-chip-display {
     display: flex;
     flex-wrap: nowrap;
@@ -93,8 +94,11 @@
     max-width: 100%;
 }
 
+/* Chips may SHRINK (flex-shrink 1): when the visible chips are collectively wider than the
+   constrained host cell, each chip ellipsizes its label instead of trailing chips being clipped
+   invisibly by the row's overflow:hidden. Every rendered chip therefore always stays visible. */
 .shift-chip-display__item {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     display: inline-flex;
     min-width: 0;
     max-width: 100%;
@@ -106,10 +110,10 @@
     overflow: hidden;
 }
 
-/* Chips are often wrapped in a MudTooltip (e.g. ShiftTagColumn). Its inline-block activator wrapper
-   sits between the item and the chip and refuses to shrink below the label's full width (flex
-   min-width:auto), which would defeat the item's width cap and let a long chip slide under the "+N"
-   chip — let it shrink so the chip's own max-width/overflow take over. */
+/* A programmer-supplied ChipTemplate may wrap its chip in a MudTooltip. Its inline-block activator
+   wrapper sits between the item and the chip and refuses to shrink below the label's full width
+   (flex min-width:auto), which would defeat the item's width cap and let a long chip overflow the
+   row — let it shrink so the chip's own max-width/overflow take over. */
 .shift-chip-display__item .mud-tooltip-root {
     min-width: 0;
     max-width: 100%;
@@ -128,21 +132,12 @@
     min-width: 0;
 }
 
-.shift-chip-display .shift-chip-hidden {
-    display: none !important;
-}
-
 .shift-chip-display__overflow {
     flex: 0 0 auto;
 }
 
 .shift-chip-display__more-chip {
     cursor: pointer;
-}
-
-.shift-chip-display__menu {
-    max-height: 280px;
-    overflow: auto;
 }
 
 

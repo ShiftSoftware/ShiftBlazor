@@ -109,6 +109,12 @@ window.fixStickyColumn = function (gridId) {
     if (!grid) return;
     var headRow = grid.querySelector(".mud-table-container .mud-table-head .mud-table-row");
     if (!headRow) return;
+
+    // A grid inside a display:none container (inactive kept-alive tab, collapsed panel) measures
+    // 0-width cells; writing those offsets would pin every sticky column to 0. Skip and keep the
+    // previously computed CSS — the grid is re-measured when it renders visibly again.
+    if (headRow.getBoundingClientRect().width === 0) return;
+
     var leftCells = [...headRow.getElementsByClassName("sticky-left")];
     var rightCells = [...headRow.getElementsByClassName("sticky-right")];
     var offset = 0;
@@ -127,13 +133,22 @@ window.fixStickyColumn = function (gridId) {
         offset += cellWidth;
     }
 
+    // The style element lives in <head>, NOT inside the grid: appending a <style> into the grid
+    // invalidates styles for the whole grid subtree and forces a recalculation on every call.
     var cssId = "css-" + gridId;
     document.getElementById(cssId)?.remove();
+
+    // Styles for disposed grids used to be removed with the grid's DOM; in <head> they linger, so
+    // garbage-collect any whose grid no longer exists.
+    document.querySelectorAll('head > style[id^="css-Grid-"]').forEach(function (s) {
+        if (!document.getElementById(s.id.substring(4))) s.remove();
+    });
+
     var style = document.createElement("style");
     style.id = cssId;
-    style.innerHTML = css.join(" ");
+    style.textContent = css.join(" ");
 
-    grid.appendChild(style);
+    document.head.appendChild(style);
 }
 
 window.fixAllStickyColumns = function () {
@@ -265,93 +280,6 @@ window.removeSlideDownEvent = function (element) {
     element.ontransitionend = null;
     element.children[0].ontransitionend = null;
 }
-
-// Single-line chip overflow (see ShiftChipDisplay.razor): hide whole chips that don't fit and
-// reveal a trailing "+N" indicator. Measurement-driven so chips are never sliced. One ResizeObserver
-// per host element, disposed by the component to avoid leaking observers as grid rows recycle.
-window.shiftChipOverflow = (function () {
-    const observers = new WeakMap();
-
-    function layout(el) {
-        if (!el || !el.isConnected) return;
-
-        const items = Array.from(el.querySelectorAll(":scope > .shift-chip-display__item"));
-        const overflow = el.querySelector(":scope > .shift-chip-display__overflow");
-        if (items.length === 0) {
-            if (overflow) overflow.style.display = "none";
-            return;
-        }
-
-        // Reset to "everything visible, no +N, first chip uncapped" BEFORE measuring the host:
-        // in hosts that shrink to fit their content (auto-layout table cells), measuring first
-        // would lock onto the previously collapsed width and over-truncate.
-        items.forEach(i => { i.classList.remove("shift-chip-hidden"); i.style.maxWidth = ""; });
-        if (overflow) overflow.style.display = "none";
-
-        // Fractional width (clientWidth rounds to an integer, off by up to 0.5px at fractional
-        // zoom), and widths rather than left/right positions so the math also holds in RTL,
-        // where chips flow right-to-left and position-based checks never detect overflow.
-        const available = el.getBoundingClientRect().width;
-        if (available <= 0) return;
-
-        const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
-        const widths = items.map(i => i.getBoundingClientRect().width);
-        const total = widths.reduce((sum, w) => sum + w + gap, -gap);
-        if (total <= available + 0.5) return; // all chips fit, nothing to collapse
-
-        // Overflow: reveal the +N indicator to measure it, then reserve room for it. Measure with
-        // the widest possible count (everything but the first chip hidden) so a multi-digit count
-        // can never outgrow the reservation and clip.
-        const countEl = overflow ? overflow.querySelector(".shift-chip-display__count") : null;
-        if (countEl) countEl.textContent = String(items.length - 1);
-        if (overflow) overflow.style.display = "";
-        const reserve = overflow ? overflow.getBoundingClientRect().width + gap : 0;
-        const budget = available - reserve;
-
-        // Never hide the first chip, so at least one is always shown — but cap it to the budget:
-        // CSS alone only caps it at the full row width, which would push the +N out of the row.
-        let used = widths[0];
-        if (used > budget) {
-            used = Math.max(0, budget);
-            items[0].style.maxWidth = used + "px";
-        }
-
-        // Keep the longest prefix that fits alongside the +N; hide the rest.
-        let hidden = 0;
-        for (let i = 1; i < items.length; i++) {
-            if (hidden > 0 || used + gap + widths[i] > budget) {
-                items[i].classList.add("shift-chip-hidden");
-                hidden++;
-            } else {
-                used += gap + widths[i];
-            }
-        }
-
-        if (hidden === 0) {
-            // Sub-pixel disagreement between total and the per-chip pass — nothing to collapse.
-            items[0].style.maxWidth = "";
-            if (overflow) overflow.style.display = "none";
-            return;
-        }
-
-        if (countEl) countEl.textContent = String(hidden);
-    }
-
-    return {
-        init(el) {
-            if (!el || observers.has(el)) { layout(el); return; }
-            const ro = new ResizeObserver(() => layout(el));
-            ro.observe(el);
-            observers.set(el, ro);
-            layout(el);
-        },
-        layout: layout,
-        dispose(el) {
-            const ro = observers.get(el);
-            if (ro) { ro.disconnect(); observers.delete(el); }
-        }
-    };
-})();
 
 function responsiveFix() {
     fixAllStickyColumns();

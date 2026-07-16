@@ -30,20 +30,14 @@
                     value = Misc.GetValueFromPropertyPath(data, TEntityTextField);
                 }
 
+                @* Every cell gets a native HTML title unconditionally (see PropertyColumnExtended). *@
                 if (IsButtonColumn)
                 {
                     <a @onclick="() => OpenDialogForm(GetKey(context.Item))" @onclick:preventDefault="true" @onclick:stopPropagation="true" href="@GetUrl(GetKey(context.Item))">
                         @if (ButtonTemplate == null)
                         {
                             var buttonText = value?.ToString();
-                            @if (EffectiveCellNowrap)
-                            {
-                                <span class="button-column-button" title="@(string.IsNullOrEmpty(buttonText) ? null : buttonText)">@value</span>
-                            }
-                            else
-                            {
-                                <span class="button-column-button">@value</span>
-                            }
+                            <span class="button-column-button" title="@(string.IsNullOrEmpty(buttonText) ? null : buttonText)">@value</span>
                         }
                         else
                         {
@@ -51,14 +45,10 @@
                         }
                     </a>
                 }
-                else if (EffectiveCellNowrap)
+                else
                 {
                     var text = value?.ToString();
                     <span title="@(string.IsNullOrEmpty(text) ? null : text)">@value</span>
-                }
-                else
-                {
-                    @value
                 }
             }
             catch

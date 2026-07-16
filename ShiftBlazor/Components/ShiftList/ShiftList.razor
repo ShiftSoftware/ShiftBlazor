@@ -247,8 +247,9 @@
                          RowClick="@RowClickHandler"
                          Filterable="!DisableFilters"
                          Hover="true"
-                         Virtualize="@EnableVirtualization"
-                         Height="@Height"
+                         Virtualize="@ShouldVirtualize"
+                         ItemSize="@EffectiveItemSize"
+                         Height="@EffectiveHeight"
                          ShowColumnOptions="true"
                          RowsPerPage="@SelectedPageSize"
                          ServerData="ServerData"
@@ -303,7 +304,7 @@
                             </HeaderTemplate>
                             <CellTemplate>
                                 @{
-                                    var isSelected = SelectState.Items.Any(x => x.ID == context.Item.ID) || SelectState.All;
+                                    var isSelected = SelectState.All || SelectState.Contains(context.Item);
                                     Func<bool, Task> changeHandler = (x) => SelectRow(context.Item);
                                 }
                                 <MudCheckBox T="bool" Size="@IconSize" Value="@isSelected" ValueChanged="@changeHandler" />
@@ -382,7 +383,8 @@
                         <MudIconButton OnClick="@SelectState.Clear" Size="Size.Small" Icon="@Icons.Material.Filled.Close" />
                     }
 
-                    @if (!EnableVirtualization && !DisablePagination)
+                    @* EnableVirtualization is render-only (virtualizes the current page's rows), so it no longer hides the pager. *@
+                    @if (!DisablePagination)
                     {
                         <MudSpacer/>
                         <MudDataGridPager Style="border: 0;" PageSizeOptions="@PageSizes" RowsPerPageString="@Loc["ItemsPerPageLabel"]" />

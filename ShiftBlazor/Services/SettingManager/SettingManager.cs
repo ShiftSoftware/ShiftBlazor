@@ -73,17 +73,46 @@ public class SettingManager
         return Settings.TimeFormat ?? DefaultAppSetting.TimeFormat;
     }
 
+    // The app-wide default page size, set explicitly by the user in the Settings UI.
+    // Explicitly picking an app-wide size means "make every list this size", so it also clears the
+    // per-list overrides — otherwise lists whose pager was ever touched would silently keep their
+    // old size and the Settings control would appear broken for them.
     public void SetListPageSize(int size)
     {
-        if (Settings.ListPageSize != size)
+        if (Settings.ListPageSize != size || Settings.ListPageSizes?.Count > 0)
         {
             Settings.ListPageSize = size;
+            Settings.ListPageSizes = null;
             SyncLocalStorage.SetItem(Key, Settings);
         }
     }
     public int GetListPageSize()
     {
         return Settings.ListPageSize ?? DefaultAppSetting.ListPageSize;
+    }
+
+    // Per-list page size, set implicitly when the user changes a list's pager. Overrides the
+    // app-wide default for that list only — picking 100 on one heavy list must not turn every
+    // other list into a 100-row render.
+    public void SetListPageSize(string listIdentifier, int size)
+    {
+        Settings.ListPageSizes ??= [];
+
+        if (Settings.ListPageSizes.TryGetValue(listIdentifier, out var current) && current == size)
+            return;
+
+        Settings.ListPageSizes[listIdentifier] = size;
+        SyncLocalStorage.SetItem(Key, Settings);
+    }
+
+    public int? GetListPageSize(string listIdentifier)
+    {
+        if (Settings.ListPageSizes != null && Settings.ListPageSizes.TryGetValue(listIdentifier, out var size))
+            return size;
+
+        // No per-list preference yet — fall back to the app-wide value (which also carries over
+        // preferences saved before page sizes became per-list).
+        return Settings.ListPageSize;
     }
     
     public void SetModalPosition(DialogPosition position)

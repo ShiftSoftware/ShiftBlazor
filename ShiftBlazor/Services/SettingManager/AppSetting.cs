@@ -9,6 +9,7 @@ public class AppSetting
     public virtual string? DateFormat { get; set; }
     public virtual string? TimeFormat { get; set; }
     public virtual int? ListPageSize { get; set; }
+    public virtual Dictionary<string, int>? ListPageSizes { get; set; }
     public virtual DialogPosition? ModalPosition { get; set; }
     public virtual MaxWidth? ModalWidth { get; set; }
     public virtual FormOnSaveAction? FormOnSaveAction { get; set; }

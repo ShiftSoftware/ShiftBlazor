@@ -139,17 +139,56 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     private bool _attentionSubscribeStarted;
 
     /// <summary>
-    /// Enable Virtualization and disable Paging.
+    /// Virtualize the rendering of the current page's rows. Paging is unaffected:
+    /// data is still fetched and paged as usual, and the pager stays visible.
     /// 'Height' paramater should have a valid value when this is enabled.
+    /// Independent of this flag, virtualization turns on automatically at page sizes of
+    /// <see cref="AutoVirtualizeAt"/> or more — see there.
     /// </summary>
     [Parameter]
     public bool EnableVirtualization { get; set; }
+
+    /// <summary>
+    /// Page size at (or above) which the list virtualizes automatically, even when
+    /// <see cref="EnableVirtualization"/> is not set. Rendering hundreds of full rows freezes the
+    /// single-threaded WASM UI on every data load and lags every layout change, so large pages are
+    /// unusable without virtualization. Small pages keep their natural height. Defaults to 50;
+    /// set to 0 (or negative) to disable auto-virtualization.
+    /// </summary>
+    [Parameter]
+    public int AutoVirtualizeAt { get; set; } = 50;
+
+    /// <summary>
+    /// Whether the grid actually virtualizes this render: the explicit flag, or a large page size.
+    /// </summary>
+    internal bool ShouldVirtualize => EnableVirtualization || (AutoVirtualizeAt > 0 && SelectedPageSize >= AutoVirtualizeAt);
 
     /// <summary>
     /// Sets the css height property for the Datagrid.
     /// </summary>
     [Parameter]
     public string Height { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The height actually passed to the grid: the Height parameter when set; otherwise a viewport
+    /// fallback when virtualizing (MudBlazor's Virtualize needs a fixed height to know its viewport).
+    /// </summary>
+    internal string EffectiveHeight => !string.IsNullOrEmpty(Height)
+        ? Height
+        : ShouldVirtualize ? "65vh" : Height;
+
+    /// <summary>
+    /// Estimated row height (px) used by virtualization to size its viewport. MudBlazor's default
+    /// assumes 50px rows; a Dense grid renders ~36px rows, and an over-estimate causes blank
+    /// stretches while scrolling fast. When unset (0), picked from Dense. Tune per list if rows
+    /// have custom heights.
+    /// </summary>
+    [Parameter]
+    public float VirtualizeItemSize { get; set; }
+
+    internal float EffectiveItemSize => VirtualizeItemSize > 0
+        ? VirtualizeItemSize
+        : Dense ? 37f : 50f;
 
     /// <summary>
     /// The title used for the form and the browser tab title.
@@ -389,8 +428,9 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     /// <summary>
     /// When true (default), long cell text is kept on a single line and clipped with an ellipsis (…)
-    /// instead of wrapping to multiple lines. The full text is shown in a tooltip on hover.
-    /// Set to false to let cells wrap. Can be overridden per column via the column's own CellNowrap.
+    /// instead of wrapping to multiple lines. Set to false to let cells wrap. Can be overridden per
+    /// column via the column's own CellNowrap. (The full text is always available via the cell's
+    /// native hover tooltip, independent of this setting.)
     /// </summary>
     [Parameter]
     public bool CellNowrap { get; set; } = true;
@@ -409,7 +449,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     internal DataServiceQuery<T> QueryBuilder { get; set; } = default!;
     internal bool RenderAddButton = false;
     internal int SelectedPageSize;
-    internal int[] PageSizes = [ 5, 10, 50, 100, 250, 500 ];
+    internal int[] PageSizes = [ 5, 10, 50, 100, 250, 500, 1000 ];
     internal bool? deleteFilter = false;
     internal string? ErrorMessage;
     private ITypeAuthService? TypeAuthService;
@@ -437,7 +477,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     {
         var builder = new CssBuilder()
             .AddClass("is-deleted", item.IsDeleted)
-            .AddClass("is-selected", SelectState.Items.Any(x => x.ID == item.ID) || SelectState.All);
+            .AddClass("is-selected", SelectState.All || SelectState.Contains(item));
 
         if (GetAttentionSeverity is not null)
         {
@@ -561,7 +601,9 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             SelectState.Total = Values.Count;
         }
 
-        SelectedPageSize = SettingManager.Settings.ListPageSize ?? PageSize ?? DefaultAppSetting.ListPageSize;
+        // Per-list preference first (keyed by GetIdentifier(), falling back internally to the
+        // app-wide setting), then the developer-set parameter, then the framework default.
+        SelectedPageSize = SettingManager.GetListPageSize(GetIdentifier()) ?? PageSize ?? DefaultAppSetting.ListPageSize;
         IsFilterPanelOpen = SettingManager?.GetFilterPanelState() ?? FilterPanelDefaultOpen;
     }
 
@@ -579,9 +621,30 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
     }
 
+    // Sticky-column offsets depend on rendered cell widths, so they must be refreshed after anything
+    // that can change column widths: first render, a data load, or a column operation. They must NOT
+    // be refreshed on every render — fixStickyColumn measures the DOM and injects CSS, and running it
+    // per render (selection clicks, loading toggles, ...) forces needless style/layout work.
+    // Window resizes are handled by a JS-side listener (fixAllStickyColumns).
+    private bool _stickyStylesDirty = true;
+
+    private System.Diagnostics.Stopwatch? _perfRenderTimer;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+        // Timer started right before the post-data-load StateHasChanged: this render carried the new
+        // rows into the DOM, so elapsed ≈ Blazor render + diff + DOM apply for the data.
+        if (_perfRenderTimer is not null)
+        {
+            Console.WriteLine($"[ShiftListPerf] {typeof(T).Name}: render-after-data={_perfRenderTimer.ElapsedMilliseconds}ms");
+            _perfRenderTimer = null;
+        }
+
+        if (_stickyStylesDirty)
+        {
+            _stickyStylesDirty = false;
+            await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
+        }
 
         if (firstRender)
             await SubscribeToAttentionUpdatesAsync();
@@ -640,8 +703,18 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         return ReadyToRender;
     }
 
+    private List<T>? _previousValues;
+
     protected override void OnParametersSet()
     {
+        // Values-mode lists get new rows via this parameter (no ServerReload), so a changed
+        // reference is the data-load signal that sticky-column offsets need a refresh.
+        if (!ReferenceEquals(Values, _previousValues))
+        {
+            _previousValues = Values;
+            _stickyStylesDirty = true;
+        }
+
         if (Filter != null)
         {
             var filter = new ODataFilterGenerator(true, Id);
@@ -670,10 +743,13 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             DataGrid.RenderedColumns.Remove(actionColumn);
         }
 
-        if (DataGrid.Virtualize != EnableVirtualization && Values == null)
-        {
-            DataGrid.ReloadServerData();
-        }
+        // EnableVirtualization used to switch the OData URL between unpaged and paged (see BuildODataUrl),
+        // so flipping it required refetching. Virtualization is now render-only — the URL is the same
+        // either way — so no reload is needed when the flag changes.
+        //if (DataGrid.Virtualize != EnableVirtualization && Values == null)
+        //{
+        //    DataGrid.ReloadServerData();
+        //}
     }
 
     /// <summary>
@@ -749,6 +825,10 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     public void GridStateHasChanged()
     {
+        // Called when grid CONTENT changed outside the normal data-load path (e.g. ForeignColumn
+        // filling its cells after its deferred fetch). New content can redistribute auto-layout
+        // column widths, so the sticky offsets must be re-measured on the upcoming render.
+        _stickyStylesDirty = true;
         StateHasChanged();
     }
 
@@ -807,10 +887,10 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
         try
         {
-            // Save current PageSize as user preference 
+            // Save the current PageSize as this list's preference (per-list, not app-wide).
             if (state.PageSize != SelectedPageSize)
             {
-                SettingManager.SetListPageSize(state.PageSize);
+                SettingManager.SetListPageSize(GetIdentifier(), state.PageSize);
                 SelectedPageSize = state.PageSize;
             }
 
@@ -888,6 +968,13 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                 {
                     ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, gridData.Items.ToList<object>()));
                 }
+
+                // New rows can change column widths, which the sticky-column offsets are computed from.
+                _stickyStylesDirty = true;
+
+                if (ShiftListPerfProbe.LogTimings)
+                    _perfRenderTimer = System.Diagnostics.Stopwatch.StartNew();
+
                 StateHasChanged();
             }
 
@@ -973,13 +1060,15 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
         var builderQueryable = builder.AsQueryable();
 
-        // apply pagination values
-        if (!EnableVirtualization)
-        {
-            builderQueryable = builderQueryable
-                .Skip(state.Page * state.PageSize)
-                .Take(state.PageSize);
-        }
+        // Apply pagination values.
+        // EnableVirtualization used to skip $skip/$top here — an incomplete attempt at scroll-based server
+        // virtualization that in practice fetched the entire entity set in one request. Virtualization is
+        // now render-only (it virtualizes the current page's rows), so pagination always applies.
+        // If scroll-based server loading is ever revisited, build it on MudDataGrid's VirtualizeServerData.
+        //if (!EnableVirtualization)
+        builderQueryable = builderQueryable
+            .Skip(state.Page * state.PageSize)
+            .Take(state.PageSize);
 
         return builderQueryable.ToString();
     }
@@ -1191,12 +1280,12 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         return;
     }
 
-    private async ValueTask SaveColumnState()
+    private ValueTask SaveColumnState()
     {
         var columns = DataGrid?.RenderedColumns.Where(x => (x.Hideable ?? DataGrid?.Hideable) == true);
         if (columns == null || !columns.Any())
         {
-            return;
+            return ValueTask.CompletedTask;
         }
 
         var columnStates = columns.Select(x => new ColumnState
@@ -1206,12 +1295,13 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             Sticky = x.StickyLeft,
         }).ToList();
 
-        if (columnStates.Any(x => x.Sticky))
-        {
-            await JsRuntime.InvokeVoidAsync("fixStickyColumn", $"Grid-{Id}");
-        }
+        // Defer the sticky-offset refresh to OnAfterRenderAsync: a direct fixStickyColumn call here
+        // would measure the PRE-re-render DOM (the column operation hasn't been applied yet). Set
+        // unconditionally — unpinning the last sticky column also needs a pass to clear stale CSS.
+        _stickyStylesDirty = true;
 
         SettingManager.SetColumnState(GetIdentifier(), columnStates);
+        return ValueTask.CompletedTask;
     }
 
     private void OpenGridEditor()
@@ -1431,14 +1521,13 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     internal async Task SelectRow(T item)
     {
-        // search the selected list, if we find an item with the current item id, then remove it
-        var removedItems = SelectState.Items.RemoveAll(x => x.ID == item.ID);
-
-        // if no items were removed from the list, it means we want to add it to the list
-        if (removedItems == 0 && !SelectState.All)
-        {
-            SelectState.Items.Add(item);
-        }
+        // Toggle membership — but a toggle while "select all" is active means "deselect all, keep
+        // just this interaction's semantics" (the item was visually selected via All, so the click
+        // deselects it and drops the all-flag), matching the previous behavior.
+        if (SelectState.All)
+            SelectState.ClearItems();
+        else
+            SelectState.Toggle(item);
 
         SelectState.All = false;
         await OnSelectStateChanged.InvokeAsync(SelectState);
@@ -1447,15 +1536,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     internal async Task SelectAll(bool selectAll)
     {
         SelectState.All = selectAll;
-        if (selectAll)
-        {
-            SelectState.Items.Clear();
-        }
-        else
-        {
-            SelectState.Items.Clear();
-            SelectState.All = false;
-        }
+        SelectState.ClearItems();
         await OnSelectStateChanged.InvokeAsync(SelectState);
     }
 

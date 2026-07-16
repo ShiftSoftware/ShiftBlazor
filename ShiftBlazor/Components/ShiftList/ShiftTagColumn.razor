@@ -27,10 +27,14 @@
     [Parameter] public Size Size { get; set; } = Size.Small;
 
     /// <summary>
-    /// Maximum width the tags cell may grow to before tags collapse into a trailing "+N" overflow chip.
-    /// Any valid CSS length. Defaults to "320px".
+    /// Maximum width the tags cell may grow to. Any valid CSS length. Defaults to "320px".
     /// </summary>
     [Parameter] public string CellMaxWidth { get; set; } = "320px";
+
+    /// <summary>
+    /// How many tag chips to render before the rest collapse into a "+N" overflow chip. Defaults to 3.
+    /// </summary>
+    [Parameter] public int MaxVisible { get; set; } = 3;
 
     protected override void OnParametersSet()
     {
@@ -46,11 +50,11 @@
         }
 
         base.CellTemplate ??= context =>
-            @<ShiftChipDisplay T="TagDTO" Items="@((context.Item as IShiftEntityTaggableDTO)?.Tags)" Size="@Size">
+            @<ShiftChipDisplay T="TagDTO" Items="@((context.Item as IShiftEntityTaggableDTO)?.Tags)" Size="@Size" MaxVisible="@MaxVisible">
                 <ChipTemplate Context="tag">
-                    <MudTooltip Text="@(tag.Description ?? string.Empty)" Placement="Placement.Top" Disabled="@string.IsNullOrWhiteSpace(tag.Description)">
-                        <MudChip @key="tag" T="string" Size="@Size" Style="@ChipStyle(tag.Color)" Value="@tag.Name" />
-                    </MudTooltip>
+                    @* Native title (browser tooltip) rather than MudTooltip: a Blazor component per chip
+                       per row is a heavy cost on large lists. *@
+                    <MudChip @key="tag" T="string" Size="@Size" Style="@ChipStyle(tag.Color)" Value="@tag.Name" title="@(string.IsNullOrWhiteSpace(tag.Description) ? null : tag.Description)" />
                 </ChipTemplate>
             </ShiftChipDisplay>;
 

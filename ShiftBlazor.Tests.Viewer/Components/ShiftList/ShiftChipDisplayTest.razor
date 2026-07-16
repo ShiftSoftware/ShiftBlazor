@@ -1,0 +1,16 @@
+<ShiftChipDisplay Items="Items" MaxVisible="MaxVisible" Title="@Title">
+    <ChipTemplate Context="item">
+        <MudChip T="string" Size="Size.Small">@item</MudChip>
+    </ChipTemplate>
+</ShiftChipDisplay>
+
+@code {
+    [Parameter]
+    public List<string> Items { get; set; } = [];
+
+    [Parameter]
+    public int MaxVisible { get; set; } = 3;
+
+    [Parameter]
+    public string? Title { get; set; }
+}
