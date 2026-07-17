@@ -21,11 +21,11 @@
             <MudAppBar>
 
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@App.ToggleDrawer" />
-                <MudLink Href="/"><MudText Style="color: #fff;">@(App.Title ?? "New App")</MudText></MudLink>
+                <MudLink Color="Color.Inherit" Underline="Underline.None" Href="/"><MudText Color="Color.Inherit">@(App.Title ?? "New App")</MudText></MudLink>
 
                 <MudSpacer />
 
-                @if (App.EnableAutherization == true)
+                @if (App.EnableAuthorization)
                 {
                     <AuthorizeView>
                         <UserAvatar></UserAvatar>

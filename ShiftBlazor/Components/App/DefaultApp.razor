@@ -11,7 +11,7 @@
 @inject ShiftBlazorLocalizer Loc
 
 <RedirectToAuthFlow />
-<CascadingValue Value="AppContext" IsFixed="true">
+<CascadingValue Value="_appContext">
     <Router AppAssembly="@AppAssembly"
             AdditionalAssemblies="@AllAdditionalAssemblies"
             NotFoundPage="@(NotFoundPage ?? typeof(NotFound))"
@@ -91,7 +91,7 @@
     [Parameter]
     public ShiftIdentityHostingTypes IdentityHostingType { get; set; }
 
-    private AppLayoutContext AppContext = default!;
+    private AppLayoutContext _appContext = default!;
 
     protected override void OnInitialized()
     {
@@ -104,20 +104,20 @@
             ? AdditionalAssemblies.Concat(optionsAssemblies).Distinct()
             : optionsAssemblies;
 
-        AppContext = new AppLayoutContext(SettingManager)
+        _appContext = new AppLayoutContext(SettingManager)
         {
             Title = AppTitle,
             NavMenuTemplate = NavMenuTemplate,
             HeaderTemplate = HeaderTemplate,
             FooterTemplate = FooterTemplate,
-            EnableAutherization = AuthenticationStateTask != null,
+            EnableAuthorization = AuthenticationStateTask != null,
             MainLayout = MainLayout,
         };
 
         base.OnInitialized();
     }
 
-    public async Task RedirectToLogin()
+    private async Task RedirectToLogin()
     {
         const string url = $"{ShiftIdentity.Core.Constants.IdentityRoutePreifix}/login";
         var authenticationState = await AuthenticationStateTask;
@@ -143,8 +143,6 @@
                     await ShiftIdentityService.LoginAsync(returnUrl);
             }
         }
-
-        await base.OnInitializedAsync();
     }
 
 }

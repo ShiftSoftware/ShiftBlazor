@@ -8,7 +8,7 @@ using ShiftSoftware.ShiftBlazor.Services;
 
 namespace ShiftSoftware.ShiftBlazor.Layouts;
 
-public class LayoutBase : LayoutComponentBase
+public class LayoutBase : LayoutComponentBase, IDisposable
 {
     [Inject] private ShiftModal ShiftModal { get; set; } = default!;
     [Inject] private NavigationManager NavManager { get; set; } = default!;
@@ -48,4 +48,8 @@ public class LayoutBase : LayoutComponentBase
         await ShiftModal.UpdateModals();
     }
 
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= HandleLocationChanged;
+    }
 }
