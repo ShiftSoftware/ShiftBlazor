@@ -1323,6 +1323,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             var dParams = new DialogParameters
             {
                 {"EntitySet", Endpoint.AddUrlPath(Key?.ToString(), "revisions")},
+                {"ItemUrl", ItemUrl},
             };
 
             if (!string.IsNullOrWhiteSpace(Title))

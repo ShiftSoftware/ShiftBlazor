@@ -17,6 +17,8 @@ public class ShiftBlazorTestContext : TestContext
 
     public List<SampleDTO> Values = new();
 
+    protected readonly MockHttpMessageHandler MockHttp;
+
     public ShiftBlazorTestContext()
     {
         for (var i = 0; i < 100; i++ )
@@ -27,6 +29,7 @@ public class ShiftBlazorTestContext : TestContext
         Values[3].IsDeleted = true;
 
         var mock = Services.AddMockHttpClient();
+        MockHttp = mock;
         mock.When(ODataBaseUrl + "/Users").RespondJson(new ODataResult<User>
         {
             value = User.GenerateData(50, 50),
