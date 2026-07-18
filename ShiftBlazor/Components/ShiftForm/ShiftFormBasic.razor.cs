@@ -190,6 +190,13 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     [Parameter]
     public bool OnlyValidateOnSubmit { get; set;  }
 
+    /// <summary>
+    /// When true, renders ChildContent read-only for a supplied Value without taking over the
+    /// page: no forced Create mode, no shortcut registration, no autofocus. Used by the compare view.
+    /// </summary>
+    [Parameter]
+    public bool Embedded { get; set; }
+
     public Guid Id { get; private set; } = Guid.NewGuid();
     public FormTasks TaskInProgress { get; set; }
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -223,7 +230,9 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
 
     protected override void OnInitialized()
     {
-        IShortcutComponent.Register(this);
+        // Embedded hosts must not grab the global shortcut handler.
+        if (!Embedded)
+            IShortcutComponent.Register(this);
 
         TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
 
@@ -247,13 +256,16 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
 
     protected override async Task OnInitializedAsync()
     {
-        await SetMode(FormModes.Create);
+        // Embedded hosts keep the passed Mode (read-only); forcing Create would make them editable.
+        if (!Embedded)
+            await SetMode(FormModes.Create);
+
         DocumentTitle = Title;
     }
 
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender && AutoFocus)
+        if (firstRender && AutoFocus && !Embedded)
         {
             Task.Delay(10).ContinueWith(async x =>
             {

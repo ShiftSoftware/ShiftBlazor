@@ -1,0 +1,86 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@typeparam T where T : ShiftSoftware.ShiftEntity.Model.Dtos.ShiftEntityViewAndUpsertDTO, new()
+
+<MudFocusTrap DefaultFocus="DefaultFocus.Element">
+    <MudToolBar Dense="@true" Class="light-toolbar shift-toolbar-header">
+        <MudIcon Icon="@Icons.Material.Filled.Difference"></MudIcon>
+        <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["CompareButton"])</MudText>
+
+        <MudSpacer></MudSpacer>
+
+        @if (MudDialog != null)
+        {
+            <MudTooltip Text="@Loc["CloseButton"]">
+                <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                   Style="min-width:40px;"
+                                   Variant="@Variant.Text"
+                                   Size="@Size.Medium"
+                                   Color="@Color.Default"
+                                   aria-label="@Loc["CloseButton"]"
+                                   OnClick="@Close">
+                    <MudIcon Size="@Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                </MudButtonExtended>
+            </MudTooltip>
+        }
+    </MudToolBar>
+
+    @if (Loading)
+    {
+        <div style="padding: 50px; display: flex; justify-content: center;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+        </div>
+    }
+    else if (OldValue == null || NewValue == null)
+    {
+        <div class="pa-4">
+            <MudAlert Severity="Severity.Error" Dense="@true">@Loc["CompareLoadError"]</MudAlert>
+        </div>
+    }
+    else
+    {
+        <div class="pa-4">
+            @if (ChangedFields.Count == 0)
+            {
+                <MudAlert Severity="Severity.Success" Dense="@true">@Loc["CompareNoChanges"]</MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Dense="@true">
+                    <strong>@Loc["CompareChangedFields"]:</strong>
+                    @string.Join(", ", ChangedFields)
+                </MudAlert>
+            }
+        </div>
+
+        <MudGrid Spacing="0" Style="overflow-x:auto;">
+            <MudItem xs="12" md="6">
+                <div class="pa-2">
+                    <MudText Typo="Typo.subtitle2" Class="px-2 pb-2">@OldLabel</MudText>
+                    <ShiftFormBasic T="T"
+                                    Embedded="@true"
+                                    Mode="@FormModes.View"
+                                    DisableHeaderToolbar="@true"
+                                    DisableFooterToolbar="@true"
+                                    AutoFocus="@false"
+                                    TypeAuthAction="@TypeAuthAction"
+                                    Value="@(OldValue!)"
+                                    ChildContent="@ChildContent" />
+                </div>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <div class="pa-2">
+                    <MudText Typo="Typo.subtitle2" Class="px-2 pb-2">@NewLabel</MudText>
+                    <ShiftFormBasic T="T"
+                                    Embedded="@true"
+                                    Mode="@FormModes.View"
+                                    DisableHeaderToolbar="@true"
+                                    DisableFooterToolbar="@true"
+                                    AutoFocus="@false"
+                                    TypeAuthAction="@TypeAuthAction"
+                                    Value="@(NewValue!)"
+                                    ChildContent="@ChildContent" />
+                </div>
+            </MudItem>
+        </MudGrid>
+    }
+</MudFocusTrap>

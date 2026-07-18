@@ -1316,19 +1316,20 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         if (Mode > FormModes.Archive)
             return;
 
-        DateTimeOffset? date = null;
+        ViewRevision? selection = null;
 
         await RunTask(FormTasks.FetchRevisions, async () =>
         {
-            var dParams = new DialogParameters
+            var dParams = new DialogParameters<RevisionViewer>
             {
-                {"EntitySet", Endpoint.AddUrlPath(Key?.ToString(), "revisions")},
-                {"ItemUrl", ItemUrl},
+                { x => x.EntitySet, Endpoint.AddUrlPath(Key?.ToString(), "revisions") },
+                { x => x.ItemUrl, ItemUrl },
+                { x => x.OnCompareRequested, EventCallback.Factory.Create<CompareRevisions>(this, OpenCompare) },
             };
 
             if (!string.IsNullOrWhiteSpace(Title))
             {
-                dParams.Add("Title", Loc["RevisionsTitle", Title].ToString());
+                dParams.Add(x => x.Title, Loc["RevisionsTitle", Title].ToString());
             }
 
             var options = new DialogOptions
@@ -1339,18 +1340,48 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
             var dialogReference = await DialogService.ShowAsync<RevisionViewer>("", dParams, options);
             var result = await dialogReference.Result;
-            date = (DateTimeOffset?)result?.Data;
+            selection = result?.Data as ViewRevision;
         });
 
-        if (date == null)
+        // AsOf == null means the live/current record (or the dialog was dismissed) — nothing to archive.
+        if (selection?.AsOf is { } asOf)
         {
-            await CloseRevision();
+            await FetchItem(asOf);
+            await SetMode(FormModes.Archive);
         }
         else
         {
-            await FetchItem(date);
-            await SetMode(FormModes.Archive);
+            await CloseRevision();
         }
+    }
+
+    /// <summary>Opens the side-by-side compare on top of the revisions list, using this form's own fields.</summary>
+    private async Task OpenCompare(CompareRevisions compare)
+    {
+        var dParams = new DialogParameters<RevisionCompare<T>>
+        {
+            { x => x.ChildContent, ChildContent },
+            { x => x.ItemUrl, ItemUrl },
+            { x => x.OldRevision, compare.Old },
+            { x => x.NewRevision, compare.New },
+            { x => x.TypeAuthAction, TypeAuthAction },
+        };
+
+        if (!string.IsNullOrWhiteSpace(Title))
+        {
+            dParams.Add(x => x.Title, Loc["RevisionsCompareTitle", Title].ToString());
+        }
+
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = false,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+        };
+
+        var dialogReference = await DialogService.ShowAsync<RevisionCompare<T>>("", dParams, options);
+        await dialogReference.Result;
     }
 
     internal async Task CloseRevision()

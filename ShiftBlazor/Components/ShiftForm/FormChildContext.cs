@@ -10,6 +10,7 @@ public class FormChildContext<T> where T : class, new()
     public FormTasks CurrentTask => Self.TaskInProgress;
     public bool ReadOnly => Mode < FormModes.Edit;
     public bool Disabled => CurrentTask != FormTasks.None;
+    public bool Embedded => Self.Embedded;
     public T Item => Self.Value;
     public Guid Id => Self.Id;
     public Func<Task> CloseModal;

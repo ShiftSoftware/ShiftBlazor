@@ -1,140 +1,93 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 
 <MudFocusTrap DefaultFocus="DefaultFocus.Element">
-    @if (!ShowCompare)
-    {
-        <ShiftList T="RevisionDTO"
-                   EntitySet="@EntitySet"
-                   OnRowClick="@RowClickHandler"
-                   DisableGridEditor="true"
-                   ShowIDColumn="false"
-                   Sort='new Dictionary<string, SortDirection>{
-                        { nameof(RevisionDTO.ValidFrom), SortDirection.Descending }
-                   }'
-                   DisableHeaderToolbar="@true">
+    <ShiftList T="RevisionDTO"
+               EntitySet="@EntitySet"
+               OnRowClick="@RowClickHandler"
+               DisableGridEditor="true"
+               ShowIDColumn="false"
+               Sort='new Dictionary<string, SortDirection>{
+                    { nameof(RevisionDTO.ValidFrom), SortDirection.Descending }
+               }'
+               DisableHeaderToolbar="@true">
 
-            <ChildContent>
+        <ChildContent>
+
+            @if (CompareEnabled)
+            {
+                <TemplateColumn T="RevisionDTO" Context="cell" Sortable="false" Filterable="false"
+                                ShowColumnOptions="false" Editable="false" Title="" HeaderStyle="width:0%"
+                                CellStyle="padding: 0;">
+                    <CellTemplate>
+                        @* The whole cell toggles selection and stops propagation, so a near-miss doesn't leak to
+                           the row-click that opens a single revision. *@
+                        <div class="d-flex align-center justify-center"
+                             style="width: 100%; height: 100%; min-height: 40px; padding: 0 12px; cursor: pointer;"
+                             @onclick="@(() => ToggleSelect(cell.Item))"
+                             @onclick:stopPropagation="true">
+                            <MudCheckBox T="bool"
+                                         Dense="@true"
+                                         Size="@Size.Medium"
+                                         Style="pointer-events: none;"
+                                         Value="@IsSelected(cell.Item)" />
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            }
+
+            <PropertyColumn Property="x => x.ValidFrom" Title="@Loc["ValidFromColumnTitle"]" />
+            <PropertyColumn Property="x => x.ValidTo" Title="@Loc["ValidToColumnTitle"]" />
+
+            @if (UserListBaseUrl != null && UserListEntitySet != null)
+            {
+                <ForeignColumn TEntity="UserDetails"
+                               T="RevisionDTO"
+                               Property="x => x.SavedByUserID"
+                               ForeignTextField="@nameof(UserDetails.Name)"
+                               Title="@Loc["SavedByColumnTitle"]"
+                               BaseUrl="@UserListBaseUrl"
+                               EntitySet="@UserListEntitySet"
+                               TProperty="string">
+                </ForeignColumn>
+            }
+        </ChildContent>
+
+        <HeaderTemplate>
+            <MudToolBar Dense="@true" Class="light-toolbar shift-toolbar-header">
+                <MudIcon Icon="@Icons.Material.Filled.List"></MudIcon>
+                <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["DefaultTitle"])</MudText>
+
+                <MudSpacer></MudSpacer>
 
                 @if (CompareEnabled)
                 {
-                    <TemplateColumn T="RevisionDTO" Context="cell" Sortable="false" Filterable="false"
-                                    ShowColumnOptions="false" Editable="false" Title="" HeaderStyle="width:0%">
-                        <CellTemplate>
-                            @* Stop propagation so ticking a row doesn't also trigger the row-click (which opens a single version). *@
-                            <div @onclick:stopPropagation="true">
-                                <MudCheckBox T="bool"
-                                             Dense="@true"
-                                             Size="@Size.Small"
-                                             Value="@IsSelected(cell.Item)"
-                                             ValueChanged="@(_ => ToggleSelect(cell.Item))" />
-                            </div>
-                        </CellTemplate>
-                    </TemplateColumn>
-                }
-
-                <PropertyColumn Property="x => x.ValidFrom" Title="@Loc["ValidFromColumnTitle"]" />
-                <PropertyColumn Property="x => x.ValidTo" Title="@Loc["ValidToColumnTitle"]" />
-
-                @if (UserListBaseUrl != null && UserListEntitySet != null)
-                {
-                    <ForeignColumn TEntity="UserDetails"
-                                   T="RevisionDTO"
-                                   Property="x => x.SavedByUserID"
-                                   ForeignTextField="@nameof(UserDetails.Name)"
-                                   Title="@Loc["SavedByColumnTitle"]"
-                                   BaseUrl="@UserListBaseUrl"
-                                   EntitySet="@UserListEntitySet"
-                                   TProperty="string">
-                    </ForeignColumn>
-                }
-            </ChildContent>
-
-            <HeaderTemplate>
-                <MudToolBar Dense="@true" Class="light-toolbar shift-toolbar-header">
-                    <MudIcon Icon="@Icons.Material.Filled.List"></MudIcon>
-                    <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["DefaultTitle"])</MudText>
-
-                    <MudSpacer></MudSpacer>
-
-                    @if (CompareEnabled)
-                    {
-                        <MudTooltip Text="@(CanCompare ? Loc["CompareButton"] : Loc["CompareSelectTwoHint"])">
-                            <MudButton StartIcon="@Icons.Material.Filled.Difference"
-                                       Variant="@Variant.Text"
-                                       Size="@Size.Medium"
-                                       Color="@Color.Default"
-                                       Disabled="@(!CanCompare)"
-                                       OnClick="@CompareHandler">
-                                @Loc["CompareButton"]
-                            </MudButton>
-                        </MudTooltip>
-                    }
-
-                    @if (MudDialog != null)
-                    {
-                        <MudTooltip Text="@Loc["CloseButton"]">
-                            <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
-                                               Style="min-width:40px;"
-                                               Variant="@Variant.Text"
-                                               Size="@Size.Medium"
-                                               Color="@Color.Default"
-                                               aria-label="@Loc["CloseButton"]"
-                                               OnClick="@Close">
-                                <MudIcon Size="@Size.Medium" Icon="@Icons.Material.Filled.Close" />
-                            </MudButtonExtended>
-                        </MudTooltip>
-                    }
-                </MudToolBar>
-            </HeaderTemplate>
-        </ShiftList>
-    }
-    else
-    {
-        <MudToolBar Dense="@true" Class="light-toolbar shift-toolbar-header">
-            <MudTooltip Text="@Loc["CompareBackButton"]">
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
-                               Size="@Size.Medium"
-                               Color="@Color.Default"
-                               aria-label="@Loc["CompareBackButton"]"
-                               OnClick="@BackToList" />
-            </MudTooltip>
-            <MudText Class="px-4" Style="margin:0;">@Loc["CompareButton"]</MudText>
-
-            <MudSpacer></MudSpacer>
-
-            <MudSwitch T="bool" Value="@OnlyChanges" ValueChanged="@(v => { OnlyChanges = v; })"
-                       Color="@Color.Primary" Label="@Loc["CompareShowOnlyChanges"]" />
-
-            @if (MudDialog != null)
-            {
-                <MudTooltip Text="@Loc["CloseButton"]">
-                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                    <MudTooltip Text="@(CanCompare ? Loc["CompareButton"] : Loc["CompareSelectTwoHint"])">
+                        <MudButton StartIcon="@Icons.Material.Filled.Difference"
+                                   Variant="@Variant.Text"
                                    Size="@Size.Medium"
                                    Color="@Color.Default"
-                                   aria-label="@Loc["CloseButton"]"
-                                   OnClick="@Close" />
-                </MudTooltip>
-            }
-        </MudToolBar>
-
-        <MudSimpleTable Dense="@true" Bordered="@true" Striped="@true" Style="overflow-x:auto;">
-            <thead>
-                <tr>
-                    <th>@Loc["CompareFieldColumn"]</th>
-                    <th>@Loc["CompareOldColumn"]</th>
-                    <th>@Loc["CompareNewColumn"]</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in CompareRows.Where(x => !OnlyChanges || x.Changed))
-                {
-                    <tr style="@(row.Changed ? "background-color: var(--mud-palette-warning-hover);" : null)">
-                        <td><strong>@row.Field</strong></td>
-                        <td>@row.Old</td>
-                        <td>@row.New</td>
-                    </tr>
+                                   Disabled="@(!CanCompare)"
+                                   OnClick="@CompareHandler">
+                            @Loc["CompareButton"]
+                        </MudButton>
+                    </MudTooltip>
                 }
-            </tbody>
-        </MudSimpleTable>
-    }
+
+                @if (MudDialog != null)
+                {
+                    <MudTooltip Text="@Loc["CloseButton"]">
+                        <MudButtonExtended KeyboardKey="KeyboardKeys.Escape"
+                                           Style="min-width:40px;"
+                                           Variant="@Variant.Text"
+                                           Size="@Size.Medium"
+                                           Color="@Color.Default"
+                                           aria-label="@Loc["CloseButton"]"
+                                           OnClick="@Close">
+                            <MudIcon Size="@Size.Medium" Icon="@Icons.Material.Filled.Close" />
+                        </MudButtonExtended>
+                    </MudTooltip>
+                }
+            </MudToolBar>
+        </HeaderTemplate>
+    </ShiftList>
 </MudFocusTrap>
