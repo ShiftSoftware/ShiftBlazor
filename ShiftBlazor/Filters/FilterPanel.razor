@@ -67,14 +67,14 @@
 
     @FilterTempalte
 
-    <MudStack Row Class="mt-3">
+    <MudStack Row Class="mt-3" AlignItems="AlignItems.Center">
         <MudChipSet T="string">
-            @foreach (var filterSet in filterHistory)
+            @foreach (var savedFilter in savedFilters)
             {
                 <MudTooltip Placement="Placement.Top">
                     <TooltipContent>
                         <MudStack Spacing="0" Class="pa-1" AlignItems="AlignItems.Start">
-                            @foreach (var filter in filterSet)
+                            @foreach (var filter in savedFilter.Filters)
                             {
                                 <MudText Typo="Typo.caption">@DescribeFilter(filter)</MudText>
                             }
@@ -82,15 +82,18 @@
                     </TooltipContent>
                     <ChildContent>
                         <MudChip T="string"
-                                 OnClick="() => RestoreFilters(filterSet)"
-                                 OnClose="(chip) => RemoveFromHistory(filterSet)">
-                            @filterSet.Count @(filterSet.Count == 1 ? "Filter" : "Filters")
+                                 Color="savedFilter.Color"
+                                 Variant="Variant.Filled"
+                                 OnClick="() => RestoreFilters(savedFilter)"
+                                 OnClose="(chip) => RemoveSavedFilter(savedFilter)">
+                            @savedFilter.Name
                         </MudChip>
                     </ChildContent>
                 </MudTooltip>
             }
         </MudChipSet>
         <MudSpacer/>
+        <MudButton StartIcon="@Icons.Material.Filled.BookmarkAdd" Size="Size.Small" Variant="Variant.Outlined" OnClick="OpenSaveFilterDialog" Disabled="IsLoading">Save Filter</MudButton>
         <MudButton StartIcon="@Icons.Material.Filled.PlaylistRemove" Size="Size.Small" Variant="Variant.Filled" OnClick="Reset" Disabled="IsLoading">Reset</MudButton>
         <MudButton StartIcon="@Icons.Material.Filled.Search" Size="Size.Small" Variant="Variant.Filled" ButtonType="ButtonType.Submit" Color="Color.Primary" Disabled="IsLoading">Filter</MudButton>
     </MudStack>

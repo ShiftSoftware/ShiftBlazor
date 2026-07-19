@@ -1,0 +1,66 @@
+@namespace ShiftSoftware.ShiftBlazor.Filters
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Save filter</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="Name"
+                      Label="Name"
+                      Immediate
+                      AutoFocus
+                      MaxLength="50"
+                      @onkeydown="OnKeyDown" />
+
+        <MudText Typo="Typo.caption" Class="mt-4 d-block">Color</MudText>
+        <MudStack Row Wrap="Wrap.Wrap" Spacing="1" Class="mt-1">
+            @foreach (var color in Palette)
+            {
+                <MudChip T="string"
+                         Color="color"
+                         Variant="Variant.Filled"
+                         Icon="@(SelectedColor == color ? Icons.Material.Filled.Check : null)"
+                         OnClick="() => SelectedColor = color">
+                    @color.ToString()
+                </MudChip>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="MudBlazor.Color.Primary"
+                   Disabled="@(string.IsNullOrWhiteSpace(Name))"
+                   OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    internal IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public List<FilterPanel.BasicFilter> Filters { get; set; } = default!;
+
+    private string Name { get; set; } = string.Empty;
+    private Color SelectedColor { get; set; } = Palette[0];
+
+    private static readonly Color[] Palette =
+    [
+        Color.Primary, Color.Secondary, Color.Tertiary, Color.Info,
+        Color.Success, Color.Warning, Color.Error, Color.Dark,
+    ];
+
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !string.IsNullOrWhiteSpace(Name))
+            Submit();
+    }
+
+    private void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(new FilterPanel.SavedFilter(Name.Trim(), SelectedColor, Filters)));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

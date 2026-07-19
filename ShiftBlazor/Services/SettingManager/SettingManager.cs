@@ -284,18 +284,18 @@ public class SettingManager
         return Settings.IsDataGridFilterPanelOpen;
     }
 
-    public void AddFilterToHistory(string id, List<List<BasicFilter>> filter)
+    public void SetSavedFilters(string id, List<SavedFilter> filters)
     {
-        Settings.FilterHistory ??= [];
+        Settings.SavedFilters ??= [];
 
-        Settings.FilterHistory.Remove(id);
-        Settings.FilterHistory.Add(id, filter);
+        Settings.SavedFilters.Remove(id);
+        Settings.SavedFilters.Add(id, filters);
         SyncLocalStorage.SetItem(Key, Settings);
     }
 
-    public List<List<BasicFilter>>? GetFilterHistory(string id)
+    public List<SavedFilter>? GetSavedFilters(string id)
     {
-        return Settings.FilterHistory?.GetValueOrDefault(id);
+        return Settings.SavedFilters?.GetValueOrDefault(id);
     }
 
     private async Task<DeviceInfo> GetDeviceInfo()

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Components;
 using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Events;
@@ -12,6 +13,8 @@ namespace ShiftSoftware.ShiftBlazor.Filters;
 public partial class FilterPanel : ComponentBase, IDisposable
 {
     [Inject] private SettingManager SettingManager { get; set; } = default!;
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+    [Inject] private MessageService MessageService { get; set; } = default!;
 
     [Parameter]
     public Type? DTO { get; set; }
@@ -30,9 +33,9 @@ public partial class FilterPanel : ComponentBase, IDisposable
     private readonly bool IsAnd = true;
     private bool IsLoading { get; set; }
 
-    private const int MaxHistorySize = 10;
     public record BasicFilter(string Field, ODataOperator Operator, string? Value);
-    private List<List<BasicFilter>> filterHistory = [];
+    public record SavedFilter(string Name, Color Color, List<BasicFilter> Filters);
+    private List<SavedFilter> savedFilters = [];
 
     protected override void OnInitialized()
     {
@@ -46,7 +49,7 @@ public partial class FilterPanel : ComponentBase, IDisposable
         {
             ShiftList = list;
             ShiftBlazorEvents.OnBeforeGridDataBound += OnListFetched;
-            filterHistory = SettingManager.GetFilterHistory(ShiftList.GetIdentifier()) ?? [];
+            savedFilters = SettingManager.GetSavedFilters(ShiftList.GetIdentifier()) ?? [];
         }
     }
 
@@ -71,51 +74,55 @@ public partial class FilterPanel : ComponentBase, IDisposable
 
     private void SetFilterAndReload()
     {
-        SaveFilters();
         ReloadList(true);
     }
 
-    private void SaveFilters()
+    private async Task OpenSaveFilterDialog()
     {
-        var filtersToSave = Parent?.Filters
+        var currentFilters = Parent?.Filters
             .Where(x => !x.Value.IsHidden)
             .Where(x => x.Value.HasValue() || x.Value.IsNoValueOperator)
             .Select(x => new BasicFilter(x.Value.Field, x.Value.Operator, x.Value.ValueToString()))
-            .ToList();
+            .ToList() ?? [];
 
-        if (filtersToSave == null || filtersToSave.Count == 0)
+        if (currentFilters.Count == 0)
+        {
+            MessageService.Warning("There are no filters to save.");
+            return;
+        }
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var parameters = new DialogParameters<SaveFilterDialog> { { x => x.Filters, currentFilters } };
+        var dialog = await DialogService.ShowAsync<SaveFilterDialog>("", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled || result.Data is not SavedFilter saved)
             return;
 
-        var isDuplicate = filterHistory.Any(existingFilters =>
-            filtersToSave.Count == existingFilters.Count && filtersToSave.All(x =>
-                existingFilters.Any(z => z.Field == x.Field && z.Operator == x.Operator && z.Value == x.Value)));
+        // Replace any existing saved filter with the same name (case-insensitive).
+        savedFilters.RemoveAll(x => string.Equals(x.Name, saved.Name, StringComparison.OrdinalIgnoreCase));
+        savedFilters.Insert(0, saved);
 
-        if (isDuplicate)
-            return;
-
-        // newest first
-        filterHistory.Insert(0, filtersToSave);
-
-        if (filterHistory.Count > MaxHistorySize)
-            filterHistory.RemoveRange(MaxHistorySize, filterHistory.Count - MaxHistorySize);
-
-        PersistHistory();
+        PersistSavedFilters();
+        StateHasChanged();
     }
 
-    private void RemoveFromHistory(List<BasicFilter> filterSet)
+    private void RemoveSavedFilter(SavedFilter savedFilter)
     {
-        filterHistory.Remove(filterSet);
-        PersistHistory();
+        savedFilters.Remove(savedFilter);
+        PersistSavedFilters();
     }
 
-    private void PersistHistory()
+    private void PersistSavedFilters()
     {
         if (ShiftList != null)
-            SettingManager.AddFilterToHistory(ShiftList.GetIdentifier(), filterHistory);
+            SettingManager.SetSavedFilters(ShiftList.GetIdentifier(), savedFilters);
     }
 
-    private void RestoreFilters(List<BasicFilter> filterSet)
+    private void RestoreFilters(SavedFilter savedFilter)
     {
+        var filterSet = savedFilter.Filters;
+
         if (Parent == null)
             return;
 
@@ -153,7 +160,7 @@ public partial class FilterPanel : ComponentBase, IDisposable
         }
 
         if (hasFailure)
-            RemoveFromHistory(filterSet);
+            RemoveSavedFilter(savedFilter);
 
         StateHasChanged();
         ReloadList(true);

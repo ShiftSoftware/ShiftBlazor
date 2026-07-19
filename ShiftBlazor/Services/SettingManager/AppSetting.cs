@@ -19,7 +19,7 @@ public class AppSetting
     public virtual Dictionary<string, FileExplorerSettings>? FileExplorerSettings { get; set; }
     public virtual bool? IsDrawerOpen { get; set; }
     public virtual bool? IsDataGridFilterPanelOpen { get; set; }
-    public virtual Dictionary<string, List<List<BasicFilter>>>? FilterHistory { get; set; }
+    public virtual Dictionary<string, List<SavedFilter>>? SavedFilters { get; set; }
 }
 
 public static class DefaultAppSetting
