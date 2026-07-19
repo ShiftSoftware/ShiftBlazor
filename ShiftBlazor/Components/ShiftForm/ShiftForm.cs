@@ -7,6 +7,7 @@ using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
+[Obsolete("Use the form's Context instead")]
 public partial class ShiftForm<TComponent, T> : ComponentBase where TComponent : ComponentBase where T : ShiftEntityViewAndUpsertDTO, new()
 {
     [Inject] private SettingManager SettingManager { get; set; } = default!;

@@ -42,6 +42,11 @@ public partial class RevisionViewer
 
     internal bool CanCompare => CompareEnabled && SelectedRevisions.Count == 2;
 
+    private readonly Dictionary<string, SortDirection> _sort = new ()
+    {
+        { nameof(RevisionDTO.ValidFrom), SortDirection.Descending }
+    };
+
     protected override void OnInitialized()
     {
         StateHasChanged();
