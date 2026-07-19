@@ -146,10 +146,20 @@
 
 		if (Initialized && newFilter is StringFilterModel stringFilter && AutocompleteParameters != null && IsMultiSelectOperator(stringFilter.Operator))
 		{
-			// temp fix to Filter Reset
-			if (stringFilter.Value == null)
+			// Keep the autocomplete's SelectedValues in sync when the filter value changes
+			// from an external source (Reset, or restoring a saved filter). Without this the
+			// autocomplete keeps its previous selection, so a restored filter shows empty even
+			// though Filter.Value is correct and the filter itself works.
+			var desiredValues = (stringFilter.Value as IEnumerable<string>)?
+				.Where(x => !string.IsNullOrWhiteSpace(x)).ToList() ?? [];
+
+			var currentValues = (AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValues)] as List<ShiftEntitySelectDTO>)?
+				.Select(SelectDTOKey).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x!).ToList() ?? [];
+
+			if (!new HashSet<string>(currentValues).SetEquals(desiredValues))
 			{
-				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValues)] = new List<ShiftEntitySelectDTO>();
+				AutocompleteParameters[nameof(ShiftAutocomplete<ShiftEntityDTOBase>.SelectedValues)] =
+					desiredValues.Select(ValueToSelectDTO).ToList();
 			}
 		}
 
@@ -169,6 +179,13 @@
 	private bool IsMultiSelectOperator(ODataOperator oDataOperator)
 	{
 		return oDataOperator == ODataOperator.In || oDataOperator == ODataOperator.NotIn;
+	}
+
+	private string? SelectDTOKey(ShiftEntitySelectDTO dto)
+	{
+		// Mirror ValueToSelectDTO/AutocompleteMultiChanged: options-backed autocompletes key
+		// off Value (the ID), text-backed ones off Text.
+		return Filter is StringFilterModel filter && filter.AutocompleteOptions != null ? dto.Value : dto.Text;
 	}
 
 	private ShiftEntitySelectDTO ValueToSelectDTO(string value)
