@@ -88,12 +88,26 @@ function fetchForeignEntries(foreignTables, headers) {
                     throw new Error(`Failed to fetch ${url}: ${response.statusText}`)
                 }
 
-                let items;
+                let items = []
 
                 try {
-                    items = (await response.json()).Value;
+                    const json = await response.json()
+
+                    // Controllers serialize the OData envelope PascalCase ("Value"), but a
+                    // minimal-API endpoint whose host has not mirrored the MVC naming policy
+                    // emits camelCase ("value"). Accept either. Anything else is logged and
+                    // treated as empty — reading .Value off an unexpected 200 body used to
+                    // leave this undefined and fail the spread below with the opaque
+                    // "items is not iterable".
+                    const rows = json?.Value ?? json?.value
+
+                    if (Array.isArray(rows)) {
+                        items = rows
+                    } else {
+                        console.error(`Unexpected response shape from ${url}`, json)
+                    }
                 } catch (err) {
-                    items = [];
+                    console.error(`Failed to parse response from ${url}`, err)
                 }
 
                 v.items = [...v.items, ...items]
@@ -104,13 +118,23 @@ function fetchForeignEntries(foreignTables, headers) {
 }
 
 function generateItemMapper(foreignTables) {
-    Object.values(foreignTables).forEach((v) => {
+    Object.entries(foreignTables).forEach(([tableName, v]) => {
+        let mapped = 0
+
         // create entry mapper as id : value, for example "u23" : 1 (the index)
         v.items.forEach((item, idx) => {
             if (item.ID) {
                 v.itemsMapper[item.ID.toString()] = idx.toString()
+                mapped++
             }
         })
+
+        // Rows came back but not one carried an "ID". The endpoint served property names in a
+        // casing other than the PascalCase contract, so every lookup below resolves to blank.
+        // Say so — otherwise the column exports empty with no indication anything went wrong.
+        if (v.items.length && !mapped) {
+            console.error(`Foreign column "${tableName}": ${v.items.length} row(s) returned without an "ID" property — the column will export blank. Check the endpoint's JSON naming policy.`)
+        }
     })
 }
 
@@ -368,7 +392,10 @@ self.onmessage = async (event) => {
                 return;
             }
 
-            rows = data?.Value || [];
+            // Same casing tolerance as the foreign-column fetch above. Without the camelCase
+            // fallback a minimal-API list endpoint exports zero rows and surfaces as the
+            // misleading "No Items found" thrown below.
+            rows = data?.Value ?? data?.value ?? [];
         }
 
         if (!rows.length) throw new Error("No Items found");
