@@ -1,0 +1,60 @@
+@using ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+@inject IDialogService DialogService
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenViewer">Open Image Viewer</MudButton>
+<MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="ml-2" OnClick="OpenSingle">Open Single Image</MudButton>
+
+@code {
+    // Uses the general-purpose ShiftFileDTO API (Values) — no FileUploader / UploaderItem involved.
+    private List<ShiftFileDTO> BuildFiles(bool includeNonImage)
+    {
+        var files = new List<ShiftFileDTO>();
+
+        for (var i = 1; i <= 6; i++)
+        {
+            files.Add(new ShiftFileDTO
+            {
+                Name = $"photo-{i}.jpg",
+                Url = $"https://picsum.photos/id/{i * 10}/1200/800",
+                ContentType = "image/jpeg",
+            });
+        }
+
+        if (includeNonImage)
+        {
+            files.Add(new ShiftFileDTO
+            {
+                Name = "specification.pdf",
+                Url = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                ContentType = "application/pdf",
+            });
+        }
+
+        return files;
+    }
+
+    private void OpenViewer() => Show(BuildFiles(includeNonImage: true), "Sample Gallery");
+
+    private void OpenSingle() => Show(BuildFiles(includeNonImage: false).Take(1).ToList(), null);
+
+    private void Show(List<ShiftFileDTO> files, string? title)
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            BackdropClick = true,
+            CloseOnEscapeKey = false,
+            FullScreen = true,
+            MaxWidth = MaxWidth.False,
+        };
+
+        var parameters = new DialogParameters
+        {
+            { "Values", files },
+            { "Title", title },
+        };
+
+        DialogService.ShowAsync<ImageViewer>("", parameters, options);
+    }
+}

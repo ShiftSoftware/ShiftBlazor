@@ -1,95 +1,167 @@
-﻿@namespace ShiftSoftware.ShiftBlazor.Components
+@namespace ShiftSoftware.ShiftBlazor.Components
 @implements IShortcutComponent
-@inject ShiftBlazorLocalizer Loc
 
-
-<MudDialog ContentStyle="padding: 0;margin: 0;">
+<MudDialog ContentClass="siv-dialog-content">
     <DialogContent>
-        
+        <div class="shift-image-viewer" tabindex="0" @ref="ViewerRef" @onkeydown="HandleKeyDown">
 
-        <MudToolBar Dense Class="light-toolbar">
+            @* ---------- Toolbar ---------- *@
+            <div class="siv-toolbar">
+                <MudIcon Icon="@Icons.Material.Filled.Collections" Size="Size.Medium" />
+                <span class="siv-title">@(Title ?? Loc["GalleryDefaultTitle"])</span>
 
-            <MudIcon Icon="@Icons.Material.Filled.ViewCarousel"></MudIcon>
-            <MudText>@Title</MudText>
-            <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["GalleryDefaultTitle"])</MudText>
-            <MudSpacer/>
+                @if (Items.Count > 1)
+                {
+                    <span class="siv-counter">@(currentIndex + 1) / @Items.Count</span>
+                }
+
+                <MudSpacer />
+
+                @if (CurrentIsImage)
+                {
+                    <MudTooltip Text="@Loc["ImageViewerZoomOut"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.Remove"
+                                       Color="Color.Inherit"
+                                       Disabled="@(scale <= MinScale)"
+                                       OnClick="ZoomOut"
+                                       aria-label="@Loc["ImageViewerZoomOut"]" />
+                    </MudTooltip>
+
+                    <span class="siv-zoom-label">@ZoomLabel</span>
+
+                    <MudTooltip Text="@Loc["ImageViewerZoomIn"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                       Color="Color.Inherit"
+                                       Disabled="@(scale >= MaxScale)"
+                                       OnClick="ZoomIn"
+                                       aria-label="@Loc["ImageViewerZoomIn"]" />
+                    </MudTooltip>
+
+                    <MudTooltip Text="@Loc["ImageViewerResetZoom"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.ZoomOutMap"
+                                       Color="Color.Inherit"
+                                       Disabled="@(!IsTransformed)"
+                                       OnClick="ResetTransform"
+                                       aria-label="@Loc["ImageViewerResetZoom"]" />
+                    </MudTooltip>
+
+                    <MudTooltip Text="@Loc["ImageViewerRotate"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.RotateRight"
+                                       Color="Color.Inherit"
+                                       OnClick="RotateCw"
+                                       aria-label="@Loc["ImageViewerRotate"]" />
+                    </MudTooltip>
+
+                    <MudDivider Vertical Class="siv-divider" FlexItem />
+                }
+
+                @if (!string.IsNullOrWhiteSpace(CurrentUrl))
+                {
+                    <MudTooltip Text="@Loc["DownloadFile"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                       Color="Color.Inherit"
+                                       Href="@CurrentUrl"
+                                       Target="_blank"
+                                       aria-label="@Loc["DownloadFile"]" />
+                    </MudTooltip>
+                }
 
                 <MudTooltip Text="@Loc["ModalClose"]">
-                    <MudButton Style="min-width:40px;"
-                               Variant="Variant.Text"
-                               Size="Size.Medium"
-                               aria-label="@Loc["ModalClose"]"
-                               OnClick="Close">
-                        <MudIcon Size="Size.Medium" Icon="@Icons.Material.Filled.Close" />
-                    </MudButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   Color="Color.Inherit"
+                                   OnClick="Close"
+                                   aria-label="@Loc["ModalClose"]" />
                 </MudTooltip>
-        </MudToolBar>
+            </div>
 
-        <MudCarousel Class="mud-width-full" Style="height: 90vh;" ShowArrows="true" ShowBullets="true"  EnableSwipeGesture="true" AutoCycle="false" TData="UploaderItem">
+            @* ---------- Stage ---------- *@
+            <div class="siv-stage"
+                 @onpointerdown="OnPointerDown"
+                 @onpointermove="OnPointerMove"
+                 @onpointerup="OnPointerUp"
+                 @onpointerleave="OnPointerUp"
+                 @onwheel="OnWheel"
+                 @ondblclick="ToggleZoom">
 
-            @if (Files?.Count > 0)
-            {
-                foreach (var file in Files)
+                @if (!HasItems)
                 {
-                    <MudCarouselItem Transition="Transition.Slide" Color="@Color.Dark" Style="@($"color: #fff;background:{Colors.Gray.Darken4};")">
-                        @if (file.IsImage()) {
-                            <MudImage ObjectFit="ObjectFit.ScaleDown" ObjectPosition="ObjectPosition.Center" Src="@file?.File?.Url" Alt="@file?.GetFileName()" Elevation="25" Style="width: 100%; height: 100%;" />
-                        }
-                        else
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.InsertDriveFile" Style="width: 80%; height: 80%; display: block; margin: auto;" />
-                            <MudText Align="Align.Center">@file.GetFileName()</MudText>
-                        }
-                    </MudCarouselItem>
-                    
+                    <div class="siv-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.HideImage" Size="Size.Large" />
+                        <MudText>@Loc["NoFilesSelected"]</MudText>
+                    </div>
                 }
-            }
+                else if (Current is not null)
+                {
+                    @if (CurrentIsImage)
+                    {
+                        <img class="siv-image @(isDragging ? "siv-dragging" : null) @(IsZoomed ? "siv-zoomed" : null)"
+                             src="@CurrentUrl"
+                             alt="@Current.Name"
+                             style="@ImageTransform"
+                             draggable="false" />
+                    }
+                    else
+                    {
+                        <div class="siv-file">
+                            <MudIcon Icon="@Icons.Material.Filled.InsertDriveFile" />
+                            <MudText Typo="Typo.h6" Class="siv-file-name">@Current.Name</MudText>
+                            @if (!string.IsNullOrWhiteSpace(CurrentUrl))
+                            {
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Download"
+                                           Href="@CurrentUrl"
+                                           Target="_blank">
+                                    @Loc["DownloadFile"]
+                                </MudButton>
+                            }
+                        </div>
+                    }
+                }
 
-        </MudCarousel>
+                @if (Items.Count > 1)
+                {
+                    @* Swallow the arrows' double-click so it doesn't bubble to the stage and toggle zoom. *@
+                    <span @ondblclick:stopPropagation="true">
+                        <MudIconButton Class="siv-nav siv-nav-prev"
+                                       Icon="@Icons.Material.Filled.ChevronLeft"
+                                       Color="Color.Inherit"
+                                       Size="Size.Large"
+                                       OnClick="Prev"
+                                       aria-label="@Loc["ImageViewerPrevious"]" />
+                        <MudIconButton Class="siv-nav siv-nav-next"
+                                       Icon="@Icons.Material.Filled.ChevronRight"
+                                       Color="Color.Inherit"
+                                       Size="Size.Large"
+                                       OnClick="Next"
+                                       aria-label="@Loc["ImageViewerNext"]" />
+                    </span>
+                }
+            </div>
+
+            @* ---------- Thumbnail strip ---------- *@
+            @if (Items.Count > 1)
+            {
+                <div class="siv-thumbs">
+                    @for (var i = 0; i < Items.Count; i++)
+                    {
+                        var index = i;
+                        var item = Items[index];
+                        <div class="siv-thumb @(index == currentIndex ? "active" : null)"
+                             @key="item.Key"
+                             @onclick="@(() => Select(index))">
+                            @if (item.IsImage && !string.IsNullOrWhiteSpace(item.Url))
+                            {
+                                <img src="@item.Url" alt="@item.Name" draggable="false" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.InsertDriveFile" />
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
     </DialogContent>
 </MudDialog>
-
-@code {
-    [Parameter]
-    public List<UploaderItem>? Files { get; set; }
-
-    [Parameter]
-    public string? Title { get; set; }
-
-    [CascadingParameter]
-    public IMudDialogInstance? MudDialog { get; set; }
-
-    public Guid Id { get; private set; } = Guid.NewGuid();
-
-    public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
-
-    protected override void OnInitialized()
-    {
-        if (MudDialog != null)
-        {
-            IShortcutComponent.Register(this);
-        }
-    }
-
-    public ValueTask HandleShortcut(KeyboardKeys actions)
-    {
-        switch (actions)
-        {
-            case KeyboardKeys.Escape:
-                MudDialog?.Close();
-                break;
-        }
-
-        return new ValueTask();
-    }
-
-    public void Close()
-    {
-        MudDialog?.Close();
-    }
-
-    public void Dispose()
-    {
-        IShortcutComponent.Remove(Id);
-    }
-}

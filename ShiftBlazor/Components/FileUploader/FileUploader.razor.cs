@@ -267,7 +267,8 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         {
             NoHeader = true,
             BackdropClick = true,
-            CloseOnEscapeKey = true,
+            CloseOnEscapeKey = false,
+            FullScreen = true,
             MaxWidth = MaxWidth.False,
         };
 

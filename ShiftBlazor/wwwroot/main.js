@@ -55,6 +55,17 @@ window.getWindowDimensions = function () {
     };
 };
 
+// Scrolls the active ImageViewer thumbnail (by index) into view within its strip.
+window.shiftScrollIntoView = function (container, index) {
+    try {
+        const thumbs = container && container.querySelectorAll ? container.querySelectorAll(".siv-thumb") : null;
+        const el = thumbs ? thumbs[index] : null;
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        }
+    } catch { /* no-op */ }
+};
+
 window.handleKeydown = function (e) {
     if (e.altKey || (e.code != null && e.code.includes("Alt"))) {
         e.preventDefault();
