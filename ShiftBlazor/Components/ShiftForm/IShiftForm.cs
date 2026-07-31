@@ -26,5 +26,21 @@ public interface IShiftForm
     public void DisplayError(string field, string message);
     public void DisplayError(FieldIdentifier field, string message);
 
+    /// <summary>
+    ///     Marks the form as changed, so the hosting <see cref="ShiftList{T}"/> reloads when the
+    ///     form closes. See <see cref="ShiftFormBasic{T}.MarkAsChanged"/> for details.
+    /// </summary>
+    /// <remarks>
+    ///     Exposed on the interface so components nested inside the form — which receive it
+    ///     through the <c>ShiftForm</c> cascading value and do not know the form's DTO type —
+    ///     can report their own out-of-band changes:
+    ///     <code>
+    ///     [CascadingParameter(Name = "ShiftForm")] public IShiftForm? ShiftForm { get; set; }
+    ///     // ... after a successful PUT to this component's own endpoint:
+    ///     ShiftForm?.MarkAsChanged();
+    ///     </code>
+    /// </remarks>
+    public void MarkAsChanged();
+
 
 }

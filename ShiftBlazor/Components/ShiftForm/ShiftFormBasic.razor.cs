@@ -207,6 +207,17 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
     internal MudBlazor.Severity AlertSeverity { get; set; }
     internal string AlertMessage { get; set; } = default!;
 
+    /// <summary>
+    ///     Whether anything about this form's record changed while it was open. Decides what the
+    ///     form hands back when it closes: the <see cref="Value"/> when set, <c>null</c> otherwise
+    ///     — and <c>null</c> makes <see cref="Services.ShiftModal.Close"/> cancel the dialog, which
+    ///     is what tells <see cref="ShiftList{T}.OpenDialog"/> not to reload the grid.
+    ///     <para>
+    ///     Set internally by the paths that change the record (save, delete, clear attention) and
+    ///     publicly by <see cref="MarkAsChanged"/>. Only ever set to <c>true</c> — see that method
+    ///     for why it is a one-way latch.
+    ///     </para>
+    /// </summary>
     internal bool MadeChanges = false;
 
     protected ITypeAuthService? TypeAuthService;
@@ -324,6 +335,36 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
                 break;
         }
     }
+
+    /// <summary>
+    ///     Marks the form as changed, so the hosting <see cref="ShiftList{T}"/> reloads when the
+    ///     form closes.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///     For edits made outside the form's own save — side panels or embedded components that
+    ///     PUT their own endpoints — where the form's entity itself was never submitted. Without
+    ///     this, such a form closes as a cancel and the list keeps showing the stale row.
+    ///     </para>
+    ///     <para>
+    ///     Saving, deleting and clearing attention already mark the form; calling this on top of
+    ///     them is harmless. Safe to call any number of times, and at any point while the form is
+    ///     open — only the state at close time matters. A form that never calls it behaves exactly
+    ///     as before.
+    ///     </para>
+    ///     <para>
+    ///     Deliberately one-way: there is no matching "unmark". Clearing the flag would silently
+    ///     throw away the list refresh owed by a real save that had already set it.
+    ///     </para>
+    ///     <example>
+    ///     <code>
+    ///     // In a form deriving from ShiftForm&lt;TPage, TDTO&gt;, after a side panel completed
+    ///     // a task against its own endpoint:
+    ///     private void OnFollowUpTaskCompleted() => MarkAsChanged();
+    ///     </code>
+    ///     </example>
+    /// </remarks>
+    public void MarkAsChanged() => MadeChanges = true;
 
     internal async Task Cancel()
     {

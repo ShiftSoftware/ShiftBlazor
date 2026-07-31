@@ -774,6 +774,17 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// <param name="openMode">Specifies how the dialog window opens.</param>
     /// <param name="parameters">The parameters to be passed to the component.</param>
     /// <returns>A DialogResult object representing the outcome of the dialog.</returns>
+    /// <remarks>
+    /// The grid reloads when the dialog closes with data, i.e. when the form marked itself changed
+    /// (see <see cref="ShiftFormBasic{T}.MarkAsChanged"/>); a cancelled dialog leaves it alone.
+    /// <para>
+    /// <see cref="OnFormClosed"/> is deliberately NOT invoked here. It reports on this list's own
+    /// item form and is raised by <see cref="ViewAddItem"/>, which always opens
+    /// <c>ComponentType</c>. This method opens an arbitrary component — button and foreign columns
+    /// use it to open a <em>different</em> entity's form — so raising the event here would hand
+    /// handlers a DTO of an unrelated type. The reload above still happens either way.
+    /// </para>
+    /// </remarks>
     public async Task<DialogResult?> OpenDialog(Type ComponentType, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null)
     {
         IsModalOpen = true;
@@ -1545,6 +1556,22 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         IsFilterPanelOpen = SettingManager?.SetFilterPanelState(!IsFilterPanelOpen) ?? !IsFilterPanelOpen;
     }
 
+    /// <summary>
+    /// Reloads the grid data.
+    /// </summary>
+    /// <remarks>
+    /// The two branches both reload — they differ in how. <see cref="ReloadBlockTokenSource"/> is
+    /// non-null only during the short window in <c>ServerReload</c> where the very first load is
+    /// held back while filters and sorts register themselves (see <c>ActiveOperations</c>). Inside
+    /// that window a load is already in flight and has not sent its request yet, so cancelling the
+    /// block releases it immediately with the now-registered operations applied — reloading by
+    /// unblocking rather than by queueing a second, redundant request.
+    /// <para>
+    /// Outside that window the field is null, so the condition is false and the else branch
+    /// debounces a real reload. That is the steady-state path: after the first load has completed,
+    /// this method always reloads.
+    /// </para>
+    /// </remarks>
     public void Reload()
     {
         if (ReloadBlockTokenSource?.IsCancellationRequested == false)
