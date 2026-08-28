@@ -231,6 +231,10 @@
 .mud-table .mud-table-pagination {
     display: flex;
     align-items: center;
+    /* Lets .shift-list-find-note claim a full-width line of its own above the pager controls.
+       Inert otherwise: the pager row carries a MudSpacer that absorbs any slack, so nothing
+       else in it ever reaches the point of wrapping. */
+    flex-wrap: wrap;
 }
 
 th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
@@ -879,3 +883,141 @@ tr:has(> td .attention-row--info) > td {
 }
 
 /* =============== Attention System End =============== */
+
+/* =============== List Find =============== */
+
+/* Its own slim row directly under .shift-toolbar-header, not an item inside it. The toolbar's
+   contents differ per list — ToolbarStartTemplate can hold any number of action buttons — so a box
+   placed in it landed somewhere different on every list and moved as buttons came and went.
+
+   The row keeps the header's banner colour but is deliberately shorter than it, so the toolbar
+   above stays the dominant band. justify-content (not a margin or float) docks the box to the
+   row's end, which follows the reading direction — it lands on the left in an RTL culture
+   without a second rule. */
+:root {
+    /* Both bars are laid out outside the grid's height box, so ShiftList deducts these same two
+       lengths from the height it hands MudBlazor (see EffectiveHeight). They are variables so the
+       element and the arithmetic can never disagree — change one and both follow. */
+    --shift-list-find-bar-height: 41px;
+    --shift-list-find-note-height: 33px;
+}
+
+.shift-list-find-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    height: var(--shift-list-find-bar-height);
+    box-sizing: border-box;
+    padding: 4px 12px;
+    border-top: 1px solid var(--mud-palette-table-lines);
+}
+
+/* Capped, not flexible: the box should stay the same width whatever else lands on this row. */
+.shift-list-find {
+    flex: 0 1 260px;
+    min-width: 140px;
+}
+
+/* The field carries its own surface colour so it reads as somewhere to type rather than dissolving
+   into the banner behind it. On the input row, not on the outline: MudBlazor's outline is an
+   absolutely positioned fieldset drawn over this box, so painting that one would cover the field. */
+.shift-list-find .mud-input.mud-input-outlined {
+    background-color: var(--mud-palette-surface);
+    border-radius: var(--mud-default-borderradius);
+}
+
+/* Two rules below trim the field well under the toolbar's height. Both name a MudBlazor class of
+   their own on purpose: the rules they override have the same specificity and MudBlazor.min.css
+   loads after this file, so without the extra class they would lose on source order. */
+
+/* MudBlazor reserves vertical space under a dense field for helper text this box never shows. */
+.shift-list-find .mud-input-control.mud-input-control-margin-dense {
+    margin-block: 0;
+}
+
+/* A search box subordinate to the header does not need the input default's 16px text in a 40px
+   field. The selector names the variant and margin the box is declared with because that is the
+   pair of MudBlazor rules being outweighed; change the variant and the field simply reverts to
+   MudBlazor's own sizing. */
+.shift-list-find .mud-input > input.mud-input-root-outlined.mud-input-root-margin-dense {
+    padding-block: 6px;
+    font-size: 0.875rem;
+}
+
+/* MudBlazor's default 24px adornment suits its default 40px field; in the shorter one it very
+   nearly fills the height. */
+.shift-list-find .mud-input-adornment .mud-icon-root {
+    font-size: 1.25rem;
+}
+
+/* Keeps the match count on one line so a narrow bar cannot wrap it under the box. */
+.shift-list-find-count {
+    white-space: nowrap;
+    font-size: var(--mud-typography-body2-size);
+    opacity: 0.75;
+}
+
+/* The scope warning. margin-inline-end:auto is what puts it at the start of an end-docked row:
+   it absorbs the slack, so the count and the box stay pinned to the end and do not move when it
+   appears. Amber rather than a muted grey on purpose — the failure it guards against is a user
+   quietly concluding a record does not exist, so it has to survive being skimmed past. */
+.shift-list-find-scope,
+.shift-list-find-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    /* Mixed from MudBlazor's own warning hue rather than --mud-palette-warning-hover, which is a
+       6% wash meant for hover feedback and is all but invisible as a standing badge. */
+    background-color: rgba(var(--mud-palette-warning-rgb), 0.14);
+    color: var(--mud-palette-warning-darken);
+    /* The grid's own body size. At 0.75rem these read as footnotes next to the cells they are
+       warning about, which is the wrong weight for the thing that stops a wrong conclusion. */
+    font-size: var(--mud-typography-body2-size);
+    line-height: 1.4;
+}
+
+.shift-list-find-scope {
+    margin-inline-end: auto;
+    padding: 3px 8px;
+    border-radius: var(--mud-default-borderradius);
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Full-width band on its own line above the pager controls: flex-basis 100% against the wrap
+   allowed on .mud-table-pagination below. */
+.shift-list-find-note {
+    flex: 0 0 100%;
+    justify-content: center;
+    height: var(--shift-list-find-note-height);
+    box-sizing: border-box;
+    padding: 6px 12px;
+}
+
+/* One line, whatever the width. The height above is fixed so the grid can budget for it, so a
+   sentence that wrapped on a narrow list would be silently clipped instead. The message is
+   ordered worst-news-first, so an ellipsis eats the filter-panel hint rather than the warning,
+   and the title attribute keeps the whole thing reachable. */
+.shift-list-find-note > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The same fact in the empty state, where it is a second line rather than a band. */
+.shift-list-find-unsearched {
+    color: var(--mud-palette-warning-darken);
+    font-size: var(--mud-typography-body2-size);
+}
+
+/* The chip carries a full sentence now. Given room it shows all of it; squeezed, it clips to an
+   ellipsis rather than pushing the box off its dock, and the title attribute still has the text. */
+.shift-list-find-scope-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* =============== List Find End =============== */

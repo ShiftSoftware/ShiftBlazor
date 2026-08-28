@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tests-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "ShiftBlazor.Tests.API/ShiftBlazor.Tests.API.csproj", "--urls", "http://localhost:5272"],
+      "port": 5272
+    },
+    {
+      "name": "tests-viewer",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "ShiftBlazor.Tests.Viewer/ShiftBlazor.Tests.Viewer.csproj", "--urls", "http://localhost:5169"],
+      "port": 5169
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Microsoft.OData.Client;
@@ -173,9 +174,37 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     /// The height actually passed to the grid: the Height parameter when set; otherwise a viewport
     /// fallback when virtualizing (MudBlazor's Virtualize needs a fixed height to know its viewport).
     /// </summary>
-    internal string EffectiveHeight => !string.IsNullOrEmpty(Height)
-        ? Height
-        : ShouldVirtualize ? "65vh" : Height;
+    internal string EffectiveHeight
+    {
+        get
+        {
+            var height = !string.IsNullOrEmpty(Height)
+                ? Height
+                : ShouldVirtualize ? "65vh" : Height;
+
+            // No fixed height to budget against: the list is free to grow either way.
+            if (string.IsNullOrEmpty(height))
+                return height;
+
+            // MudBlazor applies Height to the scrolling table container, so anything of ours
+            // outside it — the find bar above, the scope note in the pager below — adds to the
+            // component's overall size and starts the page scrolling, which is the very thing a
+            // fixed height is set to prevent. Deduct them instead, so the list occupies what it
+            // always did. Both lengths are CSS variables that also size the elements themselves,
+            // so this arithmetic cannot drift from what is actually rendered.
+            var deductions = new List<string>(2);
+
+            if (!DisableFind)
+                deductions.Add("var(--shift-list-find-bar-height)");
+
+            if (IsFindIncomplete && FindMatchCount > 0)
+                deductions.Add("var(--shift-list-find-note-height)");
+
+            return deductions.Count == 0
+                ? height
+                : $"calc({height} - {string.Join(" - ", deductions)})";
+        }
+    }
 
     /// <summary>
     /// Estimated row height (px) used by virtualization to size its viewport. MudBlazor's default
@@ -189,6 +218,16 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     internal float EffectiveItemSize => VirtualizeItemSize > 0
         ? VirtualizeItemSize
         : Dense ? 37f : 50f;
+
+    /// <summary>
+    /// Hides the toolbar's find box (Alt+F). The box narrows the rows already loaded on the current
+    /// page and exists because the browser's own find-in-page cannot see rows that virtualization
+    /// keeps out of the DOM — see <see cref="ShouldVirtualize"/>. It is not a filter: it never
+    /// reaches the server, never touches <see cref="ODataFilters"/> or the filter panel, and is
+    /// forgotten as soon as it is cleared.
+    /// </summary>
+    [Parameter]
+    public bool DisableFind { get; set; }
 
     /// <summary>
     /// The title used for the form and the browser tab title.
@@ -399,6 +438,15 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
     [Parameter]
     public bool EnableFilterPanel { get; set; }
 
+    /// <summary>
+    /// By default the filter panel gets an ID filter for free, so every list can look a row up by
+    /// its key without the programmer declaring one. Set to <c>true</c> to leave it out. A list that
+    /// declares its own filter on <c>ID</c> keeps that one — the automatic filter steps aside.
+    /// Has no effect when <see cref="EnableFilterPanel"/> is false.
+    /// </summary>
+    [Parameter]
+    public bool DisableIdFilter { get; set; }
+
     [Parameter]
     public bool FilterPanelDefaultOpen { get; set; }
 
@@ -472,6 +520,281 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     private TaskCompletionSource<GridData<T>> IndefiniteReloadTask = new();
     private CancellationTokenSource? ReloadCancellationTokenSource { get; set; }
+
+    #region Find
+
+    // Find replaces the browser's Ctrl+F for this grid. Virtualization keeps off-screen rows out of
+    // the DOM, so find-in-page can only see what is painted; this searches the DTOs themselves, and
+    // therefore finds matches in rows the browser never rendered — and in columns the grid is not
+    // even showing. It is deliberately NOT a filter: no request, no OData, no saved state.
+
+    private MudTextField<string>? FindField;
+    private string? FindText;
+    private string[] FindTerms = [];
+    private int FindMatchCount;
+
+    // The page exactly as the server returned it. Find narrows a copy, so clearing the box restores
+    // the page without another request.
+    private List<T> PageItems = [];
+    private int PageTotalItems;
+
+    // Set just before ReloadServerData so ServerReload knows to answer from PageItems instead of
+    // going to the network.
+    private bool FindReloadOnly;
+
+    // "Every field joined and lowercased", one per row, aligned with its source list by index.
+    // Built on the first keystroke only: a page nobody searches never pays for the reflection.
+    private List<string>? FindHaystacks;
+    private List<T>? FindHaystackSource;
+
+    private List<T>? FindFilteredValues;
+    private List<T>? FindFilteredValuesSource;
+
+    // Unit Separator: a character no field value can contain, so a term can never match across the
+    // boundary between two unrelated fields.
+    private const char FieldSeparator = '\u001f';
+
+    private static readonly PropertyInfo[] FindProperties = typeof(T)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(x => x.CanRead && x.GetIndexParameters().Length == 0 && IsFindableType(x.PropertyType))
+        .ToArray();
+
+    /// <summary>
+    /// Rows the grid should show in Values mode: the list itself, or the subset matching the find
+    /// box. MudBlazor pages <c>Items</c> on its own, so handing it a narrowed list is all it takes.
+    /// </summary>
+    internal List<T>? EffectiveValues
+    {
+        get
+        {
+            if (Values == null || FindTerms.Length == 0)
+                return Values;
+
+            if (FindFilteredValues == null || !ReferenceEquals(FindFilteredValuesSource, Values))
+            {
+                FindFilteredValuesSource = Values;
+                FindFilteredValues = ApplyFind(Values);
+                FindMatchCount = FindFilteredValues.Count;
+            }
+
+            return FindFilteredValues;
+        }
+    }
+
+    /// <summary>How many rows the find box had to choose from: the rows currently loaded.</summary>
+    internal int FindTotalCount => ServerData == null ? Values?.Count ?? 0 : PageItems.Count;
+
+    internal bool IsFindActive => FindTerms.Length > 0;
+
+    /// <summary>
+    /// Rows find could not look at, because the server only sent this page. Zero in Values mode —
+    /// there the grid holds the whole set and pages it itself, so find already covered everything.
+    /// </summary>
+    internal int FindUnsearchedCount => ServerData == null
+        ? 0
+        : Math.Max(0, PageTotalItems - PageItems.Count);
+
+    /// <summary>
+    /// Whether find gave an answer that only covers part of the data. This is the dangerous state:
+    /// a match count that looks like a result while most of the table went unread, so a user
+    /// concludes a record does not exist when it is two pages away. When it is false — a page that
+    /// holds the whole set — saying nothing is right, and warning anyway would only teach people to
+    /// ignore the warning.
+    /// </summary>
+    internal bool IsFindIncomplete => IsFindActive && FindUnsearchedCount > 0;
+
+    internal string FindUnsearchedDisplay => FindUnsearchedCount.ToString("N0");
+
+    internal string FindTotalDisplay => FindTotalCount.ToString("N0");
+
+    /// <summary>
+    /// Where to go when find isn't enough — appended to each scope message. Left off when this list
+    /// has no filter panel, rather than pointing at something the user cannot open.
+    /// </summary>
+    private string FilterPanelHint => EnableFilterPanel ? " " + Loc["ListFindUseFilterPanel"] : string.Empty;
+
+    internal string FindScopeChipText =>
+        Loc["ListFindUnsearchedChip", FindTotalDisplay, FindUnsearchedDisplay] + FilterPanelHint;
+
+    internal string FindScopeNoteText =>
+        Loc["ListFindUnsearchedNote", FindUnsearchedDisplay] + FilterPanelHint;
+
+    internal string FindScopeEmptyText =>
+        Loc["ListFindUnsearchedEmpty", FindUnsearchedDisplay] + FilterPanelHint;
+
+    /// <summary>
+    /// The match count, worded rather than given as "n of m". The denominator in "1 of 100" is the
+    /// page size, which tells the reader nothing and invites them to read the numerator as the
+    /// whole answer. How much was left unread is said separately, by the scope warning.
+    /// </summary>
+    internal string FindMatchLabel => FindMatchCount switch
+    {
+        0 => Loc["ListFindNoMatchesShort"],
+        1 => Loc["ListFindMatchCountSingle"],
+        _ => Loc["ListFindMatchCount", FindMatchCount.ToString("N0")],
+    };
+
+    private static bool IsFindableType(Type type)
+    {
+        var underlying = Nullable.GetUnderlyingType(type) ?? type;
+
+        return underlying.IsPrimitive
+            || underlying.IsEnum
+            || underlying == typeof(string)
+            || underlying == typeof(decimal)
+            || underlying == typeof(Guid)
+            || underlying == typeof(DateTime)
+            || underlying == typeof(DateTimeOffset)
+            || underlying == typeof(DateOnly)
+            || underlying == typeof(TimeOnly)
+            || underlying == typeof(TimeSpan);
+    }
+
+    private async Task OnFindTextChanged(string? value)
+    {
+        var incoming = string.IsNullOrWhiteSpace(value) ? null : value;
+
+        // The same text arriving twice costs a reload and a re-render for no change. It happens on
+        // the clear button, which runs immediately and is then followed by the debounced empty
+        // value it was racing.
+        if (incoming == FindText)
+            return;
+
+        FindText = incoming;
+        FindTerms = string.IsNullOrWhiteSpace(value)
+            ? []
+            : value.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (ServerData == null)
+        {
+            FindFilteredValues = null;
+
+            // Counted here rather than off EffectiveValues: the toolbar's counter is built before
+            // the grid's Items in the render tree, so a count assigned from that getter would
+            // always be one render behind what the user sees.
+            FindMatchCount = EffectiveValues?.Count ?? 0;
+
+            StateHasChanged();
+            return;
+        }
+
+        if (DataGrid == null)
+            return;
+
+        // The grid only takes rows from ServerData, so the new subset has to arrive through it.
+        // ServerReload answers this one from the cached page instead of issuing a request. The flag
+        // is set only once the call is certain to happen — a flag left standing would make the next
+        // genuine reload (a page turn, a sort) answer from the stale page instead of the network.
+        FindReloadOnly = true;
+
+        await DataGrid.ReloadServerData();
+    }
+
+    private Task ClearFind() => OnFindTextChanged(null);
+
+    /// <summary>
+    /// Drives the find box from code, exactly as typing into it would: narrows the rows on screen
+    /// to the matches, sends nothing to the server. <c>null</c> or empty clears it.
+    /// </summary>
+    internal Task SetFindText(string? text) => OnFindTextChanged(text);
+
+    private async Task FindKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key != "Escape")
+            return;
+
+        if (!string.IsNullOrEmpty(FindText))
+        {
+            await ClearFind();
+            return;
+        }
+
+        // Nothing to clear. The wrapper stops keydown from reaching the window-level handler (so
+        // that Escape can mean "clear find"), so hand an empty box's Escape on to it by hand.
+        await IShortcutComponent.SendKeys([KeyboardKeys.Escape]);
+    }
+
+    private List<T> ApplyFind(List<T> items)
+    {
+        if (FindTerms.Length == 0)
+            return items;
+
+        var haystacks = EnsureHaystacks(items);
+        var matches = new List<T>();
+
+        for (var i = 0; i < items.Count; i++)
+        {
+            var haystack = haystacks[i];
+            var matched = true;
+
+            // Every term must appear somewhere in the row, in any field and in any order, so
+            // "ali baghdad" finds the Ali who lives in Baghdad.
+            foreach (var term in FindTerms)
+            {
+                if (!haystack.Contains(term, StringComparison.Ordinal))
+                {
+                    matched = false;
+                    break;
+                }
+            }
+
+            if (matched)
+                matches.Add(items[i]);
+        }
+
+        return matches;
+    }
+
+    private List<string> EnsureHaystacks(List<T> items)
+    {
+        if (FindHaystacks != null && ReferenceEquals(FindHaystackSource, items) && FindHaystacks.Count == items.Count)
+            return FindHaystacks;
+
+        FindHaystackSource = items;
+        FindHaystacks = items.ConvertAll(BuildHaystack);
+
+        return FindHaystacks;
+    }
+
+    private static string BuildHaystack(T item)
+    {
+        var builder = new System.Text.StringBuilder();
+
+        foreach (var property in FindProperties)
+        {
+            object? value;
+
+            try
+            {
+                value = property.GetValue(item);
+            }
+            catch
+            {
+                // A computed property that throws on a partially-filled DTO must not break find.
+                continue;
+            }
+
+            if (value == null)
+                continue;
+
+            // The separator keeps a term from matching across two unrelated fields.
+            builder.Append(Stringify(value)).Append(FieldSeparator);
+        }
+
+        return builder.ToString().ToLowerInvariant();
+    }
+
+    private static string Stringify(object value) => value switch
+    {
+        string text => text,
+        // Both spellings: the cell shows the display name, but the raw name is what a developer types.
+        Enum enumValue => $"{enumValue} {enumValue.Describe()}",
+        // Mirrors what PropertyColumnExtended renders for this type.
+        DateTimeOffset offset => offset.DateTime.ToString(),
+        _ => value.ToString() ?? string.Empty,
+    };
+
+    #endregion
 
     protected string GetRowClassname(T item, int colIndex)
     {
@@ -585,6 +908,12 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         ServerData = Values == null
             ? new Func<GridState<T>, CancellationToken, Task<GridData<T>>>(ServerReload)
             : default;
+
+        // ShouldRender() gates renders on ReadyToRender so the grid does not paint before its first
+        // load, and only ServerReload ever sets it. A Values-mode list has no load to wait for, so
+        // without this it renders once and then ignores every StateHasChanged for the rest of its
+        // life — which is why the find box had nothing to narrow.
+        ReadyToRender = Values != null;
         SortMode = DisableSorting
                     ? SortMode.None
                     : DisableMultiSorting
@@ -605,6 +934,47 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         // app-wide setting), then the developer-set parameter, then the framework default.
         SelectedPageSize = SettingManager.GetListPageSize(GetIdentifier()) ?? PageSize ?? DefaultAppSetting.ListPageSize;
         IsFilterPanelOpen = SettingManager?.GetFilterPanelState() ?? FilterPanelDefaultOpen;
+
+        AddDefaultIdFilter();
+    }
+
+    // Fixed rather than generated so the automatic filter is recognisable later, when a filter the
+    // host app declared on ID has to take precedence over it. Each list holds its own Filters
+    // dictionary, so sharing the value across lists costs nothing.
+    private static readonly Guid DefaultIdFilterId = new("6bd4e4b6-2a1c-4c05-8e3f-1f0f2f6a51d2");
+
+    /// <summary>
+    /// Gives the filter panel an ID filter unless the list opted out or declared its own. Filters
+    /// are otherwise only ever declared by hand, which is why so many lists ended up with no way to
+    /// look a row up by its key.
+    /// </summary>
+    private void AddDefaultIdFilter()
+    {
+        if (DisableIdFilter || !EnableFilterPanel)
+            return;
+
+        var idProperty = typeof(T).GetProperty(nameof(ShiftEntityDTOBase.ID));
+
+        if (idProperty == null)
+            return;
+
+        // Equal, not Contains: IDs travel as hashed keys, so a substring of one means nothing.
+        var filter = FilterModelBase.CreateFilter(nameof(ShiftEntityDTOBase.ID), idProperty.PropertyType, isDefault: true);
+        filter.Id = DefaultIdFilterId;
+        filter.Operator = ODataOperator.Equal;
+        filter.UIOptions = new FilterUIOptions
+        {
+            Label = Loc["IdColumnHeaderText"],
+            xs = 12,
+            sm = 6,
+            md = 4,
+            lg = 3,
+            xl = 3,
+            xxl = 2,
+        };
+        filter.Clone();
+
+        Filters[DefaultIdFilterId] = filter;
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -647,7 +1017,30 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
 
         if (firstRender)
+        {
+            DropDefaultIdFilterIfRedundant();
             await SubscribeToAttentionUpdatesAsync();
+        }
+    }
+
+    /// <summary>
+    /// Filters declared by the host app register as children, so they only exist once the grid has
+    /// rendered. By then a list that declares its own filter on ID has two — drop ours.
+    /// </summary>
+    private void DropDefaultIdFilterIfRedundant()
+    {
+        if (!Filters.ContainsKey(DefaultIdFilterId))
+            return;
+
+        var declaredElsewhere = Filters.Any(x =>
+            x.Key != DefaultIdFilterId &&
+            x.Value.Field == nameof(ShiftEntityDTOBase.ID));
+
+        if (declaredElsewhere)
+        {
+            Filters.Remove(DefaultIdFilterId);
+            StateHasChanged();
+        }
     }
 
     /// <summary>
@@ -862,11 +1255,42 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                 if (!DisableGridEditor)
                     OpenGridEditor();
                 break;
+            case KeyboardKeys.KeyF:
+                if (!DisableFind && FindField != null)
+                {
+                    await FindField.FocusAsync();
+                    // Select what is already there so a second Alt+F starts a fresh search.
+                    await FindField.SelectAsync();
+                }
+                break;
         }
     }
 
     private async Task<GridData<T>> ServerReload(GridState<T> state, CancellationToken cancellationToken = default)
     {
+        // A find-box keystroke only needs the page we already hold re-narrowed. Answer it here and
+        // return before the first await, so the task is already complete when MudBlazor awaits it:
+        // no request, and no loading flicker between its Loading=true and Loading=false. TotalItems
+        // stays the server's real count, so the pager keeps telling the truth about the dataset
+        // rather than reporting however many rows happen to match.
+        if (FindReloadOnly)
+        {
+            FindReloadOnly = false;
+
+            var found = ApplyFind(PageItems);
+            FindMatchCount = found.Count;
+
+            // Fewer (or more) rows can redistribute auto-layout column widths.
+            _stickyStylesDirty = true;
+
+            // This path returns before the finally below, so nothing else renders this component.
+            // The grid re-renders its own rows either way, but the find bar is ours — without this
+            // the match count and the scope warning keep whatever they said before the keystroke.
+            StateHasChanged();
+
+            return new GridData<T> { Items = found, TotalItems = PageTotalItems };
+        }
+
         IsLoading = true;
         StateHasChanged();
 
@@ -893,6 +1317,12 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         var cts = ReloadCancellationTokenSource;
         
         GridData<T> gridData = new();
+
+        // Always the whole page, never the find subset: ForeignColumn resolves its cells from this
+        // event and replaces its cache wholesale, so narrowing it would leave the rows find is
+        // currently hiding without foreign values the moment the box is cleared.
+        List<T> boundItems = [];
+
         bool preventDefault = false;
         ErrorMessage = null;
 
@@ -918,10 +1348,19 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                 return gridData;
             }
 
+            // Keep the page as the server sent it: an active find narrows a copy, so clearing the
+            // box puts every row back without another request.
+            PageItems = content.Value ?? [];
+            PageTotalItems = (int?)content.Count ?? PageItems.Count;
+            boundItems = PageItems;
+
+            var visibleItems = ApplyFind(PageItems);
+            FindMatchCount = visibleItems.Count;
+
             gridData = new GridData<T>
             {
-                Items = content.Value ?? [],
-                TotalItems = (int?)content.Count ?? content.Value?.Count ?? 0,
+                Items = visibleItems,
+                TotalItems = PageTotalItems,
             };
 
             SelectState.Total = gridData.TotalItems;
@@ -977,7 +1416,7 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
                 if (!preventDefault)
                 {
-                    ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, gridData.Items.ToList<object>()));
+                    ShiftBlazorEvents.TriggerOnBeforeGridDataBound(new KeyValuePair<Guid, List<object>>(Id, boundItems.ToList<object>()));
                 }
 
                 // New rows can change column widths, which the sticky-column offsets are computed from.

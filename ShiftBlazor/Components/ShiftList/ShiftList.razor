@@ -134,6 +134,62 @@
                         </ToolbarMenuItems>
                     </MudToolBar>
                 }
+
+                @if (!DisableFind)
+                {
+                    @* Its own row rather than an item in the toolbar: what the toolbar holds varies
+                       from list to list (ToolbarStartTemplate, the action cluster), which shoved the
+                       box to a different spot on every list. Here it is always in the same place.
+
+                       stopPropagation keeps keystrokes away from the window-level shortcut handler,
+                       so Escape can mean "clear the find" while the box has focus. *@
+                    <div class="light-toolbar shift-list-find-bar" @onkeydown:stopPropagation="true">
+                        @* Sits at the start of the row (see the margin rule on its class) because
+                           that space is otherwise empty, and because it must be read before the
+                           count is — the count is only trustworthy once you know its scope. *@
+                        @if (IsFindIncomplete)
+                        {
+                            <span class="shift-list-find-scope" title="@FindScopeChipText">
+                                <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Size="Size.Small" />
+                                <span class="shift-list-find-scope-text">@FindScopeChipText</span>
+                            </span>
+                        }
+
+                        @* Before the box, not after: the row is end-docked, so a counter placed
+                           after it would shove the box away from the edge the moment a search
+                           becomes active. This way the box never moves and the count grows inward. *@
+                        @if (IsFindActive)
+                        {
+                            <MudText Typo="Typo.caption" Class="shift-list-find-count">@FindMatchLabel</MudText>
+                        }
+
+                        <div class="button-shortcut shift-list-find">
+                            <MudTextField @ref="FindField"
+                                          T="string"
+                                          Value="@FindText"
+                                          ValueChanged="OnFindTextChanged"
+                                          OnKeyDown="FindKeyDown"
+                                          @* MudBlazor routes the clear button through the debounce
+                                             too, which puts half a second between the click and the
+                                             rows coming back on the commonest way out of a search.
+                                             Clear on the click instead; the debounced empty value
+                                             that follows is a no-op. *@
+                                          OnClearButtonClick="ClearFind"
+                                          Immediate
+                                          DebounceInterval="500"
+                                          Clearable
+                                          Margin="Margin.Dense"
+                                          Variant="Variant.Outlined"
+                                          Placeholder="@Loc["ListFindPlaceholder"]"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Outlined.Search"
+                                          title="@Loc["ListFindTooltip"]"
+                                          aria-label="@Loc["ListFindTooltip"]" />
+                            <div class="shortcut-key">@IShortcutComponent.CleanKeyName(nameof(KeyboardKeys.KeyF))</div>
+                        </div>
+                    </div>
+                }
+
                 @if (EnableFilterPanel)
                 {
                     <MudCollapse Expanded="IsFilterPanelOpen" Style="border:none" Class="light-toolbar">
@@ -237,7 +293,7 @@
 
             <MudDataGrid
                          @ref="DataGrid"
-                         Items="@Values"
+                         Items="@EffectiveValues"
                          MultiSelection="@EnableSelection"
                          Hideable="!DisableGridEditor"
                          SortMode="@SortMode"
@@ -279,6 +335,27 @@
                     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
                     {
                         <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+                    }
+                    else if (IsFindActive && FindTotalCount > 0)
+                    {
+                        @* The page is not empty — the find box is hiding all of it. Say so, or the
+                           list looks broken. The unsearched count joins this message rather than
+                           appearing as its own band below: stacked under "no row matches" it would
+                           be near enough the same sentence twice, and read as a bug. *@
+                        <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText>@Loc["ListFindNoMatches", FindText!]</MudText>
+
+                            @if (FindUnsearchedCount > 0)
+                            {
+                                <MudText Class="shift-list-find-unsearched">
+                                    @FindScopeEmptyText
+                                </MudText>
+                            }
+
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="ClearFind">
+                                @Loc["ListFindClearButton"]
+                            </MudButton>
+                        </MudStack>
                     }
                     else
                     {
@@ -377,6 +454,19 @@
                 </Columns>
 
                 <PagerContent>
+                    @* Above the pager, not after the last row: on a virtualized page the end of the
+                       rows is below the fold, so a note there would only be found by someone who
+                       had already given up. Here it is always in view, and it sits beside
+                       "1-100 of 1,057" — where the reader's sense of how much data exists lives.
+                       Suppressed when nothing matched, because the empty state says it instead. *@
+                    @if (IsFindIncomplete && FindMatchCount > 0)
+                    {
+                        <div class="shift-list-find-note" title="@FindScopeNoteText">
+                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Size="Size.Small" />
+                            <span>@FindScopeNoteText</span>
+                        </div>
+                    }
+
                     @if (EnableSelection && SelectState.Count > 0)
                     {
                         <MudText Style="padding-inline: 20px 2px;" Typo="Typo.body2">@Loc["SelectedItemsCounterLabel", SelectState.Count, SelectState.Total]</MudText>

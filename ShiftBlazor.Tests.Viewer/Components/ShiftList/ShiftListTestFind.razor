@@ -1,0 +1,16 @@
+<ShiftList T="User"
+           Title="Find List"
+           DisableFind="DisableFind"
+           @bind-Values="Users">
+
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="x => x.Email" />
+</ShiftList>
+
+@code {
+    [Parameter]
+    public List<User> Users { get; set; } = User.GenerateData(20, 20, false);
+
+    [Parameter]
+    public bool DisableFind { get; set; }
+}

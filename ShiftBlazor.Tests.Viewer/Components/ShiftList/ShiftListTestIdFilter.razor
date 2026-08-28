@@ -1,0 +1,25 @@
+<ShiftList T="User"
+           EntitySet="Users"
+           EnableFilterPanel="EnableFilterPanel"
+           DisableIdFilter="DisableIdFilter">
+
+    @if (DeclareOwnIdFilter)
+    {
+        <StringFilter T="User" TProperty="string" Property="x => x.ID" Label="Custom ID"
+                      Operator="ODataOperator.Contains" />
+    }
+
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="x => x.Email" />
+</ShiftList>
+
+@code {
+    [Parameter]
+    public bool EnableFilterPanel { get; set; } = true;
+
+    [Parameter]
+    public bool DisableIdFilter { get; set; }
+
+    [Parameter]
+    public bool DeclareOwnIdFilter { get; set; }
+}

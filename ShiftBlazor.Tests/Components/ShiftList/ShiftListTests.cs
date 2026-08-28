@@ -349,7 +349,11 @@ public class ShiftListTests : ShiftBlazorTestContext
 
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
-        Assert.Equal(height, grid.Height);
+        // Not the bare "300px" any more: the find bar is laid out outside the grid's height box, so
+        // the list deducts it from what it hands MudBlazor and stays the size the programmer asked
+        // for overall. Set DisableFind and the value passes through untouched — see
+        // ShiftListFindTests.ShouldLeaveTheGridHeightAloneWithoutAFindBar.
+        Assert.Equal($"calc({height} - var(--shift-list-find-bar-height))", grid.Height);
     }
 
     [Fact]

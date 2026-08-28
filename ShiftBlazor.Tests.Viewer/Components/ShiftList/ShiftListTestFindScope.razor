@@ -1,0 +1,24 @@
+@* Server-backed list for the find scope warnings: only a paged endpoint can leave rows unsearched,
+   so unlike ShiftListTestFind (local Values) this one goes through an EntitySet. *@
+
+<ShiftList T="User"
+           EntitySet="Users"
+           Title="Find Scope List"
+           Height="@Height"
+           DisableFind="DisableFind"
+           EnableFilterPanel="EnableFilterPanel">
+
+    <PropertyColumn Property="x => x.Name" />
+    <PropertyColumn Property="x => x.Email" />
+</ShiftList>
+
+@code {
+    [Parameter]
+    public string Height { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool DisableFind { get; set; }
+
+    [Parameter]
+    public bool EnableFilterPanel { get; set; }
+}
