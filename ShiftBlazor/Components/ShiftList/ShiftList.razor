@@ -163,17 +163,16 @@
                             <MudText Typo="Typo.caption" Class="shift-list-find-count">@FindMatchLabel</MudText>
                         }
 
+                        @* OnClearButtonClick, because MudBlazor routes the clear button through the
+                           debounce too — which puts half a second between the click and the rows
+                           coming back, on the commonest way out of a search. Clearing on the click
+                           makes the debounced empty value that follows a no-op. *@
                         <div class="button-shortcut shift-list-find">
                             <MudTextField @ref="FindField"
                                           T="string"
                                           Value="@FindText"
                                           ValueChanged="OnFindTextChanged"
                                           OnKeyDown="FindKeyDown"
-                                          @* MudBlazor routes the clear button through the debounce
-                                             too, which puts half a second between the click and the
-                                             rows coming back on the commonest way out of a search.
-                                             Clear on the click instead; the debounced empty value
-                                             that follows is a no-op. *@
                                           OnClearButtonClick="ClearFind"
                                           Immediate
                                           DebounceInterval="500"
