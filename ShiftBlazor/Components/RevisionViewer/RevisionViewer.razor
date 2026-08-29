@@ -36,6 +36,25 @@
             <PropertyColumn Property="x => x.ValidFrom" Title="@Loc["ValidFromColumnTitle"]" />
             <PropertyColumn Property="x => x.ValidTo" Title="@Loc["ValidToColumnTitle"]" />
 
+            @if (NewTabEnabled)
+            {
+                <TemplateColumn T="RevisionDTO" Context="cell" Sortable="false" Filterable="false"
+                                ShowColumnOptions="false" Editable="false" Title="" HeaderStyle="width:0%"
+                                CellStyle="padding: 0;">
+                    <CellTemplate>
+                        @* Stops propagation so opening a tab doesn't also load the revision into the form behind. *@
+                        <div class="d-flex align-center justify-center" @onclick:stopPropagation="true">
+                            <MudTooltip Text="@Loc["NewTab"]">
+                                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                               Size="@Size.Small"
+                                               aria-label="@Loc["NewTab"]"
+                                               OnClick="@(() => OnOpenInNewTabRequested.InvokeAsync(cell.Item))" />
+                            </MudTooltip>
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            }
+
             @if (UserListBaseUrl != null && UserListEntitySet != null)
             {
                 <ForeignColumn TEntity="UserDetails"

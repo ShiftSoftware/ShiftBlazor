@@ -5,12 +5,12 @@
                  IconSvg="@Icons.Material.Filled.Person4">
 
     <MudTextFieldExtended ErrorText="" RequiredError="" Label="Name"
-                          @bind-Value="User.Name"
-                          For="() => User.Name"/>
+                          @bind-Value="context.Item.Name"
+                          For="() => context.Item.Name"/>
 
     <MudTextFieldExtended Label="Email"
-                          @bind-Value="User.Email"
-                          For="() => User.Email"/>
+                          @bind-Value="context.Item.Email"
+                          For="() => context.Item.Email"/>
 </ShiftEntityForm>
 
 @code {

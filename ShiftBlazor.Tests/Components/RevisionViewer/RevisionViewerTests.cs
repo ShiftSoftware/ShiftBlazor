@@ -75,6 +75,59 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
             Assert.Equal(newer.ValidFrom, emitted.New.ValidFrom);
         }
 
+        [Theory]
+        [InlineData(0)]
+        [InlineData(3)]
+        [InlineData(14)]
+        public void CurrentRevisionIsRecognisedWhateverOffsetStampedIt(int offsetHours)
+        {
+            // Regression: the temporal sentinel arrives stamped with the API server's UTC offset,
+            // which need not match the browser's, so the instant it represents differs per machine.
+            // Comparing it against DateTime.MaxValue - which the runtime converts using the *local*
+            // offset - made the current revision look historical, and threw outright behind UTC.
+            var current = new RevisionDTO
+            {
+                ValidFrom = new DateTimeOffset(2026, 7, 19, 6, 5, 0, TimeSpan.Zero),
+                ValidTo = new DateTimeOffset(DateTime.MaxValue.Ticks, TimeSpan.FromHours(offsetHours)),
+            };
+
+            Assert.True(current.IsCurrent());
+            Assert.Null(current.AsOf());
+        }
+
+        [Fact]
+        public void HistoricalRevisionIsReadAsOfItsValidFrom()
+        {
+            var validFrom = new DateTimeOffset(2023, 12, 16, 14, 23, 0, TimeSpan.FromHours(3));
+            var historical = new RevisionDTO
+            {
+                ValidFrom = validFrom,
+                ValidTo = new DateTimeOffset(2026, 7, 19, 6, 5, 0, TimeSpan.FromHours(3)),
+            };
+
+            Assert.False(historical.IsCurrent());
+            Assert.Equal(validFrom, historical.AsOf());
+        }
+
+        [Fact]
+        public void NewTabButtonIsHiddenUntilAHandlerIsSupplied()
+        {
+            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
+                .Add(p => p.EntitySet, RevisionsEntitySet));
+
+            Assert.False(comp.Instance.NewTabEnabled);
+        }
+
+        [Fact]
+        public void NewTabButtonIsShownWhenAHandlerIsSupplied()
+        {
+            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
+                .Add(p => p.EntitySet, RevisionsEntitySet)
+                .Add(p => p.OnOpenInNewTabRequested, EventCallback.Factory.Create<RevisionDTO>(this, _ => { })));
+
+            Assert.True(comp.Instance.NewTabEnabled);
+        }
+
         [Fact]
         public async Task CompareHandlerEmitsNothingUnlessTwoSelected()
         {

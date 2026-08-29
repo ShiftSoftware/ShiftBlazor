@@ -52,19 +52,6 @@
                                 </MudTooltip>
                             }
 
-                            @if (_RenderCloneButton)
-                            {
-                                <MudTooltip Text="@Loc["Clone"]">
-                                    <MudButtonExtended KeyboardKey="KeyboardKeys.KeyC"
-                                                        Variant="Variant.Text"
-                                                        Color="NavIconFlatColor ? Color.Inherit : Color.Default"
-                                                        Style="min-width:40px;"
-                                                        aria-label="@Loc["Clone"]"
-                                                        OnClick="CloneAndOpen">
-                                        <MudIcon Icon="@Icons.Material.Filled.ContentCopy"></MudIcon>
-                                    </MudButtonExtended>
-                                </MudTooltip>
-                            }
 
                             @if (_RenderPrintButton)
                             {
@@ -202,7 +189,9 @@
 
                 @HeaderTemplate
 
-                @if (Mode == FormModes.Archive)
+                @* An embedded pane says which revision it is in its own header, and the banner would
+                   also offset one pane against the other, which is what breaks side-by-side reading. *@
+                @if (Mode == FormModes.Archive && !Embedded)
                 {
                     <MudAlert Severity="Severity.Warning">@Loc["RevisionIndicator"]</MudAlert>
                 }

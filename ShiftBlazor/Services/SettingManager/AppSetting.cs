@@ -15,7 +15,6 @@ public class AppSetting
     public virtual FormOnSaveAction? FormOnSaveAction { get; set; }
     public virtual Dictionary<string, List<ColumnState>>? ColumnStates { get; set; }
     public virtual LanguageInfo? Language { get; set; }
-    public virtual bool? EnableFormClone { get; set; }
     public virtual Dictionary<string, FileExplorerSettings>? FileExplorerSettings { get; set; }
     public virtual bool? IsDrawerOpen { get; set; }
     public virtual bool? IsDataGridFilterPanelOpen { get; set; }
@@ -37,7 +36,6 @@ public static class DefaultAppSetting
         Label = "English",
         RTL = false,
     };
-    public readonly static bool EnableFormClone = false;
     public readonly static FileExplorerSettings FileExplorerSettings = new()
     {
         View = FileView.Detailed,

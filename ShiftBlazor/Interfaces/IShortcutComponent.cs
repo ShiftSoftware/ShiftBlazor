@@ -10,14 +10,26 @@ public interface IShortcutComponent : IDisposable
 
     private static OrderedDictionary<Guid, IShortcutComponent> Components { get; set; } = new();
 
+    // The registry is static, so every component in the process shares it — and components are
+    // registered from render callbacks, which do not all run on the same thread. Without this,
+    // two overlapping renders corrupt the dictionary, and every later Register throws
+    // "non-concurrent collections must have exclusive access" for the life of the process.
+    private static object Sync { get; } = new();
+
     public static bool Register(IShortcutComponent component)
     {
-        return Components.TryAdd(component.Id, component);
+        lock (Sync)
+        {
+            return Components.TryAdd(component.Id, component);
+        }
     }
 
     public static bool Remove(Guid id)
     {
-        return Components.Remove(id);
+        lock (Sync)
+        {
+            return Components.Remove(id);
+        }
     }
 
     public static string CleanKeyName(string keyName)
@@ -27,14 +39,26 @@ public interface IShortcutComponent : IDisposable
 
     public static async Task SendKeys(IEnumerable<KeyboardKeys> keys)
     {
-        if (Components.Count != 0)
+        // Pick the target under the lock, then hand off outside it — the handler is the
+        // component's own async work and must not run while the registry is held.
+        IShortcutComponent? top;
+
+        lock (Sync)
         {
-            await Components.Last().Value.HandleShortcut(keys.First());
+            top = Components.Count == 0 ? null : Components.Last().Value;
+        }
+
+        if (top != null)
+        {
+            await top.HandleShortcut(keys.First());
         }
     }
 
     public static IShortcutComponent GetComponent(Index index)
     {
-        return Components.ElementAtOrDefault(index).Value;
+        lock (Sync)
+        {
+            return Components.ElementAtOrDefault(index).Value;
+        }
     }
 }

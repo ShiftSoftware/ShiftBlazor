@@ -1,12 +1,51 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @typeparam T where T : ShiftSoftware.ShiftEntity.Model.Dtos.ShiftEntityViewAndUpsertDTO, new()
 
-<MudFocusTrap DefaultFocus="DefaultFocus.Element">
+<MudFocusTrap DefaultFocus="DefaultFocus.Element" Class="shift-revision-compare">
     <MudToolBar Dense="@true" Class="light-toolbar shift-toolbar-header">
         <MudIcon Icon="@Icons.Material.Filled.Difference"></MudIcon>
         <MudText Class="px-4" Style="margin:0;">@(Title ?? Loc["CompareButton"])</MudText>
 
         <MudSpacer></MudSpacer>
+
+        @* The summary lives in the toolbar rather than in a banner: a long list of changed fields
+           costs a whole row of the very space the two panes are competing for. *@
+        @if (BothLoaded)
+        {
+            if (ChangedFields.Count == 0)
+            {
+                <MudChip T="string"
+                         Size="@Size.Small"
+                         Color="@Color.Success"
+                         Variant="@Variant.Text"
+                         Icon="@Icons.Material.Filled.CheckCircle">
+                    @Loc["CompareNoChanges"]
+                </MudChip>
+            }
+            else
+            {
+                <MudMenu Dense="@true"
+                         AnchorOrigin="@Origin.BottomRight"
+                         TransformOrigin="@Origin.TopRight"
+                         ListClass="shift-revision-compare-fields">
+                    <ActivatorContent>
+                        <MudChip T="string"
+                                 Size="@Size.Small"
+                                 Color="@Color.Info"
+                                 Variant="@Variant.Text"
+                                 Icon="@Icons.Material.Filled.Difference">
+                            @Loc["CompareChangedFields"] (@ChangedFields.Count)
+                        </MudChip>
+                    </ActivatorContent>
+                    <ChildContent>
+                        @foreach (var field in ChangedFields)
+                        {
+                            <MudMenuItem>@field</MudMenuItem>
+                        }
+                    </ChildContent>
+                </MudMenu>
+            }
+        }
 
         @if (MudDialog != null)
         {
@@ -24,63 +63,51 @@
         }
     </MudToolBar>
 
-    @if (Loading)
-    {
-        <div style="padding: 50px; display: flex; justify-content: center;">
-            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
-        </div>
-    }
-    else if (OldValue == null || NewValue == null)
-    {
-        <div class="pa-4">
-            <MudAlert Severity="Severity.Error" Dense="@true">@Loc["CompareLoadError"]</MudAlert>
-        </div>
-    }
-    else
-    {
-        <div class="pa-4">
-            @if (ChangedFields.Count == 0)
-            {
-                <MudAlert Severity="Severity.Success" Dense="@true">@Loc["CompareNoChanges"]</MudAlert>
-            }
-            else
-            {
-                <MudAlert Severity="Severity.Info" Dense="@true">
-                    <strong>@Loc["CompareChangedFields"]:</strong>
-                    @string.Join(", ", ChangedFields)
-                </MudAlert>
-            }
-        </div>
-
-        <MudGrid Spacing="0" Style="overflow-x:auto;">
+    @* Only this area scrolls, so the toolbar and both revision headings stay put while reading. *@
+    <div class="shift-revision-compare-body">
+        <MudGrid Spacing="0">
             <MudItem xs="12" md="6">
                 <div class="pa-2">
                     <MudText Typo="Typo.subtitle2" Class="px-2 pb-2">@OldLabel</MudText>
-                    <ShiftFormBasic T="T"
-                                    Embedded="@true"
-                                    Mode="@FormModes.View"
-                                    DisableHeaderToolbar="@true"
-                                    DisableFooterToolbar="@true"
-                                    AutoFocus="@false"
-                                    TypeAuthAction="@TypeAuthAction"
-                                    Value="@(OldValue!)"
-                                    ChildContent="@ChildContent" />
+                    @RevisionPane(OldRevision, v => OldValue = v)
                 </div>
             </MudItem>
             <MudItem xs="12" md="6">
                 <div class="pa-2">
                     <MudText Typo="Typo.subtitle2" Class="px-2 pb-2">@NewLabel</MudText>
-                    <ShiftFormBasic T="T"
-                                    Embedded="@true"
-                                    Mode="@FormModes.View"
-                                    DisableHeaderToolbar="@true"
-                                    DisableFooterToolbar="@true"
-                                    AutoFocus="@false"
-                                    TypeAuthAction="@TypeAuthAction"
-                                    Value="@(NewValue!)"
-                                    ChildContent="@ChildContent" />
+                    @RevisionPane(NewRevision, v => NewValue = v)
                 </div>
             </MudItem>
         </MudGrid>
-    }
+    </div>
 </MudFocusTrap>
+
+@*
+    One pane is one ordinary ShiftEntityForm, embedded and pinned to its own revision: it fetches
+    its own snapshot into its own Value, and the shared ChildContent renders against that.
+
+    The dialog instance is shadowed to null so the pane does not inherit this dialog's chrome,
+    focus trap or scroll wrapper - it is a form on a page as far as it knows.
+*@
+@code {
+    private RenderFragment RevisionPane(RevisionDTO? revision, Action<T> captureValue) => __builder =>
+    {
+        <CascadingValue TValue="IMudDialogInstance" Value="@null" IsFixed="@true">
+            <ShiftEntityForm T="T"
+                             Embedded="@true"
+                             Mode="@FormModes.Archive"
+                             AsOf="@revision?.AsOf()"
+                             BaseUrl="@BaseUrl"
+                             BaseUrlKey="@BaseUrlKey"
+                             Endpoint="@Endpoint"
+                             Key="@Key"
+                             TypeAuthAction="@TypeAuthAction"
+                             DisableHeaderToolbar="@true"
+                             DisableFooterToolbar="@true"
+                             AutoFocus="@false"
+                             HideRevisions="@true"
+                             ValueChanged="@(v => OnPaneLoaded(v, captureValue))"
+                             ChildContent="@ChildContent" />
+        </CascadingValue>
+    };
+}

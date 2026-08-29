@@ -63,13 +63,20 @@ public class ShiftModal
             throw new Exception("ShiftModal: Object is not a component");
         }
 
+        // The component's own route, not its type name: a route can carry a prefix the type name
+        // knows nothing about (e.g. "Identity/CityForm"), and opening "CityForm" lands nowhere.
+        var route = GetComponentIdentifier(ComponentType) ?? ComponentType.Name;
+        var path = $"{route}/{key}{GenerateQueryString(parameters)}";
+
         if (openMode == ModalOpenMode.NewTab)
         {
-            await JsRuntime.InvokeVoidAsync("open", $"{ComponentType.Name}/{key}{GenerateQueryString(parameters)}", "_blank");
+            // Absolute, because window.open resolves a relative URL against the document rather
+            // than the app base, which loses the base path when the app is hosted under one.
+            await JsRuntime.InvokeVoidAsync("open", NavManager.ToAbsoluteUri(path).ToString(), "_blank");
         }
         else if (openMode == ModalOpenMode.Redirect)
         {
-            NavManager.NavigateTo($"{ComponentType.Name}/{key}{GenerateQueryString(parameters)}");
+            NavManager.NavigateTo(path);
         }
         else if (openMode == ModalOpenMode.Drawer_Start)
         {

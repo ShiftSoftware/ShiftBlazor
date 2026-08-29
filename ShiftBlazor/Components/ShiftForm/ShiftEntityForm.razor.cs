@@ -16,9 +16,11 @@ using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using ShiftSoftware.TypeAuth.Core;
 using ShiftSoftware.TypeAuth.Core.Actions;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Web;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
@@ -37,6 +39,12 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     [Inject] ISnackbar Snackbar { get; set; } = default!;
     [Inject] IAttentionHubClient AttentionHubClient { get; set; } = default!;
 
+    /// <summary>
+    ///     Query-string key that carries a revision timestamp on a form's own URL, so a single
+    ///     revision can be opened — and linked to — in its own browser tab.
+    /// </summary>
+    internal const string AsOfQueryKey = "asOf";
+
     [Parameter] public string? BaseUrl { get; set; }
     [Parameter] public string? BaseUrlKey { get; set; }
 
@@ -52,6 +60,14 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     /// </summary>
     [Parameter]
     public object? Key { get; set; }
+
+    /// <summary>
+    ///     Loads the record as it stood at this point in time instead of live. Used by the compare
+    ///     view to put one revision in each pane, and by the <c>?asOf=</c> link that opens a single
+    ///     revision in its own tab.
+    /// </summary>
+    [Parameter]
+    public DateTimeOffset? AsOf { get; set; }
 
     /// <summary>
     ///     An event triggered when the state of Key has changed.
@@ -125,9 +141,6 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     public Func<Exception, ValueTask<bool>>? OnError { get; set; }
     [Parameter]
     public Func<ShiftEntityResponse<T>?, ValueTask<bool>>? OnResult { get; set; }
-
-    [Parameter]
-    public bool AllowClone { get; set; }
 
     [Parameter]
     public bool AllowSaveAsNew { get; set; }
@@ -259,7 +272,6 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     internal string? OriginalValue { get; set; }
     internal bool Maximized { get; set; }
 
-    internal bool _RenderCloneButton;
     internal bool _RenderPrintButton;
     internal bool _RenderRevisionButton;
     internal bool _RenderDeleteButton;
@@ -297,7 +309,9 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
 
     protected override void OnInitialized()
     {
-        IShortcutComponent.Register(this);
+        // An embedded pane sits inside another form's dialog; it must not take over the keyboard.
+        if (!Embedded)
+            IShortcutComponent.Register(this);
 
         TypeAuthService = ServiceProvider.GetService<ITypeAuthService>();
 
@@ -323,14 +337,17 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             throw new ArgumentNullException(nameof(Endpoint));
         }
 
-        if (Key == null && Mode != FormModes.Create)
+        // An embedded pane is handed the mode it must stay in (a revision is never editable).
+        if (Key == null && Mode != FormModes.Create && !Embedded)
         {
             await SetMode(FormModes.Create);
         }
 
         if (Mode != FormModes.Create && HasReadAccess)
         {
-            await FetchItem();
+            // Handed a revision, load that revision; handed none, load live. A revision found in
+            // the page's own URL is deliberately NOT loaded here - see OpenUrlRevision.
+            await FetchItem(AsOf);
         }
         else
         {
@@ -342,6 +359,57 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         CacheValue();
 
         ReadyToRender = true;
+
+        await OpenUrlRevision();
+    }
+
+    /// <summary>
+    ///     Applies a revision requested through this form's own URL (<c>?asOf=</c>), landing in the
+    ///     same state as picking that revision out of the revisions dialog.
+    ///     <para>
+    ///     Deliberately runs after the live record has been fetched and cached, so the extra read is
+    ///     what buys <see cref="CloseRevision"/> a live record to restore — exactly as it has
+    ///     everywhere else. Only a form that <em>is</em> the page honours the query: a dialog opened
+    ///     on top of a deep-linked form must not inherit the page's revision.
+    ///     </para>
+    /// </summary>
+    private async Task OpenUrlRevision()
+    {
+        if (Embedded || MudDialog != null || Mode == FormModes.Create || !HasReadAccess)
+            return;
+
+        var asOf = ReadAsOfFromUrl();
+
+        if (asOf == null)
+            return;
+
+        await FetchItem(asOf);
+        await SetMode(FormModes.Archive);
+    }
+
+    /// <summary>
+    ///     Writes a revision timestamp for a URL. <c>DateTimeOffset.ToString("O")</c> always emits a
+    ///     numeric offset — <c>+00:00</c> even in UTC — and a raw '+' in a query string decodes back
+    ///     as a space, which is not a parseable timestamp. Going through
+    ///     <see cref="DateTimeOffset.UtcDateTime"/> emits the 'Z' form instead, which needs no
+    ///     escaping and survives the round trip intact.
+    /// </summary>
+    internal static string FormatAsOf(DateTimeOffset asOf) => asOf.UtcDateTime.ToString("O");
+
+    private DateTimeOffset? ReadAsOfFromUrl()
+    {
+        var value = HttpUtility.ParseQueryString(new Uri(NavManager.Uri).Query).Get(AsOfQueryKey);
+
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        // Links written before the 'Z' form, or typed by hand, carry a '+' offset that arrives here
+        // as a space. An ISO-8601 timestamp has no legitimate space, so putting the '+' back is safe.
+        value = value.Replace(' ', '+');
+
+        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var asOf)
+            ? asOf
+            : null;
     }
 
     protected override bool ShouldRender()
@@ -353,14 +421,13 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     {
         base.OnParametersSet();
 
-        _RenderCloneButton = (SettingManager.GetFormCloneSetting() || AllowClone) && !ForceSaveAsNew;
         _RenderPrintButton = /*OnPrint.HasDelegate &&*/ ShowPrint && HasReadAccess;
         _RenderRevisionButton = !HideRevisions && HasReadAccess && IsTemporal;
         _RenderEditButton = !HideEdit && HasWriteAccess;
         _RenderDeleteButton = !HideDelete && HasDeleteAccess;
 
         _RenderAttentionBell = EffectiveAttentionSignals is { Count: > 0 } && HasReadAccess;
-        _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderCloneButton || _RenderAttentionBell;
+        _RenderHeaderControlsDivider = _RenderPrintButton || _RenderRevisionButton || _RenderEditButton || _RenderDeleteButton || _RenderAttentionBell;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -377,6 +444,12 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
+
+        // A pane is a read-only view of a past revision. It must not join the live record's
+        // attention feed, nor announce itself as someone viewing it — the form it sits inside
+        // already does both, and a pane doing it again would double-count the same user.
+        if (Embedded)
+            return;
 
         if (firstRender)
         {
@@ -1290,25 +1363,38 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         await ShiftModal.Open(modals.First().Name, Key, ModalOpenMode.NewTab, modals.First().Parameters);
     }
 
-    internal async Task CloneAndOpen()
+    /// <summary>
+    ///     Opens one revision of this record in its own browser tab, as a form URL carrying
+    ///     <c>?asOf=</c> — which is what makes two revisions comparable side by side in two tabs.
+    /// </summary>
+    internal async Task OpenRevisionInNewTab(RevisionDTO revision)
     {
-        if (!_RenderCloneButton) return;
+        var parameters = new Dictionary<string, object>();
 
-        var val = JsonSerializer.Serialize(Value);
-        var original = JsonSerializer.Deserialize<T>(val);
-        original!.ID = null;
-
-        var param = new Dictionary<string, object>()
-        {
-            ["TheItem"] = original,
-        };
+        // The current revision carries no asOf, so its link is just the live record.
+        if (revision.AsOf() is { } asOf)
+            parameters[AsOfQueryKey] = FormatAsOf(asOf);
 
         var url = await JsRuntime.GetValueAsync<string>("window.location.href");
+        var modal = ShiftModal.ParseModalUrl(url).FirstOrDefault();
 
-        var modals = ShiftModal.ParseModalUrl(url);
-        var result = await ShiftModal.Open(modals.First().Name, parameters: param, skipQueryParamUpdate: true);
+        if (modal != null)
+        {
+            // Open as a dialog: rebuild this form's own route, keeping what it was opened with.
+            if (modal.Parameters != null)
+            {
+                foreach (var item in modal.Parameters)
+                    parameters.TryAdd(item.Key, item.Value);
+            }
 
-        MadeChanges = result != null && result.Canceled != true;
+            await ShiftModal.Open(modal.Name, Key, ModalOpenMode.NewTab, parameters);
+        }
+        else
+        {
+            // Already the page: reuse this URL's path and swap its query.
+            var path = new Uri(NavManager.Uri).AbsolutePath;
+            await JsRuntime.InvokeVoidAsync("open", path + ShiftModal.GenerateQueryString(parameters), "_blank");
+        }
     }
 
     internal async Task ViewRevisions()
@@ -1325,6 +1411,7 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
                 { x => x.EntitySet, Endpoint.AddUrlPath(Key?.ToString(), "revisions") },
                 { x => x.ItemUrl, ItemUrl },
                 { x => x.OnCompareRequested, EventCallback.Factory.Create<CompareRevisions>(this, OpenCompare) },
+                { x => x.OnOpenInNewTabRequested, EventCallback.Factory.Create<RevisionDTO>(this, OpenRevisionInNewTab) },
             };
 
             if (!string.IsNullOrWhiteSpace(Title))
@@ -1361,7 +1448,10 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
         var dParams = new DialogParameters<RevisionCompare<T>>
         {
             { x => x.ChildContent, ChildContent },
-            { x => x.ItemUrl, ItemUrl },
+            { x => x.Endpoint, Endpoint },
+            { x => x.BaseUrl, BaseUrl },
+            { x => x.BaseUrlKey, BaseUrlKey },
+            { x => x.Key, Key },
             { x => x.OldRevision, compare.Old },
             { x => x.NewRevision, compare.New },
             { x => x.TypeAuthAction, TypeAuthAction },
@@ -1372,12 +1462,16 @@ public partial class ShiftEntityForm<T> : ShiftFormBasic<T>, IEntityRequestCompo
             dParams.Add(x => x.Title, Loc["RevisionsCompareTitle", Title].ToString());
         }
 
+        // Full screen: two forms side by side need every pixel, and anything narrower starts
+        // wrapping fields differently in each pane, which is exactly what makes them uncomparable.
         var options = new DialogOptions
         {
             NoHeader = true,
             CloseOnEscapeKey = false,
-            MaxWidth = MaxWidth.ExtraLarge,
-            FullWidth = true,
+            FullScreen = true,
+            // Names the dialog for main.css, which makes its content a full-height flex column so
+            // the toolbar stays put and only the panes scroll.
+            BackgroundClass = "shift-revision-compare-dialog",
         };
 
         var dialogReference = await DialogService.ShowAsync<RevisionCompare<T>>("", dParams, options);

@@ -189,17 +189,6 @@ public class SettingManager
         return Settings.Language ?? DefaultAppSetting.Language;
     }
 
-    public void SetFormCloneSetting(bool enableClone)
-    {
-        Settings.EnableFormClone = enableClone;
-        SyncLocalStorage.SetItem(Key, Settings);
-    }
-
-    public bool GetFormCloneSetting()
-    {
-        return Settings.EnableFormClone ?? DefaultAppSetting.EnableFormClone;
-    }
-
     public void SetFileExplorerSetting(string id, FileExplorerSettings setting)
     {
         Settings.FileExplorerSettings ??= [];

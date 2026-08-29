@@ -4,11 +4,9 @@ using ShiftSoftware.ShiftBlazor.Enums;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Net.Http.Json;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -16,15 +14,19 @@ using System.Text.Json.Nodes;
 namespace ShiftSoftware.ShiftBlazor.Components;
 
 /// <summary>
-/// Shows two revisions side by side, read-only, using the entity's real form fields so values
-/// look as they do in the form. A banner lists the fields that differ.
+/// Shows two revisions side by side as two ordinary forms — the entity's real form, twice, each
+/// pinned to its own revision. A banner lists the fields that differ.
+/// <para>
+/// Each pane renders the hosting form's own <see cref="ChildContent"/>, so the fields in it must
+/// bind through the form they are in (<c>context.Item.Foo</c>) rather than through a variable on
+/// the page. A page variable is a single object shared by both panes, and both panes would show
+/// whatever it happens to hold.
+/// </para>
 /// </summary>
 [CascadingTypeParameter(nameof(T))]
 public partial class RevisionCompare<T> : IShortcutComponent where T : ShiftEntityViewAndUpsertDTO, new()
 {
-    [Inject] internal HttpClient HttpClient { get; set; } = default!;
     [Inject] internal ShiftBlazorLocalizer Loc { get; set; } = default!;
-    [Inject] internal ISnackbar Snackbar { get; set; } = default!;
 
     public Guid Id { get; } = Guid.NewGuid();
     public Dictionary<KeyboardKeys, object> Shortcuts { get; set; } = new();
@@ -36,9 +38,19 @@ public partial class RevisionCompare<T> : IShortcutComponent where T : ShiftEnti
     [Parameter, EditorRequired]
     public RenderFragment<FormChildContext<T>>? ChildContent { get; set; }
 
-    /// <summary>Absolute URL of the entity record; snapshots are fetched from it with <c>?asOf=</c>.</summary>
+    /// <summary>Passed through to each pane so it reads the same API as the hosting form.</summary>
     [Parameter, EditorRequired]
-    public string? ItemUrl { get; set; }
+    public string Endpoint { get; set; } = default!;
+
+    [Parameter]
+    public string? BaseUrl { get; set; }
+
+    [Parameter]
+    public string? BaseUrlKey { get; set; }
+
+    /// <summary>The record both panes show; they differ only by revision.</summary>
+    [Parameter]
+    public object? Key { get; set; }
 
     /// <summary>The older revision (rendered on the left).</summary>
     [Parameter, EditorRequired]
@@ -51,14 +63,15 @@ public partial class RevisionCompare<T> : IShortcutComponent where T : ShiftEnti
     [Parameter]
     public string? Title { get; set; }
 
-    /// <summary>Passed through to each host so read-access gating matches the real form.</summary>
+    /// <summary>Passed through to each pane so read-access gating matches the real form.</summary>
     [Parameter]
     public TypeAuth.Core.Actions.Action? TypeAuthAction { get; set; }
 
     internal T? OldValue { get; private set; }
     internal T? NewValue { get; private set; }
-    internal bool Loading { get; private set; } = true;
     internal List<string> ChangedFields { get; private set; } = new();
+
+    internal bool BothLoaded => OldValue != null && NewValue != null;
 
     private static readonly JsonSerializerOptions SerializerOptions = CreateSerializerOptions();
 
@@ -75,42 +88,18 @@ public partial class RevisionCompare<T> : IShortcutComponent where T : ShiftEnti
         IShortcutComponent.Register(this);
     }
 
-    protected override async Task OnInitializedAsync()
+    /// <summary>
+    /// A pane hands over the snapshot it fetched. The banner needs both, so it is recomputed as
+    /// each arrives and stays empty until the second one does.
+    /// </summary>
+    private void OnPaneLoaded(T value, Action<T> capture)
     {
-        try
-        {
-            OldValue = await FetchSnapshot(OldRevision);
-            NewValue = await FetchSnapshot(NewRevision);
+        capture(value);
+
+        if (BothLoaded)
             ChangedFields = ComputeChangedFields(OldValue, NewValue);
-        }
-        catch (Exception e)
-        {
-            Snackbar.Add(e.Message, Severity.Error);
-        }
-        finally
-        {
-            Loading = false;
-        }
-    }
 
-    private async Task<T?> FetchSnapshot(RevisionDTO? revision)
-    {
-        if (revision == null)
-            return null;
-
-        // A live revision (ValidTo == MaxValue) has no meaningful asOf; fetch the current record.
-        var asOf = revision.ValidFrom;
-        var url = ItemUrl;
-
-        if (asOf != null && revision.ValidTo != DateTime.MaxValue)
-            url += "?asOf=" + Uri.EscapeDataString(asOf.Value.ToString("O"));
-
-        using var request = HttpClient.CreateRequestMessage(HttpMethod.Get, new Uri(url!));
-        using var res = await HttpClient.SendAsync(request);
-        res.EnsureSuccessStatusCode();
-
-        var response = await res.Content.ReadFromJsonAsync<ShiftEntityResponse<T>>(SerializerOptions);
-        return response?.Entity;
+        StateHasChanged();
     }
 
     /// <summary>Display names of the top-level properties that differ between the two snapshots.</summary>
@@ -128,6 +117,9 @@ public partial class RevisionCompare<T> : IShortcutComponent where T : ShiftEnti
         var changed = new List<string>();
         foreach (var key in keys)
         {
+            if (IsBookkeeping(key))
+                continue;
+
             var oldChild = oldNode != null && oldNode.TryGetPropertyValue(key, out var o) ? o : null;
             var newChild = newNode != null && newNode.TryGetPropertyValue(key, out var n) ? n : null;
 
@@ -137,6 +129,16 @@ public partial class RevisionCompare<T> : IShortcutComponent where T : ShiftEnti
 
         return changed;
     }
+
+    /// <summary>
+    /// Fields the framework keeps on every entity rather than fields of this record. LastSaveDate
+    /// and LastSavedByUserID differ between any two revisions by definition, so listing them says
+    /// nothing and pushes the fields that did change further down.
+    /// </summary>
+    private static bool IsBookkeeping(string jsonKey)
+        => typeof(ShiftEntityViewAndUpsertDTO).GetProperty(
+               jsonKey,
+               BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase) != null;
 
     private static IEnumerable<string> NodeKeys(JsonObject? node)
         => node == null ? Enumerable.Empty<string>() : node.Select(x => x.Key);

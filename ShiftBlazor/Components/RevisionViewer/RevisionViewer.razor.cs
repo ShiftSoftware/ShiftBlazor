@@ -32,10 +32,18 @@ public partial class RevisionViewer
     [Parameter]
     public EventCallback<CompareRevisions> OnCompareRequested { get; set; }
 
+    /// <summary>
+    ///     Raised when the user opens one revision in its own browser tab; the caller owns the URL.
+    ///     When unset, the per-row button is hidden.
+    /// </summary>
+    [Parameter]
+    public EventCallback<RevisionDTO> OnOpenInNewTabRequested { get; set; }
+
     internal string? UserListBaseUrl { get; set; }
     internal string? UserListEntitySet { get; set; }
 
     internal bool CompareEnabled => !string.IsNullOrWhiteSpace(ItemUrl);
+    internal bool NewTabEnabled => OnOpenInNewTabRequested.HasDelegate;
     // we need to use a custom select column because the ShiftList Select column wouldn't work here
     // the ShiftList uses ID to select but we don't have IDs here.
     internal List<RevisionDTO> SelectedRevisions { get; } = new();
@@ -82,9 +90,8 @@ public partial class RevisionViewer
     private async Task RowClickHandler(ShiftEvent<DataGridRowClickEventArgs<RevisionDTO>> args)
     {
         await Task.Delay(1);
-        // ValidTo == MaxValue is the live record (no asOf); anything else is a historical revision.
-        var asOf = args.Data.Item.ValidTo == DateTime.MaxValue ? null : args.Data.Item.ValidFrom;
-        MudDialog?.Close(DialogResult.Ok(new ViewRevision(asOf)));
+        // The current revision is the live record (no asOf); anything else is historical.
+        MudDialog?.Close(DialogResult.Ok(new ViewRevision(args.Data.Item.AsOf())));
     }
 
     internal async Task CompareHandler()
