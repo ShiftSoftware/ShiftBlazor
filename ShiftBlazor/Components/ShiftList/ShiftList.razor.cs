@@ -186,23 +186,14 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
             if (string.IsNullOrEmpty(height))
                 return height;
 
-            // MudBlazor applies Height to the scrolling table container, so anything of ours
-            // outside it — the find bar above, the scope note in the pager below — adds to the
-            // component's overall size and starts the page scrolling, which is the very thing a
-            // fixed height is set to prevent. Deduct them instead, so the list occupies what it
-            // always did. Both lengths are CSS variables that also size the elements themselves,
-            // so this arithmetic cannot drift from what is actually rendered.
-            var deductions = new List<string>(2);
-
-            if (!DisableFind)
-                deductions.Add("var(--shift-list-find-bar-height)");
-
-            if (IsFindIncomplete && FindMatchCount > 0)
-                deductions.Add("var(--shift-list-find-note-height)");
-
-            return deductions.Count == 0
+            // MudBlazor applies Height to the scrolling table container, so the find bar above it
+            // adds to the component's overall size and starts the page scrolling, which is the very
+            // thing a fixed height is set to prevent. Deduct it instead, so the list occupies what
+            // it always did. The length is a CSS variable that also sizes the bar itself, so this
+            // arithmetic cannot drift from what is actually rendered.
+            return DisableFind
                 ? height
-                : $"calc({height} - {string.Join(" - ", deductions)})";
+                : $"calc({height} - var(--shift-list-find-bar-height))";
         }
     }
 
@@ -615,9 +606,6 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     internal string FindScopeChipText =>
         Loc["ListFindUnsearchedChip", FindTotalDisplay, FindUnsearchedDisplay] + FilterPanelHint;
-
-    internal string FindScopeNoteText =>
-        Loc["ListFindUnsearchedNote", FindUnsearchedDisplay] + FilterPanelHint;
 
     internal string FindScopeEmptyText =>
         Loc["ListFindUnsearchedEmpty", FindUnsearchedDisplay] + FilterPanelHint;

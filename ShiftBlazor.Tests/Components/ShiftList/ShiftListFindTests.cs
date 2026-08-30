@@ -221,7 +221,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     }
 
     [Fact]
-    public void ShouldPayForItsOwnBarsOutOfTheGridHeight()
+    public void ShouldPayForItsOwnBarOutOfTheGridHeight()
     {
         MockUsers(SampleUsers(), serverTotal: 1057);
         var cut = RenderComponent<ShiftListTestFindScope>(parameters => parameters
@@ -230,22 +230,20 @@ public class ShiftListFindTests : ShiftBlazorTestContext
 
         cut.WaitForAssertion(() => Assert.Equal(3, RowCount(cut)));
 
-        // Idle: the find bar exists, so its height comes out of the grid's.
+        // The find bar is laid out outside the grid's height box, so its height comes out of it.
         Assert.Equal("calc(500px - var(--shift-list-find-bar-height))", ListOf(cut).EffectiveHeight);
 
         cut.InvokeAsync(() => ListOf(cut).SetFindText("ali"));
+        cut.WaitForAssertion(() => Assert.Equal(2, RowCount(cut)));
 
-        // Matches shown, so the scope note is in the pager too and both come out.
-        cut.WaitForAssertion(() => Assert.Equal(
-            "calc(500px - var(--shift-list-find-bar-height) - var(--shift-list-find-note-height))",
-            ListOf(cut).EffectiveHeight));
+        // The bar is always there, so the deduction is a constant: nothing the find does can
+        // resize the grid underneath the rows the user is reading.
+        Assert.Equal("calc(500px - var(--shift-list-find-bar-height))", ListOf(cut).EffectiveHeight);
 
-        // Nothing matched: the note gives way to the empty state, so its height goes back.
         cut.InvokeAsync(() => ListOf(cut).SetFindText("nobody-by-this-name"));
+        cut.WaitForAssertion(() => Assert.Equal(0, RowCount(cut)));
 
-        cut.WaitForAssertion(() => Assert.Equal(
-            "calc(500px - var(--shift-list-find-bar-height))",
-            ListOf(cut).EffectiveHeight));
+        Assert.Equal("calc(500px - var(--shift-list-find-bar-height))", ListOf(cut).EffectiveHeight);
     }
 
     [Fact]
@@ -297,10 +295,9 @@ public class ShiftListFindTests : ShiftBlazorTestContext
             Assert.Equal(1054, ListOf(cut).FindUnsearchedCount);
             Assert.True(ListOf(cut).IsFindIncomplete);
 
-            // Said twice on purpose: the chip is above the fold, the note is by the pager where
-            // someone who scrolled through the matches ends up.
+            // Said once, in the bar the count sits in: the count is only readable next to the
+            // scope it was counted over.
             Assert.Contains("1,054", cut.Find(".shift-list-find-scope").TextContent);
-            Assert.Contains("1,054", cut.Find(".shift-list-find-note").TextContent);
         });
     }
 
@@ -320,7 +317,6 @@ public class ShiftListFindTests : ShiftBlazorTestContext
         Assert.Equal(0, ListOf(cut).FindUnsearchedCount);
         Assert.False(ListOf(cut).IsFindIncomplete);
         Assert.Empty(cut.FindAll(".shift-list-find-scope"));
-        Assert.Empty(cut.FindAll(".shift-list-find-note"));
     }
 
     [Fact]
@@ -333,11 +329,10 @@ public class ShiftListFindTests : ShiftBlazorTestContext
 
         // The scope only matters once a find has produced an answer to misread.
         Assert.Empty(cut.FindAll(".shift-list-find-scope"));
-        Assert.Empty(cut.FindAll(".shift-list-find-note"));
     }
 
     [Fact]
-    public void ShouldFoldTheWarningIntoTheEmptyStateRatherThanRepeatIt()
+    public void ShouldRepeatTheWarningInTheEmptyState()
     {
         MockUsers(SampleUsers(), serverTotal: 1057);
         var cut = RenderComponent<ShiftListTest1>();
@@ -350,8 +345,8 @@ public class ShiftListFindTests : ShiftBlazorTestContext
         {
             Assert.Equal(0, RowCount(cut));
 
-            // Stacked under "no row matches", the band would be the same sentence twice.
-            Assert.Empty(cut.FindAll(".shift-list-find-note"));
+            // "No row matches" is the reading most likely to be taken as "the record does not
+            // exist", so the empty state spells the scope out rather than leaving it to the chip.
             Assert.Contains("1,054", cut.Find(".shift-list-find-unsearched").TextContent);
 
             // The chip is the constant — it stays in both states.

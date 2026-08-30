@@ -338,9 +338,9 @@
                     else if (IsFindActive && FindTotalCount > 0)
                     {
                         @* The page is not empty — the find box is hiding all of it. Say so, or the
-                           list looks broken. The unsearched count joins this message rather than
-                           appearing as its own band below: stacked under "no row matches" it would
-                           be near enough the same sentence twice, and read as a bug. *@
+                           list looks broken. The unsearched count is spelled out here rather than
+                           left to the chip: "no row matches" is the reading most likely to be taken
+                           as "the record does not exist", so the scope has to come with it. *@
                         <MudStack AlignItems="AlignItems.Center" Spacing="1">
                             <MudText>@Loc["ListFindNoMatches", FindText!]</MudText>
 
@@ -453,19 +453,6 @@
                 </Columns>
 
                 <PagerContent>
-                    @* Above the pager, not after the last row: on a virtualized page the end of the
-                       rows is below the fold, so a note there would only be found by someone who
-                       had already given up. Here it is always in view, and it sits beside
-                       "1-100 of 1,057" — where the reader's sense of how much data exists lives.
-                       Suppressed when nothing matched, because the empty state says it instead. *@
-                    @if (IsFindIncomplete && FindMatchCount > 0)
-                    {
-                        <div class="shift-list-find-note" title="@FindScopeNoteText">
-                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Size="Size.Small" />
-                            <span>@FindScopeNoteText</span>
-                        </div>
-                    }
-
                     @if (EnableSelection && SelectState.Count > 0)
                     {
                         <MudText Style="padding-inline: 20px 2px;" Typo="Typo.body2">@Loc["SelectedItemsCounterLabel", SelectState.Count, SelectState.Total]</MudText>

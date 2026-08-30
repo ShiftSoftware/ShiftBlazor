@@ -231,10 +231,6 @@
 .mud-table .mud-table-pagination {
     display: flex;
     align-items: center;
-    /* Lets .shift-list-find-note claim a full-width line of its own above the pager controls.
-       Inert otherwise: the pager row carries a MudSpacer that absorbs any slack, so nothing
-       else in it ever reaches the point of wrapping. */
-    flex-wrap: wrap;
 }
 
 th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
@@ -895,11 +891,10 @@ tr:has(> td .attention-row--info) > td {
    row's end, which follows the reading direction — it lands on the left in an RTL culture
    without a second rule. */
 :root {
-    /* Both bars are laid out outside the grid's height box, so ShiftList deducts these same two
-       lengths from the height it hands MudBlazor (see EffectiveHeight). They are variables so the
-       element and the arithmetic can never disagree — change one and both follow. */
+    /* The bar is laid out outside the grid's height box, so ShiftList deducts this same length
+       from the height it hands MudBlazor (see EffectiveHeight). It is a variable so the element
+       and the arithmetic can never disagree — change one and both follow. */
     --shift-list-find-bar-height: 41px;
-    --shift-list-find-note-height: 33px;
 }
 
 .shift-list-find-bar {
@@ -962,51 +957,27 @@ tr:has(> td .attention-row--info) > td {
    it absorbs the slack, so the count and the box stay pinned to the end and do not move when it
    appears. Amber rather than a muted grey on purpose — the failure it guards against is a user
    quietly concluding a record does not exist, so it has to survive being skimmed past. */
-.shift-list-find-scope,
-.shift-list-find-note {
+.shift-list-find-scope {
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    margin-inline-end: auto;
+    padding: 3px 8px;
+    border-radius: var(--mud-default-borderradius);
     /* Mixed from MudBlazor's own warning hue rather than --mud-palette-warning-hover, which is a
        6% wash meant for hover feedback and is all but invisible as a standing badge. */
     background-color: rgba(var(--mud-palette-warning-rgb), 0.14);
     color: var(--mud-palette-warning-darken);
-    /* The grid's own body size. At 0.75rem these read as footnotes next to the cells they are
-       warning about, which is the wrong weight for the thing that stops a wrong conclusion. */
+    /* The grid's own body size. At 0.75rem it reads as a footnote next to the cells it is warning
+       about, which is the wrong weight for the thing that stops a wrong conclusion. */
     font-size: var(--mud-typography-body2-size);
     line-height: 1.4;
-}
-
-.shift-list-find-scope {
-    margin-inline-end: auto;
-    padding: 3px 8px;
-    border-radius: var(--mud-default-borderradius);
     white-space: nowrap;
     min-width: 0;
     overflow: hidden;
 }
 
-/* Full-width band on its own line above the pager controls: flex-basis 100% against the wrap
-   allowed on .mud-table-pagination below. */
-.shift-list-find-note {
-    flex: 0 0 100%;
-    justify-content: center;
-    height: var(--shift-list-find-note-height);
-    box-sizing: border-box;
-    padding: 6px 12px;
-}
-
-/* One line, whatever the width. The height above is fixed so the grid can budget for it, so a
-   sentence that wrapped on a narrow list would be silently clipped instead. The message is
-   ordered worst-news-first, so an ellipsis eats the filter-panel hint rather than the warning,
-   and the title attribute keeps the whole thing reachable. */
-.shift-list-find-note > span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* The same fact in the empty state, where it is a second line rather than a band. */
+/* The same fact in the empty state, where it is a line of text rather than a chip. */
 .shift-list-find-unsearched {
     color: var(--mud-palette-warning-darken);
     font-size: var(--mud-typography-body2-size);
