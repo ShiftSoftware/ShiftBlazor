@@ -516,7 +516,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
                 { Constants.FileExplorerSizesMetadataKey, string.Join("|", thumbnailSizes)},
             };
 
-            var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+            var tokenStore = ServiceProvider.GetService<IdentitySession>();
 
             if (tokenStore != null)
             {

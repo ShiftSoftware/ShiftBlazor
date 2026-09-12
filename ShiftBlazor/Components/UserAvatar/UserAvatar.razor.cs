@@ -9,7 +9,7 @@ namespace ShiftSoftware.ShiftBlazor.Components;
 public partial class UserAvatar
 {
     [Inject] IDialogService Dialog { get; set; } = default!;
-    [Inject] IIdentityStore tokenStore { get; set; } = default!;
+    [Inject] IdentitySession tokenStore { get; set; } = default!;
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
     [Parameter]

@@ -267,7 +267,7 @@ public partial class FileExplorer : IShortcutComponent, IRequestComponent
 
     protected override async Task OnInitializedAsync()
     {
-        var tokenStore = ServiceProvider.GetService<IIdentityStore>();
+        var tokenStore = ServiceProvider.GetService<IdentitySession>();
 
         if (tokenStore != null)
         {

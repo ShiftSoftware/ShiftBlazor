@@ -10,7 +10,7 @@ namespace ShiftSoftware.ShiftBlazor.Services;
 /// <summary>
 /// Production <see cref="IAttentionHubConnection"/> wrapping a real SignalR
 /// <see cref="HubConnection"/> with automatic reconnect and bearer-token auth (the token is
-/// pulled from <see cref="IIdentityStore"/> per connect/reconnect, so it stays current).
+/// pulled from <see cref="IdentitySession"/> per connect/reconnect, so it stays current).
 /// </summary>
 internal sealed class SignalRAttentionHubConnection : IAttentionHubConnection
 {
@@ -21,10 +21,10 @@ internal sealed class SignalRAttentionHubConnection : IAttentionHubConnection
         connection = new HubConnectionBuilder()
             .WithUrl(hubUrl, options =>
             {
-                // IIdentityStore may be absent in hosts without ShiftIdentity wired — the hub
+                // IdentitySession may be absent in hosts without ShiftIdentity wired — the hub
                 // then connects unauthenticated and the server's [Authorize] rejects it, which
                 // is the correct outcome (no token → no real-time, same as any secured call).
-                var identityStore = services.GetService<IIdentityStore>();
+                var identityStore = services.GetService<IdentitySession>();
                 if (identityStore is not null)
                     options.AccessTokenProvider = async () => (await identityStore.GetTokenAsync())?.Token;
             })
