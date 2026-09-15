@@ -246,22 +246,6 @@
                                     || (Mode <= FormModes.Archive && TypeAuthService.Can(TypeAuthAction, Access.Read)))
                                 {
                                     
-                                    @if (Value is IHasBrandSelection<T> dtoWithBrand)
-                                    {
-                                        var fieldId = FieldIdentifier.Create(() => dtoWithBrand.Brand);
-                                        var errorText = EditContext.GetValidationMessages(fieldId).FirstOrDefault();
-                                        <ShiftAutocomplete Label="@Loc["BrandAutocompleteLabel"]"
-                                                           Value="dtoWithBrand.Brand"
-                                                           ValueChanged="(value) => { if (value != dtoWithBrand.Brand) { dtoWithBrand.Brand = value;EditContext.NotifyFieldChanged(fieldId);} }"
-                                                           TEntitySet="ShiftSoftware.ShiftIdentity.Core.DTOs.Brand.BrandListDTO"
-                                                           EntitySet="IdentityBrand"
-                                                           BaseUrlKey="ShiftIdentityApi"
-                                                           For="() => dtoWithBrand.Brand"
-                                                           Error="!EditContext.IsValid(fieldId)"
-                                                           ErrorText="@errorText"/>
-
-                                    }
-
                                     @if (ChildContent != null)
                                     {
                                         @ChildContent(new(this))
