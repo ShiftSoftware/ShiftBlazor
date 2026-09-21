@@ -49,12 +49,27 @@ public class ShiftEntityFormViewingPresenceTests : ShiftBlazorTestContext
         return root.FindComponent<ShiftEntityForm<SampleDTO>>();
     }
 
+    /// <summary>
+    /// The report starts (and restarts) inside OnAfterRenderAsync, and nothing re-renders once it
+    /// has: WaitForAssertion re-checks only on a render, so it would keep looking at the state
+    /// from before the report existed. Poll the fake hub client instead.
+    /// </summary>
+    private static void WaitForHub(Action assertion, int timeoutMs = 3000)
+    {
+        var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+        while (true)
+        {
+            try { assertion(); return; }
+            catch (Xunit.Sdk.XunitException) when (DateTime.UtcNow < deadline) { Thread.Sleep(20); }
+        }
+    }
+
     [Fact]
     public void ReportsViewing_WhenAnExistingRecordIsShown()
     {
         var cut = RenderForm(key: "1");
 
-        cut.WaitForAssertion(() =>
+        WaitForHub(() =>
             Assert.Equal((BaseUrl, "Product", "1", null), Assert.Single(_hubClient.Starts)));
     }
 
@@ -63,7 +78,7 @@ public class ShiftEntityFormViewingPresenceTests : ShiftBlazorTestContext
     {
         var cut = RenderForm(key: "1", scope: "Details");
 
-        cut.WaitForAssertion(() =>
+        WaitForHub(() =>
             Assert.Equal((BaseUrl, "Product", "1", "Details"), Assert.Single(_hubClient.Starts)));
     }
 
@@ -90,7 +105,7 @@ public class ShiftEntityFormViewingPresenceTests : ShiftBlazorTestContext
     public async Task StopsReporting_WhenTheFormIsDisposed()
     {
         var cut = RenderForm(key: "1");
-        cut.WaitForAssertion(() => Assert.Single(_hubClient.Starts));
+        WaitForHub(() => Assert.Single(_hubClient.Starts));
 
         await DisposeComponentsAsync();
 
@@ -101,11 +116,11 @@ public class ShiftEntityFormViewingPresenceTests : ShiftBlazorTestContext
     public void RestartsReporting_WhenTheKeyChanges()
     {
         var cut = RenderForm(key: "1");
-        cut.WaitForAssertion(() => Assert.Single(_hubClient.Starts));
+        WaitForHub(() => Assert.Single(_hubClient.Starts));
 
         cut.Render(parameters => parameters.Add(p => p.Key, "2"));
 
-        cut.WaitForAssertion(() =>
+        WaitForHub(() =>
         {
             // The old record's report ended and the new record's report started.
             Assert.Equal(("Product", "1", null), Assert.Single(_hubClient.Stops));

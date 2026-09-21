@@ -265,6 +265,21 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
         //NavManager.RegisterLocationChangingHandler(LocationChangingHandler);
     }
 
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        // A parent that re-renders with a different Value object used to get a fresh context from
+        // EditForm's Model= binding. Now that EditForm is bound to this EditContext, keep it
+        // pointing at the current Value ourselves. SetValue already replaces the context together
+        // with Value, so this only fires for a parameter-driven swap.
+        if (EditContext != null && !ReferenceEquals(EditContext.Model, Value))
+        {
+            EditContext.OnFieldChanged -= SuppressDirtyOnLoadHandler;
+            EditContext = new EditContext(Value);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         // Embedded hosts keep the passed Mode (read-only); forcing Create would make them editable.

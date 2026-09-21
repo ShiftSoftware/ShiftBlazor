@@ -34,20 +34,26 @@ public class ShiftBlazorTestContext : BunitContext, IAsyncLifetime
 
         var mock = Services.AddMockHttpClient();
         MockHttp = mock;
-        mock.When(ODataBaseUrl + "/Users").RespondJson(new ODataResult<User>
+
+        // With no separate API/OData prefixes, the OData list and the entity endpoints share a
+        // path ("/Product" is both the list and the create URL), so every mock is pinned to its
+        // HTTP method and registered as an absolute URL. A relative pattern without a leading
+        // slash (what AddUrlPath yields from an empty prefix) never matches in MockHttp, and an
+        // any-method pattern registered first would shadow the POST/PUT ones below.
+        mock.When(HttpMethod.Get, BaseUrl.AddUrlPath(ODataBaseUrl, "Users")).RespondJson(new ODataResult<User>
         {
             value = User.GenerateData(50, 50),
         });
-        mock.When(ODataBaseUrl + "/Product").RespondJson(new ODataResult<SampleDTO>
+        mock.When(HttpMethod.Get, BaseUrl.AddUrlPath(ODataBaseUrl, "Product")).RespondJson(new ODataResult<SampleDTO>
         {
             value = Values
         });
-        mock.When(HttpMethod.Get, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
-        mock.When(HttpMethod.Post, ApiBaseUrl.AddUrlPath("Product")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
-        mock.When(HttpMethod.Put, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
-        mock.When(HttpMethod.Delete, ApiBaseUrl.AddUrlPath("Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First(x => x.IsDeleted == true) });
+        mock.When(HttpMethod.Get, BaseUrl.AddUrlPath(ApiBaseUrl, "Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
+        mock.When(HttpMethod.Post, BaseUrl.AddUrlPath(ApiBaseUrl, "Product")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
+        mock.When(HttpMethod.Put, BaseUrl.AddUrlPath(ApiBaseUrl, "Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First() });
+        mock.When(HttpMethod.Delete, BaseUrl.AddUrlPath(ApiBaseUrl, "Product/1")).RespondJson(new ShiftEntityResponse<SampleDTO> { Entity = Values.First(x => x.IsDeleted == true) });
 
-        mock.When(HttpMethod.Get, ApiBaseUrl.AddUrlPath("/User/1/revisions")).RespondJson(new ODataDTO<RevisionDTO>
+        mock.When(HttpMethod.Get, BaseUrl.AddUrlPath(ApiBaseUrl, "User/1/revisions")).RespondJson(new ODataDTO<RevisionDTO>
         {
             Value = new List<RevisionDTO> {
                 new RevisionDTO {

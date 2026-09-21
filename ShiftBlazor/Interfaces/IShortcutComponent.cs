@@ -54,7 +54,8 @@ public interface IShortcutComponent : IDisposable
         }
     }
 
-    public static IShortcutComponent GetComponent(Index index)
+    /// <summary>Returns the component at <paramref name="index"/>, or <c>null</c> when the registry has no entry there.</summary>
+    public static IShortcutComponent? GetComponent(Index index)
     {
         lock (Sync)
         {

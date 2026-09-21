@@ -8,6 +8,14 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftForm;
 
 public class ShiftFormBasicTests : ShiftBlazorTestContext
 {
+    /// <summary>
+    /// The footer Save/Create control. It is a <see cref="MudButtonExtended"/> of type Button
+    /// that submits the form itself on click (the S shortcut goes through the same path), so
+    /// <c>button[type='submit']</c> no longer matches it; the shortcut key is what identifies it.
+    /// </summary>
+    private static IRenderedComponent<MudButtonExtended> FindSubmitButton(IRenderedComponent<ShiftFormBasic<SampleDTO>> cut)
+        => cut.FindComponents<MudButtonExtended>().First(x => x.Instance.KeyboardKey == KeyboardKeys.KeyS);
+
     [Fact]
     public void ShouldRenderComponentCorrectly()
     {
@@ -93,7 +101,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
 
         form = cut.Instance;
 
-        cut.Find("footer button[type='submit']").Click();
+        FindSubmitButton(cut).Find("button").Click();
 
         Assert.True(isSaving);
     }
@@ -103,7 +111,10 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var content = "Hello, world, how is the weather?";
 
-        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters.AddChildContent(content));
+        // ChildContent is a RenderFragment<FormChildContext<T>>, so bUnit's AddChildContent (plain
+        // RenderFragment) cannot be used; build the fragment against the context ourselves.
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
+            .Add(p => p.ChildContent, _ => builder => builder.AddMarkupContent(0, content)));
 
         var body = cut.Find(".form-body");
 
@@ -137,7 +148,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
             .Add(p => p.OnInvalidSubmit, () => isInvalid = true)
         );
 
-        cut.Find("footer button[type='submit']").Click();
+        FindSubmitButton(cut).Find("button").Click();
 
         Assert.True(isInvalid);
     }
@@ -370,9 +381,8 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         //render the component again after flag has been changed
         cut.Render();
 
-        var buttons = cut.FindComponents<MudToolBar>().Last().FindComponents<MudButton>();
-        //Footer toolbar should not have any buttons with the type of submit
-        Assert.Empty(buttons.Where(x => x.Instance.ButtonType == ButtonType.Submit));
+        //Footer toolbar should not have the Save/Create button
+        Assert.DoesNotContain(cut.FindComponents<MudButtonExtended>(), x => x.Instance.KeyboardKey == KeyboardKeys.KeyS);
     }
 
     [Fact]
@@ -383,8 +393,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
             .Add(p => p.SubmitText, text)
         );
 
-        var buttons = cut.FindComponents<MudToolBar>().Last().FindComponents<MudButton>();
-        var submitButton = buttons.First(x => x.Instance.ButtonType == ButtonType.Submit);
+        var submitButton = FindSubmitButton(cut);
 
         Assert.Contains(text, submitButton.Markup);
     }
@@ -397,9 +406,9 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
             .Add(p => p.OnValidSubmit, async () => await Task.Delay(1000))
         );
 
-        var button = cut.Find("footer button[type='submit']");
-        button.Click();
-        cut.WaitForAssertion(() => Assert.Contains("mud-progress-circular", button.ToHtml()));
+        var button = FindSubmitButton(cut);
+        button.Find("button").Click();
+        cut.WaitForAssertion(() => Assert.Contains("mud-progress-circular", button.Markup));
     }
 
     [Fact]

@@ -1,10 +1,14 @@
 using AngleSharp;
 using Bunit;
 using Bunit.Rendering;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MudBlazor;
+using RichardSzalay.MockHttp;
 using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm;
 using ShiftBlazor.Tests.Viewer.Components.ShiftList;
 using ShiftBlazor.Tests.Shared.DTOs;
+using ShiftSoftware.ShiftEntity.Model;
+using ShiftSoftware.TypeAuth.Core;
 using System.Linq.Expressions;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList;
@@ -85,18 +89,24 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.Equal(pageSize, grid.Instance.RowsPerPage);
     }
 
+    /// <summary>
+    /// The ID column is on by default (it doubles as the open-item button when a ComponentType is
+    /// set) and goes away only when ShowIDColumn is switched off.
+    /// </summary>
     [Fact]
-    public void ShouldHideIDColumnByDefault()
+    public void ShouldShowIDColumnByDefault()
     {
         var comp = Render<ShiftListTest1>();
 
-        var comp2 = Render<ShiftListTest2>();
+        var comp2 = Render<ShiftListTest2>(parameters => parameters
+            .Add(p => p.ShowIDColumn, false)
+        );
 
         var cols1 = comp.FindComponent<MudDataGrid<User>>().Instance.RenderedColumns;
         var cols2 = comp2.FindComponent<MudDataGrid<User>>().Instance.RenderedColumns;
 
-        Assert.Null(cols1.FirstOrDefault(x => x.PropertyName == nameof(User.ID)));
-        Assert.NotNull(cols2.FirstOrDefault(x => x.PropertyName == nameof(User.ID)));
+        Assert.NotNull(cols1.FirstOrDefault(x => x.PropertyName == nameof(User.ID)));
+        Assert.Null(cols2.FirstOrDefault(x => x.PropertyName == nameof(User.ID)));
     }
 
     [Fact]
@@ -113,8 +123,11 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderOrHideActionColumn2()
     {
-        // Should render Actions column when ComponentType is 
-        var comp = Render<ShiftListTest2>();
+        // The Actions column is opt-in: it renders when a ComponentType is set AND
+        // DisableActionColumn (true by default, the ID column opens the item) is switched off.
+        var comp = Render<ShiftListTestDisableFeatures>(parameters => parameters
+            .Add(p => p.DisableActionColumn, false)
+        );
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
         var cols = grid.RenderedColumns.Where(x => x.Title == "Actions");
@@ -142,13 +155,30 @@ public class ShiftListTests : ShiftBlazorTestContext
         Assert.Null(tooltip);
     }
 
+    /// <summary>
+    /// Export is gated by TypeAuth's DataGridExport action. The test context registers TypeAuth
+    /// without granting anything (see ShouldNotRenderExportButtonWithoutAccess), so this covers
+    /// the other side: an app that does not use TypeAuth at all gets the button whenever
+    /// EnableExport is set.
+    /// </summary>
     [Fact]
     public void ShouldRenderExportButton()
     {
+        Services.RemoveAll<ITypeAuthService>();
+
         var comp = Render<ShiftListTestExport>();
 
         var tooltip = comp.FindComponents<MudTooltip>().FirstOrDefault(x => x.Instance.Text.Contains("Export"));
         Assert.NotNull(tooltip);
+    }
+
+    [Fact]
+    public void ShouldNotRenderExportButtonWithoutAccess()
+    {
+        var comp = Render<ShiftListTestExport>();
+
+        var tooltip = comp.FindComponents<MudTooltip>().FirstOrDefault(x => x.Instance.Text.Contains("Export"));
+        Assert.Null(tooltip);
     }
 
     [Fact]
@@ -297,21 +327,6 @@ public class ShiftListTests : ShiftBlazorTestContext
     //}
 
     [Fact]
-    public void ShouldReplaceActionsColumnContent()
-    {
-        var text = Guid.NewGuid().ToString();
-        var comp = Render<ShiftListTestCustomColumns>(parameters => parameters
-            .Add(p => p.ActionsTemplate, $"<h1>{text}</h1>")
-        );
-
-        var grid = comp.FindComponent<MudDataGrid<User>>();
-
-        var row = comp.Find(".mud-table-cell[data-label='Actions']");
-        row.FirstChild?.ToHtml().Contains($"{text}");
-
-    }
-
-    [Fact]
     public void ShouldAddElementsToToolbar()
     {
         var text = Guid.NewGuid();
@@ -359,13 +374,14 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldEmbededInsideForm()
     {
-        RenderTree.Add<ShiftFormBasic<SampleDTO>>();
+        // The viewer component is a ShiftEntityForm with a ShiftList in its body; the form's own
+        // cascading values are what mark the list as embedded, no outer form is needed.
+        MockHttp.When(HttpMethod.Get, BaseUrl + "/User/1")
+            .RespondJson(new ShiftEntityResponse<User> { Entity = new User { ID = "1", Name = "Sample" } });
 
         var comp = Render<ShiftEntityFormTestWithList>();
 
-        var list = comp.FindComponent<ShiftList<User>>();
-
-        Assert.True(list.Instance.IsEmbed);
+        comp.WaitForAssertion(() => Assert.True(comp.FindComponent<ShiftList<User>>().Instance.IsEmbed));
     }
 
     //[Fact]

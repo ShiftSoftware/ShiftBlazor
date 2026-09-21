@@ -310,7 +310,7 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.Equivalent(comp.Instance.Value, item);
 
         comp.Instance.Value.Name = "Sample Name Changed";
-        await comp.Instance.RestoreOriginalValue();
+        await comp.InvokeAsync(() => comp.Instance.RestoreOriginalValue());
 
         Assert.Equivalent(comp.Instance.Value, item);
 
@@ -422,12 +422,12 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
         Assert.EndsWith(title, comp.Instance.DocumentTitle);
         Assert.StartsWith("Creating new", comp.Instance.DocumentTitle);
 
-        await comp.Instance.ValidSubmitHandler(comp.Instance.EditContext);
+        await comp.InvokeAsync(() => comp.Instance.ValidSubmitHandler(comp.Instance.EditContext));
 
         Assert.StartsWith("Viewing", comp.Instance.DocumentTitle);
         Assert.EndsWith($"{title} ({comp.Instance.Value.ID})", comp.Instance.DocumentTitle);
 
-        await comp.Instance.EditItem();
+        await comp.InvokeAsync(() => comp.Instance.EditItem());
 
         Assert.StartsWith("Editing", comp.Instance.DocumentTitle);
         Assert.EndsWith($"{title} ({comp.Instance.Value.ID})", comp.Instance.DocumentTitle);
@@ -509,17 +509,14 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
 
         Assert.Equal(JsonSerializer.Serialize(comp.Instance.Value), comp.Instance.OriginalValue);
 
-        await comp.Instance.SetValue(value, false);
-
-        await Task.Delay(10);
+        await comp.InvokeAsync(() => comp.Instance.SetValue(value, false));
 
         Assert.NotEqual(JsonSerializer.Serialize(comp.Instance.Value), comp.Instance.OriginalValue);
 
-        await comp.Instance.SetValue(value);
+        await comp.InvokeAsync(() => comp.Instance.SetValue(value));
 
-        await Task.Delay(10);
-
-        Assert.Equal(JsonSerializer.Serialize(comp.Instance.Value), comp.Instance.OriginalValue);
+        // The copy is taken on a background task, so give it a moment to land.
+        comp.WaitForAssertion(() => Assert.Equal(JsonSerializer.Serialize(comp.Instance.Value), comp.Instance.OriginalValue));
     }
 
     //[Fact]
@@ -541,20 +538,31 @@ public class ShiftEntityFormTests : ShiftBlazorTestContext
     //    Assert.False(comp.Instance.editContext.IsModified());
     //}
 
+    /// <summary>
+    /// A page-hosted form only rewrites the address while a save is running: that is the moment a
+    /// created record gets its key and the URL must follow it. Outside a save (a plain Key change,
+    /// a fetch) the address is left alone.
+    /// </summary>
     [Fact]
-    public async Task ShouldUpdateUrl()
+    public async Task ShouldUpdateUrlOnlyWhileSaving()
     {
         var navManager = Services.GetRequiredService<NavigationManager>();
         var url = navManager.Uri;
 
         var comp = Render<ShiftEntityForm<SampleDTO>>(parameters => parameters
-            .Add(p => p.Key, "1")
             .Add(p => p.Endpoint, path)
         );
 
-        await comp.Instance.UpdateUrl("1");
+        await comp.InvokeAsync(() => comp.Instance.UpdateUrl("1"));
 
-        Assert.NotEqual(url, navManager.Uri);
+        Assert.Equal("1", comp.Instance.Key);
+        Assert.Equal(url, navManager.Uri);
+
+        comp.Instance.TaskInProgress = FormTasks.Save;
+        await comp.InvokeAsync(() => comp.Instance.UpdateUrl("2"));
+
+        Assert.Equal("2", comp.Instance.Key);
+        Assert.Equal(url.TrimEnd('/') + "/2", navManager.Uri);
     }
 
     //[Fact]

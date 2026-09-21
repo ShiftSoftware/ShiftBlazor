@@ -1,7 +1,7 @@
 ﻿@using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm;
 
 <ShiftList T="User"
-           ShowIDColumn
+           ShowIDColumn="ShowIDColumn"
            Dense
            EnableExport
            EnableSelection
@@ -18,4 +18,7 @@
  @code {
     [Parameter]
     public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public bool ShowIDColumn { get; set; } = true;
 }

@@ -1,5 +1,7 @@
 using AngleSharp.Css.Dom;
+using AngleSharp.Dom;
 using FluentAssertions;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Services;
@@ -9,6 +11,19 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.LanguageSwitcher;
 
 public class LanguageSwitcherTests: ShiftBlazorTestContext
 {
+    /// <summary>
+    /// The switcher's MudMenu activates on hover (ActivationEvent = MouseOver), so the items only
+    /// exist in the popover once the pointer enters the menu; clicking the activator does nothing.
+    /// MudMenu ignores pointers that cannot hover (touch, pen) and opens after a short hover
+    /// delay, hence the mouse pointer type and the wait.
+    /// </summary>
+    private static IReadOnlyList<IElement> OpenMenu(IRenderedComponent<IncludeMudProviders> comp)
+    {
+        comp.Find(".mud-menu").PointerEnter(new PointerEventArgs { PointerType = "mouse" });
+        comp.WaitForAssertion(() => Assert.NotEmpty(comp.FindAll("[role='menuitem']")), TimeSpan.FromSeconds(3));
+        return comp.FindAll("[role='menuitem']");
+    }
+
     [Fact]
     public void ShouldRenderComponentCorrectly()
     {
@@ -26,8 +41,8 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
 
         var SettingManager = Services.GetRequiredService<SettingManager>();
 
-        comp.FindAll("button.mud-button-root")[0].Click();
-        Assert.Equal(SettingManager.Configuration.Languages.Count, comp.FindAll("div.mud-list-item").Count);
+        var items = OpenMenu(comp);
+        Assert.Equal(SettingManager.Configuration.Languages.Count, items.Count);
     }
 
     [Fact]
@@ -39,11 +54,8 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
 
         var SettingManager = Services.GetRequiredService<SettingManager>();
 
-        comp.FindAll("button.mud-button-root")[0].Click();
-        Assert.All(comp.FindAll("div.mud-list-item"), (menu) =>
-        {
-            SettingManager.Configuration.Languages.Select(x => x.Label).Contains(menu.TextContent);
-        });
+        var labels = SettingManager.Configuration.Languages.Select(x => x.Label).ToList();
+        Assert.All(OpenMenu(comp), menu => Assert.Contains(menu.TextContent.Trim(), labels));
     }
 
     [Fact]
@@ -56,10 +68,9 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
         var SettingManager = Services.GetRequiredService<SettingManager>();
         var selectedLangauge = SettingManager.Settings.Language?.CultureName;
 
-        comp.FindAll("button.mud-button-root")[0].Click();
-        comp.FindAll("div.mud-list-item")[1].Click();
+        OpenMenu(comp)[1].Click();
 
-        Assert.NotEqual(selectedLangauge, SettingManager.Settings.Language?.CultureName);
+        comp.WaitForAssertion(() => Assert.NotEqual(selectedLangauge, SettingManager.Settings.Language?.CultureName));
     }
 
     [Fact]
@@ -69,8 +80,7 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
             .AddChildContent<ShiftBlazor.Components.LanguageSwitcher>()
         );
         
-        comp.FindAll("button.mud-button-root")[0].Click();
-        var items = comp.FindAll("div.mud-list-item");
+        var items = OpenMenu(comp);
         var selected = items.Where(x =>
         {
             var css = x.GetStyle().CssText;

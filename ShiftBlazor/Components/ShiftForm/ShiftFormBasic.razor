@@ -62,7 +62,12 @@
                 }
             </header>
 
-            <EditForm Model="Value"
+            @* Bind the form's own EditContext (not Model="Value"): with Model, EditForm creates a
+               second context that the inputs and ShiftValidator attach to, while SubmitHandler,
+               ConfirmClose and DisplayError work against this.EditContext — so validation was
+               bypassed on submit and IsModified() never saw a change. ShiftEntityForm already
+               binds this way. *@
+            <EditForm EditContext="EditContext"
                       @ref="Form"
                       OnSubmit="@(async () => await SubmitHandler(this.EditContext))"
                       style="height: 100%;">

@@ -1513,14 +1513,17 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
     private void ShiftBlazorEvents_OnModalClosed(object? sender, object? data)
     {
-        // Use Shortcut components to find out if the datagrid is on top of the component list
+        // Use Shortcut components to find out if the datagrid is on top of the component list.
+        // The registry can hold fewer than two entries (the closing modal was opened from a page
+        // with nothing registered), and DataGrid is null until the grid renders or when read
+        // access is denied — neither should throw from inside ShiftModal.Close.
         if (!IsModalOpen)
         {
-            var compId = IShortcutComponent.GetComponent(^2).Id;
+            var compId = IShortcutComponent.GetComponent(^2)?.Id;
 
             if (compId == Id && data != null)
             {
-                DataGrid!.ReloadServerData();
+                DataGrid?.ReloadServerData();
             }
         }
     }

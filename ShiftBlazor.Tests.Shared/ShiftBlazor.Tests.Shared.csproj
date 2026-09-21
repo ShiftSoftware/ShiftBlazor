@@ -1,4 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\ShiftTemplates\ShiftFrameworkGlobalSettings.props" Condition="Exists('..\..\ShiftTemplates\ShiftFrameworkGlobalSettings.props')" />
+
+  <!--The Azure Pipeline clones ShiftTemplates into a directory called 's' by default-->
+  <Import Project="..\..\s\ShiftFrameworkGlobalSettings.props" Condition="Exists('..\..\s\ShiftFrameworkGlobalSettings.props')" />
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,7 +12,18 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.5" />
-    <PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="2025.5.31.2" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <!--
+      Same rule as ShiftBlazor.csproj: build against the sibling ShiftEntity checkout when it is
+      there (framework development through StockPlusPlus.sln), otherwise against the package at
+      the framework version the props file pins. A hard-coded package version here would compile
+      these DTOs against a different ShiftEntity.Model than the component under test uses.
+    -->
+    <PackageReference Include="ShiftSoftware.ShiftEntity.Model" Version="$(ShiftFrameworkVersion)" Condition="!Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj" Condition="Exists('..\..\ShiftEntity\ShiftEntity.Model\ShiftEntity.Model.csproj')" />
   </ItemGroup>
 
 </Project>
