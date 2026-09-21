@@ -32,7 +32,7 @@ public class AttentionNavBadgeTests : ShiftBlazorTestContext
     }
 
     private IRenderedComponent<AttentionNavBadge> RenderBadge(int maxCount = 99)
-        => RenderComponent<AttentionNavBadge>(parameters => parameters
+        => Render<AttentionNavBadge>(parameters => parameters
             .Add(p => p.EntitySet, "Product")
             .Add(p => p.MaxCount, maxCount)
             // The periodic fallback poll is not needed here; refreshes are driven through the fake hub.

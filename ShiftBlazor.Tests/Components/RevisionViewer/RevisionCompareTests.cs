@@ -53,7 +53,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
             var older = new RevisionDTO { ValidFrom = new DateTime(2020, 1, 1), ValidTo = new DateTime(2021, 1, 1) };
             newer ??= new RevisionDTO { ValidFrom = new DateTime(2021, 1, 1), ValidTo = new DateTime(2022, 1, 1) };
 
-            var comp = RenderComponent<RevisionCompare<SampleDTO>>(parameters => parameters
+            var comp = Render<RevisionCompare<SampleDTO>>(parameters => parameters
                 .Add(p => p.Endpoint, Endpoint)
                 .Add(p => p.Key, "1")
                 .Add(p => p.OldRevision, older)

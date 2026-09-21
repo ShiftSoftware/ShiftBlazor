@@ -8,7 +8,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
         [Fact]
         public void ShouldRenderComponentCorrectly()
         {
-            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters.Add(p => p.EntitySet, RevisionsEntitySet));
+            var comp = Render<ShiftBlazor.Components.RevisionViewer>(parameters => parameters.Add(p => p.EntitySet, RevisionsEntitySet));
 
             comp.FindComponent<ShiftList<RevisionDTO>>();
         }
@@ -16,7 +16,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
         [Fact]
         public void ShouldHideCompareWhenItemUrlNotProvided()
         {
-            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
+            var comp = Render<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
                 .Add(p => p.EntitySet, RevisionsEntitySet));
 
             Assert.False(comp.Instance.CompareEnabled);
@@ -26,7 +26,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
         [Fact]
         public void ShouldShowCompareButtonWhenItemUrlProvided()
         {
-            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
+            var comp = Render<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
                 .Add(p => p.EntitySet, RevisionsEntitySet)
                 .Add(p => p.ItemUrl, ItemUrl));
 
@@ -39,7 +39,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
         {
             // Regression: RevisionDTO.ID is [JsonIgnore] so all rows have a null ID. Selection must
             // key on ValidFrom, otherwise ticking one row marks every row as selected.
-            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
+            var comp = Render<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
                 .Add(p => p.EntitySet, RevisionsEntitySet)
                 .Add(p => p.ItemUrl, ItemUrl));
 
@@ -56,7 +56,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
         public async Task CompareHandlerEmitsOlderRevisionFirst()
         {
             CompareRevisions? emitted = null;
-            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
+            var comp = Render<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
                 .Add(p => p.EntitySet, RevisionsEntitySet)
                 .Add(p => p.ItemUrl, ItemUrl)
                 .Add(p => p.OnCompareRequested, EventCallback.Factory.Create<CompareRevisions>(this, r => emitted = r)));
@@ -112,7 +112,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
         [Fact]
         public void NewTabButtonIsHiddenUntilAHandlerIsSupplied()
         {
-            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
+            var comp = Render<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
                 .Add(p => p.EntitySet, RevisionsEntitySet));
 
             Assert.False(comp.Instance.NewTabEnabled);
@@ -121,7 +121,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
         [Fact]
         public void NewTabButtonIsShownWhenAHandlerIsSupplied()
         {
-            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
+            var comp = Render<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
                 .Add(p => p.EntitySet, RevisionsEntitySet)
                 .Add(p => p.OnOpenInNewTabRequested, EventCallback.Factory.Create<RevisionDTO>(this, _ => { })));
 
@@ -132,7 +132,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.RevisionViewer
         public async Task CompareHandlerEmitsNothingUnlessTwoSelected()
         {
             CompareRevisions? emitted = null;
-            var comp = RenderComponent<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
+            var comp = Render<ShiftBlazor.Components.RevisionViewer>(parameters => parameters
                 .Add(p => p.EntitySet, RevisionsEntitySet)
                 .Add(p => p.ItemUrl, ItemUrl)
                 .Add(p => p.OnCompareRequested, EventCallback.Factory.Create<CompareRevisions>(this, r => emitted = r)));

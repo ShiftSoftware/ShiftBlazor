@@ -1,4 +1,4 @@
-﻿using AngleSharp.Css.Dom;
+using AngleSharp.Css.Dom;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
@@ -12,7 +12,7 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderComponentCorrectly()
     {
-        var comp = RenderComponent<ShiftBlazor.Components.LanguageSwitcher>();
+        var comp = Render<ShiftBlazor.Components.LanguageSwitcher>();
 
         comp.FindComponent<MudMenu>();
     }
@@ -20,7 +20,7 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderMenuItemsPerLanguage()
     {
-        var comp = RenderComponent<IncludeMudProviders>(parameters => parameters
+        var comp = Render<IncludeMudProviders>(parameters => parameters
             .AddChildContent<ShiftBlazor.Components.LanguageSwitcher>()
         );
 
@@ -33,7 +33,7 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderMenuItemLabelCorrectly()
     {
-        var comp = RenderComponent<IncludeMudProviders>(parameters => parameters
+        var comp = Render<IncludeMudProviders>(parameters => parameters
             .AddChildContent<ShiftBlazor.Components.LanguageSwitcher>()
         );
 
@@ -49,7 +49,7 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
     [Fact]
     public void ShouldChangeSelectedLanguage()
     {
-        var comp = RenderComponent<IncludeMudProviders>(parameters => parameters
+        var comp = Render<IncludeMudProviders>(parameters => parameters
             .AddChildContent<ShiftBlazor.Components.LanguageSwitcher>()
         );
 
@@ -65,7 +65,7 @@ public class LanguageSwitcherTests: ShiftBlazorTestContext
     [Fact]
     public void ShouldHaveDefaultSelectedValue()
     {
-        var comp = RenderComponent<IncludeMudProviders>(parameters => parameters
+        var comp = Render<IncludeMudProviders>(parameters => parameters
             .AddChildContent<ShiftBlazor.Components.LanguageSwitcher>()
         );
         

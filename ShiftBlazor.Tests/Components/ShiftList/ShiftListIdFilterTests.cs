@@ -15,7 +15,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftList;
 /// </summary>
 public class ShiftListIdFilterTests : ShiftBlazorTestContext
 {
-    private static List<FilterModelBase> IdFiltersOf(IRenderedFragment cut) =>
+    private static List<FilterModelBase> IdFiltersOf(IRenderedComponent<ShiftListTestIdFilter> cut) =>
         cut.FindComponent<ShiftList<User>>().Instance.Filters.Values
             .Where(x => x.Field == nameof(ShiftEntityDTOBase.ID))
             .ToList();
@@ -23,7 +23,7 @@ public class ShiftListIdFilterTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldAddIdFilterWhenFilterPanelIsEnabled()
     {
-        var cut = RenderComponent<ShiftListTestIdFilter>();
+        var cut = Render<ShiftListTestIdFilter>();
 
         var idFilter = Assert.Single(IdFiltersOf(cut));
 
@@ -36,7 +36,7 @@ public class ShiftListIdFilterTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotAddIdFilterWithoutTheFilterPanel()
     {
-        var cut = RenderComponent<ShiftListTestIdFilter>(parameters => parameters
+        var cut = Render<ShiftListTestIdFilter>(parameters => parameters
             .Add(p => p.EnableFilterPanel, false)
         );
 
@@ -46,7 +46,7 @@ public class ShiftListIdFilterTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotAddIdFilterWhenDisabled()
     {
-        var cut = RenderComponent<ShiftListTestIdFilter>(parameters => parameters
+        var cut = Render<ShiftListTestIdFilter>(parameters => parameters
             .Add(p => p.DisableIdFilter, true)
         );
 
@@ -56,7 +56,7 @@ public class ShiftListIdFilterTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldStandAsideForAFilterTheListDeclaresItself()
     {
-        var cut = RenderComponent<ShiftListTestIdFilter>(parameters => parameters
+        var cut = Render<ShiftListTestIdFilter>(parameters => parameters
             .Add(p => p.DeclareOwnIdFilter, true)
         );
 
@@ -68,7 +68,7 @@ public class ShiftListIdFilterTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderTheIdFilterInThePanel()
     {
-        var cut = RenderComponent<ShiftListTestIdFilter>();
+        var cut = Render<ShiftListTestIdFilter>();
 
         // Present in the panel, not merely in the Filters dictionary.
         var rendered = cut.FindComponents<StringFilterUI>()

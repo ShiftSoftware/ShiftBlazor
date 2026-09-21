@@ -1,4 +1,5 @@
-﻿using Bunit;
+using AngleSharp;
+using Bunit;
 using Bunit.Rendering;
 using MudBlazor;
 using ShiftBlazor.Tests.Viewer.Components.ShiftEntityForm;
@@ -13,7 +14,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderComponent()
     {
-        RenderComponent<ShiftListTestLocalData>();
+        Render<ShiftListTestLocalData>();
     }
 
     [Fact]
@@ -21,24 +22,23 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            RenderComponent<ShiftList<SampleDTO>>();
+            Render<ShiftList<SampleDTO>>();
         });
     }
 
     [Fact]
     public void ShouldShowErrorSnackbarWhenBadUrl()
     {
-        var cut = RenderComponent<ShiftListTestHttpError>();
+        var cut = Render<ShiftListTestHttpError>();
 
-        var alert = cut.FindComponent<MudAlert>();
-
-        Assert.Equal(Severity.Error, alert.Instance.Severity);
+        cut.WaitForAssertion(() =>
+            Assert.Equal(Severity.Error, cut.FindComponent<MudAlert>().Instance.Severity));
     }
 
     [Fact]
     public void ShouldRenderRowsPerPageCorrectly()
     {
-        var cut = RenderComponent<ShiftListTestLocalData>();
+        var cut = Render<ShiftListTestLocalData>();
 
         var grid = cut.FindComponent<MudDataGrid<User>>();
 
@@ -55,7 +55,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         //get a random string
         var title = Guid.NewGuid().ToString();
 
-        var cut = RenderComponent<ShiftListTestLocalData>(parameters => parameters
+        var cut = Render<ShiftListTestLocalData>(parameters => parameters
             .Add(p => p.Title, title)
         );
 
@@ -66,7 +66,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderPagingByDefault()
     {
-        var cut = RenderComponent<ShiftListTest1>();
+        var cut = Render<ShiftListTest1>();
         var grid = cut.FindComponent<ShiftList<User>>();
         Assert.True(cut.HasComponent<MudDataGridPager<User>>());
         Assert.False(grid.Instance.DisablePagination);
@@ -77,7 +77,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         var pageSize = 22;
 
-        var cut = RenderComponent<ShiftListTest2>(parameters => parameters
+        var cut = Render<ShiftListTest2>(parameters => parameters
             .Add(p => p.PageSize, pageSize)
         );
 
@@ -88,9 +88,9 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldHideIDColumnByDefault()
     {
-        var comp = RenderComponent<ShiftListTest1>();
+        var comp = Render<ShiftListTest1>();
 
-        var comp2 = RenderComponent<ShiftListTest2>();
+        var comp2 = Render<ShiftListTest2>();
 
         var cols1 = comp.FindComponent<MudDataGrid<User>>().Instance.RenderedColumns;
         var cols2 = comp2.FindComponent<MudDataGrid<User>>().Instance.RenderedColumns;
@@ -103,7 +103,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldNotRenderActionColumn()
     {
         // Should not render Actions column when ComponentType is not set
-        var comp = RenderComponent<ShiftListTest1>();
+        var comp = Render<ShiftListTest1>();
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
         var cols = grid.RenderedColumns.Where(x => x.Title == "Actions");
@@ -114,7 +114,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldRenderOrHideActionColumn2()
     {
         // Should render Actions column when ComponentType is 
-        var comp = RenderComponent<ShiftListTest2>();
+        var comp = Render<ShiftListTest2>();
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
         var cols = grid.RenderedColumns.Where(x => x.Title == "Actions");
@@ -125,7 +125,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldRenderOrHideActionColumn3()
     {
         // Should not render Actions column when DisableActionColumn is true
-        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
+        var comp = Render<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisableActionColumn, true)
         );
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
@@ -136,7 +136,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderExportButton()
     {
-        var comp = RenderComponent<ShiftListTest1>();
+        var comp = Render<ShiftListTest1>();
 
         var tooltip = comp.FindComponents<MudTooltip>().FirstOrDefault(x => x.Instance.Text.Contains("Export"));
         Assert.Null(tooltip);
@@ -145,7 +145,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderExportButton()
     {
-        var comp = RenderComponent<ShiftListTestExport>();
+        var comp = Render<ShiftListTestExport>();
 
         var tooltip = comp.FindComponents<MudTooltip>().FirstOrDefault(x => x.Instance.Text.Contains("Export"));
         Assert.NotNull(tooltip);
@@ -155,7 +155,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldAddNativeTitleToEveryCell()
     {
         var users = User.GenerateData(20, 20, false);
-        var cut = RenderComponent<ShiftListTestExtendedColumns>(parameters => parameters
+        var cut = Render<ShiftListTestExtendedColumns>(parameters => parameters
             .Add(p => p.Users, users)
         );
 
@@ -172,7 +172,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldEnableVirtualizationAndKeepPaging()
     {
-        var comp = RenderComponent<ShiftListTestVirtualization>(parameters => parameters.Add(p => p.EnableVirtualization, true));
+        var comp = Render<ShiftListTestVirtualization>(parameters => parameters.Add(p => p.EnableVirtualization, true));
 
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
 
@@ -187,7 +187,7 @@ public class ShiftListTests : ShiftBlazorTestContext
         // Large pages must virtualize even without the explicit flag — hundreds of full rows freeze
         // the UI on load and lag every layout change. A viewport-height fallback is applied because
         // virtualization requires a fixed height.
-        var comp = RenderComponent<ShiftListTest2>(parameters => parameters
+        var comp = Render<ShiftListTest2>(parameters => parameters
             .Add(p => p.PageSize, 100)
         );
 
@@ -199,7 +199,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotAutoVirtualizeAtSmallPageSizes()
     {
-        var comp = RenderComponent<ShiftListTest2>(parameters => parameters
+        var comp = Render<ShiftListTest2>(parameters => parameters
             .Add(p => p.PageSize, 25)
         );
 
@@ -211,7 +211,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderAddButton()
     {
-        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
+        var comp = Render<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisableAdd, true)
         );
 
@@ -227,7 +227,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldDisableDataGridPaging()
     {
-        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
+        var comp = Render<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisablePagination, true)
         );
 
@@ -237,7 +237,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldDisableDataGridSorting()
     {
-        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
+        var comp = Render<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisableSorting, true)
         );
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
@@ -248,7 +248,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldDisableDataGridMultiSorting()
     {
-        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
+        var comp = Render<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisableMultiSorting, true)
         );
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
@@ -259,7 +259,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldDisableDataGridFilters()
     {
-        var comp = RenderComponent<ShiftListTestDisableFeatures>(parameters => parameters
+        var comp = Render<ShiftListTestDisableFeatures>(parameters => parameters
             .Add(p => p.DisableFilters, true)
         );
         var grid = comp.FindComponent<MudDataGrid<User>>().Instance;
@@ -270,7 +270,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     //[Fact]
     //public void ShouldDisableDataGridSelection()
     //{
-    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //    var comp = Render<ShiftList<SampleDTO>>(parameters => parameters
     //        .Add(p => p.Action, "/Product")
     //        .Add(p => p.ComponentType, typeof(DummyComponent))
     //        .Add(p => p.DisablePagination, DisablePaging)
@@ -284,7 +284,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     //public void ShouldAddColumnsToDataGrid()
     //{
     //    var headerText = "This is a header";
-    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //    var comp = Render<ShiftList<SampleDTO>>(parameters => parameters
     //        .Add(p => p.EntitySet, "/Product")
     //        .Add(p => p.ComponentType, typeof(DummyComponent))
     //        .Add<GridColumn>(p => p.ColumnTemplate, _params => _params.Add(x => x.HeaderText, headerText))
@@ -300,14 +300,14 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldReplaceActionsColumnContent()
     {
         var text = Guid.NewGuid().ToString();
-        var comp = RenderComponent<ShiftListTestCustomColumns>(parameters => parameters
+        var comp = Render<ShiftListTestCustomColumns>(parameters => parameters
             .Add(p => p.ActionsTemplate, $"<h1>{text}</h1>")
         );
 
         var grid = comp.FindComponent<MudDataGrid<User>>();
 
         var row = comp.Find(".mud-table-cell[data-label='Actions']");
-        row.FirstChild?.ToMarkup().Contains($"{text}");
+        row.FirstChild?.ToHtml().Contains($"{text}");
 
     }
 
@@ -316,20 +316,20 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         var text = Guid.NewGuid();
 
-        var comp = RenderComponent<ShiftListTestCustomToolbar>(parameters => parameters
+        var comp = Render<ShiftListTestCustomToolbar>(parameters => parameters
             .Add(p => p.ToolbarStartTemplate, $"<span>{text}</span>")
         );
 
         var toolbar = comp.Find(".shift-toolbar-header");
 
-        Assert.Contains($"<span>{text}</span>", toolbar.ToMarkup());
+        Assert.Contains($"<span>{text}</span>", toolbar.ToHtml());
     }
 
     //[Fact]
     //public void ShouldAddWhereToFilter()
     //{
     //    Expression<Func<User, bool>> WhereFilter = (x) => x.Name.Contains("Be");
-    //    var comp = RenderComponent<ShiftListTestFilteredResult>(parameters => parameters
+    //    var comp = Render<ShiftListTestFilteredResult>(parameters => parameters
     //        .Add(p => p.Where, WhereFilter)
     //    );
     //    var grid = comp.FindComponent<ShiftList<User>>().Instance;
@@ -342,7 +342,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     public void ShouldSetDataGridHeight()
     {
         var height = "300px";
-        var comp = RenderComponent<ShiftListTestVirtualization>(parameters => parameters
+        var comp = Render<ShiftListTestVirtualization>(parameters => parameters
             .Add(p => p.EnableVirtualization, true)
             .Add(p => p.Height, height)
         );
@@ -361,7 +361,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     {
         RenderTree.Add<ShiftFormBasic<SampleDTO>>();
 
-        var comp = RenderComponent<ShiftEntityFormTestWithList>();
+        var comp = Render<ShiftEntityFormTestWithList>();
 
         var list = comp.FindComponent<ShiftList<User>>();
 
@@ -371,7 +371,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     //[Fact]
     //public void ShouldCreateCorrectDeleteQuery()
     //{
-    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //    var comp = Render<ShiftList<SampleDTO>>(parameters => parameters
     //        .Add(p => p.Action, "/Product")
     //        .Add(p => p.DisablePagination, DisablePaging)
     //    );
@@ -436,7 +436,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     //[Fact]
     //public void ShouldNotStackDeleteFilters()
     //{
-    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //    var comp = Render<ShiftList<SampleDTO>>(parameters => parameters
     //        .Add(p => p.Action, "/Product")
     //        .Add(p => p.DisablePagination, DisablePaging)
     //    );
@@ -457,7 +457,7 @@ public class ShiftListTests : ShiftBlazorTestContext
     //{
     //    var originalQuery = new Query().Where(nameof(SampleDTO.Name), "equal", "Sample 1");
 
-    //    var comp = RenderComponent<ShiftList<SampleDTO>>(parameters => parameters
+    //    var comp = Render<ShiftList<SampleDTO>>(parameters => parameters
     //        .Add(p => p.Action, "/Product")
     //        .Add(p => p.DisablePagination, DisablePaging)
     //        .Add(p => p.Query, originalQuery)

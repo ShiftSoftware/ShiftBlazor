@@ -11,7 +11,7 @@ public class ShiftChipDisplayTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderNothingWhenEmpty()
     {
-        var comp = RenderComponent<ShiftChipDisplayTest>(parameters => parameters
+        var comp = Render<ShiftChipDisplayTest>(parameters => parameters
             .Add(p => p.Items, [])
         );
 
@@ -21,7 +21,7 @@ public class ShiftChipDisplayTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderAllChipsWhenAtOrBelowMaxVisible()
     {
-        var comp = RenderComponent<ShiftChipDisplayTest>(parameters => parameters
+        var comp = Render<ShiftChipDisplayTest>(parameters => parameters
             .Add(p => p.Items, MakeItems(3))
             .Add(p => p.MaxVisible, 3)
         );
@@ -33,7 +33,7 @@ public class ShiftChipDisplayTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldCollapseOverflowIntoPlusNChip()
     {
-        var comp = RenderComponent<ShiftChipDisplayTest>(parameters => parameters
+        var comp = Render<ShiftChipDisplayTest>(parameters => parameters
             .Add(p => p.Items, MakeItems(5))
             .Add(p => p.MaxVisible, 2)
         );
@@ -47,7 +47,7 @@ public class ShiftChipDisplayTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldOpenDialogWithAllChipsOnPlusNClick()
     {
-        var comp = RenderComponent<IncludeMudProviders>(parameters => parameters
+        var comp = Render<IncludeMudProviders>(parameters => parameters
             .AddChildContent<ShiftChipDisplayTest>(chipParams => chipParams
                 .Add(p => p.Items, MakeItems(5))
                 .Add(p => p.MaxVisible, 2)
@@ -65,7 +65,7 @@ public class ShiftChipDisplayTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldShowCountOnlyChipWhenMaxVisibleIsZero()
     {
-        var comp = RenderComponent<ShiftChipDisplayTest>(parameters => parameters
+        var comp = Render<ShiftChipDisplayTest>(parameters => parameters
             .Add(p => p.Items, MakeItems(5))
             .Add(p => p.MaxVisible, 0)
         );
@@ -79,7 +79,7 @@ public class ShiftChipDisplayTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldClampNegativeMaxVisibleToCountOnlyMode()
     {
-        var comp = RenderComponent<ShiftChipDisplayTest>(parameters => parameters
+        var comp = Render<ShiftChipDisplayTest>(parameters => parameters
             .Add(p => p.Items, MakeItems(5))
             .Add(p => p.MaxVisible, -2)
         );
@@ -93,7 +93,7 @@ public class ShiftChipDisplayTests : ShiftBlazorTestContext
     public void ShouldNotUseJsInterop()
     {
         // The deterministic collapse must not measure the DOM: no JS interop, no ResizeObserver.
-        var comp = RenderComponent<ShiftChipDisplayTest>(parameters => parameters
+        var comp = Render<ShiftChipDisplayTest>(parameters => parameters
             .Add(p => p.Items, MakeItems(5))
             .Add(p => p.MaxVisible, 2)
         );

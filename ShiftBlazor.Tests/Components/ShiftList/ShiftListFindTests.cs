@@ -35,16 +35,16 @@ public class ShiftListFindTests : ShiftBlazorTestContext
             .RespondJson(new ODataDTO<User> { Count = serverTotal ?? users.Count, Value = users });
     }
 
-    private static ShiftList<User> ListOf(IRenderedFragment cut) =>
+    private static ShiftList<User> ListOf<T>(IRenderedComponent<T> cut) where T : class, IComponent =>
         cut.FindComponent<ShiftList<User>>().Instance;
 
-    private static int RowCount(IRenderedFragment cut) =>
+    private static int RowCount<T>(IRenderedComponent<T> cut) where T : class, IComponent =>
         cut.FindAll(".mud-table-body .mud-table-row").Count;
 
     [Fact]
     public void ShouldRenderFindBoxByDefault()
     {
-        var cut = RenderComponent<ShiftListTestFind>();
+        var cut = Render<ShiftListTestFind>();
 
         Assert.NotEmpty(cut.FindAll(".shift-list-find input"));
     }
@@ -52,7 +52,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldPlaceFindBoxOnItsOwnRowNotInTheToolbar()
     {
-        var cut = RenderComponent<ShiftListTestFind>();
+        var cut = Render<ShiftListTestFind>();
 
         // Inside the toolbar its position depended on how many action buttons the list declared,
         // so it landed somewhere different on every list. Its own row keeps it put.
@@ -63,7 +63,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldKeepTheBoxDockedWhenTheCounterAppears()
     {
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.Users, SampleUsers())
         );
 
@@ -85,7 +85,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderFindBoxWhenDisabled()
     {
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.DisableFind, true)
         );
 
@@ -95,7 +95,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNarrowRowsToMatches()
     {
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.Users, SampleUsers())
         );
 
@@ -110,7 +110,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     public void ShouldMatchFieldsTheGridDoesNotShow()
     {
         // The ID column is not rendered on this list, but find reads the DTO, not the cells.
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.Users, SampleUsers())
         );
 
@@ -122,7 +122,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRequireEveryTermButNotTheirOrder()
     {
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.Users, SampleUsers())
         );
 
@@ -135,7 +135,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRestoreEveryRowWhenCleared()
     {
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.Users, SampleUsers())
         );
 
@@ -149,7 +149,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldReportHowManyOfTheLoadedRowsMatched()
     {
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.Users, SampleUsers())
         );
 
@@ -166,7 +166,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldSayNothingMatchedRatherThanLookEmpty()
     {
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.Users, SampleUsers())
         );
 
@@ -184,7 +184,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldClearImmediatelyRatherThanOnTheDebounce()
     {
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.Users, SampleUsers())
         );
 
@@ -205,7 +205,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     public void ShouldNotSendARequestWhileFinding()
     {
         var request = MockUsers(SampleUsers());
-        var cut = RenderComponent<ShiftListTest1>();
+        var cut = Render<ShiftListTest1>();
 
         cut.WaitForAssertion(() => Assert.Equal(3, RowCount(cut)));
         var requestsBefore = MockHttp.GetMatchCount(request);
@@ -224,7 +224,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     public void ShouldPayForItsOwnBarOutOfTheGridHeight()
     {
         MockUsers(SampleUsers(), serverTotal: 1057);
-        var cut = RenderComponent<ShiftListTestFindScope>(parameters => parameters
+        var cut = Render<ShiftListTestFindScope>(parameters => parameters
             .Add(p => p.Height, "500px")
         );
 
@@ -250,7 +250,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     public void ShouldLeaveTheGridHeightAloneWithoutAFindBar()
     {
         MockUsers(SampleUsers());
-        var cut = RenderComponent<ShiftListTestFindScope>(parameters => parameters
+        var cut = Render<ShiftListTestFindScope>(parameters => parameters
             .Add(p => p.Height, "500px")
             .Add(p => p.DisableFind, true)
         );
@@ -264,7 +264,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     public void ShouldPointAtTheFilterPanelOnlyWhenThereIsOne()
     {
         MockUsers(SampleUsers(), serverTotal: 1057);
-        var cut = RenderComponent<ShiftListTest1>();
+        var cut = Render<ShiftListTest1>();
 
         cut.WaitForAssertion(() => Assert.Equal(3, RowCount(cut)));
         cut.InvokeAsync(() => ListOf(cut).SetFindText("ali"));
@@ -284,7 +284,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     {
         // 3 rows in hand, 1,057 in the table: find answered from 3 and ignored 1,054.
         MockUsers(SampleUsers(), serverTotal: 1057);
-        var cut = RenderComponent<ShiftListTest1>();
+        var cut = Render<ShiftListTest1>();
 
         cut.WaitForAssertion(() => Assert.Equal(3, RowCount(cut)));
 
@@ -306,7 +306,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     {
         // Nothing was missed, so a warning here would only teach people to ignore warnings.
         MockUsers(SampleUsers());
-        var cut = RenderComponent<ShiftListTest1>();
+        var cut = Render<ShiftListTest1>();
 
         cut.WaitForAssertion(() => Assert.Equal(3, RowCount(cut)));
 
@@ -323,7 +323,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     public void ShouldNotWarnBeforeAnythingIsTyped()
     {
         MockUsers(SampleUsers(), serverTotal: 1057);
-        var cut = RenderComponent<ShiftListTest1>();
+        var cut = Render<ShiftListTest1>();
 
         cut.WaitForAssertion(() => Assert.Equal(3, RowCount(cut)));
 
@@ -335,7 +335,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     public void ShouldRepeatTheWarningInTheEmptyState()
     {
         MockUsers(SampleUsers(), serverTotal: 1057);
-        var cut = RenderComponent<ShiftListTest1>();
+        var cut = Render<ShiftListTest1>();
 
         cut.WaitForAssertion(() => Assert.Equal(3, RowCount(cut)));
 
@@ -357,7 +357,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldWordTheMatchCountRatherThanGiveItAsNOfM()
     {
-        var cut = RenderComponent<ShiftListTestFind>(parameters => parameters
+        var cut = Render<ShiftListTestFind>(parameters => parameters
             .Add(p => p.Users, SampleUsers())
         );
 
@@ -378,7 +378,7 @@ public class ShiftListFindTests : ShiftBlazorTestContext
     public void ShouldKeepThePagerTotalWhileFinding()
     {
         MockUsers(SampleUsers());
-        var cut = RenderComponent<ShiftListTest1>();
+        var cut = Render<ShiftListTest1>();
         var grid = cut.FindComponent<MudDataGrid<User>>();
 
         cut.WaitForAssertion(() => Assert.Equal(3, grid.Instance.GetFilteredItemsCount()));

@@ -87,12 +87,12 @@ public class ShiftEntityFormViewingPresenceTests : ShiftBlazorTestContext
     }
 
     [Fact]
-    public void StopsReporting_WhenTheFormIsDisposed()
+    public async Task StopsReporting_WhenTheFormIsDisposed()
     {
         var cut = RenderForm(key: "1");
         cut.WaitForAssertion(() => Assert.Single(_hubClient.Starts));
 
-        DisposeComponents();
+        await DisposeComponentsAsync();
 
         Assert.Equal(("Product", "1", null), Assert.Single(_hubClient.Stops));
     }
@@ -103,7 +103,7 @@ public class ShiftEntityFormViewingPresenceTests : ShiftBlazorTestContext
         var cut = RenderForm(key: "1");
         cut.WaitForAssertion(() => Assert.Single(_hubClient.Starts));
 
-        cut.SetParametersAndRender(parameters => parameters.Add(p => p.Key, "2"));
+        cut.Render(parameters => parameters.Add(p => p.Key, "2"));
 
         cut.WaitForAssertion(() =>
         {

@@ -7,8 +7,12 @@ using ShiftSoftware.TypeAuth.Blazor.Extensions;
 
 namespace ShiftSoftware.ShiftBlazor.Tests;
 
-public class ShiftBlazorTestContext : TestContext
+public class ShiftBlazorTestContext : BunitContext, IAsyncLifetime
 {
+    Task IAsyncLifetime.InitializeAsync() => Task.CompletedTask;
+
+    async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync();
+
     public static string BaseUrl = "http://localhost";
     // The configuration no longer has separate API and OData paths. Components resolve
     // every URL against the single configured base address.
@@ -80,6 +84,6 @@ public class ShiftBlazorTestContext : TestContext
 
         Services.AddTypeAuth(o => { });
 
-        this.AddTestAuthorization();
+        this.AddAuthorization();
     }
 }

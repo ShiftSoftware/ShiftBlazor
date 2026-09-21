@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Forms;
 using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components.FileUploader
@@ -8,7 +8,7 @@ namespace ShiftSoftware.ShiftBlazor.Tests.Components.FileUploader
         [Fact]
         public void ShouldRenderComponentCorrectly()
         {
-            var comp = RenderComponent<ShiftBlazor.Components.FileUploader>();
+            var comp = Render<ShiftBlazor.Components.FileUploader>();
 
             comp.FindComponent<InputFile>();
         }

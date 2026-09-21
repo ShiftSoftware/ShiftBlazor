@@ -1,4 +1,5 @@
-﻿using Bunit.Rendering;
+using AngleSharp;
+using Bunit.Rendering;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
@@ -10,7 +11,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderComponentCorrectly()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         Assert.Equal(FormModes.Create, cut.Instance.Mode);
         cut.FindComponent<EditForm>();
@@ -21,7 +22,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var value = new SampleDTO();
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters.Add(p => p.Value, value));
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters.Add(p => p.Value, value));
 
         cut.FindComponent<EditForm>();
     }
@@ -29,7 +30,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldCreateAndPassEditContextToEditForm()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         var editForm = cut.FindComponent<EditForm>().Instance;
 
@@ -41,7 +42,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var title = "this is a form";
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters.Add(p => p.Title, title));
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters.Add(p => p.Title, title));
 
         var toolbar = cut.FindComponent<MudToolBar>();
 
@@ -54,7 +55,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var icon = Icons.Material.Filled.Abc;
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters.Add(p => p.IconSvg, icon));
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters.Add(p => p.IconSvg, icon));
 
         var toolbar = cut.FindComponent<MudToolBar>();
 
@@ -65,7 +66,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     public void ShouldAddValidatorAndDisableReflection()
     {
         var validator = new SampleValidator();
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters.Add(p => p.Validator, validator));
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters.Add(p => p.Validator, validator));
 
         var shiftValidator = cut.FindComponent<ShiftValidator>().Instance;
 
@@ -85,7 +86,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         var isSaving = false;
         ShiftFormBasic<SampleDTO> form = default!;
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.Value, value)
             .Add(p => p.OnValidSubmit, () => isSaving = form?.TaskInProgress == FormTasks.Save)
         );
@@ -102,7 +103,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var content = "Hello, world, how is the weather?";
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters.AddChildContent(content));
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters.AddChildContent(content));
 
         var body = cut.Find(".form-body");
 
@@ -112,7 +113,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     //[Fact]
     //public void ShouldCascadeValuesToChildContent()
     //{
-    //    var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+    //    var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
     //        .AddChildContent<ShiftAutocomplete<SampleDTO>>(_params => _params.Add(p => p.EntitySet, "Product"))
     //    );
 
@@ -131,7 +132,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         var value = new SampleDTO();
         var isInvalid = false;
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.Value, value)
             .Add(p => p.OnInvalidSubmit, () => isInvalid = true)
         );
@@ -144,7 +145,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderHeaderToolbar()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters =>
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters =>
             parameters.Add(p => p.DisableHeaderToolbar, true));
 
         Assert.Throws<ElementNotFoundException>(() => { cut.Find("header .mud-toolbar"); });
@@ -153,7 +154,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderFooterToolbar()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters =>
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters =>
             parameters.Add(p => p.DisableFooterToolbar, true));
 
         Assert.Throws<ElementNotFoundException>(() => { cut.Find("footer .mud-toolbar"); });
@@ -164,7 +165,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         Func<string, string> text = e => $"This is the {e} section in the header";
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add<MudChip<string>>(p => p.ToolbarStartTemplate, z => z.AddChildContent(text("1st")))
             .Add<MudChip<string>>(p => p.ToolbarCenterTemplate, z => z.AddChildContent(text("2nd")))
             .Add<MudChip<string>>(p => p.ToolbarEndTemplate, z => z.AddChildContent(text("3rd")))
@@ -183,7 +184,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         Func<string, string> text = e => $"This is the {e} section in the footer";
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add<MudChip<string>>(p => p.FooterToolbarStartTemplate, z => z.AddChildContent(text("1st")))
             .Add<MudChip<string>>(p => p.FooterToolbarCenterTemplate, z => z.AddChildContent(text("2nd")))
             .Add<MudChip<string>>(p => p.FooterToolbarEndTemplate, z => z.AddChildContent(text("3rd")))
@@ -202,7 +203,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var text = "This is the controls section";
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add<MudChip<string>>(p => p.ToolbarControlsTemplate, z => z.AddChildContent(text))
         );
 
@@ -220,7 +221,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
         RenderTree.Add<CascadingValue<IMudDialogInstance>>(parameters =>
             parameters.Add(p => p.Value, new MudDialogContainer()));
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add<MudTooltip>(p => p.ToolbarControlsTemplate, z => z.Add(p => p.Text, text))
             .Add<MudTooltip>(p => p.ToolbarEndTemplate, z => z.Add(p => p.Text, "some text"))
         );
@@ -238,7 +239,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderOneSpacerInHeaderToolbar()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         var spacers = cut.FindComponent<MudToolBar>().FindComponents<MudSpacer>();
 
@@ -251,7 +252,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderTwoSpacersInHeaderToolbar()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.ToolbarCenterTemplate, "some text")
         );
 
@@ -268,7 +269,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         RenderTree.Add<CascadingValue<IMudDialogInstance>>(parameters =>
             parameters.Add(p => p.Value, new MudDialogContainer()));
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.ToolbarEndTemplate, "some text")
         );
 
@@ -283,7 +284,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         RenderTree.Add<CascadingValue<IMudDialogInstance>>(parameters =>
             parameters.Add(p => p.Value, new MudDialogContainer()));
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         Assert.Throws<ComponentNotFoundException>(() => cut.FindComponent<MudToolBar>().FindComponent<MudDivider>());
     }
@@ -293,11 +294,11 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var text = "2nd header";
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.HeaderTemplate, text)
         );
 
-        Assert.Contains(text, cut.Find("header").ToMarkup());
+        Assert.Contains(text, cut.Find("header").ToHtml());
     }
 
     [Fact]
@@ -305,11 +306,11 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         var text = "2nd footer";
 
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.FooterTemplate, text)
         );
 
-        Assert.Contains(text, cut.Find("footer").ToMarkup());
+        Assert.Contains(text, cut.Find("footer").ToHtml());
     }
 
     /// <summary>
@@ -318,7 +319,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderOneSpacerInFooterToolbar()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         var spacers = cut.FindComponents<MudToolBar>().Last().FindComponents<MudSpacer>();
 
@@ -331,7 +332,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldRenderTwoSpacersInFooterToolbar()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.FooterToolbarCenterTemplate, "some text")
         );
 
@@ -344,10 +345,10 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     public void ShouldRenderMessageWhenAlertEnabled()
     {
         var text = "should display alert message";
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         cut.Instance.ShowAlert(text, Severity.Normal, 5);
-        cut.WaitForAssertion(() => Assert.Contains(text, cut.Find("header").ToMarkup()));
+        cut.WaitForAssertion(() => Assert.Contains(text, cut.Find("header").ToHtml()));
     }
 
     [Fact]
@@ -355,7 +356,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     {
         RenderTree.Add<CascadingValue<IMudDialogInstance>>(parameters =>
             parameters.Add(p => p.Value, new MudDialogContainer()));
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         cut.Find(".shift-scrollable-content-wrapper");
     }
@@ -363,7 +364,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldNotRenderSubmitButton()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         cut.Instance.HideSubmit = true;
         //render the component again after flag has been changed
@@ -378,7 +379,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     public void ShouldChangeSubmitButtonText()
     {
         var text = "this is the button to submit.";
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.SubmitText, text)
         );
 
@@ -391,21 +392,21 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldHaveALoadingIconWhenSaving()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>(parameters => parameters
+        var cut = Render<ShiftFormBasic<SampleDTO>>(parameters => parameters
             .Add(p => p.Value, new SampleDTO() { Name = "First", LastName = "Last" })
             .Add(p => p.OnValidSubmit, async () => await Task.Delay(1000))
         );
 
         var button = cut.Find("footer button[type='submit']");
         button.Click();
-        cut.WaitForAssertion(() => Assert.Contains("mud-progress-circular", button.ToMarkup()));
+        cut.WaitForAssertion(() => Assert.Contains("mud-progress-circular", button.ToHtml()));
     }
 
     [Fact]
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     public void ShouldInvokeADelegateAndChangeTask()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         var Task = FormTasks.None;
 
@@ -419,7 +420,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldCatchException()
     {
-        var cut = RenderComponent<ShiftFormBasic<SampleDTO>>();
+        var cut = Render<ShiftFormBasic<SampleDTO>>();
 
         _ = cut.Instance.RunTask(FormTasks.Custom, () => throw new Exception());
 
@@ -430,7 +431,7 @@ public class ShiftFormBasicTests : ShiftBlazorTestContext
     //public async Task ShouldMarkAsUnmodified()
     //{
     //    var value = new Sample();
-    //    var cut = RenderComponent<ShiftFormBasic<Sample>>(parameters => parameters
+    //    var cut = Render<ShiftFormBasic<Sample>>(parameters => parameters
     //        .Add(p => p.Value, value)
     //    );
 

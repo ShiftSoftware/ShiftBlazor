@@ -53,9 +53,9 @@ public class AsOfDeepLinkTests : ShiftBlazorTestContext
 
     private IRenderedComponent<ShiftEntityForm<SampleDTO>> RenderAt(string url)
     {
-        Services.GetRequiredService<FakeNavigationManager>().NavigateTo(url);
+        Services.GetRequiredService<BunitNavigationManager>().NavigateTo(url);
 
-        return RenderComponent<ShiftEntityForm<SampleDTO>>(parameters => parameters
+        return Render<ShiftEntityForm<SampleDTO>>(parameters => parameters
             .Add(p => p.Key, "1")
             .Add(p => p.Endpoint, Endpoint));
     }
@@ -116,7 +116,7 @@ public class AsOfDeepLinkTests : ShiftBlazorTestContext
         // Regression: the URL was built from the component's type name, so a form whose route
         // carries a prefix ("Identity/CityForm") opened at "CityForm" — a route that isn't there.
         // It was also relative, which loses the base path when the app is hosted under one.
-        var nav = Services.GetRequiredService<FakeNavigationManager>();
+        var nav = Services.GetRequiredService<BunitNavigationManager>();
         nav.NavigateTo("Cities");
 
         var modal = Services.GetRequiredService<ShiftSoftware.ShiftBlazor.Services.ShiftModal>();

@@ -1,4 +1,4 @@
-﻿using MudBlazor;
+using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Enums;
 
 namespace ShiftSoftware.ShiftBlazor.Tests.Components.ShiftAutocomplete;
@@ -10,7 +10,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldInheritMudAutocomplete()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
+        var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet)
             .Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name")
         );
@@ -21,13 +21,13 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void ShouldThrowIfEntitySetIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>());
+        Assert.Throws<ArgumentNullException>(() => Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>());
     }
 
     [Fact]
     public void ShouldRenderComponentCorrectly()
     {
-        var cut = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
+        var cut = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name"));
 
         // Check if the html result contains the MudAutocomplete classes
@@ -41,7 +41,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     //    // Add a cascading State value to the context to emulate a form
     //    RenderTree.Add<CascadingValue<FormModes>>(parameters => parameters.Add(p => p.Value, FormModes.View));
 
-    //    var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
+    //    var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
     //        parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name"));
 
     //    // Mud rerenders the element attributes only on interaction
@@ -61,7 +61,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     //{
     //    RenderTree.Add<CascadingValue<FormModes>>(parameters => parameters.Add(p => p.Value, FormModes.Edit));
 
-    //    var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
+    //    var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
     //        parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name"));
 
     //    comp.Find("input").Click();
@@ -78,7 +78,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     {
         RenderTree.Add<CascadingValue<FormModes>>(parameters => parameters.Add(p => p.Value, FormModes.Create));
 
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
+        var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name"));
         comp.Find("input").Click();
 
@@ -98,7 +98,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     //    // Add a cascading State value to the context to emulate a form
     //    RenderTree.Add<CascadingValue<FormTasks>>(parameters => parameters.Add(p => p.Value, FormTasks.Save));
 
-    //    var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
+    //    var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
     //        parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name"));
 
     //    // Make sure Mud rerenders the element by making an interaction with the element
@@ -117,7 +117,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void NoCascadingValues()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
+        var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name"));
 
         comp.Find("input").Click();
@@ -137,7 +137,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void DefaultValues()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
+        var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
             parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name"));
 
         Assert.Equal(Variant.Text, comp.Instance.Variant);
@@ -149,7 +149,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     [Fact]
     public void OverrideDefaultValues()
     {
-        var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters => parameters
+        var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters => parameters
             .Add(p => p.EntitySet, EntitytSet)
             .Add(p => p.Variant, Variant.Filled)
             .Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name")
@@ -164,7 +164,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     //[Fact]
     //public void QueryBuilderTest()
     //{
-    //    var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
+    //    var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters =>
     //        parameters.Add(p => p.EntitySet, EntitytSet));
 
     //    Assert.NotNull(comp.Instance.QueryBuilder);
@@ -178,7 +178,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     //{
     //    var entityName = EntitytSet;
 
-    //    var comp = RenderComponent<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters => parameters
+    //    var comp = Render<ShiftAutocomplete<ShiftEntityViewAndUpsertDTO>>(parameters => parameters
     //        .Add(p => p.EntitySet, EntitytSet)
     //        .Add(p => p.SearchFunc, e => "text")
     //    );
@@ -198,7 +198,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     //[Fact]
     //public async Task ShouldReturnCorrectODataItems()
     //{
-    //    var comp = RenderComponent<ShiftAutocomplete<SampleDTO>>(parameters =>
+    //    var comp = Render<ShiftAutocomplete<SampleDTO>>(parameters =>
     //        parameters.Add(p => p.EntitySet, EntitytSet).Add(p => p.DataValueField, "ID").Add(p => p.DataTextField, "Name")
     //    );
 
@@ -220,7 +220,7 @@ public class ShiftAutocompleteTests : ShiftBlazorTestContext
     //{
     //    var id = "ab49Q";
 
-    //    var comp = RenderComponent<ShiftAutocomplete<SampleDTO>>(parameters => parameters
+    //    var comp = Render<ShiftAutocomplete<SampleDTO>>(parameters => parameters
     //        .Add(p => p.EntitySet, EntitytSet)
     //        .Add(p => p.Where, q => x => x.ID == q)
     //        .Add(p => p.DataValueField, "ID")

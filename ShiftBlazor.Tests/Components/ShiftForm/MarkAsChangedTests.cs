@@ -22,7 +22,7 @@ public class MarkAsChangedTests : ShiftBlazorTestContext
     private async Task<(IRenderedComponent<IncludeMudProviders> Host, IRenderedComponent<TForm> Form, IDialogReference Dialog)>
         ShowFormInDialogAsync<TForm>(DialogParameters? parameters = null) where TForm : ComponentBase
     {
-        var host = RenderComponent<IncludeMudProviders>();
+        var host = Render<IncludeMudProviders>();
         var dialogService = Services.GetRequiredService<IDialogService>();
 
         IDialogReference dialog = default!;
