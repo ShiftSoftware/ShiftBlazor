@@ -26,7 +26,7 @@
         {
             <MudTimeline TimelinePosition="TimelinePosition.Left"
                          TimelineOrientation="TimelineOrientation.Vertical"
-                         DisableModifiers="true">
+                         Modifiers="false">
                 @foreach (var signal in Signals.OrderByDescending(s => s.RaisedAt))
                 {
                     var isActive = signal.ClearedAt is null;

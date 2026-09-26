@@ -7,7 +7,9 @@ using System.Text.Json;
 
 namespace ShiftSoftware.ShiftBlazor.Components;
 
-[Obsolete("Use the form's Context instead")]
+[Obsolete("Use the form's context instead: remove the @inherits, give the page a [Parameter] public object? Key { get; set; }, " +
+    "pass it with @bind-Key and the item with @bind-Value on <ShiftEntityForm>, and read Mode, ReadOnly, Disabled and Item " +
+    "from context (FormChildContext<T>) in its child content, as ProductBrandForm.razor in ShiftTemplates' StockPlusPlus.Web does.")]
 public partial class ShiftForm<TComponent, T> : ComponentBase where TComponent : ComponentBase where T : ShiftEntityViewAndUpsertDTO, new()
 {
     [Inject] private SettingManager SettingManager { get; set; } = default!;
