@@ -1,13 +1,10 @@
 ﻿@page "/not-found"
 @inject ShiftBlazorLocalizer Loc
 
+@* This page has no LayoutView. The router renders it with the Found template, both as the
+   NotFoundPage and at /not-found, and the RouteView there already puts it inside the app's main
+   layout. A LayoutView would add that layout a second time, and the second MudPopoverProvider
+   would throw. *@
 <PageTitle>@Loc["DefaultAppNotFoundTitle"]</PageTitle>
-<LayoutView Layout="@(Context?.MainLayout ?? typeof(ShiftMainLayout))">
-    <h1>404</h1>
-    <p role="alert">@Loc["DefaultAppNotFoundText"]</p>
-</LayoutView>
-
-@code {
-    [CascadingParameter]
-    public AppLayoutContext? Context { get; set; }
-}
+<h1>404</h1>
+<p role="alert">@Loc["DefaultAppNotFoundText"]</p>
