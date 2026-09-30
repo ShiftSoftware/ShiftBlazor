@@ -1,0 +1,8 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+@foreach (var banner in banners)
+{
+    <MudAlert Severity="banner.Rule.Severity" Dense Class="@($"mb-2 {Class}")" data-banner-id="@banner.Rule.Id">
+        @banner.Text
+    </MudAlert>
+}
