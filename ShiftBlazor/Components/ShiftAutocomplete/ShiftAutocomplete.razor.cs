@@ -603,7 +603,7 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
 
         if (fetchItems)
         {
-            await FetchItems();
+            await FetchItems(GetSearchQuery());
         }
 
         // dont open the dropdown if list items are being fetched
@@ -611,6 +611,18 @@ public partial class ShiftAutocomplete<TEntitySet> : IODataRequestComponent<TEnt
         {
             IsDropdownOpen = true;
         }
+    }
+
+    // The text left in the input is a search term, unless it is just
+    // the selected value's text, in which case all items are listed
+    private string? GetSearchQuery()
+    {
+        if (string.IsNullOrWhiteSpace(Text) || (!MultiSelect && Text == Value?.Text))
+        {
+            return null;
+        }
+
+        return Text;
     }
 
     public async Task CloseDropdown(bool clearText = true)
