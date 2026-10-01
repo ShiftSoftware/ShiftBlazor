@@ -1,0 +1,184 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using System.Net.Http.Json
+@using System.Linq.Expressions
+@using Microsoft.AspNetCore.Components.Forms
+@using ShiftSoftware.ShiftBlazor.Enums
+@using ShiftSoftware.ShiftBlazor.Interfaces
+@using ShiftSoftware.ShiftBlazor.Services
+@using ShiftSoftware.ShiftEntity.Core.Extensions
+@using ShiftSoftware.ShiftEntity.Core.Pii
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+@using ShiftSoftware.TypeAuth.Core
+@inject HttpClient Http
+@inject ITypeAuthService TypeAuth
+@inject Microsoft.Extensions.Options.IOptions<PiiOptions> PiiOptions
+@inject SettingManager SettingManager
+
+<div style="position: relative;">
+<MudTextField T="string"
+              Label="@Label"
+              Value="@EditorValue"
+              ValueChanged="OnValueChanged"
+              Immediate="true"
+              ReadOnly="@(!CanType)"
+              Adornment="@(ShowRevealAdornment ? Adornment.End : Adornment.None)"
+              AdornmentIcon="@(isRevealing ? null : Icons.Material.Filled.Visibility)"
+              AdornmentAriaLabel="Reveal protected value"
+              OnAdornmentClick="RevealAsync"
+              Error="@(!string.IsNullOrEmpty(revealError))"
+              ErrorText="@revealError" />
+@if (isRevealing)
+{
+    <span role="status"
+          aria-label="Revealing protected value"
+          style="position: absolute; right: 2px; top: 50%; transform: translateY(-50%); pointer-events: none; display: flex; align-items: center; justify-content: center;">
+        <MudProgressCircular Indeterminate="true"
+                             Size="Size.Small"
+                             Color="Color.Primary" />
+    </span>
+}
+</div>
+
+@code {
+    [CascadingParameter(Name = "ShiftForm")] public IShiftForm? ShiftForm { get; set; }
+    [Parameter] public string Label { get; set; } = "Protected field";
+    [Parameter] public string Endpoint { get; set; } = default!;
+    [Parameter] public string? BaseUrl { get; set; }
+    [Parameter] public string? BaseUrlKey { get; set; }
+    [Parameter] public string? RecordKey { get; set; }
+    [Parameter] public string Member { get; set; } = default!;
+    [Parameter] public bool AllowReveal { get; set; } = true;
+    [Parameter] public PiiFieldDTO? Field { get; set; }
+    [Parameter] public EventCallback<PiiFieldDTO?> FieldChanged { get; set; }
+    [Parameter] public Expression<Func<PiiFieldDTO?>>? For { get; set; }
+
+    private string? revealedValue;
+    private string? localValue;
+    private string? previousKey;
+    private string? previousMember;
+    private EditContext? previousEditContext;
+    private PiiFieldDTO? previousField;
+    private PiiFieldDTO? originalField;
+    private PiiFieldDTO? lastWrittenField;
+    private string? revealError;
+    private bool isRevealed;
+    private bool isRevealing;
+    private bool hasLocalValue;
+    private long revealRequestVersion;
+
+    private bool IsCreate => string.IsNullOrWhiteSpace(RecordKey) || ShiftForm?.Mode == FormModes.Create;
+    private bool CanChange => TypeAuth.CanAccess(PiiOptions.Value.Action);
+    private bool ShowRevealAdornment => !IsCreate && AllowReveal && CanChange && !isRevealed;
+    private bool CanReveal => !IsCreate && AllowReveal && CanChange && !isRevealed && !isRevealing;
+    private bool CanType => CanChange && (IsCreate || isRevealed &&
+        (ShiftForm is null || ShiftForm.Mode == FormModes.Edit));
+    private string? EditorValue => IsCreate
+        ? hasLocalValue ? localValue : Field?.Value
+        : isRevealed ? localValue : Field?.Display;
+
+    protected override void OnParametersSet()
+    {
+        var editContext = ShiftForm?.EditContext;
+        var fieldChangedOutsideForm = ShiftForm is null
+            && !ReferenceEquals(previousField, Field)
+            && !ReferenceEquals(originalField, Field)
+            && !ReferenceEquals(lastWrittenField, Field);
+        if (previousKey != RecordKey || previousMember != Member
+            || !ReferenceEquals(previousEditContext, editContext)
+            || fieldChangedOutsideForm)
+        {
+            isRevealed = false;
+            revealedValue = null;
+            localValue = null;
+            hasLocalValue = false;
+            revealError = null;
+            isRevealing = false;
+            revealRequestVersion++;
+            originalField = Field;
+            lastWrittenField = null;
+        }
+
+        previousKey = RecordKey;
+        previousMember = Member;
+        previousEditContext = editContext;
+        previousField = Field;
+    }
+
+    private async Task RevealAsync()
+    {
+        if (!CanReveal)
+            return;
+
+        isRevealing = true;
+        revealError = null;
+        var requestVersion = ++revealRequestVersion;
+        StateHasChanged();
+        try
+        {
+            var formRequest = ShiftForm as IRequest;
+            var configuration = SettingManager.Configuration;
+            var baseUrl = BaseUrl
+                ?? (BaseUrlKey is not null ? configuration.ExternalAddresses.TryGet(BaseUrlKey) : null)
+                ?? formRequest?.BaseUrl
+                ?? (formRequest?.BaseUrlKey is not null
+                    ? configuration.ExternalAddresses.TryGet(formRequest.BaseUrlKey)
+                    : null)
+                ?? configuration.BaseAddress;
+            var url = baseUrl.AddUrlPath(
+                Endpoint, Uri.EscapeDataString(RecordKey!), "pii", Uri.EscapeDataString(Member), "reveal");
+            using var response = await Http.PostAsync(url, null);
+            if (requestVersion != revealRequestVersion)
+                return;
+            if (!response.IsSuccessStatusCode)
+            {
+                revealError = "Unable to reveal this field.";
+                return;
+            }
+
+            var value = (await response.Content.ReadFromJsonAsync<PiiRevealDTO>())?.Value;
+            if (requestVersion != revealRequestVersion)
+                return;
+            revealedValue = value;
+            localValue = revealedValue;
+            hasLocalValue = true;
+            isRevealed = true;
+        }
+        catch (HttpRequestException)
+        {
+            if (requestVersion == revealRequestVersion)
+                revealError = "Unable to reveal this field.";
+        }
+        finally
+        {
+            if (requestVersion == revealRequestVersion)
+                isRevealing = false;
+        }
+    }
+
+    private async Task OnValueChanged(string? value)
+    {
+        if (!CanType)
+            return;
+
+        var raw = string.IsNullOrEmpty(value) ? null : value;
+        localValue = raw;
+        hasLocalValue = true;
+        var keep = IsCreate ? raw is null : string.Equals(raw, revealedValue, StringComparison.Ordinal);
+        Field = new PiiFieldDTO
+        {
+            Display = Field?.Display,
+            Value = keep ? null : raw,
+            Write = keep ? "keep" : "replace"
+        };
+        lastWrittenField = Field;
+        previousField = Field;
+        await FieldChanged.InvokeAsync(Field);
+        if (ShiftForm?.EditContext is { } editContext)
+        {
+            var fieldIdentifier = For is not null
+                ? FieldIdentifier.Create(For)
+                : new FieldIdentifier(editContext.Model, Member);
+            editContext.NotifyFieldChanged(fieldIdentifier);
+        }
+    }
+}

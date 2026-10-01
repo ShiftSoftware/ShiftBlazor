@@ -19,6 +19,7 @@ public class ShiftModal
 
     private static readonly string QueryKey = "modal";
     private Dictionary<string, Type>? _routeTypeCache;
+    private Dictionary<string, Type>? _keyedRouteTypeCache;
 
     public ShiftModal(IJSRuntime jsRuntime, NavigationManager navManager, IDialogService dialogService, SettingManager settingManager, MessageService messageService)
     {
@@ -45,7 +46,7 @@ public class ShiftModal
 
     public async Task<DialogResult?> Open(string ComponentPath, object? key = null, ModalOpenMode openMode = ModalOpenMode.Popup, Dictionary<string, object>? parameters = null, bool skipQueryParamUpdate = false)
     {
-        var ComponentType = GetComponentType(ComponentPath);
+        var ComponentType = GetComponentType(ComponentPath, key);
         if (ComponentType != null)
         {
             return await Open(ComponentType, key, openMode, parameters, skipQueryParamUpdate);
@@ -88,7 +89,9 @@ public class ShiftModal
         }
         else if (openMode == ModalOpenMode.Popup)
         {
-            var identifier = GetComponentIdentifier(ComponentType);
+            // Keep route parameters in the modal identifier. A list route and its
+            // form route otherwise collapse to the same name when the page reloads.
+            var identifier = GetModalIdentifier(ComponentType);
             if (identifier != null)
             {
                 var queryParams = skipQueryParamUpdate ? null : parameters;
@@ -150,7 +153,7 @@ public class ShiftModal
 
         foreach (var modal in modals)
         {
-            var type = GetComponentType(modal.Name);
+            var type = GetComponentType(modal.Name, modal.Key);
             if (type != null)
             {
                 _ = OpenDialog(type, modal.Key, modal.Parameters);
@@ -190,10 +193,25 @@ public class ShiftModal
         await JsRuntime.InvokeVoidAsync("history.pushState", null, "", newUrl);
     }
 
-    internal Type? GetComponentType(string name)
+    internal Type? GetComponentType(string name, object? key = null)
     {
         var cache = GetRouteTypeCache();
-        return cache.TryGetValue(NormalizeRouteTemplate(name), out var routeType) ? routeType : null;
+        var route = name.TrimStart('/');
+        // New popup URLs carry the exact route template, so they resolve without
+        // the ambiguity of older shortened names.
+        if (route.Contains('{') && cache.TryGetValue(route, out var exactType))
+            return exactType;
+
+        var legacyRoute = NormalizeRouteTemplate(name);
+        // Old URLs with a record key must select the keyed form. With no key,
+        // retain the previous cache's last-discovered choice (which may be a list).
+        if (key is not null && _keyedRouteTypeCache!.TryGetValue(legacyRoute, out var keyedType))
+            return keyedType;
+
+        if (cache.TryGetValue(route, out var routeType))
+            return routeType;
+
+        return cache.TryGetValue(legacyRoute, out routeType) ? routeType : null;
     }
 
     /// <summary>
@@ -204,6 +222,12 @@ public class ShiftModal
     {
         var routeAttr = componentType.GetCustomAttributes<RouteAttribute>().FirstOrDefault();
         return routeAttr == null ? null : NormalizeRouteTemplate(routeAttr.Template);
+    }
+
+    internal static string? GetModalIdentifier(Type componentType)
+    {
+        var routeAttr = componentType.GetCustomAttributes<RouteAttribute>().FirstOrDefault();
+        return routeAttr?.Template.TrimStart('/');
     }
 
     /// <summary>
@@ -256,6 +280,7 @@ public class ShiftModal
         }
 
         var cache = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+        var keyedCache = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
             if (assembly.IsDynamic) continue;
@@ -268,18 +293,29 @@ public class ShiftModal
                 if (t == null || !typeof(ComponentBase).IsAssignableFrom(t)) continue;
                 foreach (var attr in t.GetCustomAttributes<RouteAttribute>())
                 {
-                    var key = NormalizeRouteTemplate(attr.Template);
-                    if (!string.IsNullOrEmpty(key))
+                    var exactRoute = attr.Template.TrimStart('/');
+                    var legacyRoute = NormalizeRouteTemplate(attr.Template);
+                    if (!string.IsNullOrEmpty(exactRoute))
+                        cache[exactRoute] = t;
+                    if (!string.IsNullOrEmpty(legacyRoute))
                     {
-                        cache[key] = t;
+                        // This assignment preserves the original last-discovered
+                        // behavior for shortened, keyless popup URLs.
+                        cache[legacyRoute] = t;
+                        if (AcceptsKey(t))
+                            keyedCache[legacyRoute] = t;
                     }
                 }
             }
         }
 
+        _keyedRouteTypeCache = keyedCache;
         _routeTypeCache = cache;
         return _routeTypeCache;
     }
+
+    private static bool AcceptsKey(Type componentType) =>
+        componentType.GetProperty("Key")?.GetCustomAttribute<ParameterAttribute>() is not null;
 
     private async Task<DialogResult?> OpenDialog(Type TComponent, object? key = null, Dictionary<string, object>? parameters = null)
     {
