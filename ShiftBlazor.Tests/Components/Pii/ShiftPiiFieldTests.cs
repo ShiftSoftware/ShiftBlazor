@@ -98,8 +98,10 @@ public class ShiftPiiFieldTests : ShiftBlazorTestContext
         Assert.Equal("replace", field?.Write);
         Assert.Equal("synthetic-phone-0088", field?.Value);
 
+        // A new record has nothing stored to keep. The emptied input is a replacement with no value,
+        // so the member's required rule can reject it before the form is sent.
         cut.Find("input").Input("");
-        Assert.Equal("keep", field?.Write);
+        Assert.Equal("replace", field?.Write);
         Assert.Null(field?.Value);
         Assert.Empty(cut.FindAll("button"));
     }

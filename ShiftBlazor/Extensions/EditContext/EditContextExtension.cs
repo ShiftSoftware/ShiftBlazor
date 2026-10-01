@@ -2,6 +2,7 @@
 using FluentValidation.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.ShiftBlazor.Extensions.EditContext;
+using ShiftSoftware.ShiftEntity.Model.Validation;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
@@ -77,7 +78,7 @@ public static class EditContextExtension
         if (fields == null)
         {
             var context = new ValidationContext(editContext.Model);
-            isValid = Validator.TryValidateObject(editContext.Model, context, results, true);
+            isValid = WrappedValueValidator.TryValidateObject(editContext.Model, context, results);
         }
         else
         {
@@ -91,7 +92,7 @@ public static class EditContextExtension
                         MemberName = propertyInfo.Name
                     };
 
-                    if (!Validator.TryValidateProperty(propertyValue, validationContext, results))
+                    if (!WrappedValueValidator.TryValidateProperty(propertyValue, validationContext, results))
                     {
                         isValid = false;
                     }
@@ -270,6 +271,13 @@ public static class EditContextExtension
             if (newObj == null)
             {
                 // This is as far as we can go
+                return new FieldIdentifier(obj, nextToken.ToString());
+            }
+
+            // A wrapper member (such as a PII field) is validated as one field.
+            // A message about a value inside the wrapper belongs to the member.
+            if (newObj is IValidationValueWrapper)
+            {
                 return new FieldIdentifier(obj, nextToken.ToString());
             }
 

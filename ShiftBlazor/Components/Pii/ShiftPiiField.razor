@@ -1,4 +1,5 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
+@implements IDisposable
 @using System.Net.Http.Json
 @using System.Linq.Expressions
 @using Microsoft.AspNetCore.Components.Forms
@@ -25,8 +26,9 @@
               AdornmentIcon="@(isRevealing ? null : Icons.Material.Filled.Visibility)"
               AdornmentAriaLabel="Reveal protected value"
               OnAdornmentClick="RevealAsync"
-              Error="@(!string.IsNullOrEmpty(revealError))"
-              ErrorText="@revealError" />
+              Required="@isRequired"
+              Error="@(!string.IsNullOrEmpty(FieldError))"
+              ErrorText="@FieldError" />
 @if (isRevealing)
 {
     <span role="status"
@@ -41,6 +43,7 @@
 
 @code {
     [CascadingParameter(Name = "ShiftForm")] public IShiftForm? ShiftForm { get; set; }
+    [CascadingParameter] public IFormSection? FormSection { get; set; }
     [Parameter] public string Label { get; set; } = "Protected field";
     [Parameter] public string Endpoint { get; set; } = default!;
     [Parameter] public string? BaseUrl { get; set; }
@@ -65,6 +68,9 @@
     private bool isRevealing;
     private bool hasLocalValue;
     private long revealRequestVersion;
+    private bool isRequired;
+    // The form field for the protected member. Its validation messages are shown in this input.
+    private FieldIdentifier? fieldIdentifier;
 
     private bool IsCreate => string.IsNullOrWhiteSpace(RecordKey) || ShiftForm?.Mode == FormModes.Create;
     private bool CanChange => TypeAuth.CanAccess(PiiOptions.Value.Action);
@@ -75,10 +81,27 @@
     private string? EditorValue => IsCreate
         ? hasLocalValue ? localValue : Field?.Value
         : isRevealed ? localValue : Field?.Display;
+    private string? FieldError => (fieldIdentifier is { } identifier
+        ? ShiftForm?.EditContext?.GetValidationMessages(identifier).FirstOrDefault()
+        : null) ?? revealError;
+
+    protected override void OnInitialized()
+    {
+        isRequired = For is not null && FormHelper.IsRequired(For);
+    }
 
     protected override void OnParametersSet()
     {
         var editContext = ShiftForm?.EditContext;
+        if (!ReferenceEquals(previousEditContext, editContext))
+        {
+            if (previousEditContext is not null)
+                previousEditContext.OnValidationStateChanged -= OnValidationStateChanged;
+            if (editContext is not null)
+                editContext.OnValidationStateChanged += OnValidationStateChanged;
+        }
+        UpdateFieldIdentifier(editContext);
+
         var fieldChangedOutsideForm = ShiftForm is null
             && !ReferenceEquals(previousField, Field)
             && !ReferenceEquals(originalField, Field)
@@ -163,7 +186,9 @@
         var raw = string.IsNullOrEmpty(value) ? null : value;
         localValue = raw;
         hasLocalValue = true;
-        var keep = IsCreate ? raw is null : string.Equals(raw, revealedValue, StringComparison.Ordinal);
+        // A new record has no stored value to keep, so every edit there is a replacement.
+        // An emptied input then sends "replace" with no value, which the member's validation rules check.
+        var keep = !IsCreate && string.Equals(raw, revealedValue, StringComparison.Ordinal);
         Field = new PiiFieldDTO
         {
             Display = Field?.Display,
@@ -173,12 +198,33 @@
         lastWrittenField = Field;
         previousField = Field;
         await FieldChanged.InvokeAsync(Field);
-        if (ShiftForm?.EditContext is { } editContext)
-        {
-            var fieldIdentifier = For is not null
-                ? FieldIdentifier.Create(For)
-                : new FieldIdentifier(editContext.Model, Member);
-            editContext.NotifyFieldChanged(fieldIdentifier);
-        }
+        if (ShiftForm?.EditContext is { } editContext && fieldIdentifier is { } identifier)
+            editContext.NotifyFieldChanged(identifier);
+    }
+
+    private void UpdateFieldIdentifier(EditContext? editContext)
+    {
+        FieldIdentifier? current = For is not null ? FieldIdentifier.Create(For)
+            : editContext is not null ? new FieldIdentifier(editContext.Model, Member) : null;
+        if (Nullable.Equals(current, fieldIdentifier))
+            return;
+
+        // Keep the section's field list in step when the form loads another record instance.
+        if (fieldIdentifier is { } previous)
+            FormSection?.Remove(previous);
+        if (current is { } added)
+            FormSection?.Add(added);
+        fieldIdentifier = current;
+    }
+
+    private void OnValidationStateChanged(object? sender, ValidationStateChangedEventArgs args)
+        => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        if (previousEditContext is not null)
+            previousEditContext.OnValidationStateChanged -= OnValidationStateChanged;
+        if (fieldIdentifier is { } identifier)
+            FormSection?.Remove(identifier);
     }
 }

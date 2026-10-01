@@ -1,0 +1,20 @@
+@namespace ShiftSoftware.ShiftBlazor.Tests.Components.Pii
+@using ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+@using FluentValidation
+
+<ShiftEntityForm @bind-Value="Model" Endpoint="validation-contacts" @bind-Key="Key" OnlyValidateOnSubmit="OnlyValidateOnSubmit" Validator="Validator">
+    <FormSection>
+        <ShiftPiiField Label="Phone" Endpoint="validation-contacts" RecordKey="@context.Item.ID" Member="Phone"
+                       @bind-Field="context.Item.Phone" For="() => context.Item.Phone" />
+        <ShiftPiiField Label="Email" Endpoint="validation-contacts" RecordKey="@context.Item.ID" Member="Email"
+                       @bind-Field="context.Item.Email" For="() => context.Item.Email" />
+    </FormSection>
+</ShiftEntityForm>
+
+@code {
+    [Parameter] public ValidatedPiiContactDTO Model { get; set; } = new();
+    [Parameter] public object? Key { get; set; }
+    [Parameter] public bool OnlyValidateOnSubmit { get; set; }
+    [Parameter] public IValidator? Validator { get; set; }
+}

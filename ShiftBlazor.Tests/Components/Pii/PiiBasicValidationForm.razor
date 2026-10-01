@@ -1,0 +1,13 @@
+@namespace ShiftSoftware.ShiftBlazor.Tests.Components.Pii
+@using ShiftSoftware.ShiftBlazor.Components
+
+<ShiftFormBasic Value="Model">
+    <FormSection>
+        <ShiftPiiField Label="Phone" Member="Phone" Endpoint="contacts"
+                       @bind-Field="context.Item.Phone" For="() => context.Item.Phone" />
+    </FormSection>
+</ShiftFormBasic>
+
+@code {
+    private BasicPiiModel Model { get; set; } = new();
+}
