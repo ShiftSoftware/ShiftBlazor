@@ -25,6 +25,11 @@
 
             <MudStack Class="pa-6">
 
+                @if (!string.IsNullOrWhiteSpace(PrintError))
+                {
+                    <MudAlert Severity="Severity.Error" role="alert">@PrintError</MudAlert>
+                }
+
                 <MudSelectExtended Value="@PrintType"
                                    ValueChanged="PrintTypeChanged"
                                    T="string"
@@ -135,9 +140,11 @@
     private Dictionary<string, string?> FormValues = new();
 
     private bool Error { get; set; }
+    private string? PrintError { get; set; }
 
     private void ValueChanged(string key, string value)
     {
+        PrintError = null;
         if (FormValues.ContainsKey(key))
         {
             FormValues.Remove(key);
@@ -149,12 +156,14 @@
     private void PrintTypeChanged(string type)
     {
         Error = false;
+        PrintError = null;
         PrintType = type;
     }
 
     private async Task Print()
     {
         Error = false;
+        PrintError = null;
 
         var query = FormValues.Where(IsNotDisabled).ToDictionary();
 
@@ -169,7 +178,7 @@
             query.Add("type", PrintType);
         }
 
-        await PrintService.PrintAsync(Url, Key, query!);
+        PrintError = await PrintService.TryPrintAsync(Url, Key, query!);
     }
 
     private bool IsNotDisabled(KeyValuePair<string, string?> value)
@@ -209,17 +218,6 @@
         }
 
         FormValues = Options.Fields.ToDictionary(x => x.Key, x => x.DefaultChoiceKey ?? null);
-
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-
-        if (Options == null)
-        {
-            await PrintService.PrintAsync(Url, Key);
-            // Close();
-        }
 
     }
 
