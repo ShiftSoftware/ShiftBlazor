@@ -74,6 +74,7 @@ public static class EditContextExtension
         messageStore ??= new ValidationMessageStore(editContext);
         var isValid = true;
         var results = new List<ValidationResult>();
+        var fieldMessages = new List<(FieldIdentifier Field, string Message)>();
 
         if (fields == null)
         {
@@ -92,10 +93,18 @@ public static class EditContextExtension
                         MemberName = propertyInfo.Name
                     };
 
-                    if (!WrappedValueValidator.TryValidateProperty(propertyValue, validationContext, results))
+                    var fieldResults = new List<ValidationResult>();
+                    if (!WrappedValueValidator.TryValidateProperty(propertyValue, validationContext, fieldResults))
                     {
                         isValid = false;
                     }
+
+                    // The field can belong to a nested object of the model. Its member names are relative to that
+                    // object, so they are not resolved from the model. That would attach them to the wrong object.
+                    foreach (var result in fieldResults)
+                        foreach (var name in result.MemberNames)
+                            if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(result.ErrorMessage))
+                                fieldMessages.Add((new FieldIdentifier(field.Model, name), result.ErrorMessage));
                 }
 
                 messageStore.Clear(field);
@@ -110,6 +119,11 @@ public static class EditContextExtension
         {
             var field = editContext.ToFieldIdentifier(name);
             messageStore.Add(field, errorMessage!);
+        }
+
+        foreach (var (field, message) in fieldMessages)
+        {
+            messageStore.Add(field, message);
         }
 
         return isValid;

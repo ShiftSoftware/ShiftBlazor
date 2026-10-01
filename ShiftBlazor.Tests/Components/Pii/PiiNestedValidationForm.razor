@@ -1,0 +1,21 @@
+@namespace ShiftSoftware.ShiftBlazor.Tests.Components.Pii
+@using ShiftSoftware.ShiftBlazor.Components
+@using FluentValidation
+
+<ShiftEntityForm @bind-Value="Model" Endpoint="nested-contacts" @bind-Key="Key" Validator="Validator">
+    <FormSection>
+        @foreach (var phone in context.Item.Phones)
+        {
+            <ShiftPiiField @key="phone" Label="Additional phone" Endpoint="nested-contacts"
+                           RecordKey="@(string.IsNullOrWhiteSpace(phone.ID) ? null : context.Item.ID)"
+                           Member="@($"Phones[{phone.ID}].Number")"
+                           @bind-Field="phone.Number" For="() => phone.Number" />
+        }
+    </FormSection>
+</ShiftEntityForm>
+
+@code {
+    [Parameter] public NestedPiiCustomerDTO Model { get; set; } = new() { Phones = [new()] };
+    [Parameter] public object? Key { get; set; }
+    [Parameter] public IValidator? Validator { get; set; }
+}
