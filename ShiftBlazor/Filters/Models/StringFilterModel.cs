@@ -39,6 +39,7 @@ public class StringFilterModel : FilterModelBase
     public override ODataFilterGenerator ToODataFilter()
     {
         var filter = new ODataFilterGenerator(true, Id);
+        if (AllowedOperators is { Count: 0 }) return filter;
         var hasValue = this.HasValue();
         var builder = new ODataFilter
         {

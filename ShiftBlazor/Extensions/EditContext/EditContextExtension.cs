@@ -22,7 +22,7 @@ public static class EditContextExtension
     {
         messageStore ??= new ValidationMessageStore(editContext);
 
-        var isValid = editContext.ValidateDataAnnotation(fields, messageStore);
+        var isValid = editContext.ValidateDataAnnotation(fields, messageStore, serviceProvider);
 
         // if the DataAnnotation validator returns false,
         // then don't run the FluentValidation validator 
@@ -69,7 +69,7 @@ public static class EditContextExtension
         return result.Errors.Select(x => x.ErrorMessage).ToList();
     }
 
-    public static bool ValidateDataAnnotation(this EditContext editContext, in List<FieldIdentifier>? fields, ValidationMessageStore? messageStore = null)
+    public static bool ValidateDataAnnotation(this EditContext editContext, in List<FieldIdentifier>? fields, ValidationMessageStore? messageStore = null, IServiceProvider? serviceProvider = null)
     {
         messageStore ??= new ValidationMessageStore(editContext);
         var isValid = true;
@@ -78,7 +78,7 @@ public static class EditContextExtension
 
         if (fields == null)
         {
-            var context = new ValidationContext(editContext.Model);
+            var context = new ValidationContext(editContext.Model, serviceProvider, null);
             isValid = WrappedValueValidator.TryValidateObject(editContext.Model, context, results);
         }
         else
@@ -88,7 +88,7 @@ public static class EditContextExtension
                 if (TryGetValidatableProperty(field, out var propertyInfo))
                 {
                     var propertyValue = propertyInfo.GetValue(field.Model);
-                    var validationContext = new ValidationContext(field.Model)
+                    var validationContext = new ValidationContext(field.Model, serviceProvider, null)
                     {
                         MemberName = propertyInfo.Name
                     };

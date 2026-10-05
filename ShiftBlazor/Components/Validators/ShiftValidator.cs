@@ -77,7 +77,7 @@ public class ShiftValidator : ComponentBase, IDisposable
 
         if (!DisableDataAnnotation)
         {
-            isValid = CurrentEditContext.ValidateDataAnnotation(fields, MessageStore);
+            isValid = CurrentEditContext.ValidateDataAnnotation(fields, MessageStore, serviceProvider);
         }
 
         if (EnableFluentValidation && isValid)

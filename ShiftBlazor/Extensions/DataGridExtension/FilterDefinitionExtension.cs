@@ -1,5 +1,6 @@
 ﻿using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Utils;
+using ShiftSoftware.ShiftBlazor.Filters;
 
 namespace System.Collections.Generic;
 
@@ -37,6 +38,12 @@ public static class FilterDefinitionExtension
 
         if (field == null)
             return string.Empty;
+        if (definition.Column is IQueryColumn { QueryPath: { } path } column)
+        {
+            var effectiveOperator = column.GetQueryOperator(definition.Operator);
+            if (effectiveOperator is null) return string.Empty;
+            return GetFilterString(path, effectiveOperator, definition.Value, fieldType);
+        }
         return GetFilterString(field, definition.Operator!, definition.Value, fieldType);
     }
 

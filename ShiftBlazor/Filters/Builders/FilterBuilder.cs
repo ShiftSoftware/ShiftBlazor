@@ -13,6 +13,7 @@ namespace ShiftSoftware.ShiftBlazor.Filters.Builders;
 
 public abstract class FilterBuilder<T, TProperty> : ComponentBase
 {
+    [Inject] private IServiceProvider QueryServices { get; set; } = default!;
     [Parameter]
     public Guid Id { get; set; } = Guid.NewGuid();
     [Parameter]
@@ -82,6 +83,7 @@ public abstract class FilterBuilder<T, TProperty> : ComponentBase
         {
             isCollection = isCollection || propertyInfo.PropertyType.IsEnumerable();
             Filter = CreateFilter(path, propertyInfo.PropertyType);
+            Filter.QueryRule = () => FieldQueryRule.Resolve(QueryServices, typeof(T), path);
         }
         else
         {

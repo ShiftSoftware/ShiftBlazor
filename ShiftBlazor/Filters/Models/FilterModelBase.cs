@@ -10,7 +10,14 @@ public abstract class FilterModelBase
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Field { get; set; } = string.Empty;
-    public ODataOperator Operator { get; set; }
+    private ODataOperator requestedOperator;
+    public ODataOperator Operator
+    {
+        get => AllowedOperators is { Count: > 0 } allowed && !allowed.Contains(requestedOperator) ? allowed[0] : requestedOperator;
+        set => requestedOperator = value;
+    }
+    internal Func<FieldQueryRule?>? QueryRule { get; set; }
+    public IReadOnlyList<ODataOperator>? AllowedOperators => QueryRule?.Invoke()?.Operators;
     public object? Value { get; set; }
     public bool IsHidden { get; set; }
     public bool IsImmediate { get; set; }

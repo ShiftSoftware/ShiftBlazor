@@ -22,6 +22,7 @@ public static class ServicesExtension
 
     public static IServiceCollection AddShiftBlazor(this IServiceCollection services)
     {
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<Filters.IFieldQueryPolicy, Components.Pii.PiiFieldQueryPolicy>());
         services.TryAddSingleton(sp => sp.GetRequiredService<IOptions<AppStartupOptions>>().Value);
 
         services.AddMudServices(mudConfig =>

@@ -1,0 +1,23 @@
+@namespace ShiftSoftware.ShiftBlazor.Tests.Components.Pii
+@using ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftBlazor.Enums
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+
+<ShiftList T="PiiSearchList.ContactDTO" EntitySet="protected-contacts" EnableFilterPanel FilterPanelDefaultOpen>
+    <ChildContent>
+        <PropertyColumnExtended Property="x => x.Label" Title="Label" />
+        <PropertyColumnExtended Property="x => x.Phone!.Display" Title="Phone" />
+        <PropertyColumnExtended Property="x => x.Secret!.Display" Title="Secret" />
+        <StringFilter T="ContactDTO" TProperty="string" Property="x => x.Phone!.Display" Operator="ODataOperator.Contains" Label="Phone" />
+    </ChildContent>
+</ShiftList>
+
+@code {
+    public sealed class ContactDTO : ShiftEntityListDTO
+    {
+        public override string? ID { get; set; }
+        public string? Label { get; set; }
+        [Pii(PiiKind.Phone)] public PiiFieldDTO? Phone { get; set; }
+        [Pii(PiiKind.Identifier, Revealable = false)] public PiiFieldDTO? Secret { get; set; }
+    }
+}

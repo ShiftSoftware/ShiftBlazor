@@ -3,9 +3,21 @@
 @inherits FilterUIBase
 
 <div style="width: 100%;" class="@ClassName">
-	<MudField Label="@Label" InnerPadding="false" Disabled="ParentDisabled">
+	<MudField Label="@Label" InnerPadding="false" Disabled="@(ParentDisabled || Filter.AllowedOperators is { Count: 0 })">
 		<MudStack Row>
-			@if (Filter is StringFilterModel stringFilter && stringFilter.AutocompleteOptions != null)
+			@if (Filter.AllowedOperators is { } operators)
+			{
+				<MudSelect T="ODataOperator" Value="Filter.Operator" ValueChanged="OperatorChanged"
+				           Disabled="@(ParentDisabled || operators.Count <= 1)" Underline="false" Style="min-width: 100px">
+					@foreach (var op in operators)
+					{
+						<MudSelectItem Value="op">@op.Describe()</MudSelectItem>
+					}
+				</MudSelect>
+				<MudTextField T="string" Value="(string?)Filter.Value" ValueChanged="ValueChanged" Clearable Underline="false"
+				              Disabled="@(ParentDisabled || operators.Count == 0)" />
+			}
+			else if (Filter is StringFilterModel stringFilter && stringFilter.AutocompleteOptions != null)
 			{
 				<MudMenu Style="padding: 4px 0;" OpenChanged="OnMenuOpened" Disabled="ParentDisabled">
 					<ActivatorContent>

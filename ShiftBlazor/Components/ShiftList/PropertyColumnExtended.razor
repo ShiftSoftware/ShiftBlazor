@@ -4,12 +4,22 @@
 @typeparam TProperty
 @inherits PropertyColumn<T, TProperty>
 @inject ShiftModal ShiftModal
+@inject IServiceProvider QueryServices
+@using ShiftSoftware.ShiftBlazor.Filters
+@implements IQueryColumn
 
 @{
     base.BuildRenderTree(__builder);
 }
 
 @code {
+    private FieldQueryRule? QueryRule => FieldQueryRule.Resolve(QueryServices, typeof(T), Misc.GetPropertyPath(Property, "/"));
+    string? IQueryColumn.QueryPath => QueryRule is null ? null : Misc.GetPropertyPath(Property, "/");
+    string? IQueryColumn.GetQueryOperator(string? requested)
+    {
+        var allowed = QueryRule?.GridOperators;
+        return allowed is null || requested is not null && allowed.Contains(requested) ? requested : allowed.FirstOrDefault();
+    }
     [CascadingParameter]
     public ShiftList<T> ShiftList { get; set; } = default!;
 
@@ -52,6 +62,18 @@
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
+
+        var rule = QueryRule;
+        if (rule is not null)
+        {
+            Sortable = rule.Sortable;
+            Filterable = rule.Operators.Count > 0;
+            var operators = rule.GridOperators;
+            if (FilterOperators is null || !FilterOperators.SetEquals(operators)) FilterOperators = operators;
+            foreach (var filter in ShiftList?.DataGrid?.FilterDefinitions.Where(f => ReferenceEquals(f.Column, this)) ?? [])
+                if (filter.Operator is null || !FilterOperators.Contains(filter.Operator))
+                    filter.Operator = FilterOperators.FirstOrDefault();
+        }
 
         // Single-line truncation lives on the cell (td) so the inherited MudBlazor CellClass/CellStyle
         // can customize it (e.g. CellStyle="max-width: 500px;"). Append without clobbering the programmer's class.
