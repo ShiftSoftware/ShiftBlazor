@@ -181,8 +181,25 @@ function parseRawValue(value, col, localizedColumns, lang) {
     return value
 }
 
+// A column whose type declares an export value member (ExportValueMemberAttribute, e.g. a
+// protected PiiFieldDTO) exports only that member. Anything that is not a string there exports
+// blank; there is deliberately no fallback to any other member of the object.
+function readValueMember(value, valueMember) {
+    if (Array.isArray(value)) {
+        return value
+            .map(item => item?.[valueMember])
+            .filter(item => typeof item === "string" && item.length)
+            .join("; ")
+    }
+
+    const member = value?.[valueMember]
+    return typeof member === "string" ? member : ""
+}
+
 function parseColumn(col, foreignKeys, fieldMapper, row, foreignTables, lang) {
     let value = row[col.key]
+
+    if (col.valueMember) return readValueMember(value, col.valueMember)
 
     if (foreignKeys.includes(col.key)) { // process the foriegn values
         if (value) {
@@ -250,6 +267,9 @@ function parseCustomColumn(row, col, localizedColumns, lang, fieldMapper, foreig
 
             }
         } else {
+            const valueMember = col.customColumn.argValueMembers?.[arg]
+            if (valueMember) return parseRawValue(readValueMember(row[arg], valueMember), col, localizedColumns, lang)
+
             if (row[arg]) {
                 if (typeof row[arg] === "string") {
                     let tempValue = row[arg];
@@ -262,7 +282,7 @@ function parseCustomColumn(row, col, localizedColumns, lang, fieldMapper, foreig
                     return parseRawValue(tempValue, col, localizedColumns, lang)
 
                 } else {
-                    return parseRawValue(row[value], col, localizedColumns, lang)
+                    return parseRawValue(row[arg], col, localizedColumns, lang)
                 }
             }
         }

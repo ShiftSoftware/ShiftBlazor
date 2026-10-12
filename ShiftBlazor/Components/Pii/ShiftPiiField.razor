@@ -1,12 +1,11 @@
 @namespace ShiftSoftware.ShiftBlazor.Components
 @implements IDisposable
-@using System.Net.Http.Json
 @using System.Linq.Expressions
 @using Microsoft.AspNetCore.Components.Forms
+@using ShiftSoftware.ShiftBlazor.Components.Pii
 @using ShiftSoftware.ShiftBlazor.Enums
 @using ShiftSoftware.ShiftBlazor.Interfaces
 @using ShiftSoftware.ShiftBlazor.Services
-@using ShiftSoftware.ShiftEntity.Core.Extensions
 @using ShiftSoftware.ShiftEntity.Core.Pii
 @using ShiftSoftware.ShiftEntity.Model.Dtos
 @using ShiftSoftware.TypeAuth.Core
@@ -14,6 +13,7 @@
 @inject ITypeAuthService TypeAuth
 @inject Microsoft.Extensions.Options.IOptions<PiiOptions> PiiOptions
 @inject SettingManager SettingManager
+@inject ShiftSoftware.ShiftBlazor.Localization.ShiftBlazorLocalizer Loc
 
 <div style="position: relative;">
 <MudTextField T="string"
@@ -138,38 +138,21 @@
         StateHasChanged();
         try
         {
-            var formRequest = ShiftForm as IRequest;
-            var configuration = SettingManager.Configuration;
-            var baseUrl = BaseUrl
-                ?? (BaseUrlKey is not null ? configuration.ExternalAddresses.TryGet(BaseUrlKey) : null)
-                ?? formRequest?.BaseUrl
-                ?? (formRequest?.BaseUrlKey is not null
-                    ? configuration.ExternalAddresses.TryGet(formRequest.BaseUrlKey)
-                    : null)
-                ?? configuration.BaseAddress;
-            var url = baseUrl.AddUrlPath(
-                Endpoint, Uri.EscapeDataString(RecordKey!), "pii", Uri.EscapeDataString(Member), "reveal");
-            using var response = await Http.PostAsync(url, null);
+            var url = PiiRevealRequest.BuildUrl(
+                SettingManager, BaseUrl, BaseUrlKey, ShiftForm as IRequest, Endpoint, RecordKey!, Member);
+            var revealed = await PiiRevealRequest.SendAsync(Http, url);
             if (requestVersion != revealRequestVersion)
                 return;
-            if (!response.IsSuccessStatusCode)
+            if (!revealed.Succeeded)
             {
-                revealError = "Unable to reveal this field.";
+                revealError = Loc["Unable to reveal this field."];
                 return;
             }
 
-            var value = (await response.Content.ReadFromJsonAsync<PiiRevealDTO>())?.Value;
-            if (requestVersion != revealRequestVersion)
-                return;
-            revealedValue = value;
+            revealedValue = revealed.Value;
             localValue = revealedValue;
             hasLocalValue = true;
             isRevealed = true;
-        }
-        catch (HttpRequestException)
-        {
-            if (requestVersion == revealRequestVersion)
-                revealError = "Unable to reveal this field.";
         }
         finally
         {

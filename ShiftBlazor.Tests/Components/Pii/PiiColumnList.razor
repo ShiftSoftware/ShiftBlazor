@@ -1,0 +1,30 @@
+@namespace ShiftSoftware.ShiftBlazor.Tests.Components.Pii
+@using ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftEntity.Model
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+
+<ShiftList T="PiiColumnList.ContactDTO" EntitySet="protected-contacts" Values="Rows" EnableExport>
+    <ChildContent>
+        <PropertyColumnExtended Property="x => x.Label" Title="Label" />
+        <ShiftPiiColumn T="ContactDTO" Property="x => x.Phone!.Display" Title="Phone" />
+        <ShiftPiiColumn T="ContactDTO" Property="x => x.Secret!.Display" Title="Secret" />
+        <ShiftPiiColumn T="ContactDTO" Property="x => x.Alias!.Display" Title="Alias" RevealEndpoint="owners" RevealMember="OwnerPhone" KeyPropertyName="OwnerID" />
+        <PropertyColumnExtended Property="x => x.Name!.Display" Title="Name" />
+    </ChildContent>
+</ShiftList>
+
+@code {
+    [Parameter] public List<ContactDTO> Rows { get; set; } = [];
+
+    public sealed class ContactDTO : ShiftEntityListDTO
+    {
+        public override string? ID { get; set; }
+        [ExportOptions("{0} ({1})", nameof(Label), nameof(Phone))]
+        public string? Label { get; set; }
+        public string? OwnerID { get; set; }
+        [Pii(PiiKind.Phone)] public PiiFieldDTO? Phone { get; set; }
+        [Pii(PiiKind.Identifier, Revealable = false)] public PiiFieldDTO? Secret { get; set; }
+        [Pii(PiiKind.Phone)] public PiiFieldDTO? Alias { get; set; }
+        [Pii(PiiKind.Name)] public PiiFieldDTO? Name { get; set; }
+    }
+}

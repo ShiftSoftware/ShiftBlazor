@@ -1,0 +1,107 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using System.Linq.Expressions
+@using System.Reflection
+@using ShiftSoftware.ShiftEntity.Core.Pii
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+@typeparam T where T : ShiftEntityDTOBase, new()
+@inherits PropertyColumnExtended<T, string>
+
+@*
+    A protected column with a reveal button in each cell. Bind the wrapper's Display:
+
+        <ShiftList T="ContactListDTO" EntitySet="Contact">
+            <ShiftPiiColumn T="ContactListDTO" Property="x => x.Phone!.Display" Title="Phone" />
+            <ShiftPiiColumn T="ContactListDTO" Property="x => x.Name!.Display" Title="Name" AllowReveal="false" />
+        </ShiftList>
+
+    Binding Display keeps the column's query rules exactly as PropertyColumnExtended applies them
+    to protected members (exact or partial filters by permission, no sorting), and the export
+    writes the mask. Reveal posts to {list endpoint}/{row ID}/pii/{member}/reveal by default:
+    the list's Endpoint and EntitySet, its BaseUrl/BaseUrlKey, the row's ID, and the bound
+    wrapper's path. Set RevealEndpoint, RevealMember or KeyPropertyName when the record that
+    owns the value is a different one, or the view DTO names the member differently.
+*@
+
+@{
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+    /// <summary>Show the reveal button (still subject to the PII permission and the member's <c>Revealable</c>). Defaults to true.</summary>
+    [Parameter] public bool AllowReveal { get; set; } = true;
+
+    /// <summary>The endpoint that owns the record. Defaults to the list's Endpoint and EntitySet.</summary>
+    [Parameter] public string? RevealEndpoint { get; set; }
+
+    /// <summary>The view DTO member path to reveal. Defaults to the bound wrapper's path, e.g. "Phone".</summary>
+    [Parameter] public string? RevealMember { get; set; }
+
+    private Expression<Func<T, string>>? boundProperty;
+    private PropertyInfo[] wrapperPath = [];
+    private string wrapperMember = default!;
+    private bool revealable;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(boundProperty, Property))
+        {
+            wrapperPath = ResolveWrapperPath(Property);
+            wrapperMember = string.Join(".", wrapperPath.Select(x => x.Name));
+            revealable = PiiFieldProtection.FindDeclaration(wrapperPath[^1])?.Revealable == true;
+            boundProperty = Property;
+        }
+
+        Sortable ??= false;
+        base.CellTemplate ??= context =>
+            @<ShiftPiiText Field="@GetField(context.Item)"
+                           Endpoint="@(RevealEndpoint ?? ListEndpoint)"
+                           BaseUrl="@ShiftList?.BaseUrl"
+                           BaseUrlKey="@ShiftList?.BaseUrlKey"
+                           RecordKey="@GetKey(context.Item)"
+                           Member="@(RevealMember ?? wrapperMember)"
+                           AllowReveal="@(AllowReveal && revealable)"
+                           Label="@(Title ?? wrapperMember)" />;
+
+        base.OnParametersSet();
+    }
+
+    private string? ListEndpoint => ShiftList is null
+        ? null
+        : string.Join("/", new[] { ShiftList.Endpoint, ShiftList.EntitySet }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+    // Null-safe: a null wrapper (or a null parent) renders an empty cell.
+    private PiiFieldDTO? GetField(T item)
+    {
+        object? current = item;
+        foreach (var property in wrapperPath)
+        {
+            if (current is null) return null;
+            current = property.GetValue(current);
+        }
+        return current as PiiFieldDTO;
+    }
+
+    private static PropertyInfo[] ResolveWrapperPath(Expression<Func<T, string>> property)
+    {
+        var path = new List<PropertyInfo>();
+        Expression? body = property.Body;
+        while (body is UnaryExpression { NodeType: ExpressionType.Convert } convert)
+            body = convert.Operand;
+
+        if (body is MemberExpression { Member.Name: nameof(PiiFieldDTO.Display) } display
+            && display.Expression?.Type == typeof(PiiFieldDTO))
+        {
+            body = display.Expression;
+            while (body is MemberExpression { Member: PropertyInfo member } access)
+            {
+                path.Insert(0, member);
+                body = access.Expression;
+            }
+            if (body is ParameterExpression && path.Count > 0)
+                return path.ToArray();
+        }
+
+        throw new InvalidOperationException(
+            $"{nameof(ShiftPiiColumn<T>)} must bind a protected member's {nameof(PiiFieldDTO.Display)}, e.g. Property=\"x => x.Phone!.Display\". Got: {property}");
+    }
+}

@@ -1,0 +1,128 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftBlazor.Components.Pii
+@using ShiftSoftware.ShiftBlazor.Services
+@using ShiftSoftware.ShiftEntity.Core.Pii
+@using ShiftSoftware.ShiftEntity.Model.Dtos
+@using ShiftSoftware.TypeAuth.Core
+@inject HttpClient Http
+@inject ITypeAuthService TypeAuth
+@inject Microsoft.Extensions.Options.IOptions<PiiOptions> PiiOptions
+@inject SettingManager SettingManager
+@inject ShiftSoftware.ShiftBlazor.Localization.ShiftBlazorLocalizer Loc
+
+@*
+    Read-only protected text: the server's mask, plus a reveal button when the user may reveal.
+    For list cells, cards or custom templates. ShiftPiiColumn uses it for its cells.
+
+        <ShiftPiiText Field="@item.Phone" Endpoint="Contact" RecordKey="@item.ID" Member="Phone" Label="Phone" />
+
+    The revealed value stays in this component. It never replaces the DTO's mask, so a later
+    export or save still sees the mask.
+*@
+
+<span class="shift-pii-text" style="display: inline-flex; align-items: center; gap: 4px; max-width: 100%;">
+    <span title="@(string.IsNullOrEmpty(Text) ? null : Text)" style="overflow: hidden; text-overflow: ellipsis;">@Text</span>
+    @if (ShowReveal)
+    {
+        <button type="button"
+                class="mud-button-root mud-icon-button mud-icon-button-size-small"
+                style="padding: 2px;"
+                aria-label="@RevealText"
+                title="@RevealText"
+                aria-busy="@(isRevealing ? "true" : null)"
+                disabled="@isRevealing"
+                @onclick="RevealAsync"
+                @onclick:stopPropagation="true"
+                @onclick:preventDefault="true">
+            @if (isRevealing)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" Style="width: 18px; height: 18px;" />
+            }
+            else
+            {
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false">@((MarkupString)Icons.Material.Filled.Visibility)</svg>
+            }
+        </button>
+    }
+    @if (revealError is not null)
+    {
+        <span role="alert" class="mud-error-text" style="font-size: 0.75rem;">@revealError</span>
+    }
+</span>
+
+@code {
+    /// <summary>The protected wrapper. Only its <c>Display</c> is shown until reveal.</summary>
+    [Parameter] public PiiFieldDTO? Field { get; set; }
+    /// <summary>The entity endpoint that owns the record, e.g. "Contact".</summary>
+    [Parameter] public string? Endpoint { get; set; }
+    [Parameter] public string? BaseUrl { get; set; }
+    [Parameter] public string? BaseUrlKey { get; set; }
+    [Parameter] public string? RecordKey { get; set; }
+    /// <summary>The view DTO member path the reveal endpoint reads, e.g. "Phone" or "Phones[child-id].Number".</summary>
+    [Parameter] public string? Member { get; set; }
+    [Parameter] public bool AllowReveal { get; set; } = true;
+    /// <summary>Names the field in the reveal button's label ("Reveal Phone"); just "Reveal" when unset.</summary>
+    [Parameter] public string? Label { get; set; }
+
+    private string? revealedValue;
+    private string? revealError;
+    private bool isRevealed;
+    private bool isRevealing;
+    private long revealRequestVersion;
+    private (PiiFieldDTO?, string?, string?, string?, string?, string?) previous;
+
+    private string? Text => isRevealed ? revealedValue : Field?.Display;
+
+    private string RevealText => string.IsNullOrWhiteSpace(Label) ? Loc["Reveal"] : Loc["Reveal {0}", Label];
+
+    // No mask means no stored value, so there is nothing to reveal.
+    private bool ShowReveal => AllowReveal && !isRevealed
+        && !string.IsNullOrWhiteSpace(RecordKey) && !string.IsNullOrWhiteSpace(Member)
+        && !string.IsNullOrWhiteSpace(Field?.Display) && TypeAuth.CanAccess(PiiOptions.Value.Action);
+
+    protected override void OnParametersSet()
+    {
+        // A reused component (a grid row now showing another record) must not keep another value.
+        var current = (Field, Endpoint, BaseUrl, BaseUrlKey, RecordKey, Member);
+        if (!ReferenceEquals(previous.Item1, Field) || previous.Item2 != Endpoint || previous.Item3 != BaseUrl
+            || previous.Item4 != BaseUrlKey || previous.Item5 != RecordKey || previous.Item6 != Member)
+        {
+            revealedValue = null;
+            revealError = null;
+            isRevealed = false;
+            isRevealing = false;
+            revealRequestVersion++;
+        }
+        previous = current;
+    }
+
+    private async Task RevealAsync()
+    {
+        if (!ShowReveal || isRevealing)
+            return;
+
+        isRevealing = true;
+        revealError = null;
+        var requestVersion = ++revealRequestVersion;
+        try
+        {
+            var url = PiiRevealRequest.BuildUrl(SettingManager, BaseUrl, BaseUrlKey, null, Endpoint, RecordKey!, Member!);
+            var revealed = await PiiRevealRequest.SendAsync(Http, url);
+            if (requestVersion != revealRequestVersion)
+                return;
+            if (!revealed.Succeeded)
+            {
+                revealError = revealed.Forbidden ? Loc["Not allowed to reveal"] : Loc["Could not reveal"];
+                return;
+            }
+
+            revealedValue = revealed.Value;
+            isRevealed = true;
+        }
+        finally
+        {
+            if (requestVersion == revealRequestVersion)
+                isRevealing = false;
+        }
+    }
+}

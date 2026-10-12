@@ -1874,7 +1874,12 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
 
                     if (attr?.Format != null && attr?.Args?.Count() > 0)
                     {
-                        customColumn = new ExportCustomColumn(attr.Format, attr.Args);
+                        var argValueMembers = attr.Args.Distinct()
+                            .Select(arg => (arg, member: GetExportValueMember(typeof(T).GetProperty(arg)?.PropertyType)))
+                            .Where(x => x.member != null)
+                            .ToDictionary(x => x.arg, x => x.member!);
+
+                        customColumn = new ExportCustomColumn(attr.Format, attr.Args, argValueMembers.Count > 0 ? argValueMembers : null);
                     }
                     else if (attr?.Format != null)
                     {
@@ -1909,7 +1914,8 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
                         enumValues,
                         customColumn,
                         x.Title,
-                        isHidden
+                        isHidden,
+                        GetExportValueMember(propType)
                     );
                 })
                 .ToList();
@@ -1928,8 +1934,34 @@ public partial class ShiftList<T> : IODataRequestComponent<T>, IShortcutComponen
         }
 
         public sealed record ExportPayload(string Name, string UrlValue, IReadOnlyList<T>? Values, IEnumerable<ExportColumn> Columns, IEnumerable<IForeignColumn> ForeignColumns, string FileName, string Language);
-        public sealed record ExportColumn(string Key, string? type, string? Format, IReadOnlyDictionary<string, string>? EnumValues, ExportCustomColumn? CustomColumn, string Title, bool Hidden);
-        public sealed record ExportCustomColumn(string Format, string[] Args);
+        public sealed record ExportColumn(string Key, string? type, string? Format, IReadOnlyDictionary<string, string>? EnumValues, ExportCustomColumn? CustomColumn, string Title, bool Hidden, string? ValueMember = null);
+        public sealed record ExportCustomColumn(string Format, string[] Args, IReadOnlyDictionary<string, string>? ArgValueMembers = null);
+
+        /// <summary>
+        /// The member a column of this type exports, declared once on the type with
+        /// <see cref="ExportValueMemberAttribute"/> (or on the element type of a collection).
+        /// </summary>
+        internal static string? GetExportValueMember(Type? type)
+        {
+            if (type == null)
+                return null;
+
+            type = Nullable.GetUnderlyingType(type) ?? type;
+
+            if (type != typeof(string) && !type.IsDefined(typeof(ExportValueMemberAttribute), true))
+            {
+                var element = type.IsArray
+                    ? type.GetElementType()
+                    : type.GetInterfaces().Append(type)
+                        .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                        ?.GetGenericArguments()[0];
+
+                if (element != null)
+                    type = element;
+            }
+
+            return type.GetCustomAttribute<ExportValueMemberAttribute>(true)?.MemberName;
+        }
 
         [JSInvokable]
         public void OnExportProcessing(string name)
