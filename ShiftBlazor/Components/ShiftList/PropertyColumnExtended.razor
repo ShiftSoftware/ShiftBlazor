@@ -118,7 +118,14 @@
 		}
         else if (content is DateTimeOffset datetime)
         {
-            return datetime.DateTime;
+            content = datetime.DateTime;
+        }
+
+        // The custom CellTemplate above replaces MudBlazor's default cell rendering, which is where
+        // PropertyColumn.Format would normally be applied, so apply it here.
+        if (!string.IsNullOrWhiteSpace(Format) && content is IFormattable formattable)
+        {
+            return formattable.ToString(Format, Culture);
         }
 
 		return content;
