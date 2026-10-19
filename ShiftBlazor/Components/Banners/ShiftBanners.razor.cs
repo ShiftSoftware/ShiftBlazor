@@ -31,12 +31,13 @@ public partial class ShiftBanners : ComponentBase, IDisposable
     /// <summary>Extra CSS classes for each banner.</summary>
     [Parameter] public string? Class { get; set; }
 
+    private ShiftBannerRuleSource source = default!;
     private IReadOnlyList<ShiftBannerRule> rules = Array.Empty<ShiftBannerRule>();
     private IReadOnlyList<(ShiftBannerRule Rule, string Text)> banners = Array.Empty<(ShiftBannerRule, string)>();
 
     protected override async Task OnInitializedAsync()
     {
-        var source = ServiceProvider.GetService<ShiftBannerRuleSource>()
+        source = ServiceProvider.GetService<ShiftBannerRuleSource>()
             ?? throw new InvalidOperationException(
                 $"{nameof(ShiftBanners)} needs its services: call builder.Services.{nameof(ShiftBlazorBannersServiceCollectionExtensions.AddShiftBlazorBanners)}() at startup.");
 
@@ -48,11 +49,13 @@ public partial class ShiftBanners : ComponentBase, IDisposable
     // A new predicate (for example after sign-in) can change which rules apply.
     protected override void OnParametersSet() => Refresh();
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) => _ = InvokeAsync(async () =>
     {
+        // Cached once loaded; after a failed load this tries the file again.
+        rules = await source.GetRulesAsync();
         Refresh();
-        InvokeAsync(StateHasChanged);
-    }
+        StateHasChanged();
+    });
 
     private void Refresh()
     {
