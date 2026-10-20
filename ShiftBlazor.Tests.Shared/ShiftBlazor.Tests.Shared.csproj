@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.5" />
-    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation" Version="12.2.0" />
     <!--
       Same rule as ShiftBlazor.csproj: build against the sibling ShiftEntity checkout when it is
       there (framework development through StockPlusPlus.sln), otherwise against the package at
