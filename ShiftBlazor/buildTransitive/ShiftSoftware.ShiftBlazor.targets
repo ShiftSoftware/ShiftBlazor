@@ -1,0 +1,14 @@
+<Project>
+	<ItemGroup Condition="'$(WasmEnableWebcil)' != 'false'">
+		<BlazorWebAssemblyLazyLoad Include="Apache.Arrow.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="Azure.Core.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="Azure.Storage.Blobs.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="Azure.Storage.Common.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="Microsoft.Identity.Client.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="Microsoft.Identity.Client.Extensions.Msal.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="System.ClientModel.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="System.IO.Hashing.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="System.Memory.Data.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="System.Security.Cryptography.ProtectedData.wasm" />
+	</ItemGroup>
+</Project>
