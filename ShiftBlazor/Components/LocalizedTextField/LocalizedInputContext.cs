@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,13 +13,15 @@ public class LocalizedInputContext
     public string Value { get; set; }
     public Func<string, Task> ValueChanged { get; set; }
     public string? Label { get; set; }
+    public string? Language { get; set; }
 
-    public LocalizedInputContext(string value, Func<string, Task> valueChanged, string? label, bool error, string? errorText)
+    public LocalizedInputContext(string value, Func<string, Task> valueChanged, string? label, bool error, string? errorText, string? language = null)
     {
         Value = value;
         ValueChanged = valueChanged;
         Label = label;
         Error = error;
         ErrorText = errorText;
+        Language = language;
     }
 }
