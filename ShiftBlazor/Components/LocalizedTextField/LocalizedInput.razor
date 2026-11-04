@@ -9,7 +9,7 @@
 @inject ShiftBlazorLocalizer Loc
 @inject IServiceProvider serviceProvider
 
-@if (useSwitch)
+@if (ShowAsDropDown)
 {
     RenderFragment panels = @<text>
         @foreach (var (lang, value) in Values)
@@ -125,6 +125,12 @@ else
     public List<LanguageInfo>? Languages { get; set; }
 
     /// <summary>
+    /// Shows a single input with a language dropdown beside it, instead of one input per language.
+    /// </summary>
+    [Parameter]
+    public bool ShowAsDropDown { get; set; }
+
+    /// <summary>
     /// With the language dropdown on, shows Label and the dropdown on a header row above the inputs.
     /// </summary>
     [Parameter]
@@ -149,8 +155,6 @@ else
     private string modelName = string.Empty;
     private string? fieldName;
     private ILookup<string, LanguageInfo> languageLookup = default!;
-    private HashSet<string> optionalLanguages = new();
-    private bool useSwitch;
     private string selectedLanguage = string.Empty;
 
     protected override void OnInitialized()
@@ -159,12 +163,6 @@ else
 
         this.languageLookup = languages
             .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
-
-        optionalLanguages = languageLookup
-            .Where(x => x.All(language => language.Optional))
-            .Select(x => x.Key)
-            .ToHashSet();
-        useSwitch = SettingManager.Configuration.UseLanguageDropdown;
 
         var langCodes = this.languageLookup.Select(x => x.Key).Distinct().ToList();
         var langCount = langCodes.Count;
@@ -238,7 +236,7 @@ else
                 ShiftEntityForm.DisplayError(fieldName, Errors.First().Value);
             }
 
-            if (useSwitch && !Errors.ContainsKey(selectedLanguage))
+            if (ShowAsDropDown && !Errors.ContainsKey(selectedLanguage))
             {
                 var firstInvalid = Values.Keys.FirstOrDefault(Errors.ContainsKey);
                 if (firstInvalid != null)
@@ -273,12 +271,6 @@ else
 
     private void ValidateField(string lang, string value)
     {
-        if (optionalLanguages.Contains(lang))
-        {
-            Errors.Remove(lang);
-            return;
-        }
-
         if (validationAttributes != null && EditContext != null)
         {
             var errors = EditContext.ValidateDataAnnotationValue(value, validationAttributes);
