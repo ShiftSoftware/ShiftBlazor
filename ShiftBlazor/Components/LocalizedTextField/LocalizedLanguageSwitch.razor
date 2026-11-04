@@ -1,0 +1,37 @@
+@namespace ShiftSoftware.ShiftBlazor.Components
+
+<MudMenu Dense="true" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+    <ActivatorContent>
+        <MudBadge Visible="@Options.Any(x => x.HasError)" Dot="true" Color="Color.Error" Overlap="true">
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default" Style="min-width: 0; padding: 2px 6px 2px 10px;"
+                       EndIcon="@Icons.Material.Filled.ArrowDropDown" OnClick="@context.ToggleAsync">
+                @Selected.ToUpperInvariant()
+            </MudButton>
+        </MudBadge>
+    </ActivatorContent>
+    <ChildContent>
+        @foreach (var option in Options)
+        {
+            <MudMenuItem @key="option.Code" OnClick="@(() => SelectedChanged.InvokeAsync(option.Code))">
+                <div class="d-flex align-center" style="min-width: 150px; gap: 12px;">
+                    <span class="flex-grow-1" style="@(option.Code == Selected ? "font-weight: 600;" : null)">@option.Label</span>
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: @DotColor(option);"></span>
+                </div>
+            </MudMenuItem>
+        }
+    </ChildContent>
+</MudMenu>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<LocalizedLanguageOption> Options { get; set; } = [];
+
+    [Parameter]
+    public string Selected { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SelectedChanged { get; set; }
+
+    private static string DotColor(LocalizedLanguageOption option) =>
+        option.HasError ? "var(--mud-palette-error)" : option.HasContent ? "var(--mud-palette-success)" : "transparent";
+}
