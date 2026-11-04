@@ -5,7 +5,8 @@
                 ValueChanged="ValueChanged"
                 Label="@Label"
                 For="For"
-                Languages="Languages">
+                Languages="Languages"
+                ShowAsDropDown="ShowAsDropDown">
     <MudTextFieldExtended T="string"
                           OnlyValidateIfDirty="@OnlyValidateIfDirty"
                           Value="@context.Value"
@@ -66,5 +67,7 @@
     public String? AdornmentIcon { get; set; }
     [Parameter]
     public List<LanguageInfo>? Languages { get; set; }
+    [Parameter]
+    public bool ShowAsDropDown { get; set; }
 
 }

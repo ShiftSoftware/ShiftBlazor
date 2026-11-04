@@ -1,4 +1,4 @@
-@namespace ShiftSoftware.ShiftBlazor.Components
+﻿@namespace ShiftSoftware.ShiftBlazor.Components
 @using System.Text.Json
 @using System.Linq.Expressions
 @using Microsoft.AspNetCore.Components.Forms
@@ -9,7 +9,7 @@
 @inject ShiftBlazorLocalizer Loc
 @inject IServiceProvider serviceProvider
 
-@if (useSwitch)
+@if (ShowAsDropDown)
 {
     RenderFragment panels = @<text>
         @foreach (var (lang, value) in Values)
@@ -30,36 +30,18 @@
             <div @key="lang" style="@(lang == selectedLanguage ? null : "display: none;")">
                 @if (ChildContent != null)
                 {
-                    @ChildContent(new LocalizedInputContext(value, textChanged, label, showErrors, errorMessage, lang));
+                    @ChildContent(new LocalizedInputContext(value, textChanged, label, showErrors, errorMessage));
                 }
             </div>
         }
     </text>;
 
-    if (HeaderSwitch)
-    {
-        <div class="d-flex align-center justify-space-between">
-            @if (Label != null)
-            {
-                <MudInputLabel Variant="Variant.Text">@Label</MudInputLabel>
-            }
-            else
-            {
-                <span></span>
-            }
+    <div class="d-flex align-start" style="gap: 8px;">
+        <div style="flex: 1 1 auto; min-width: 0;">@panels</div>
+        <div style="flex: none; padding-top: 18px;">
             <LocalizedLanguageSwitch Options="@LanguageOptions()" @bind-Selected="selectedLanguage" />
         </div>
-        @panels
-    }
-    else
-    {
-        <div class="d-flex align-start" style="gap: 8px;">
-            <div style="flex: 1 1 auto; min-width: 0;">@panels</div>
-            <div style="flex: none; padding-top: 18px;">
-                <LocalizedLanguageSwitch Options="@LanguageOptions()" @bind-Selected="selectedLanguage" />
-            </div>
-        </div>
-    }
+    </div>
 }
 else
 {
@@ -82,7 +64,7 @@ else
             <MudItem @key="lang" xs="xsColSize" sm="smColSize" md="mdColSize" lg="lgColSize">
                 @if (ChildContent != null)
                 {
-                    @ChildContent(new LocalizedInputContext(value, textChanged, label, showErrors, errorMessage, lang));
+                    @ChildContent(new LocalizedInputContext(value, textChanged, label, showErrors, errorMessage));
                 }
             </MudItem>
         }
@@ -125,16 +107,10 @@ else
     public List<LanguageInfo>? Languages { get; set; }
 
     /// <summary>
-    /// With the language dropdown on, shows Label and the dropdown on a header row above the inputs.
+    /// Shows a single input with a language dropdown beside it, instead of one input per language.
     /// </summary>
     [Parameter]
-    public bool HeaderSwitch { get; set; }
-
-    /// <summary>
-    /// Decides whether a language's value counts as filled in the dropdown. Defaults to non-blank text.
-    /// </summary>
-    [Parameter]
-    public Func<string, bool>? HasContent { get; set; }
+    public bool ShowAsDropDown { get; set; }
 
     private int xsColSize;
     private int smColSize;
@@ -149,8 +125,6 @@ else
     private string modelName = string.Empty;
     private string? fieldName;
     private ILookup<string, LanguageInfo> languageLookup = default!;
-    private HashSet<string> optionalLanguages = new();
-    private bool useSwitch;
     private string selectedLanguage = string.Empty;
 
     protected override void OnInitialized()
@@ -159,12 +133,6 @@ else
 
         this.languageLookup = languages
             .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
-
-        optionalLanguages = languageLookup
-            .Where(x => x.All(language => language.Optional))
-            .Select(x => x.Key)
-            .ToHashSet();
-        useSwitch = SettingManager.Configuration.UseLanguageDropdown;
 
         var langCodes = this.languageLookup.Select(x => x.Key).Distinct().ToList();
         var langCount = langCodes.Count;
@@ -238,7 +206,7 @@ else
                 ShiftEntityForm.DisplayError(fieldName, Errors.First().Value);
             }
 
-            if (useSwitch && !Errors.ContainsKey(selectedLanguage))
+            if (ShowAsDropDown && !Errors.ContainsKey(selectedLanguage))
             {
                 var firstInvalid = Values.Keys.FirstOrDefault(Errors.ContainsKey);
                 if (firstInvalid != null)
@@ -257,7 +225,7 @@ else
             return new LocalizedLanguageOption(
                 x.Key,
                 string.IsNullOrWhiteSpace(label) ? x.Key.ToUpperInvariant() : Loc[label].Value,
-                HasContent?.Invoke(x.Value) ?? !string.IsNullOrWhiteSpace(x.Value),
+                !string.IsNullOrWhiteSpace(x.Value),
                 Errors.ContainsKey(x.Key));
         }).ToList();
 
@@ -273,12 +241,6 @@ else
 
     private void ValidateField(string lang, string value)
     {
-        if (optionalLanguages.Contains(lang))
-        {
-            Errors.Remove(lang);
-            return;
-        }
-
         if (validationAttributes != null && EditContext != null)
         {
             var errors = EditContext.ValidateDataAnnotationValue(value, validationAttributes);
