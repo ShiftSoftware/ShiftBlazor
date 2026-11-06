@@ -8,6 +8,7 @@
 @inject SettingManager SettingManager
 @inject ShiftBlazorLocalizer Loc
 @inject IServiceProvider serviceProvider
+@implements IDisposable
 
 @if (useSwitch)
 {
@@ -149,6 +150,8 @@ else
     private string modelName = string.Empty;
     private string? fieldName;
     private ILookup<string, LanguageInfo> languageLookup = default!;
+    private EditContext? validatedContext;
+    private EventHandler<ValidationRequestedEventArgs>? validationHandler;
     private HashSet<string> optionalLanguages = new();
     private bool useSwitch;
     private string selectedLanguage = string.Empty;
@@ -223,7 +226,8 @@ else
         }
 
         // Display errors when the form is submitted
-        EditContext.OnValidationRequested += (sender, eventArgs) =>
+        validatedContext = EditContext;
+        validationHandler = (sender, eventArgs) =>
         {
             foreach (var (lang, value) in Values)
             {
@@ -248,6 +252,7 @@ else
                 }
             }
         };
+        EditContext.OnValidationRequested += validationHandler;
     }
 
     private List<LocalizedLanguageOption> LanguageOptions() =>
@@ -260,6 +265,12 @@ else
                 HasContent?.Invoke(x.Value) ?? !string.IsNullOrWhiteSpace(x.Value),
                 Errors.ContainsKey(x.Key));
         }).ToList();
+
+    public void Dispose()
+    {
+        if (validatedContext != null && validationHandler != null)
+            validatedContext.OnValidationRequested -= validationHandler;
+    }
 
     public async Task TextChanged(string lang, string newValue)
     {
