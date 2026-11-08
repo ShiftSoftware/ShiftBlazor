@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-	<PackageReference Include="bunit" Version="2.12.5" />
+	<PackageReference Include="bunit" Version="2.14.0" />
 	<PackageReference Include="FluentAssertions" Version="8.11.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="RichardSzalay.MockHttp" Version="7.1.0" />
