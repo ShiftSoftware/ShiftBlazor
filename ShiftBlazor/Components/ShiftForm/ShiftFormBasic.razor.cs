@@ -446,7 +446,6 @@ public partial class ShiftFormBasic<T> : IShortcutComponent, IShiftForm where T 
 
             // Suppress spurious dirty notifications fired by input components during
             // their initial post-load render. Lifted in OnAfterRenderAsync.
-            // See `.shift/repos/attention-and-notifications/docs/dirty-on-load-fix.md`.
             EditContext.OnFieldChanged += SuppressDirtyOnLoadHandler;
             _suppressDirtyOnLoad = true;
 
