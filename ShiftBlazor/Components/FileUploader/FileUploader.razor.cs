@@ -259,7 +259,10 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         _ShowThumbnail = !_ShowThumbnail;
     }
 
-    void ViewGallery()
+    /// <summary>
+    /// Opens the gallery on <paramref name="startAt"/>, or on the first file when it is null.
+    /// </summary>
+    internal void ViewGallery(UploaderItem? startAt = null)
     {
         if (Items.Count < 1) { return; }
 
@@ -275,6 +278,7 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
         var parameters = new DialogParameters
         {
             { "Files", Items },
+            { "StartIndex", startAt is null ? 0 : Math.Max(0, Items.IndexOf(startAt)) },
         };
 
         DialogService.ShowAsync<ImageViewer>("", parameters, options);

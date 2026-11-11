@@ -100,6 +100,21 @@
                              style="@ImageTransform"
                              draggable="false" />
                     }
+                    else if (CurrentIsVideo)
+                    {
+                        @* @key gives each video its own element, so moving to another item stops the one playing.
+                           Key presses stay with the player (arrows seek, space pauses) instead of reaching the
+                           viewer's navigation, and the double-click goes to the player's own full screen. *@
+                        <video @key="Current.Key"
+                               class="siv-video"
+                               src="@CurrentUrl"
+                               controls
+                               preload="metadata"
+                               playsinline
+                               @onkeydown:stopPropagation="true"
+                               @ondblclick:stopPropagation="true">
+                        </video>
+                    }
                     else
                     {
                         <div class="siv-file">
@@ -153,6 +168,16 @@
                             @if (item.IsImage && !string.IsNullOrWhiteSpace(item.Url))
                             {
                                 <img src="@item.Url" alt="@item.Name" draggable="false" />
+                            }
+                            else if (item.IsVideo)
+                            {
+                                <div class="shift-video-thumb">
+                                    @if (!string.IsNullOrWhiteSpace(item.Url))
+                                    {
+                                        <video src="@($"{item.Url}#t=0.1")" preload="metadata" muted playsinline tabindex="-1" aria-hidden="true"></video>
+                                    }
+                                    <span class="shift-video-thumb-badge"><MudIcon Icon="@Icons.Material.Filled.PlayArrow" /></span>
+                                </div>
                             }
                             else
                             {

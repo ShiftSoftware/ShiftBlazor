@@ -28,7 +28,14 @@ public class UploaderItem
         File = file;
     }
 
-    public bool IsImage()
+    public bool IsImage() => MimeTypeStartsWith("image/");
+
+    public bool IsVideo() => MimeTypeStartsWith("video/");
+
+    /// <summary>An uploaded image or video, which the gallery can show; clicking it opens the gallery there.</summary>
+    public bool CanPreview() => (IsImage() || IsVideo()) && State == FileUploadState.Uploaded && File?.Url != null;
+
+    private bool MimeTypeStartsWith(string prefix)
     {
         var fileName = GetFileName();
         if (string.IsNullOrWhiteSpace(fileName))
@@ -36,7 +43,7 @@ public class UploaderItem
             return false;
         }
 
-        return MimeTypes.GetMimeType(fileName).StartsWith("image/");
+        return MimeTypes.GetMimeType(fileName).StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
     }
 
     public string GetFileName() => (File?.Name ?? LocalFile?.Name)!;

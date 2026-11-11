@@ -61,6 +61,10 @@
     filter: drop-shadow(0 0 4px black);
 }
 
+.uploader-thumbnail .uploader-thumbnail-preview {
+    cursor: zoom-in;
+}
+
 .text-overflow-ellipsis {
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -705,6 +709,13 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     cursor: grabbing;
 }
 
+.shift-image-viewer .siv-video {
+    max-width: 100%;
+    max-height: 100%;
+    background: #000;
+    outline: none;
+}
+
 .shift-image-viewer .siv-file {
     display: flex;
     flex-direction: column;
@@ -798,7 +809,63 @@ th.mud-table-cell.sticky-left, th.mud-table-cell.sticky-right {
     color: #999;
 }
 
+.shift-image-viewer .siv-thumb .shift-video-thumb-badge {
+    width: 26px;
+    height: 26px;
+    border-width: 1.5px;
+}
+
+.shift-image-viewer .siv-thumb .shift-video-thumb-badge .mud-icon-root {
+    font-size: 18px;
+    color: #fff;
+}
+
 /* =============== Image Viewer End =============== */
+
+/* =============== Video Thumbnail =============== */
+
+/* A video tile for the uploader grid and the gallery strip: the first frame (when there is a URL)
+   under a small play badge, on a dark background so the badge reads before the frame loads. */
+.shift-video-thumb {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #2b2f36, #15171b);
+}
+
+.shift-video-thumb video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.shift-video-thumb-badge {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.shift-video-thumb-badge .mud-icon-root {
+    font-size: 30px;
+    color: #fff;
+}
+
+/* =============== Video Thumbnail End =============== */
 
 /* =============== Attention System =============== */
 

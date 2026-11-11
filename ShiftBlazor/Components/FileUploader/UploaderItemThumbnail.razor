@@ -51,12 +51,29 @@
     @if (Item.IsImage() && Item.State == FileUploadState.Uploaded && Item.File?.Url != null)
     {
         <MudImage draggable="false"
+                  Class="uploader-thumbnail-preview"
+                  @onclick="@(() => Uploader.ViewGallery(Item))"
+                  title="@Uploader.Loc["ViewGalleryButton"]"
                   Src="@($"{Item.File.Url}")"
                   Alt="@Item.GetFileName()"
                   Height="@Height"
                   Width="@Width"
                   ObjectFit="ObjectFit.Contain"
                   ObjectPosition="ObjectPosition.Center"/>
+    }
+    else if (Item.IsVideo())
+    {
+        @* Shows the video's first frame once it is uploaded; until then the dark tile and the badge alone. *@
+        <div class="shift-video-thumb @(Item.CanPreview() ? "uploader-thumbnail-preview" : null)"
+             style=@($"height: {Height}px;width: {Width}px;")
+             title="@(Item.CanPreview() ? Uploader.Loc["ViewGalleryButton"] : null)"
+             @onclick="@(() => { if (Item.CanPreview()) Uploader.ViewGallery(Item); })">
+            @if (Item.State == FileUploadState.Uploaded && Item.File?.Url != null)
+            {
+                <video src="@($"{Item.File.Url}#t=0.1")" preload="metadata" muted playsinline tabindex="-1" aria-hidden="true"></video>
+            }
+            <span class="shift-video-thumb-badge"><MudIcon Icon="@Filled.PlayArrow" /></span>
+        </div>
     }
     else
     {

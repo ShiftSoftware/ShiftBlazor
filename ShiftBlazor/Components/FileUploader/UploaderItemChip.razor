@@ -24,7 +24,7 @@ else
     [Parameter]
     public bool CanDelete { get; set; } = default!;
 
-    internal string Icon => Item.IsImage() ? Filled.Image : Filled.InsertDriveFile;
+    internal string Icon => Item.IsImage() ? Filled.Image : Item.IsVideo() ? Filled.PlayCircle : Filled.InsertDriveFile;
 
     internal RenderFragment renderFragment =>
         @<div style="display: flex;gap: 10px;">
@@ -63,8 +63,15 @@ else
         }
     }
 
+    // An image or video opens in the gallery; any other file only gets the download hint.
     internal void DownloadTip()
     {
+        if (Item.CanPreview())
+        {
+            Uploader.ViewGallery(Item);
+            return;
+        }
+
         Uploader.MessageService.Info("Double click to download file");
     }
 }

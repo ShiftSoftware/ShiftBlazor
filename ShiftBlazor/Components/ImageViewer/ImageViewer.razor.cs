@@ -17,8 +17,8 @@ public partial class ImageViewer : IShortcutComponent
 
     /// <summary>
     /// Files to display. Use this from any component. Each <see cref="ShiftFileDTO"/> that resolves
-    /// to an image (by <c>ContentType</c> or file name) is shown as an image; the rest fall back to a
-    /// download view.
+    /// to an image (by <c>ContentType</c> or file name) is shown as an image, each one that resolves to a
+    /// video is played in a video player, and the rest fall back to a download view.
     /// </summary>
     [Parameter]
     public List<ShiftFileDTO>? Values { get; set; }
@@ -32,6 +32,13 @@ public partial class ImageViewer : IShortcutComponent
 
     [Parameter]
     public string? Title { get; set; }
+
+    /// <summary>
+    /// The index of the file shown first. Read once, when the viewer opens; out-of-range values are
+    /// clamped to the list.
+    /// </summary>
+    [Parameter]
+    public int StartIndex { get; set; }
 
     [CascadingParameter]
     public IMudDialogInstance? MudDialog { get; set; }
@@ -59,6 +66,7 @@ public partial class ImageViewer : IShortcutComponent
     private double dragOriginY;
 
     private bool scrollThumbPending;
+    private bool startIndexApplied;
 
     // Normalized, source-agnostic view of the files being displayed (built from Files or Values).
     private readonly List<ViewerItem> items = new();
@@ -74,6 +82,8 @@ public partial class ImageViewer : IShortcutComponent
     // A file with no URL (e.g. a local file not yet uploaded) has nothing to render, so it falls back
     // to the file view.
     private bool CurrentIsImage => Current?.IsImage == true && !string.IsNullOrWhiteSpace(CurrentUrl);
+
+    private bool CurrentIsVideo => Current?.IsVideo == true && !string.IsNullOrWhiteSpace(CurrentUrl);
 
     private bool IsZoomed => scale > MinScale + 0.001;
     private bool IsTransformed => IsZoomed || rotation != 0 || posX != 0 || posY != 0;
@@ -97,6 +107,13 @@ public partial class ImageViewer : IShortcutComponent
     {
         BuildItems();
 
+        if (!startIndexApplied && HasItems)
+        {
+            startIndexApplied = true;
+            currentIndex = Math.Clamp(StartIndex, 0, items.Count - 1);
+            scrollThumbPending = currentIndex > 0;
+        }
+
         // Keep the index valid if the caller changes the file list.
         if (currentIndex >= items.Count)
         {
@@ -114,27 +131,28 @@ public partial class ImageViewer : IShortcutComponent
         {
             foreach (var f in Files)
             {
-                items.Add(new ViewerItem(f.Id, f.GetFileName(), f.File?.Url, f.IsImage()));
+                items.Add(new ViewerItem(f.Id, f.GetFileName(), f.File?.Url, f.IsImage(), f.IsVideo()));
             }
         }
         else if (Values is { Count: > 0 })
         {
             foreach (var f in Values)
             {
-                items.Add(new ViewerItem(f, f.Name, f.Url, IsImageFile(f)));
+                items.Add(new ViewerItem(f, f.Name, f.Url, HasMediaType(f, "image/"), HasMediaType(f, "video/")));
             }
         }
     }
 
-    private static bool IsImageFile(ShiftFileDTO file)
+    // The ContentType wins when set; otherwise the type is guessed from the file name.
+    private static bool HasMediaType(ShiftFileDTO file, string prefix)
     {
         if (!string.IsNullOrWhiteSpace(file.ContentType))
         {
-            return file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+            return file.ContentType.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
         }
 
         return !string.IsNullOrWhiteSpace(file.Name)
-            && MimeTypes.GetMimeType(file.Name).StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+            && MimeTypes.GetMimeType(file.Name).StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -251,5 +269,5 @@ public partial class ImageViewer : IShortcutComponent
     public void Dispose() => IShortcutComponent.Remove(Id);
 
     // Source-agnostic item the render loop works with. Key is used for @key (stable across rebuilds).
-    private sealed record ViewerItem(object Key, string? Name, string? Url, bool IsImage);
+    private sealed record ViewerItem(object Key, string? Name, string? Url, bool IsImage, bool IsVideo);
 }
