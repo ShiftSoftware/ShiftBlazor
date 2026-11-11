@@ -19,31 +19,10 @@ public class AppConfiguration
     public List<LanguageInfo> Languages = [];
     public List<LanguageInfo> ContentLanguages = [];
 
-    /// <summary>
-    /// Shows localized fields as a single input with a language dropdown beside it,
-    /// instead of one input per content language.
-    /// </summary>
-    public bool UseLanguageDropdown { get; set; }
-
 
     public AppConfiguration AddLanguage(string culture, string label, LanguageScope scope)
     {
         return this.AddLanguage(culture, label, false, scope);
-    }
-
-    public AppConfiguration AddOptionalContentLanguage(string culture, string label, bool rtl = false)
-    {
-        if (string.IsNullOrWhiteSpace(culture)) throw new NullReferenceException(nameof(culture));
-
-        ContentLanguages.Add(new LanguageInfo
-        {
-            CultureName = culture,
-            Label = string.IsNullOrWhiteSpace(label) ? culture : label,
-            RTL = rtl,
-            Optional = true
-        });
-
-        return this;
     }
 
     public AppConfiguration AddLanguage(string culture, string label, bool rtl = false, LanguageScope scope = LanguageScope.Both)

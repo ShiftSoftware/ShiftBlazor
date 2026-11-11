@@ -1,0 +1,22 @@
+@namespace ShiftSoftware.ShiftBlazor.Tests.Components.LocalizedTextField
+@using ShiftSoftware.ShiftBlazor.Components
+@using ShiftSoftware.ShiftBlazor.Enums
+@using ShiftSoftware.ShiftBlazor.Services
+
+<ShiftFormBasic Value="Model" OnValidSubmit="() => ValidSubmits++">
+    <LocalizedTextField @key="FieldKey"
+                        Label="Name"
+                        @bind-Value="context.Item.Name"
+                        For="() => context.Item.Name"
+                        Languages="Languages"
+                        LanguageLayout="LanguageLayout" />
+</ShiftFormBasic>
+
+@code {
+    [Parameter] public LanguageLayout LanguageLayout { get; set; }
+    [Parameter] public List<LanguageInfo> Languages { get; set; } = [];
+    [Parameter] public int FieldKey { get; set; }
+
+    public LocalizedModel Model { get; } = new();
+    public int ValidSubmits { get; private set; }
+}
