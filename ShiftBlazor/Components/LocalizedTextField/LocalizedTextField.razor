@@ -5,7 +5,8 @@
                 ValueChanged="ValueChanged"
                 Label="@Label"
                 For="For"
-                Languages="Languages">
+                Languages="Languages"
+                LanguageLayout="LanguageLayout">
     <MudTextFieldExtended T="string"
                           OnlyValidateIfDirty="@OnlyValidateIfDirty"
                           Value="@context.Value"
@@ -66,5 +67,11 @@
     public String? AdornmentIcon { get; set; }
     [Parameter]
     public List<LanguageInfo>? Languages { get; set; }
+
+    /// <summary>
+    /// How the languages are laid out. Defaults to <see cref="LanguageLayout.Grid"/>.
+    /// </summary>
+    [Parameter]
+    public LanguageLayout LanguageLayout { get; set; }
 
 }

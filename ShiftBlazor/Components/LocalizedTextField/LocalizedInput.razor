@@ -4,92 +4,102 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Reflection
 @using System.ComponentModel.DataAnnotations
+@implements IDisposable
 
 @inject SettingManager SettingManager
 @inject ShiftBlazorLocalizer Loc
 @inject IServiceProvider serviceProvider
 
-@if (useSwitch)
+@switch (LanguageLayout)
 {
-    RenderFragment panels = @<text>
-        @foreach (var (lang, value) in Values)
-        {
-            var langLabel = languageLookup[lang].FirstOrDefault()?.Label;
-            var label = Label == null
-                ? langLabel
-                : string.IsNullOrWhiteSpace(langLabel)
-                    ? $"{Label}"
-                    : $"{Label} ({Loc[langLabel].Value})";
+    case LanguageLayout.Row:
+        <div class="d-flex" style="gap: 16px; overflow-x: auto; padding: 4px 0;">
+            @foreach (var lang in Values.Keys)
+            {
+                <div @key="lang" style="flex: 1 0 240px; min-width: 0;">@Input(lang)</div>
+            }
+        </div>
+        break;
 
-            Errors.TryGetValue(lang, out var errorMessage);
-            errorMessage = string.IsNullOrWhiteSpace(errorMessage) ? null : errorMessage.Replace(modelName, fieldName);
-            var showErrors = errorMessage != null;
+    case LanguageLayout.Stacked:
+        <div class="d-flex flex-column" style="gap: 8px;">
+            @foreach (var lang in Values.Keys)
+            {
+                <div @key="lang">@Input(lang)</div>
+            }
+        </div>
+        break;
 
-            var textChanged = async (string value) => await this.TextChanged(lang, value);
-
-            <div @key="lang" style="@(lang == selectedLanguage ? null : "display: none;")">
-                @if (ChildContent != null)
+    case LanguageLayout.Dropdown:
+        <div class="d-flex align-start" style="gap: 8px;">
+            <div style="flex: 1 1 auto; min-width: 0;">
+                @foreach (var lang in Values.Keys)
                 {
-                    @ChildContent(new LocalizedInputContext(value, textChanged, label, showErrors, errorMessage, lang));
+                    <div @key="lang" style="@(lang == selectedLanguage ? null : "display: none;")">@Input(lang)</div>
                 }
             </div>
-        }
-    </text>;
-
-    if (HeaderSwitch)
-    {
-        <div class="d-flex align-center justify-space-between">
-            @if (Label != null)
-            {
-                <MudInputLabel Variant="Variant.Text">@Label</MudInputLabel>
-            }
-            else
-            {
-                <span></span>
-            }
-            <LocalizedLanguageSwitch Options="@LanguageOptions()" @bind-Selected="selectedLanguage" />
-        </div>
-        @panels
-    }
-    else
-    {
-        <div class="d-flex align-start" style="gap: 8px;">
-            <div style="flex: 1 1 auto; min-width: 0;">@panels</div>
             <div style="flex: none; padding-top: 18px;">
                 <LocalizedLanguageSwitch Options="@LanguageOptions()" @bind-Selected="selectedLanguage" />
             </div>
         </div>
-    }
-}
-else
-{
-    <MudGrid>
-        @foreach (var (lang, value) in Values)
+        break;
+
+    case LanguageLayout.Tabs:
+        <MudTabs @bind-ActivePanelIndex="SelectedIndex" KeepPanelsAlive Elevation="0" ApplyEffectsToContainer TabPanelsClass="pt-2">
+            @foreach (var option in LanguageOptions())
+            {
+                <MudTabPanel @key="option.Code"
+                             Text="@option.Label"
+                             BadgeDot="@(option.HasError || option.HasContent)"
+                             BadgeColor="@(option.HasError ? Color.Error : Color.Success)">
+                    @Input(option.Code)
+                </MudTabPanel>
+            }
+        </MudTabs>
+        break;
+
+    case LanguageLayout.Expandable:
+        var first = Values.Keys.FirstOrDefault();
+        var hidden = Values.Keys.Skip(1).ToList();
+        if (first != null)
         {
-            var langLabel = languageLookup[lang].FirstOrDefault()?.Label;
-            var label = Label == null
-                ? langLabel
-                : string.IsNullOrWhiteSpace(langLabel)
-                    ? $"{Label}"
-                    : $"{Label} ({Loc[langLabel].Value})";
-
-            Errors.TryGetValue(lang, out var errorMessage);
-            errorMessage = string.IsNullOrWhiteSpace(errorMessage) ? null : errorMessage.Replace(modelName, fieldName);
-            var showErrors = errorMessage != null;
-
-            var textChanged = async (string value) => await this.TextChanged(lang, value);
-
-            <MudItem @key="lang" xs="xsColSize" sm="smColSize" md="mdColSize" lg="lgColSize">
-                @if (ChildContent != null)
-                {
-                    @ChildContent(new LocalizedInputContext(value, textChanged, label, showErrors, errorMessage, lang));
-                }
-            </MudItem>
+            <div>
+                <div class="d-flex align-start" style="gap: 8px;">
+                    <div @key="first" style="flex: 1 1 auto; min-width: 0;">@Input(first)</div>
+                    @if (hidden.Count > 0)
+                    {
+                        <div style="flex: none; padding-top: 18px;">
+                            <MudBadge Visible="@hidden.Any(Errors.ContainsKey)" Dot="true" Color="Color.Error" Overlap="true">
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default" Style="min-width: 0; padding: 2px 6px 2px 10px;"
+                                           EndIcon="@(expanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                           OnClick="@(() => expanded = !expanded)">
+                                    +@hidden.Count
+                                </MudButton>
+                            </MudBadge>
+                        </div>
+                    }
+                </div>
+                <div style="display: @(expanded ? "flex" : "none"); flex-direction: column; gap: 8px; margin-top: 8px;">
+                    @foreach (var lang in hidden)
+                    {
+                        <div @key="lang">@Input(lang)</div>
+                    }
+                </div>
+            </div>
         }
-    </MudGrid>
+        break;
+
+    default:
+        <MudGrid>
+            @foreach (var lang in Values.Keys)
+            {
+                <MudItem @key="lang" xs="xsColSize" sm="smColSize" md="mdColSize" lg="lgColSize">@Input(lang)</MudItem>
+            }
+        </MudGrid>
+        break;
 }
 
-    @code {
+@code {
     [CascadingParameter(Name = "ShiftForm")]
     public IShiftForm? ShiftEntityForm { get; set; }
 
@@ -125,16 +135,10 @@ else
     public List<LanguageInfo>? Languages { get; set; }
 
     /// <summary>
-    /// With the language dropdown on, shows Label and the dropdown on a header row above the inputs.
+    /// How the languages are laid out. Defaults to <see cref="LanguageLayout.Grid"/>.
     /// </summary>
     [Parameter]
-    public bool HeaderSwitch { get; set; }
-
-    /// <summary>
-    /// Decides whether a language's value counts as filled in the dropdown. Defaults to non-blank text.
-    /// </summary>
-    [Parameter]
-    public Func<string, bool>? HasContent { get; set; }
+    public LanguageLayout LanguageLayout { get; set; }
 
     private int xsColSize;
     private int smColSize;
@@ -143,63 +147,25 @@ else
 
     [CascadingParameter]
     private EditContext? EditContext { get; set; }
+    private EditContext? validatedContext;
     private Dictionary<string, string> Values { get; set; } = new();
     private Dictionary<string, string> Errors { get; set; } = new();
     private IEnumerable<ValidationAttribute>? validationAttributes;
     private string modelName = string.Empty;
     private string? fieldName;
-    private ILookup<string, LanguageInfo> languageLookup = default!;
-    private HashSet<string> optionalLanguages = new();
-    private bool useSwitch;
+    private ILookup<string, LanguageInfo> languageLookup = Enumerable.Empty<LanguageInfo>().ToLookup(x => x.CultureName);
+    private string? languageSignature;
     private string selectedLanguage = string.Empty;
+    private bool expanded;
+
+    private int SelectedIndex
+    {
+        get => Values.Keys.ToList().IndexOf(selectedLanguage);
+        set => selectedLanguage = Values.Keys.ElementAtOrDefault(value) ?? selectedLanguage;
+    }
 
     protected override void OnInitialized()
     {
-        var languages = Languages ?? SettingManager.Configuration.ContentLanguages;
-
-        this.languageLookup = languages
-            .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
-
-        optionalLanguages = languageLookup
-            .Where(x => x.All(language => language.Optional))
-            .Select(x => x.Key)
-            .ToHashSet();
-        useSwitch = SettingManager.Configuration.UseLanguageDropdown;
-
-        var langCodes = this.languageLookup.Select(x => x.Key).Distinct().ToList();
-        var langCount = langCodes.Count;
-        Values = langCodes.ToDictionary(lang => lang, lang => string.Empty);
-        selectedLanguage = langCodes.FirstOrDefault() ?? string.Empty;
-
-        xsColSize = 12;
-        smColSize = Math.Max(12 / langCount, 6);
-        mdColSize = Math.Max(12 / langCount, 4);
-        lgColSize = Math.Max(12 / langCount, 3);
-
-        try
-        {
-            if (!string.IsNullOrWhiteSpace(Value))
-            {
-                // LocalizedTextField expects a JSON string in the format {"en":"Hello","fr":"Bonjour"}
-                var json = JsonDocument.Parse(Value);
-                var remoteValues = json.Deserialize<Dictionary<string, string>>() ?? new();
-
-                foreach (var item in Values.Keys)
-                {
-                    if (remoteValues.ContainsKey(item))
-                    {
-                        Values[item] = remoteValues[item];
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // if Value is not a valid json, we ignore the error and use the raw value
-            var lang = new System.Globalization.CultureInfo(DefaultAppSetting.Language.CultureName).TwoLetterISOLanguageName;
-            Values[lang] = Value;
-        }
-
         // From here we deal with validations
         // If For is null, we skip validations
         if (For == null || EditContext == null)
@@ -222,32 +188,94 @@ else
             fieldName = expression.Member.Name;
         }
 
-        // Display errors when the form is submitted
-        EditContext.OnValidationRequested += (sender, eventArgs) =>
+        validatedContext = EditContext;
+        validatedContext.OnValidationRequested += OnValidationRequested;
+    }
+
+    protected override void OnParametersSet()
+    {
+        var languages = Languages ?? SettingManager.Configuration.ContentLanguages;
+        var signature = string.Join("|", languages.Select(x => $"{x.CultureName}:{x.Label}"));
+
+        if (signature != languageSignature)
         {
-            foreach (var (lang, value) in Values)
-            {
-                ValidateField(lang, value);
-            }
-            ;
+            languageSignature = signature;
+            LoadLanguages(languages);
+        }
+    }
 
-            // Add the error to the form's EditContext/MessageStore
-            // so that we can prevent the form from being submitted
-            if (Errors.Count != 0 && fieldName != null && ShiftEntityForm != null)
-            {
-                ShiftEntityForm.DisplayError(fieldName, Errors.First().Value);
-            }
+    private void LoadLanguages(List<LanguageInfo> languages)
+    {
+        languageLookup = languages
+            .ToLookup(x => new System.Globalization.CultureInfo(x.CultureName).TwoLetterISOLanguageName, x => x);
 
-            if (useSwitch && !Errors.ContainsKey(selectedLanguage))
-            {
-                var firstInvalid = Values.Keys.FirstOrDefault(Errors.ContainsKey);
-                if (firstInvalid != null)
-                {
-                    selectedLanguage = firstInvalid;
-                    InvokeAsync(StateHasChanged);
-                }
-            }
-        };
+        var langCodes = languageLookup.Select(x => x.Key).Distinct().ToList();
+        var stored = ParseStoredValues();
+        var previous = Values;
+
+        Values = langCodes.ToDictionary(
+            lang => lang,
+            lang => previous.TryGetValue(lang, out var current) ? current : stored.GetValueOrDefault(lang) ?? string.Empty);
+
+        foreach (var lang in Errors.Keys.Except(langCodes).ToList())
+        {
+            Errors.Remove(lang);
+        }
+
+        if (!Values.ContainsKey(selectedLanguage))
+        {
+            selectedLanguage = langCodes.FirstOrDefault() ?? string.Empty;
+        }
+
+        var langCount = Math.Max(langCodes.Count, 1);
+        xsColSize = 12;
+        smColSize = Math.Max(12 / langCount, 6);
+        mdColSize = Math.Max(12 / langCount, 4);
+        lgColSize = Math.Max(12 / langCount, 3);
+    }
+
+    private Dictionary<string, string> ParseStoredValues()
+    {
+        if (string.IsNullOrWhiteSpace(Value))
+        {
+            return new();
+        }
+
+        try
+        {
+            // LocalizedTextField expects a JSON string in the format {"en":"Hello","fr":"Bonjour"}
+            var json = JsonDocument.Parse(Value);
+            return json.Deserialize<Dictionary<string, string>>() ?? new();
+        }
+        catch
+        {
+            // if Value is not a valid json, we ignore the error and use the raw value
+            var lang = new System.Globalization.CultureInfo(DefaultAppSetting.Language.CultureName).TwoLetterISOLanguageName;
+            return new() { [lang] = Value };
+        }
+    }
+
+    private RenderFragment Input(string lang) => builder =>
+    {
+        if (ChildContent != null)
+        {
+            builder.AddContent(0, ChildContent(ContextFor(lang)));
+        }
+    };
+
+    private LocalizedInputContext ContextFor(string lang)
+    {
+        var langLabel = languageLookup[lang].FirstOrDefault()?.Label;
+        var label = Label == null
+            ? langLabel
+            : string.IsNullOrWhiteSpace(langLabel)
+                ? $"{Label}"
+                : $"{Label} ({Loc[langLabel].Value})";
+
+        Errors.TryGetValue(lang, out var errorMessage);
+        errorMessage = string.IsNullOrWhiteSpace(errorMessage) ? null : errorMessage.Replace(modelName, fieldName);
+
+        return new LocalizedInputContext(Values[lang], value => TextChanged(lang, value), label, errorMessage != null, errorMessage);
     }
 
     private List<LocalizedLanguageOption> LanguageOptions() =>
@@ -257,9 +285,52 @@ else
             return new LocalizedLanguageOption(
                 x.Key,
                 string.IsNullOrWhiteSpace(label) ? x.Key.ToUpperInvariant() : Loc[label].Value,
-                HasContent?.Invoke(x.Value) ?? !string.IsNullOrWhiteSpace(x.Value),
+                !string.IsNullOrWhiteSpace(x.Value),
                 Errors.ContainsKey(x.Key));
         }).ToList();
+
+    private void OnValidationRequested(object? sender, ValidationRequestedEventArgs eventArgs)
+    {
+        foreach (var (lang, value) in Values)
+        {
+            ValidateField(lang, value);
+        }
+
+        // Add the error to the form's EditContext/MessageStore
+        // so that we can prevent the form from being submitted
+        if (Errors.Count != 0 && fieldName != null && ShiftEntityForm != null)
+        {
+            ShiftEntityForm.DisplayError(fieldName, Errors.First().Value);
+        }
+
+        if (RevealFirstError())
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private bool RevealFirstError()
+    {
+        var firstInvalid = Values.Keys.FirstOrDefault(Errors.ContainsKey);
+        if (firstInvalid == null)
+        {
+            return false;
+        }
+
+        if (LanguageLayout is LanguageLayout.Dropdown or LanguageLayout.Tabs && !Errors.ContainsKey(selectedLanguage))
+        {
+            selectedLanguage = firstInvalid;
+            return true;
+        }
+
+        if (LanguageLayout == LanguageLayout.Expandable && !expanded && Values.Keys.Skip(1).Any(Errors.ContainsKey))
+        {
+            expanded = true;
+            return true;
+        }
+
+        return false;
+    }
 
     public async Task TextChanged(string lang, string newValue)
     {
@@ -273,12 +344,6 @@ else
 
     private void ValidateField(string lang, string value)
     {
-        if (optionalLanguages.Contains(lang))
-        {
-            Errors.Remove(lang);
-            return;
-        }
-
         if (validationAttributes != null && EditContext != null)
         {
             var errors = EditContext.ValidateDataAnnotationValue(value, validationAttributes);
@@ -294,6 +359,14 @@ else
             {
                 Errors[lang] = errors.First();
             }
+        }
+    }
+
+    public void Dispose()
+    {
+        if (validatedContext != null)
+        {
+            validatedContext.OnValidationRequested -= OnValidationRequested;
         }
     }
 }
