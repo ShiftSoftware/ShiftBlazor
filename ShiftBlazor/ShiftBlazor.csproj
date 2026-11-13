@@ -46,6 +46,7 @@
 
 	<ItemGroup>
 		<None Include="Images\icon.png" Pack="true" PackagePath="\" />
+		<None Include="buildTransitive\ShiftSoftware.ShiftBlazor.targets" Pack="true" PackagePath="buildTransitive\" />
 		<None Include="wwwroot\workers\table-export.js" />
 		<Folder Include="Images\" />
 	</ItemGroup>

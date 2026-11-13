@@ -479,6 +479,23 @@ public partial class FileUploader : Events.EventComponentBase, IDisposable
 
     internal async Task UploadFileToAzureAsync(UploaderItem item)
     {
+        try
+        {
+            await AzureBlobAssemblies.EnsureLoadedAsync(ServiceProvider);
+        }
+        catch (Exception ex)
+        {
+            item.State = FileUploadState.Failed;
+            item.Message = new Message { Title = Loc["FileUploaderError3", ex.Message] };
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        await UploadBlobAsync(item);
+    }
+
+    private async Task UploadBlobAsync(UploaderItem item)
+    {
         if (item.LocalFile == null)
         {
             item.Message = new Message { Title = Loc["FileUploaderError1"] };
