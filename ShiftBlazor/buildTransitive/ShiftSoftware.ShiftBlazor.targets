@@ -1,0 +1,83 @@
+<Project>
+	<!--
+	  Opt-in: strip libphonenumber's geocoding, carrier, timezone and locale data when a Blazor
+	  WebAssembly app is published with trimming. Enable it in the Web project:
+
+	    <ShiftTrimPhoneNumberData>true</ShiftTrimPhoneNumberData>
+
+	  Phone parsing, validation and formatting, which is all the Shift framework does with phone
+	  numbers, read only the region metadata. The other data is about 2.3 MB of embedded resources
+	  in PhoneNumbers.dll that the trimmer keeps unless told to remove them. Leave this off if the
+	  app uses PhoneNumberOfflineGeocoder, PhoneNumberToCarrierMapper or
+	  PhoneNumberToTimeZonesMapper.
+
+	  The resource list is read from the PhoneNumbers.dll being trimmed, so it follows package
+	  upgrades. It does nothing when the app is not trimmed or does not include PhoneNumbers.
+	-->
+
+	<UsingTask TaskName="ShiftWritePhoneNumberDataRemoval" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<AssemblyPath ParameterType="System.String" Required="true" />
+			<OutputPath ParameterType="System.String" Required="true" />
+			<RemovedCount ParameterType="System.Int32" Output="true" />
+		</ParameterGroup>
+		<Task>
+			<Using Namespace="System" />
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.Linq" />
+			<Using Namespace="System.Text" />
+			<Code Type="Fragment" Language="cs"><![CDATA[
+				// Loaded from bytes so the build process does not keep the file open.
+				var prefixes = new[] { "PhoneNumbers.geocoding.", "PhoneNumbers.carrier.", "PhoneNumbers.timezones.", "PhoneNumbers.locale." };
+				var names = System.Reflection.Assembly.Load(File.ReadAllBytes(AssemblyPath)).GetManifestResourceNames()
+					.Where(n => prefixes.Any(p => n.StartsWith(p, StringComparison.Ordinal)))
+					.OrderBy(n => n, StringComparer.Ordinal)
+					.ToList();
+				var xml = new StringBuilder();
+				xml.AppendLine("<linker>");
+				xml.AppendLine("  <assembly fullname=\"PhoneNumbers\">");
+				foreach (var n in names)
+					xml.AppendLine("    <resource name=\"" + n + "\" action=\"remove\" />");
+				xml.AppendLine("  </assembly>");
+				xml.AppendLine("</linker>");
+				Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
+				File.WriteAllText(OutputPath, xml.ToString());
+				RemovedCount = names.Count;
+			]]></Code>
+		</Task>
+	</UsingTask>
+
+	<!--
+	  The trimmer only re-runs when one of its input files changes. Record the setting in a stamp
+	  file and add it to those inputs, so switching the setting (also from the command line)
+	  re-trims instead of reusing the previous output.
+	-->
+	<Target Name="_ShiftTrimPhoneNumberDataStamp" BeforeTargets="_RunILLink" Condition="'$(PublishTrimmed)' == 'true'">
+		<PropertyGroup>
+			<_ShiftTrimPhoneNumberDataStamp>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)ShiftTrimPhoneNumberData.stamp</_ShiftTrimPhoneNumberDataStamp>
+		</PropertyGroup>
+		<WriteLinesToFile File="$(_ShiftTrimPhoneNumberDataStamp)" Lines="ShiftTrimPhoneNumberData=$(ShiftTrimPhoneNumberData)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+		<PropertyGroup>
+			<MSBuildAllProjects>$(MSBuildAllProjects);$(_ShiftTrimPhoneNumberDataStamp)</MSBuildAllProjects>
+		</PropertyGroup>
+	</Target>
+
+	<Target Name="_ShiftTrimPhoneNumberData"
+			BeforeTargets="_RunILLink"
+			DependsOnTargets="_ComputeManagedAssemblyToLink"
+			Condition="'$(ShiftTrimPhoneNumberData)' == 'true' And '$(PublishTrimmed)' == 'true'">
+		<ItemGroup>
+			<_ShiftPhoneNumbersAssembly Include="@(ManagedAssemblyToLink)" Condition="'%(Filename)' == 'PhoneNumbers'" />
+		</ItemGroup>
+		<PropertyGroup>
+			<_ShiftPhoneNumberDataRemoval>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)ShiftPhoneNumberDataRemoval.xml</_ShiftPhoneNumberDataRemoval>
+		</PropertyGroup>
+		<ShiftWritePhoneNumberDataRemoval Condition="'@(_ShiftPhoneNumbersAssembly)' != ''" AssemblyPath="@(_ShiftPhoneNumbersAssembly->'%(FullPath)')" OutputPath="$(_ShiftPhoneNumberDataRemoval)">
+			<Output TaskParameter="RemovedCount" PropertyName="_ShiftPhoneNumberDataRemovedCount" />
+		</ShiftWritePhoneNumberDataRemoval>
+		<PropertyGroup Condition="'@(_ShiftPhoneNumbersAssembly)' != ''">
+			<_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --substitutions "$(_ShiftPhoneNumberDataRemoval)"</_ExtraTrimmerArgs>
+		</PropertyGroup>
+		<Message Importance="high" Condition="'@(_ShiftPhoneNumbersAssembly)' != ''" Text="ShiftTrimPhoneNumberData: removing $(_ShiftPhoneNumberDataRemovedCount) PhoneNumbers data resources at trim time" />
+	</Target>
+</Project>

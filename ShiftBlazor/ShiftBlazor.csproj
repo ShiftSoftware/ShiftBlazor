@@ -47,6 +47,8 @@
 	<ItemGroup>
 		<None Include="Images\icon.png" Pack="true" PackagePath="\" />
 		<None Include="wwwroot\workers\table-export.js" />
+		<!-- Opt-in build step for consuming Web apps (ShiftTrimPhoneNumberData). Packed into both folders because the Razor SDK already puts .props in build/ and buildTransitive/, and NuGet imports from one of them. -->
+		<None Update="buildTransitive\ShiftSoftware.ShiftBlazor.targets" Pack="true" PackagePath="build\ShiftSoftware.ShiftBlazor.targets;buildTransitive\ShiftSoftware.ShiftBlazor.targets" />
 		<Folder Include="Images\" />
 	</ItemGroup>
 
