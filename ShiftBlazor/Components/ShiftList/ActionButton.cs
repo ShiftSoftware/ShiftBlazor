@@ -33,6 +33,15 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
     public bool Confirm { get; set; }
 
     /// <summary>
+    /// When true, the confirmation dialog asks the user to type the number of selected items in English words
+    /// (for example "three" for 3 items) and keeps the confirm button disabled until it matches.
+    /// Use it for actions that are hard to undo.
+    /// Implies <see cref="Confirm"/>.
+    /// </summary>
+    [Parameter]
+    public bool ConfirmByTypingCount { get; set; } = true;
+
+    /// <summary>
     /// The type of the component to be opened on click.
     /// </summary>
     [Parameter]
@@ -320,7 +329,7 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
                 var userCanceled = false;
                 var selectCount = ShiftListGeneric?.SelectState.Count ?? 0;
 
-                if (Confirm)
+                if (Confirm || ConfirmByTypingCount)
                 {
                     var defaultText = selectCount == 1 ? Loc["DialogDefaultText"] : Loc["DialogDefaultTextPlural", selectCount];
                     var text = DialogTextTemplate ?? defaultText;
@@ -345,6 +354,7 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
                         { "Icon", DialogIcon },
                         { "ConfirmText",  confirmText},
                         { "CancelText",  cancelText },
+                        { "TypeToConfirm", ConfirmByTypingCount ? NumberToWords.ToEnglish(selectCount) : null },
                     };
 
                     if (this.OnDefaultDialogOpen is not null && ShiftListGeneric is not null)

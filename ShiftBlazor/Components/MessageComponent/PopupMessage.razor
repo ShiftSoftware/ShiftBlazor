@@ -44,6 +44,22 @@
                 @MessageBodyTemplate(Message)
             }
 
+            @if (RequiresTypedConfirmation)
+            {
+                var (before, after) = TypeToConfirmInstruction;
+
+                <MudText Class="mt-4 mb-2" Style="word-wrap: break-word;">@before<b>@TypeToConfirm!.Trim()</b>@after</MudText>
+                <MudTextField T="string"
+                              @bind-Value="TypedConfirmation"
+                              Immediate="true"
+                              AutoFocus="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              autocomplete="off"
+                              spellcheck="false"
+                              OnKeyDown="OnTypedConfirmationKeyDown" />
+            }
+
         </div>
 
         <MudToolBar Dense>
@@ -58,7 +74,7 @@
                 <MudButtonExtended KeyboardKey="KeyboardKeys.Escape" Variant="Variant.Text" OnClick="() => Close(true)" Class="me-2">@CancelText</MudButtonExtended>
             }
 
-            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Variant="Variant.Text" Color="@Color" OnClick="() => Close()" Class="me-2">@(ConfirmText ?? Loc["ConfirmDefaultText"])</MudButtonExtended>
+            <MudButtonExtended KeyboardKey="KeyboardKeys.KeyS" Variant="Variant.Text" Color="@Color" Disabled="!CanConfirm" OnClick="() => Close()" Class="me-2">@(ConfirmText ?? Loc["ConfirmDefaultText"])</MudButtonExtended>
         </MudToolBar>
     </MudFocusTrap>
 </MudPaper>
@@ -85,6 +101,21 @@
     [Parameter]
     public bool ReportButton { get; set; }
 
+    /// <summary>
+    /// When set, the dialog shows a text field under the message and the confirm button stays disabled until
+    /// the user types this text, for example "three". Letter case, extra spaces and hyphens are ignored, so
+    /// "Twenty One" matches "twenty-one".
+    /// </summary>
+    [Parameter]
+    public string? TypeToConfirm { get; set; }
+
+    /// <summary>
+    /// The instruction above the <see cref="TypeToConfirm"/> field, with {0} where the text to type goes.
+    /// Defaults to: Type "{0}" below to confirm.
+    /// </summary>
+    [Parameter]
+    public string? TypeToConfirmText { get; set; }
+
     [CascadingParameter]
     internal IMudDialogInstance? MudDialog { get; set; }
 
@@ -96,6 +127,49 @@
     {
         Title = Message.Title;
         IShortcutComponent.Register(this);
+    }
+
+    private string? TypedConfirmation { get; set; }
+
+    private bool RequiresTypedConfirmation => !string.IsNullOrWhiteSpace(TypeToConfirm);
+
+    private bool CanConfirm => !RequiresTypedConfirmation
+        || string.Equals(NormalizeTyped(TypedConfirmation), NormalizeTyped(TypeToConfirm), StringComparison.OrdinalIgnoreCase);
+
+    // The instruction split around {0}, so the text to type can be shown in bold.
+    private (string Before, string After) TypeToConfirmInstruction
+    {
+        get
+        {
+            var template = TypeToConfirmText;
+
+            if (template is null)
+            {
+                var localized = Loc["TypeToConfirmInstruction"];
+
+                // Apps on a localization package without this key still get a readable instruction.
+                template = localized.ResourceNotFound ? "Type \"{0}\" below to confirm" : localized.Value;
+            }
+
+            var index = template.IndexOf("{0}", StringComparison.Ordinal);
+
+            return index < 0 ? (template + " ", "") : (template[..index], template[(index + 3)..]);
+        }
+    }
+
+    // Spaces and hyphens are treated alike and collapsed, so "twenty one", "twenty-one" and "Twenty  One" match.
+    private static string NormalizeTyped(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        return string.Join(' ', text.Replace('-', ' ').Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    private void OnTypedConfirmationKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && CanConfirm)
+            Close();
     }
 
     public ValueTask HandleShortcut(KeyboardKeys key)
@@ -116,6 +190,10 @@
 
     private void Close(bool cancel = false)
     {
+        // The confirm button is disabled until the typed text matches; Ctrl+S and Enter must not get around it.
+        if (!cancel && !CanConfirm)
+            return;
+
         if (cancel)
         {
             MudDialog?.Cancel();
