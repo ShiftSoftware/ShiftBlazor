@@ -288,7 +288,7 @@ function parseCustomColumn(row, col, localizedColumns, lang, fieldMapper, foreig
         }
     });
 
-    return formatUnicorn(col.customColumn.format, values);
+    return fillTemplate(col.customColumn.format, values);
 }
 
 function generateCSVContent(rows, columns, foreignTables, fieldMapper, lang) {
@@ -327,56 +327,16 @@ function generateCSVContent(rows, columns, foreignTables, fieldMapper, lang) {
     return csvRows.join("\n")
 }
 
-// ISO 8601 https://stackoverflow.com/a/49332027
-function toISOLocal(d) {
-    var z = n => ('0' + n).slice(-2);
-    var zz = n => ('00' + n).slice(-3);
-    var off = d.getTimezoneOffset();
-    var sign = off > 0 ? '-' : '+';
-    off = Math.abs(off);
-
-    return d.getFullYear() + '-'
-        + z(d.getMonth() + 1) + '-' +
-        z(d.getDate()) + 'T' +
-        z(d.getHours()) + ':' +
-        z(d.getMinutes()) + ':' +
-        z(d.getSeconds()) + '.' +
-        zz(d.getMilliseconds()) +
-        sign + z(off / 60 | 0) + ':' + z(off % 60);
+function toExcelFriendlyLocal(date) {
+    const pad = value => String(value).padStart(2, "0");
+    const day = [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join("-");
+    const time = [date.getHours(), date.getMinutes(), date.getSeconds()].map(pad).join(":");
+    return `${day} ${time}`;
 }
 
-function toExcelFriendlyLocal(d) {
-    var z = n => ('0' + n).slice(-2);
-    var zz = n => ('00' + n).slice(-3);
-    var off = d.getTimezoneOffset();
-    var sign = off > 0 ? '-' : '+';
-    off = Math.abs(off);
-
-    return d.getFullYear() + '-'
-        + z(d.getMonth() + 1) + '-' +
-        z(d.getDate()) + ' ' +
-        z(d.getHours()) + ':' +
-        z(d.getMinutes()) + ':' +
-        z(d.getSeconds());
-}
-
-// stackoverflow's implementation https://stackoverflow.com/a/18234317
-function formatUnicorn(str, ...args) {
-    if (typeof str !== "string") {
-        throw new TypeError("First argument must be a string");
-    }
-
-    if (!args.length)
-        return str;
-
-    var t = typeof args[0];
-    var replacements = "string" === t || "number" === t
-        ? Array.prototype.slice.call(args)
-        : args[0];
-
-    for (var key in replacements)
-        str = str.replace(new RegExp("\\{" + key + "\\}", "gi"), replacements[key]);
-    return str
+// Fills "{0} ({1})" from an array. A number with no value stays as it is.
+function fillTemplate(template, values) {
+    return template.replace(/\{(\d+)\}/g, (placeholder, index) => index in values ? String(values[index]) : placeholder);
 }
 
 self.onmessage = async (event) => {

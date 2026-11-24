@@ -228,43 +228,19 @@ public static class Misc
         return underlyingType is not null && (underlyingType == typeof(DateTime) || underlyingType == typeof(DateTimeOffset));
     }
 
-    // https://stackoverflow.com/a/11124118
-    // https://www.somacon.com/p576.php
+    private static readonly string[] ByteUnits = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
+
     public static string BytesToString(long value)
     {
-        string suffix;
-        double readable;
+        double size = value;
+        var unit = 0;
 
-        switch (Math.Abs(value))
+        while (Math.Abs(size) >= 1024 && unit < ByteUnits.Length - 1)
         {
-            case >= 0x1000000000000000:
-                suffix = "EiB";
-                readable = value >> 50;
-                break;
-            case >= 0x4000000000000:
-                suffix = "PiB";
-                readable = value >> 40;
-                break;
-            case >= 0x10000000000:
-                suffix = "TiB";
-                readable = value >> 30;
-                break;
-            case >= 0x40000000:
-                suffix = "GiB";
-                readable = value >> 20;
-                break;
-            case >= 0x100000:
-                suffix = "MiB";
-                readable = value >> 10;
-                break;
-            case >= 0x400:
-                suffix = "KiB";
-                readable = value;
-                break;
-            default:
-                return value.ToString("0 B");
+            size /= 1024;
+            unit++;
         }
 
-        return (readable / 1024).ToString("0.## ", CultureInfo.InvariantCulture) + suffix;
+        return $"{size.ToString("0.##", CultureInfo.InvariantCulture)} {ByteUnits[unit]}";
     }
 }

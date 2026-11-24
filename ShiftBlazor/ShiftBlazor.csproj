@@ -21,7 +21,6 @@
 		<PackageId>ShiftSoftware.ShiftBlazor</PackageId>
 		<PackageProjectUrl>https://github.com/ShiftSoftware/ShiftBlazor</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/ShiftSoftware/ShiftBlazor</RepositoryUrl>
-		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageIcon>icon.png</PackageIcon>
 
 	</PropertyGroup>

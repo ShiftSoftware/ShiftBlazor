@@ -1,32 +1,22 @@
-﻿// https://stackoverflow.com/a/9733420
-
-namespace ShiftSoftware.ShiftBlazor.Utils;
+﻿namespace ShiftSoftware.ShiftBlazor.Utils;
 
 public class ColorHelperClass
 {
-    const double RED = 0.2126;
-    const double GREEN = 0.7152;
-    const double BLUE = 0.0722;
-    const double GAMMA = 2.4;
-
-    private static double Luminance(double r, double g, double b)
+    // Relative luminance and contrast ratio as WCAG 2.0 defines them.
+    private static double Linearize(int channel)
     {
-        double[] a = new double[] { r, g, b };
-        for (int i = 0; i < a.Length; i++)
-        {
-            a[i] /= 255;
-            a[i] = a[i] <= 0.03928 ? a[i] / 12.92 : Math.Pow((a[i] + 0.055) / 1.055, GAMMA);
-        }
-        return a[0] * RED + a[1] * GREEN + a[2] * BLUE;
+        var value = channel / 255d;
+        return value <= 0.03928 ? value / 12.92 : Math.Pow((value + 0.055) / 1.055, 2.4);
     }
 
-    private static double Contrast(int[] rgb1, int[] rgb2)
+    private static double RelativeLuminance(int[] rgb)
+        => 0.2126 * Linearize(rgb[0]) + 0.7152 * Linearize(rgb[1]) + 0.0722 * Linearize(rgb[2]);
+
+    private static double Contrast(int[] first, int[] second)
     {
-        double lum1 = Luminance(rgb1[0], rgb1[1], rgb1[2]);
-        double lum2 = Luminance(rgb2[0], rgb2[1], rgb2[2]);
-        double brightest = Math.Max(lum1, lum2);
-        double darkest = Math.Min(lum1, lum2);
-        return (brightest + 0.05) / (darkest + 0.05);
+        var a = RelativeLuminance(first) + 0.05;
+        var b = RelativeLuminance(second) + 0.05;
+        return a > b ? a / b : b / a;
     }
 
     private static int[] ConvertCssRgbToIntArray(string cssRgbValue)
