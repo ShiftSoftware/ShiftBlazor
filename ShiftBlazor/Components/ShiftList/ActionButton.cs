@@ -1,15 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using ShiftSoftware.ShiftBlazor.Interfaces;
 using ShiftSoftware.ShiftBlazor.Localization;
 using ShiftSoftware.ShiftBlazor.Services;
 using ShiftSoftware.ShiftBlazor.Utils;
-using ShiftSoftware.ShiftEntity.Core;
 using ShiftSoftware.ShiftEntity.Model;
 using ShiftSoftware.ShiftEntity.Model.Dtos;
-using ShiftSoftware.TypeAuth.Core;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -23,7 +20,6 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
     [Inject] MessageService MessageService { get; set; } = default!;
     [Inject] public SettingManager SettingManager { get; private set; } = default!;
     [Inject] public ShiftBlazorLocalizer Loc { get; private set; } = default!;
-    [Inject] private IServiceProvider ServiceProvider { get; set; } = default!;
 
 
     [CascadingParameter]
@@ -45,20 +41,6 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
     /// </summary>
     [Parameter]
     public bool DisableConfirmByTypingCount { get; set; }
-
-    /// <summary>
-    /// By default the action doesn't run when more rows are selected than the user can write in one action
-    /// (<see cref="GeneralActionTree.DataGridBulkWriteMaxTop"/>), and a warning shows the limit.
-    /// Set this to true for a button that doesn't change the selected rows, such as an export or a print.
-    /// Apps that don't use TypeAuth have no limit.
-    /// </summary>
-    /// <remarks>
-    /// This only saves the user a refused request. The endpoint enforces the limit, with
-    /// GetSelectedEntitiesForBulkWriteAsync or
-    /// <see cref="DataGridBulkWriteExtensions.EnsureDataGridBulkWriteMaxTop"/>.
-    /// </remarks>
-    [Parameter]
-    public bool DisableBulkWriteMaxTop { get; set; }
 
     /// <summary>
     /// The type of the component to be opened on click.
@@ -324,35 +306,10 @@ public class ActionButton<T> : MudButtonExtended, IEntityRequestComponent<IList<
         return !result?.Canceled;
     }
 
-    private bool WarnWhenOverBulkWriteMaxTop()
-    {
-        if (DisableBulkWriteMaxTop)
-            return false;
-
-        var maxTop = ServiceProvider.GetService<ITypeAuthService>()?.GetDataGridBulkWriteMaxTop();
-        var selectCount = ShiftListGeneric?.SelectState.Count ?? 0;
-
-        // Without TypeAuth there is no limit.
-        if (maxTop is null || selectCount <= maxTop)
-            return false;
-
-        var text = Loc["BulkWriteMaxTopWarning", selectCount, maxTop];
-
-        // Apps on a localization package without this key still get a readable warning.
-        MessageService.Warning(text.ResourceNotFound
-            ? $"{selectCount} items are selected. The most you can change in one action is {maxTop}."
-            : text);
-
-        return true;
-    }
-
     private EventCallback<MouseEventArgs> CreateEvent(Func<ValueTask<bool?>> action)
     {
         var func = async delegate (MouseEventArgs args)
         {
-            if (WarnWhenOverBulkWriteMaxTop())
-                return;
-
             // Inject loading icon into the button's ChildContent
             var originalChildContent = ChildContent;
             ChildContent = builder =>
